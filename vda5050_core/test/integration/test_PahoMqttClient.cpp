@@ -25,7 +25,7 @@
 
 TEST(PahoMqttClientTest, PublishSubscribe)
 {
-  std::string broker = "localhost:1883";
+  std::string broker = "tcp://test.mosquitto.org:1883";
   std::string topic = "/test/integration";
   std::string payload = "hello";
   int qos = 0;
