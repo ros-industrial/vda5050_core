@@ -63,6 +63,8 @@ public:
 ///
 /// \param broker_address Address of the MQTT broker
 /// \param client_id ID of the MQTT client
+///
+/// \return Shared pointer to MQTT client
 std::shared_ptr<MqttClientInterface> create_default_client(
   const std::string& broker_address, const std::string& client_id);
 

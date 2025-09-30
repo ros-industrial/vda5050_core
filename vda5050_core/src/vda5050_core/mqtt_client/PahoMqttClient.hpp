@@ -41,11 +41,14 @@ class PahoMqttClient;
 class MqttActionListener : public mqtt::iaction_listener
 {
 public:
+  /// \brief Constructor for MqttActionListener
   MqttActionListener();
 
 protected:
+  // Documentation inherited from mqtt::iaction_listener
   void on_failure(const mqtt::token& tok) override;
 
+  // Documentation inherited from mqtt::iaction_listener
   void on_success(const mqtt::token& tok) override;
 };
 
@@ -53,18 +56,24 @@ protected:
 class MqttCallback : public mqtt::callback
 {
 public:
+  /// \brief Constructor for MqttCallback
   explicit MqttCallback(PahoMqttClient& parent);
 
 protected:
+  // Documentation inherited from mqtt::callback
   void connected(const std::string& cause) override;
 
+  // Documentation inherited from mqtt::callback
   void connection_lost(const std::string& cause) override;
 
+  // Documentation inherited from mqtt::callback
   void message_arrived(mqtt::const_message_ptr msg) override;
 
+  // Documentation inherited from mqtt::callback
   void delivery_complete(mqtt::delivery_token_ptr tok) override;
 
 private:
+  /// \brief Reference to the MQTT client interface
   PahoMqttClient& parent_;
 };
 
@@ -72,9 +81,16 @@ private:
 class PahoMqttClient : public MqttClientInterface
 {
 public:
+  /// \brief Create a shared pointer to PahoMqttClient
+  ///
+  /// \param broker_address Address of the MQTT broker
+  /// \param client_id ID of the MQTT client
+  ///
+  /// \return Shared pointer to Paho MQTT client
   static std::shared_ptr<PahoMqttClient> make(
     const std::string& broker_address, const std::string& client_id);
 
+  /// \brief Destructor for PahoMqttClient
   ~PahoMqttClient();
 
   PahoMqttClient(const PahoMqttClient&) = delete;
@@ -82,27 +98,43 @@ public:
   PahoMqttClient(PahoMqttClient&&) = delete;
   PahoMqttClient& operator=(PahoMqttClient&&) = delete;
 
+  // Documentation inherited from MqttClientInterface
   void connect() override;
 
+  // Documentation inherited from MqttClientInterface
   void disconnect() override;
 
+  // Documentation inherited from MqttClientInterface
   void publish(
     const std::string& topic, const std::string& message, int qos) override;
 
+  // Documentation inherited from MqttClientInterface
   void subscribe(
     const std::string& topic, MessageHandler handler, int qos) override;
 
   friend class MqttCallback;
 
 private:
+  /// \brief Private constructor for PahoMqttClient
+  ///
+  /// \param broker_address Address of the MQTT broker
+  /// \param client_id ID of the MQTT client
   PahoMqttClient(
     const std::string& broker_address, const std::string& client_id);
 
+  /// \brief Unique pointer to Paho async client
   std::unique_ptr<mqtt::async_client> client_;
+
+  /// \brief Implementation of action listener
   MqttActionListener action_listener_;
+
+  /// \brief Implementation of callback
   MqttCallback callback_;
 
+  /// \brief List of message handlers mapped to topics
   std::unordered_map<std::string, MessageHandler> handlers_;
+
+  /// \brief Mutex protecting list of message handlers
   std::mutex handler_mutex_;
 };
 
