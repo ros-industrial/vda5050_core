@@ -26,6 +26,7 @@ namespace vda5050_core {
 
 namespace logger {
 
+/// \brief Enum for logging level
 enum class LogLevel
 {
   INFO,
@@ -36,14 +37,29 @@ enum class LogLevel
 
 using LogHandler = std::function<void(LogLevel, const std::string&)>;
 
+/// \brief Set a handler to receive logs
+///
+/// \param handler Callback to receive logs
 void set_handler(LogHandler handler);
 
+/// \brief Log at level INFO
+///
+/// \param message Message as a string
 void info(const std::string& message);
 
+/// \brief Log at level DEBUG
+///
+/// \param message Message as a string
 void debug(const std::string& message);
 
+/// \brief Log at level WARNING
+///
+/// \param message Message as a string
 void warning(const std::string& message);
 
+/// \brief Log at level ERROR
+///
+/// \param message Message as a string
 void error(const std::string& message);
 
 }  // namespace logger

@@ -30,21 +30,39 @@ namespace mqtt_client {
 class MqttClientInterface
 {
 public:
+  /// \brief Default destructor
   virtual ~MqttClientInterface() = default;
 
+  /// \brief Connect to the MQTT broker
   virtual void connect() = 0;
 
+  /// \brief Disconnect from the the MQTT broker
   virtual void disconnect() = 0;
 
+  /// \brief Publish a message to the MQTT broker
+  ///
+  /// \param topic Topic for publish
+  /// \param message Raw message string
+  /// \param qos Quality of service setting for the publish
   virtual void publish(
     const std::string& topic, const std::string& message, int qos) = 0;
 
   using MessageHandler =
     std::function<void(const std::string&, const std::string&)>;
+
+  /// \brief Subscribe to a topic to receive a message from the broker
+  ///
+  /// \param topic Topic for subscription
+  /// \param handler Callback to handle the incoming message
+  /// \param qos Quality of service setting for the subscription
   virtual void subscribe(
     const std::string& topic, MessageHandler handler, int qos) = 0;
 };
 
+/// \brief Create a default MQTT client interface
+///
+/// \param broker_address Address of the MQTT broker
+/// \param client_id ID of the MQTT client
 std::shared_ptr<MqttClientInterface> create_default_client(
   const std::string& broker_address, const std::string& client_id);
 
