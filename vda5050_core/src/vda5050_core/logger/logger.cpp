@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "vda5050_core/logger/Logger.hpp"
+#include "vda5050_core/logger/logger.hpp"
 
 #include <iostream>
 

@@ -10,7 +10,7 @@ find_package(PahoMqttCpp REQUIRED)
 
 include(GNUInstallDirs)
 
-add_library(mqtt_client src/vda5050_core/mqtt_client/PahoMqttClient.cpp)
+add_library(mqtt_client src/vda5050_core/mqtt_client/paho_mqtt_client.cpp)
 target_link_libraries(mqtt_client
   PRIVATE
     PahoMqttCpp::paho-mqttpp3
@@ -21,7 +21,7 @@ target_include_directories(mqtt_client
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-add_library(logger src/vda5050_core/logger/Logger.cpp)
+add_library(logger src/vda5050_core/logger/logger.cpp)
 target_include_directories(logger
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

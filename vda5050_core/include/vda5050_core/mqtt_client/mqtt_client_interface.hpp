@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__MQTT_CLIENT__MQTTCLIENTINTERFACE_HPP_
-#define VDA5050_CORE__MQTT_CLIENT__MQTTCLIENTINTERFACE_HPP_
+#ifndef VDA5050_CORE__MQTT_CLIENT__MQTT_CLIENT_INTERFACE_HPP_
+#define VDA5050_CORE__MQTT_CLIENT__MQTT_CLIENT_INTERFACE_HPP_
 
 #include <functional>
 #include <memory>
@@ -71,4 +71,4 @@ std::shared_ptr<MqttClientInterface> create_default_client(
 }  // namespace mqtt_client
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__MQTT_CLIENT__MQTTCLIENTINTERFACE_HPP_
+#endif  // VDA5050_CORE__MQTT_CLIENT__MQTT_CLIENT_INTERFACE_HPP_

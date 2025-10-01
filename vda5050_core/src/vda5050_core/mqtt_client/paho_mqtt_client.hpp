@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__MQTT_CLIENT__PAHOMQTTCLIENT_HPP_
-#define VDA5050_CORE__MQTT_CLIENT__PAHOMQTTCLIENT_HPP_
+#ifndef VDA5050_CORE__MQTT_CLIENT__PAHO_MQTT_CLIENT_HPP_
+#define VDA5050_CORE__MQTT_CLIENT__PAHO_MQTT_CLIENT_HPP_
 
 #include <mqtt/async_client.h>
 #include <mqtt/callback.h>
@@ -29,7 +29,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "vda5050_core/mqtt_client/MqttClientInterface.hpp"
+#include "vda5050_core/mqtt_client/mqtt_client_interface.hpp"
 
 namespace vda5050_core {
 
@@ -141,4 +141,4 @@ private:
 }  // namespace mqtt_client
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__MQTT_CLIENT__PAHOMQTTCLIENT_HPP_
+#endif  // VDA5050_CORE__MQTT_CLIENT__PAHO_MQTT_CLIENT_HPP_
