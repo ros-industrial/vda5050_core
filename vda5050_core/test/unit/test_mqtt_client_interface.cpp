@@ -18,7 +18,7 @@
 
 #include <gmock/gmock.h>
 
-#include "vda5050_core/mqtt_client/MqttClientInterface.hpp"
+#include "vda5050_core/mqtt_client/mqtt_client_interface.hpp"
 
 class MockMqttClient : public vda5050_core::mqtt_client::MqttClientInterface
 {

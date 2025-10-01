@@ -83,8 +83,8 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_gmock REQUIRED)
   ament_add_gmock(test_mqtt_client
-    test/unit/test_MqttClientInterface.cpp
-    test/integration/test_PahoMqttClient.cpp
+    test/unit/test_mqtt_client_interface.cpp
+    test/integration/test_paho_mqtt_client.cpp
   )
   target_link_libraries(test_mqtt_client mqtt_client logger)
 endif()
