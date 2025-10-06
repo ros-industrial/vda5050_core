@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "paho_mqtt_client.hpp"
+#include "vda5050_core/mqtt_client/paho_mqtt_client.hpp"
 #include "vda5050_core/logger/logger.hpp"
 
 namespace vda5050_core {
