@@ -1,0 +1,88 @@
+cmake_minimum_required(VERSION 3.8)
+project(vda5050_core)
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
+
+find_package(ament_cmake REQUIRED)
+find_package(PahoMqttCpp REQUIRED)
+
+include(GNUInstallDirs)
+
+add_library(status_manager src/vda5050_core/state/status_manager.cpp)
+target_include_directories(status_manager
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
+add_library(logger src/vda5050_core/logger/logger.cpp)
+target_include_directories(logger
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
+add_library(vda5050_core INTERFACE)
+target_link_libraries(vda5050_core
+  INTERFACE
+    logger
+    status_manager
+)
+target_include_directories(vda5050_core
+  INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
+install(
+  DIRECTORY include/vda5050_core
+  DESTINATION include
+)
+
+install(
+  TARGETS
+    logger
+    vda5050_core
+    status_manager
+  EXPORT export_vda5050_core
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(
+  EXPORT export_vda5050_core
+  DESTINATION share/${PROJECT_NAME}/cmake
+  NAMESPACE vda5050_core::
+)
+
+ament_export_targets(export_vda5050_core HAS_LIBRARY_TARGET)
+# ament_export_dependencies(PahoMqttCpp)
+
+if(BUILD_TESTING)
+  find_package(ament_cmake_cppcheck REQUIRED)
+  ament_cppcheck()
+
+  find_package(ament_cmake_cpplint REQUIRED)
+  ament_cpplint()
+
+  find_package(ament_cmake_clang_format REQUIRED)
+  ament_clang_format(
+    CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../.clang-format"
+  )
+
+  find_package(ament_cmake_copyright REQUIRED)
+  ament_copyright()
+
+  # find_package(ament_cmake_gmock REQUIRED)
+  # ament_add_gmock(test_mqtt_client
+  #   test/unit/test_mqtt_client_interface.cpp
+  #   test/integration/test_paho_mqtt_client.cpp
+  # )
+  # target_link_libraries(test_mqtt_client mqtt_client logger)
+endif()
+
+ament_package()
