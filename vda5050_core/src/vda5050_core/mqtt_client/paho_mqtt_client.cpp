@@ -39,9 +39,9 @@ MqttActionListener::MqttActionListener()
 //=============================================================================
 void MqttActionListener::on_failure(const mqtt::token& tok)
 {
-  logger::error(
-    "Failed to deliver message with ID: " +
-    std::to_string(tok.get_message_id()));
+  VDA5050_ERROR_STREAM(
+    "Failed to deliver message with ID: "
+    << std::to_string(tok.get_message_id()));
 }
 
 //=============================================================================
@@ -59,15 +59,15 @@ MqttCallback::MqttCallback(PahoMqttClient& parent) : parent_(parent)
 //=============================================================================
 void MqttCallback::connected(const std::string& /*cause*/)
 {
-  logger::info(
-    "MQTT client [" + parent_.client_->get_client_id() + "] connected to " +
-    parent_.client_->get_server_uri());
+  VDA5050_INFO_STREAM(
+    "MQTT client [" << parent_.client_->get_client_id() << "] connected to "
+                    << parent_.client_->get_server_uri());
 }
 
 //=============================================================================
 void MqttCallback::connection_lost(const std::string& /*cause*/)
 {
-  logger::warning("MQTT client disconnected. Retrying connection ...");
+  VDA5050_ERROR("MQTT client disconnected. Retrying connection ...");
 }
 
 //=============================================================================
@@ -121,7 +121,8 @@ void PahoMqttClient::connect()
   }
   catch (const mqtt::exception& e)
   {
-    logger::error("Unable to establish MQTT connection: " + e.get_message());
+    VDA5050_ERROR_STREAM(
+      "Unable to establish MQTT connection: " << e.get_message());
   }
 }
 
@@ -133,11 +134,12 @@ void PahoMqttClient::disconnect()
     try
     {
       client_->disconnect()->wait();
-      logger::info("MQTT client disconnected: " + client_->get_client_id());
+      VDA5050_INFO_STREAM(
+        "MQTT client disconnected: " << client_->get_client_id());
     }
     catch (const mqtt::exception& e)
     {
-      logger::error("MQTT disconnection failed: " + e.get_message());
+      VDA5050_ERROR_STREAM("MQTT disconnection failed: " << e.get_message());
     }
   }
 }
@@ -157,7 +159,7 @@ void PahoMqttClient::publish(
   }
   catch (const mqtt::exception& e)
   {
-    logger::error("MQTT publish failed: " + e.get_message());
+    VDA5050_ERROR_STREAM("MQTT publish failed: " << e.get_message());
   }
 }
 
@@ -173,7 +175,7 @@ void PahoMqttClient::subscribe(
   }
   catch (const mqtt::exception& e)
   {
-    logger::error("MQTT subscription failed: " + e.get_message());
+    VDA5050_ERROR_STREAM("MQTT subscription failed: " << e.get_message());
   }
 }
 

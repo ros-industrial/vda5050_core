@@ -19,7 +19,9 @@
 #ifndef VDA5050_CORE__LOGGER__LOGGER_HPP_
 #define VDA5050_CORE__LOGGER__LOGGER_HPP_
 
-#include <functional>
+#include <fmt/core.h>
+#include <memory>
+#include <sstream>
 #include <string>
 
 namespace vda5050_core {
@@ -29,40 +31,73 @@ namespace logger {
 /// \brief Enum for logging level
 enum class LogLevel
 {
-  INFO,
   DEBUG,
-  WARNING,
-  ERROR
+  INFO,
+  WARN,
+  ERROR,
+  FATAL,
 };
 
-using LogHandler = std::function<void(LogLevel, const std::string&)>;
+class LogHandler
+{
+public:
+  virtual ~LogHandler() = default;
+
+  virtual void log(LogLevel level, const std::string& message) = 0;
+};
 
 /// \brief Set a handler to receive logs
 ///
 /// \param handler Callback to receive logs
-void set_handler(LogHandler handler);
+void set_handler(std::unique_ptr<LogHandler> handler);
 
-/// \brief Log at level INFO
-///
-/// \param message Message as a string
-void info(const std::string& message);
+void release_handler();
 
-/// \brief Log at level DEBUG
-///
-/// \param message Message as a string
-void debug(const std::string& message);
+void set_log_level(LogLevel level);
 
-/// \brief Log at level WARNING
-///
-/// \param message Message as a string
-void warning(const std::string& message);
-
-/// \brief Log at level ERROR
-///
-/// \param message Message as a string
-void error(const std::string& message);
+void log(LogLevel level, const std::string& message);
 
 }  // namespace logger
 }  // namespace vda5050_core
+
+#define VDA5050_LOG(level, ...) \
+  vda5050_core::logger::log(level, fmt::format(__VA_ARGS__))
+
+#define VDA5050_LOG_STREAM(level, stream)       \
+  do {                                          \
+    std::stringstream ss;                       \
+    ss << stream;                               \
+    vda5050_core::logger::log(level, ss.str()); \
+  } while (0)
+
+#define VDA5050_DEBUG(...) \
+  VDA5050_LOG(vda5050_core::logger::LogLevel::DEBUG, __VA_ARGS__)
+
+#define VDA5050_INFO(...) \
+  VDA5050_LOG(vda5050_core::logger::LogLevel::INFO, __VA_ARGS__)
+
+#define VDA5050_WARN(...) \
+  VDA5050_LOG(vda5050_core::logger::LogLevel::WARNING, __VA_ARGS__)
+
+#define VDA5050_ERROR(...) \
+  VDA5050_LOG(vda5050_core::logger::LogLevel::ERROR, __VA_ARGS__)
+
+#define VDA5050_FATAL(...) \
+  VDA5050_LOG(vda5050_core::logger::LogLevel::FATAL, __VA_ARGS__)
+
+#define VDA5050_DEBUG_STREAM(arg) \
+  VDA5050_LOG_STREAM(vda5050_core::logger::LogLevel::DEBUG, arg)
+
+#define VDA5050_INFO_STREAM(arg) \
+  VDA5050_LOG_STREAM(vda5050_core::logger::LogLevel::INFO, arg)
+
+#define VDA5050_WARN_STREAM(arg) \
+  VDA5050_LOG_STREAM(vda5050_core::logger::LogLevel::WARN, arg)
+
+#define VDA5050_ERROR_STREAM(arg) \
+  VDA5050_LOG_STREAM(vda5050_core::logger::LogLevel::ERROR, arg)
+
+#define VDA5050_FATAL_STREAM(arg) \
+  VDA5050_LOG_STREAM(vda5050_core::logger::LogLevel::FATAL, arg)
 
 #endif  // VDA5050_CORE__LOGGER__LOGGER_HPP_
