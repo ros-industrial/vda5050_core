@@ -7,6 +7,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(PahoMqttCpp REQUIRED)
+find_package(fmt REQUIRED)
 
 include(GNUInstallDirs)
 
@@ -22,6 +23,10 @@ target_include_directories(mqtt_client
 )
 
 add_library(logger src/vda5050_core/logger/logger.cpp)
+target_link_libraries(logger
+  PRIVATE
+    fmt::fmt
+)
 target_include_directories(logger
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -83,8 +88,10 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_gmock REQUIRED)
   ament_add_gmock(test_mqtt_client
-    test/unit/test_mqtt_client_interface.cpp
-    test/integration/test_paho_mqtt_client.cpp
+    test/unit/mqtt_client/test_mqtt_client_interface.cpp
+    test/unit/logger/test_logger.cpp
+    test/unit/logger/test_default_logger.cpp
+    test/integration/mqtt_client/test_paho_mqtt_client.cpp
   )
   target_link_libraries(test_mqtt_client mqtt_client logger)
 endif()
