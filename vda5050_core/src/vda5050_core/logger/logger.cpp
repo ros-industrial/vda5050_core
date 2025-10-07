@@ -29,7 +29,6 @@ namespace logger {
 
 namespace {
 
-//=============================================================================
 LogLevel current_level = LogLevel::INFO;
 std::mutex handler_mutex;
 
@@ -85,6 +84,7 @@ void release_handler()
 {
   std::lock_guard<std::mutex> lock(handler_mutex);
   log_handler.reset();
+  current_level = LogLevel::INFO;
 }
 
 //=============================================================================
@@ -99,7 +99,10 @@ void log(LogLevel level, const std::string& message)
 {
   std::lock_guard<std::mutex> lock(handler_mutex);
 
-  if (level < current_level || !log_handler) return;
+  if (level < current_level) return;
+
+  if (!log_handler)
+    log_handler = std::unique_ptr<ConsoleLogger>(new ConsoleLogger());
 
   log_handler->log(level, message);
 }
