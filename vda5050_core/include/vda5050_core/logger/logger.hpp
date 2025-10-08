@@ -19,13 +19,9 @@
 #ifndef VDA5050_CORE__LOGGER__LOGGER_HPP_
 #define VDA5050_CORE__LOGGER__LOGGER_HPP_
 
-<<<<<<< HEAD
-#include <functional>
-=======
 #include <fmt/core.h>
 #include <memory>
 #include <sstream>
->>>>>>> origin/main
 #include <string>
 
 namespace vda5050_core {
@@ -35,40 +31,6 @@ namespace logger {
 /// \brief Enum for logging level
 enum class LogLevel
 {
-<<<<<<< HEAD
-  INFO,
-  DEBUG,
-  WARNING,
-  ERROR
-};
-
-using LogHandler = std::function<void(LogLevel, const std::string&)>;
-
-/// \brief Set a handler to receive logs
-///
-/// \param handler Callback to receive logs
-void set_handler(LogHandler handler);
-
-/// \brief Log at level INFO
-///
-/// \param message Message as a string
-void info(const std::string& message);
-
-/// \brief Log at level DEBUG
-///
-/// \param message Message as a string
-void debug(const std::string& message);
-
-/// \brief Log at level WARNING
-///
-/// \param message Message as a string
-void warning(const std::string& message);
-
-/// \brief Log at level ERROR
-///
-/// \param message Message as a string
-void error(const std::string& message);
-=======
   DEBUG,
   INFO,
   WARN,
@@ -107,13 +69,10 @@ void set_log_level(LogLevel level);
 /// \param level Log severity
 /// \param message Log message
 void log(LogLevel level, const std::string& message);
->>>>>>> origin/main
 
 }  // namespace logger
 }  // namespace vda5050_core
 
-<<<<<<< HEAD
-=======
 /// \brief Log a formatted message with a specific log level
 ///
 /// \param level Log level
@@ -192,5 +151,4 @@ void log(LogLevel level, const std::string& message);
 #define VDA5050_FATAL_STREAM(arg) \
   VDA5050_LOG_STREAM(vda5050_core::logger::LogLevel::FATAL, arg)
 
->>>>>>> origin/main
 #endif  // VDA5050_CORE__LOGGER__LOGGER_HPP_
