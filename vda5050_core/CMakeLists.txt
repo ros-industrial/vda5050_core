@@ -7,8 +7,31 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(PahoMqttCpp REQUIRED)
+find_package(fmt REQUIRED)
 
 include(GNUInstallDirs)
+
+add_library(mqtt_client src/vda5050_core/mqtt_client/paho_mqtt_client.cpp)
+target_link_libraries(mqtt_client
+  PRIVATE
+    PahoMqttCpp::paho-mqttpp3
+)
+target_include_directories(mqtt_client
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
+add_library(logger src/vda5050_core/logger/logger.cpp)
+target_link_libraries(logger
+  PRIVATE
+    fmt::fmt
+)
+target_include_directories(logger
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
 add_library(status_manager src/vda5050_core/state/status_manager.cpp)
 target_include_directories(status_manager
@@ -17,18 +40,11 @@ target_include_directories(status_manager
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-add_library(logger src/vda5050_core/logger/logger.cpp)
-target_include_directories(logger
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-)
-
 add_library(vda5050_core INTERFACE)
 target_link_libraries(vda5050_core
   INTERFACE
+    mqtt_client
     logger
-    status_manager
 )
 target_include_directories(vda5050_core
   INTERFACE
@@ -43,9 +59,10 @@ install(
 
 install(
   TARGETS
+    mqtt_client
     logger
-    vda5050_core
     status_manager
+    vda5050_core
   EXPORT export_vda5050_core
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -60,7 +77,7 @@ install(
 )
 
 ament_export_targets(export_vda5050_core HAS_LIBRARY_TARGET)
-# ament_export_dependencies(PahoMqttCpp)
+ament_export_dependencies(PahoMqttCpp)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_cppcheck REQUIRED)
@@ -77,12 +94,14 @@ if(BUILD_TESTING)
   find_package(ament_cmake_copyright REQUIRED)
   ament_copyright()
 
-  # find_package(ament_cmake_gmock REQUIRED)
-  # ament_add_gmock(test_mqtt_client
-  #   test/unit/test_mqtt_client_interface.cpp
-  #   test/integration/test_paho_mqtt_client.cpp
-  # )
-  # target_link_libraries(test_mqtt_client mqtt_client logger)
+  find_package(ament_cmake_gmock REQUIRED)
+  ament_add_gmock(test_mqtt_client
+    test/unit/mqtt_client/test_mqtt_client_interface.cpp
+    test/unit/logger/test_logger.cpp
+    test/unit/logger/test_default_logger.cpp
+    test/integration/mqtt_client/test_paho_mqtt_client.cpp
+  )
+  target_link_libraries(test_mqtt_client mqtt_client logger)
 endif()
 
 ament_package()

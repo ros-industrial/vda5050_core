@@ -18,59 +18,93 @@
 
 #include "vda5050_core/logger/logger.hpp"
 
+#include <fmt/chrono.h>
+#include <chrono>
 #include <iostream>
+#include <mutex>
 
 namespace vda5050_core {
 
 namespace logger {
 
+namespace {
+
+LogLevel current_level = LogLevel::INFO;
+std::mutex handler_mutex;
+
 //=============================================================================
-static LogHandler log_handler = [](LogLevel level, const std::string& message) {
-  switch (level)
+class ConsoleLogger : public LogHandler
+{
+public:
+  void log(LogLevel level, const std::string& message) override
   {
-    case LogLevel::INFO:
-      std::cout << "[INFO]: " << message << std::endl;
-      break;
-    case LogLevel::DEBUG:
-      std::cout << "[DEBUG]: " << message << std::endl;
-      break;
-    case LogLevel::WARNING:
-      std::cout << "[WARNING]: " << message << std::endl;
-      break;
-    case LogLevel::ERROR:
-      std::cerr << "[ERROR]: " << message << std::endl;
-      break;
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_t = std::chrono::system_clock::to_time_t(now);
+    std::tm localtime = *std::localtime(&now_t);
+
+    std::cout << "[" << fmt::format("{:%Y-%m-%d %H:%M:%S}", localtime) << "]"
+              << to_log_level_string(level) << ": " << message << std::endl;
+  }
+
+  std::string to_log_level_string(LogLevel level)
+  {
+    switch (level)
+    {
+      case LogLevel::DEBUG:
+        return "[DEBUG]";
+      case LogLevel::INFO:
+        return "[INFO]";
+      case LogLevel::WARN:
+        return "[WARN]";
+      case LogLevel::ERROR:
+        return "[ERROR]";
+      case LogLevel::FATAL:
+        return "[FATAL]";
+      default:
+        return "[UNKNOWN]";
+    }
   }
 };
 
+}  // namespace
+
 //=============================================================================
-void set_handler(LogHandler handler)
+std::unique_ptr<LogHandler> log_handler =
+  std::unique_ptr<ConsoleLogger>(new ConsoleLogger());
+
+//=============================================================================
+void set_handler(std::unique_ptr<LogHandler> handler)
 {
-  log_handler = handler;
+  std::lock_guard<std::mutex> lock(handler_mutex);
+  log_handler = std::move(handler);
 }
 
 //=============================================================================
-void info(const std::string& message)
+void release_handler()
 {
-  log_handler(LogLevel::INFO, message);
+  std::lock_guard<std::mutex> lock(handler_mutex);
+  log_handler.reset();
+  current_level = LogLevel::INFO;
 }
 
 //=============================================================================
-void debug(const std::string& message)
+void set_log_level(LogLevel level)
 {
-  log_handler(LogLevel::DEBUG, message);
+  std::lock_guard<std::mutex> lock(handler_mutex);
+  current_level = level;
 }
 
 //=============================================================================
-void warning(const std::string& message)
+void log(LogLevel level, const std::string& message)
 {
-  log_handler(LogLevel::WARNING, message);
-}
+  std::lock_guard<std::mutex> lock(handler_mutex);
 
-//=============================================================================
-void error(const std::string& message)
-{
-  log_handler(LogLevel::ERROR, message);
+  if (level < current_level) return;
+
+  if (!log_handler)
+    log_handler = std::unique_ptr<ConsoleLogger>(new ConsoleLogger());
+
+  log_handler->log(level, message);
 }
 
 }  // namespace logger
