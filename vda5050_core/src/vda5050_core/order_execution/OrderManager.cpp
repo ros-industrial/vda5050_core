@@ -19,14 +19,14 @@
 #include <stdexcept>
 #include <iostream>
 
-#include "vda5050_core/order_execution/Order.hpp"
 #include "vda5050_core/order_execution/OrderManager.hpp"
 
 namespace vda5050_core {
 namespace order_manager {
 
-OrderManager::OrderManager()
-: current_graph_element_index_{0}
+OrderManager::OrderManager(IStateManager& sm)
+: state_manager_{sm}
+, current_graph_element_index_{0}
 {};
 
 void OrderManager::validate_and_parse_order(order::Order received_order)
@@ -69,15 +69,19 @@ void OrderManager::validate_and_parse_order(order::Order received_order)
             else
             {
                 /// TODO call StateManager to clear horizon (OR call some API to update the state)
+                state_manager_.clear_horizon();
+
                 current_order_->stitch_and_set_order_update_id(received_order);
+
                 /// TODO call StateManager to append states to the ones that are currently running
+                state_manager_.append_states_for_update(received_order);
                 return;
             }
         }
         else
         {
-            /// is the received update a valid continuation of the previously completed order
-            if (received_order.nodes().front().node_id() != get_last_node_id() && received_order.nodes().front().sequence_id() != get_last_node_sequence_id())
+            /// check if the received update a valid continuation of the previously completed order
+            if (received_order.nodes().front().node_id() != state_manager_.last_node_id() && received_order.nodes().front().sequence_id() != state_manager_.last_node_sequence_id())
             {
                 reject_order();
                 throw std::runtime_error("OrderManager error: Order update is not a valid continuation of the previously compelted order.");
@@ -85,16 +89,18 @@ void OrderManager::validate_and_parse_order(order::Order received_order)
             else
             {
                 /// TODO call StateManager to populate newly added states
+                state_manager_.update_current_order(received_order);
 
                 current_order_->stitch_and_set_order_update_id(received_order);        
                 return;
             }
         }
     }
-    /// received order is new: received order orderId != current order orderId OR no current order exists on the AGV
+    /// received order is new
     else
     {
-        if (is_vehicle_ready_for_new_order() && is_node_trivially_reachable(received_order.nodes().front()))
+        /// if no current order exists we can immediately accept it
+        if (!current_order_ || (is_vehicle_ready_for_new_order() && is_node_trivially_reachable(received_order.nodes().front())))
         {
             accept_new_order(received_order);
             return;
@@ -135,13 +141,6 @@ std::optional<order_graph_element::OrderGraphElement> OrderManager::node_sequenc
 
 bool OrderManager::is_vehicle_ready_for_new_order()
 {   
-    /// if there is no existing order on the vehicle, vehicle is ready for a new order
-    if (!current_order_)
-    {
-        return true;
-    }
-
-    /// if there is an existing order on the vehicle, check if it is still in progress
     if (is_vehicle_still_executing() && is_vehicle_waiting_for_update())
     {
         return false;
@@ -151,23 +150,29 @@ bool OrderManager::is_vehicle_ready_for_new_order()
 
 bool OrderManager::is_vehicle_still_executing()
 {
-    return are_node_states_empty() && !are_action_states_still_executing();
+    bool node_states_empty = state_manager_.node_states_empty();
+    bool action_states_executing = state_manager_.action_states_still_executing();
+
+    bool res = node_states_empty && !action_states_executing;
+
+    return res;
 }
 
 bool OrderManager::is_vehicle_waiting_for_update()
 {
-    /// check if the vehicle still has a horizon. Assumes that there is an existing order on the vehicle
+    /// if horizon size is not 0, vehicle is waiting on an update
+    std::cout << current_order_->horizon().size() << '\n';
     if (current_order_->horizon().size() != 0)
     {
-        return false;
+        return true;
     }
-    return true;
+    return false;
 }
 
 bool OrderManager::is_node_trivially_reachable(node::Node& start_node)
 {
     /// check if the vehicle is on the received order's start node
-    std::string last_node_id = get_last_node_id(); /// query for lastNodeId, or the current node that the vehicle is on (Note to self: this node is guaranteed to be in the current order)
+    std::string last_node_id = state_manager_.last_node_id(); /// query for lastNodeId, or the current node that the vehicle is on (Note to self: this node is guaranteed to be in the current order)
     std::string start_node_id = start_node.node_id();
     if (last_node_id == start_node_id)
     {
@@ -181,8 +186,10 @@ bool OrderManager::is_node_trivially_reachable(node::Node& start_node)
 void OrderManager::accept_new_order(order::Order order)
 {
     /// TODO tell StateManager to cleanup anything to do with previous order 
+    state_manager_.cleanup_previous_order();
 
     /// TODO pass stateManager the new order (set orderId, orderUpdateId, populate new states)
+    state_manager_.set_new_order(order);
 
     /// update the current order on the AGV to the newly accepted order. orderId and orderUpdateId will be updated.
     current_order_ = order;
@@ -194,28 +201,6 @@ void OrderManager::accept_new_order(order::Order order)
 void OrderManager::reject_order()
 {
     return;
-}
-
-std::string OrderManager::get_last_node_id()
-{
-    /// TODO: call StateManager
-}
-
-uint32_t OrderManager::get_last_node_sequence_id()
-{
-    /// TODO: call StateManager
-
-}
-
-bool OrderManager::are_node_states_empty()
-{
-    /// TODO: call StateManager
-    
-}
-
-bool OrderManager::are_action_states_still_executing()
-{
-    /// TODO: call StateManager
 }
     
 } // namespace order_manager
