@@ -130,7 +130,7 @@ void Order::populate_horizon()
             break;
         }
 
-        horizon_temp.insert(horizon_.begin(), *it);
+        horizon_temp.insert(horizon_temp.begin(), *it);
     }
 
     horizon_ = horizon_temp;

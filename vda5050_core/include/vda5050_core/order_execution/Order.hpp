@@ -23,8 +23,8 @@
 #include <vector>
 #include <cstdint>
 
-#include "order_execution/Edge.hpp"
-#include "order_execution/Node.hpp"
+#include "vda5050_core/order_execution/Edge.hpp"
+#include "vda5050_core/order_execution/Node.hpp"
 
 namespace vda5050_core {
 

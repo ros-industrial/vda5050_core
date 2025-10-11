@@ -22,8 +22,9 @@
 #include <vector>
 #include <optional>
 
-#include "order_execution/Order.hpp"
-#include "order_execution/OrderGraphValidator.hpp"
+#include "vda5050_core/order_execution/Order.hpp"
+#include "vda5050_core/order_execution/OrderGraphValidator.hpp"
+#include "vda5050_core/order_execution/IStateManager.hpp"
 
 namespace vda5050_core {
 namespace order_manager {
@@ -32,7 +33,7 @@ namespace order_manager {
 class OrderManager
 {
 public:
-  OrderManager();
+  OrderManager(IStateManager& sm);
 
   /// \brief Checks that an order is valid and processes the order
   void validate_and_parse_order(order::Order);
@@ -43,11 +44,14 @@ public:
   std::optional<order_graph_element::OrderGraphElement> node_sequencing();
 
 private:
+  /// \brief Reference to the StateManager running on the AGV
+  IStateManager& state_manager_;
+
   /// \brief The order that is currently on the vehicle
   std::optional<order::Order> current_order_;
 
   /// \brief The index of current order's graph element that is to be dispatched next
-  int current_graph_element_index_;
+  size_t current_graph_element_index_;
 
   bool
     json_validator_;  /// TODO: (shawnkchan) I assume this needs to be modular, but using this as a placeholder for now
@@ -94,19 +98,6 @@ private:
   ///
   /// \return 
   bool is_new_order(order::Order order);
-
-  std::string get_last_node_id();
-
-  uint32_t get_last_node_sequence_id();
-
-  /// check if nodeStates are empty
-  bool are_node_states_empty();
-
-  /// check if actionStates contain states other than FAILED or FINISIHED
-  bool are_action_states_still_executing();
-
-
-
 };
 
 }  // namespace order_manager

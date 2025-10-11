@@ -39,7 +39,7 @@ void OrderManager::validate_and_parse_order(order::Order received_order)
         reject_order();
         throw std::runtime_error("OrderManager error: Graph of the received order is invalid.");
     }
-    /// check if received order is new or if received order is an update of a current order
+    /// received order is an update of a current order
     if (current_order_.has_value() && received_order.order_id() == current_order_->order_id())
     {
         /// check if received order is deprecated
@@ -55,7 +55,6 @@ void OrderManager::validate_and_parse_order(order::Order received_order)
             /// discard message as vehicle already has this update
             std::cerr << "Warning: Received duplicate order update (ID: " << received_order.order_update_id() 
                       << ") for order " << received_order.order_id() << ". Discarding message." << '\n';
-            return;
         }
         /// is the vehicle still executing the current order/waiting for an update?
         else if (is_vehicle_still_executing() && is_vehicle_waiting_for_update())
@@ -75,7 +74,6 @@ void OrderManager::validate_and_parse_order(order::Order received_order)
 
                 /// TODO call StateManager to append states to the ones that are currently running
                 state_manager_.append_states_for_update(received_order);
-                return;
             }
         }
         else
@@ -92,38 +90,43 @@ void OrderManager::validate_and_parse_order(order::Order received_order)
                 state_manager_.update_current_order(received_order);
 
                 current_order_->stitch_and_set_order_update_id(received_order);        
-                return;
             }
         }
     }
     /// received order is new
     else
     {
+        std::cout << "received order is new" << '\n';
+
+        bool vehicle_ready_for_new_order = is_vehicle_ready_for_new_order();
+        bool node_is_trivially_reachable = is_node_trivially_reachable(received_order.nodes().front());
+
         /// if no current order exists we can immediately accept it
-        if (!current_order_ || (is_vehicle_ready_for_new_order() && is_node_trivially_reachable(received_order.nodes().front())))
+        if (!current_order_ || (vehicle_ready_for_new_order && node_is_trivially_reachable))
         {
             accept_new_order(received_order);
-            return;
         }
         else
         {
             /// reject order and throw error
             reject_order();
 
-            if (!is_vehicle_ready_for_new_order() && !is_node_trivially_reachable(received_order.nodes().front()))
+            if (!vehicle_ready_for_new_order && !node_is_trivially_reachable)
             {
                 throw std::runtime_error("OrderManager error: Vehicle is not ready to accept a new order and received order's start node is not trivially reachable.");
             }
-            else if (!is_vehicle_ready_for_new_order())
+            else if (!vehicle_ready_for_new_order)
             {
-                throw std::runtime_error("OrderManager error: Vehicle is not ready to accept a new order.");
+                throw std::runtime_error("OrderManager error: Vehicle is not ready to accept a new order. Vehicle is either still executing or waiting for an order update to its order's Horizon.");
             }
-            else if (!is_node_trivially_reachable(received_order.nodes().front()))
+            else if (!node_is_trivially_reachable)
             {
                 throw std::runtime_error("OrderManager error: Received order's start node is not trivially reachable.");
             }
         }
     }
+
+    return;
 }
 
 std::optional<order_graph_element::OrderGraphElement> OrderManager::node_sequencing()
@@ -150,12 +153,11 @@ bool OrderManager::is_vehicle_ready_for_new_order()
 
 bool OrderManager::is_vehicle_still_executing()
 {
-    bool node_states_empty = state_manager_.node_states_empty();
+    bool node_states_empty = state_manager_.node_states_empty(); /// check if node states are empty
     bool action_states_executing = state_manager_.action_states_still_executing();
+    bool vehicle_is_executing = !node_states_empty && action_states_executing;
 
-    bool res = node_states_empty && !action_states_executing;
-
-    return res;
+    return vehicle_is_executing;
 }
 
 bool OrderManager::is_vehicle_waiting_for_update()
@@ -200,6 +202,7 @@ void OrderManager::accept_new_order(order::Order order)
 
 void OrderManager::reject_order()
 {
+    /// TODO: Implement any logic for order rejection
     return;
 }
     

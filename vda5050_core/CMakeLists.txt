@@ -40,6 +40,22 @@ target_include_directories(order_graph_validator
 )
 target_link_libraries(order_graph_validator edge node)
 
+add_library(order src/vda5050_core/order_execution/Order.cpp)
+target_include_directories(order
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+target_link_libraries(order edge node)
+
+add_library(order_manager src/vda5050_core/order_execution/OrderManager.cpp)
+target_include_directories(order_manager
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+target_link_libraries(order_manager order order_graph_validator)
+
 install(
     DIRECTORY include/vda5050_core
     DESTINATION include
@@ -51,6 +67,8 @@ install(
         edge
         node
         order_graph_validator
+        order
+        order_manager
     EXPORT export_vda5050_core
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
@@ -94,6 +112,24 @@ if(BUILD_TESTING)
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
       $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   )
+
+  find_package(ament_cmake_gmock REQUIRED)
+  ament_add_gmock(${PROJECT_NAME}_test_OrderManager
+    test/unit/test_OrderManager.cpp
+  )
+  target_include_directories(${PROJECT_NAME}_test_OrderManager
+    PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  )
+  target_link_libraries(${PROJECT_NAME}_test_OrderManager
+    order_graph_validator
+    edge
+    node
+    order_graph_element
+    order_manager
+  )
+  
 endif()
 
 ament_package()
