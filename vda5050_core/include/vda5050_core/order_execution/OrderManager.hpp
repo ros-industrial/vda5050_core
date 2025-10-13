@@ -59,7 +59,7 @@ private:
   size_t current_graph_element_index_;
 
   /// TODO Should we be doing JSON validation here?
-  /// \brief Reference to the JSON validator 
+  /// \brief Reference to the JSON validator
   bool
     json_validator_;  /// TODO: (shawnkchan) I assume this needs to be modular, but using this as a placeholder for now
 

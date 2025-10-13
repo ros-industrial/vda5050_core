@@ -30,8 +30,8 @@ namespace order_graph_element {
 class OrderGraphElement
 {
 public:
-  /// \brief OrderGraphElement constructor 
-  /// 
+  /// \brief OrderGraphElement constructor
+  ///
   /// \param sequence_id uint32 indicating the sequence number of this graph element in an order.
   /// \param released Boolean indicating true if this graph element is part of the base, false if it is part of the horizon.
   OrderGraphElement(uint32_t sequence_id, bool released);
@@ -62,7 +62,7 @@ protected:
 
   /// \brief Boolean indicating true if this graph element is part of the base, false if it is part of the horizon.
   bool released_;
-  
+
   /// TODO (shawnkchan) add array of actions as another common attribute.
 };
 

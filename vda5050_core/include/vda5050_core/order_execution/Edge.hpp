@@ -32,7 +32,7 @@ namespace edge {
 class Edge : public order_graph_element::OrderGraphElement
 {
 public:
-  /// \brief Edge constructor 
+  /// \brief Edge constructor
   ///
   /// \param sequence_id uint32 indicating the sequence number of this edge in an order.
   /// \param released Boolean indicating true if this edge is part of the base, false if it is part of the horizon.

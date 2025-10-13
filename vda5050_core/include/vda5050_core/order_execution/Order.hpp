@@ -34,7 +34,7 @@ namespace order {
 class Order
 {
 public:
-  /// \brief Order constructor 
+  /// \brief Order constructor
   ///
   /// \param order_id String that uniquely identifies this order
   /// \param order_update_id unit32 designating the orderUpdateId of this order
@@ -86,7 +86,7 @@ public:
   }
 
   /// \brief Stitch this order with another order and update the order_update_id if stitching is successful.
-  /// 
+  ///
   /// \param order The incoming order to stitch to this order.
   void stitch_and_set_order_update_id(order::Order order);
 
@@ -105,13 +105,13 @@ private:
 
   /// \brief The graph created by the nodes and edges of this order.
   std::vector<order_graph_element::OrderGraphElement> graph_;
-  
+
   /// \brief The base of this order. Contains the released nodes and edges sorted in ascending sequenceId
   std::vector<order_graph_element::OrderGraphElement> base_;
-  
+
   /// \brief The horizion of this order. Contains the unreleased nodes and edges sorted in ascending sequenceId
   std::vector<order_graph_element::OrderGraphElement> horizon_;
-  
+
   /// \brief The last node in this order's base, or the last released node according to sequenceId
   node::Node decision_point_;
 
