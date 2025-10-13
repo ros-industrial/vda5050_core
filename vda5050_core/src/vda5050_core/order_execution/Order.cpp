@@ -47,12 +47,6 @@ Order::Order(
   set_decision_point(nodes);
 };
 
-void Order::set_horizon(
-  std::vector<order_graph_element::OrderGraphElement>& new_horizon)
-{
-  horizon_ = new_horizon;
-}
-
 void Order::stitch_and_set_order_update_id(order::Order order)
 {
   try

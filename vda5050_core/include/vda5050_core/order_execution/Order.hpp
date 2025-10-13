@@ -88,12 +88,6 @@ public:
     return decision_point_;
   }
 
-  /// \brief Update the Order's current horizon
-  ///
-  /// \param new_horizon 
-  void set_horizon(
-    std::vector<order_graph_element::OrderGraphElement>& new_horizon);
-
   /// \brief Stitch this order with another order and update the order_update_id if stitching is successful
   /// 
   /// \param order The incoming order to stitch to this order
