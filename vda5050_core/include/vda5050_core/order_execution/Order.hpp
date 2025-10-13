@@ -94,13 +94,28 @@ public:
   void stitch_and_set_order_update_id(order::Order order);
 
 private:
+  /// \brief The orderId of this order 
   std::string order_id_;
+
+  /// \brief The orderUpdateId of this order
   uint32_t order_update_id_;
+
+  /// \brief The nodes contained within this order
   std::vector<node::Node> nodes_;
+
+  /// \brief The edges contained within this order
   std::vector<edge::Edge> edges_;
+
+  /// \brief The graph created by the nodes and edges of this order
   std::vector<order_graph_element::OrderGraphElement> graph_;
+  
+  /// \brief The base of this order. Contains the released nodes and edges sorted in ascending sequenceId
   std::vector<order_graph_element::OrderGraphElement> base_;
+  
+  /// \brief The horizion of this order. Contains the unreleased nodes and edges sorted in ascending sequenceId
   std::vector<order_graph_element::OrderGraphElement> horizon_;
+  
+  /// \brief The last node in this order's base, or the last released node according to sequenceId
   node::Node decision_point_;
 
   /// \brief Populate the graph_ member variable
