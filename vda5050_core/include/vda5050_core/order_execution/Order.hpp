@@ -30,9 +30,16 @@ namespace vda5050_core {
 
 namespace order {
 
+/// \brief Class that represents a VDA5050 Order
 class Order
 {
 public:
+  /// \brief Order constructor 
+  ///
+  /// \param order_id orderId of the Order
+  /// \param order_update_id OrderUpdateId of the Order
+  /// \param nodes The nodes belonging to this order
+  /// \param edges The edges belonging to this order
   Order(
     std::string order_id, uint32_t order_update_id,
     std::vector<node::Node> nodes, std::vector<edge::Edge> edges);
@@ -82,11 +89,14 @@ public:
   }
 
   /// \brief Update the Order's current horizon
+  ///
+  /// \param new_horizon 
   void set_horizon(
     std::vector<order_graph_element::OrderGraphElement>& new_horizon);
 
-  /// @brief Stitch this order with another order and update the order_update_id if stitching is successful
-  /// @param order
+  /// \brief Stitch this order with another order and update the order_update_id if stitching is successful
+  /// 
+  /// \param order The incoming order to stitch to this order
   void stitch_and_set_order_update_id(order::Order order);
 
 private:
@@ -99,7 +109,7 @@ private:
   std::vector<order_graph_element::OrderGraphElement> horizon_;
   node::Node decision_point_;
 
-  /// @brief Populate the graph_ member variable
+  /// \brief Populate the graph_ member variable
   void populate_graph();
 
   /// \brief Idempotent function to populate the base_ member variable with all released nodes and edges.
@@ -112,6 +122,7 @@ private:
   void stitch_order(order::Order order);
 
   /// \brief Set a new order_update_id.
+  ///
   /// \param order_update_id the new order_update_id.
   void set_order_update_id(uint32_t order_update_id);
 

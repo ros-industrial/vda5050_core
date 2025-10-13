@@ -29,7 +29,7 @@
 namespace vda5050_core {
 namespace order_manager {
 
-/// \brief Class that handles incoming orders on an AGV.
+/// \brief Class that handles incoming orders on a vehicle.
 class OrderManager
 {
 public:
@@ -40,11 +40,11 @@ public:
 
   /// \brief Returns the next graph element of the current order that is to be executed
   ///
-  /// \return A Node or Edge object that is to be executed next. Returns
+  /// \return The graph element that is to be executed next.
   std::optional<order_graph_element::OrderGraphElement> next_graph_element();
 
 private:
-  /// \brief Reference to the StateManager running on the AGV
+  /// \brief Reference to the StateManager running on the vehicle
   IStateManager& state_manager_;
 
   /// \brief The order that is currently on the vehicle
@@ -58,31 +58,36 @@ private:
 
   order_graph_validator::OrderGraphValidator graph_validator_;
 
-  /// \brief Checks that vehicle is ready to accept a new order
+  /// \brief Checks that the vehicle is ready to accept a new order
   ///
-  /// \return
+  /// \return True if ready to accept a new order
   bool is_vehicle_ready_for_new_order();
 
   /// \brief Checks that vehicle is no longer executing an order
   ///
-  /// \return
+  /// \return True if vehicle is not executing an order
   bool is_vehicle_still_executing();
 
-  /// \brief Checks that vehicle is not waiting for an update (vehicle has no horizon)
+  /// \brief Checks that vehicle is not waiting for an update to its current order (i.e: the vehicle's current order has no horizon)
   ///
-  /// \return
+  /// \return True if vehicle is waiting for an update to its current order
   bool is_vehicle_waiting_for_update();
 
-  /// \brief Checks if the received order's first node is within range of the AGV's current position
+  /// \brief Checks if the received order's first node is within range of the vehicle's current position
   ///
-  /// \param start_node
+  /// \param start_node The first node of the received order
   ///
-  /// \return
+  /// \return True if start_node can be reached from the vehicle's current position
   bool is_node_trivially_reachable(node::Node& start_node);
 
-  bool is_update_order_valid_continuation(order::Order& order);
+  /// \brief Checks if order_update is a valid continuation from the current order on the vehicle
+  ///
+  /// \param order_update The incoming order update
+  ///
+  /// \return True if order_update is a valid continuation
+  bool is_update_order_valid_continuation(order::Order& order_update);
 
-  /// \brief Accept a validated order
+  /// \brief Accept a validated order and set it to the vehicle's current_order_
   ///
   /// \param valid_order The validated order
   void accept_new_order(order::Order order);
@@ -90,13 +95,15 @@ private:
   /// \brief Checks if an order's graph is valid
   bool is_graph_valid();
 
+  /// \brief Reject an order
+  /// TODO This is currently incomplete. To find out what logic needs to be handled during order rejection
   void reject_order();
 
   /// \brief Checks if orderId of order is different to the orderId of the order that the vehicle currently holds
   //
-  /// \param order the newly received order
+  /// \param order The received order
   ///
-  /// \return
+  /// \return True if the received order's orderId is different
   bool is_new_order(order::Order order);
 };
 

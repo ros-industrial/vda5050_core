@@ -27,19 +27,7 @@
 namespace vda5050_core {
 namespace order_graph_validator {
 
-/// \brief Verifies that the graph of a given Order is valid.
-/**
- * To check for:
- * >= 1 node
- * len(edges) == len(nodes) - 1
- * neighbouring nodes of each edge match
- * node and edge list must each be ordered in the sequence in which they are traversed
- */
-
 /// \brief Utility class with functions to perform validity checks on the graph contained in a VDA5050 Order message
-///
-/// \param nodes Reference to the vector of Node objects contained in an Order
-/// \param edges Reference to the vector of Edge objects contained in an Order
 class OrderGraphValidator
 {
 public:

@@ -43,7 +43,8 @@ public:
 
   /// \brief Custom < operator to enable sorting of OrderGraphElement objects by sequence_id
   ///
-  /// \param order_graph_element
+  /// \param order_graph_element The other OrderGraphElement to be compared to
+  ///
   /// \return True if sequenceId of this OrderGraphElement is smaller than the one it is compared to.
   bool operator<(const OrderGraphElement& order_graph_element) const
   {
@@ -54,6 +55,7 @@ protected:
   uint32_t sequence_id_;
 
   bool released_;
+  
   /// TODO (shawnkchan) add array of actions as another common attribute.
 };
 
