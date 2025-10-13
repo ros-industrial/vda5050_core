@@ -29,7 +29,7 @@ OrderManager::OrderManager(IStateManager& sm)
 
 void OrderManager::validate_and_parse_order(order::Order received_order)
 {
-  /// TODO validate JSON schema using validator
+  /// TODO Should OrderManager be doing JSON validation?
 
   /// check that graph of the received order is valid
   if (!graph_validator_.is_valid_graph(

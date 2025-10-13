@@ -33,12 +33,17 @@ namespace order_manager {
 class OrderManager
 {
 public:
+  /// \brief OrderManager constructor
+  ///
+  /// \param sm Reference to the StateManager tracking the vehicle's current state.
   OrderManager(IStateManager& sm);
 
-  /// \brief Checks that an order is valid and processes the order
-  void validate_and_parse_order(order::Order);
+  /// \brief Checks that an order is valid and processes the order.
+  ///
+  /// \param order The order to be processed.
+  void validate_and_parse_order(order::Order order);
 
-  /// \brief Returns the next graph element of the current order that is to be executed
+  /// \brief Returns the next graph element of the current order that is to be executed.
   ///
   /// \return The graph element that is to be executed next.
   std::optional<order_graph_element::OrderGraphElement> next_graph_element();
@@ -53,9 +58,12 @@ private:
   /// \brief The index of current order's graph element that is to be dispatched next
   size_t current_graph_element_index_;
 
+  /// TODO Should we be doing JSON validation here?
+  /// \brief Reference to the JSON validator 
   bool
     json_validator_;  /// TODO: (shawnkchan) I assume this needs to be modular, but using this as a placeholder for now
 
+  /// \brief Variable storing a graph validator to check the Order's graph
   order_graph_validator::OrderGraphValidator graph_validator_;
 
   /// \brief Checks that the vehicle is ready to accept a new order

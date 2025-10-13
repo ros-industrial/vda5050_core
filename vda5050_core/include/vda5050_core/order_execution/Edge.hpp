@@ -28,9 +28,17 @@ namespace vda5050_core {
 
 namespace edge {
 
+/// @brief Class representing a VDA5050 Edge
 class Edge : public order_graph_element::OrderGraphElement
 {
 public:
+  /// \brief Edge constructor 
+  ///
+  /// \param sequence_id uint32 indicating the sequence number of this edge in an order.
+  /// \param released Boolean indicating true if this edge is part of the base, false if it is part of the horizon.
+  /// \param edge_id String that uniquely identifies this edge.
+  /// \param start_node_id String indicating the first node of the order that this edge belongs to.
+  /// \param end_node_id String indicating the last node of the order that this edge belongs to.
   Edge(
     uint32_t sequence_id, bool released, std::string edge_id,
     std::string start_node_id, std::string end_node_id);
@@ -51,8 +59,13 @@ public:
   }
 
 private:
+  /// \brief String that uniquely identifies this edge.
   std::string edge_id;
+
+  /// \brief String indicating the first node of the order that this edge belongs to.
   std::string start_node_id;
+
+  /// \brief String indicating the last node of the order that this edge belongs to.
   std::string end_node_id;
 };
 

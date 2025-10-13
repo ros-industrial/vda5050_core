@@ -28,9 +28,15 @@ namespace vda5050_core {
 
 namespace node {
 
+/// \brief Class that represents a VDA5050 Node
 class Node : public order_graph_element::OrderGraphElement
 {
 public:
+  /// \brief Node constructor
+  ///
+  /// \param sequence_id uint32 indicating the sequence number of this node in an order
+  /// \param released Boolean indicating true if this node is part of the base, false if it is part of the horizon
+  /// \param node_id String that uniquely identifies this node.
   Node(uint32_t sequence_id, bool released, std::string node_id);
 
   std::string node_id() const
@@ -39,6 +45,7 @@ public:
   }
 
 private:
+  /// \brief String that uniquely identifies this node.
   std::string node_id_;
 };
 
