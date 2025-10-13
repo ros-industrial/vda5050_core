@@ -64,7 +64,7 @@ void Order::stitch_and_set_order_update_id(order::Order order)
 void Order::stitch_order(order::Order order)
 {
   /// stitch this order with another order. stitching node could be horizon or base node.
-  /// TODO: (shawnkchan) should we still check that the stitchin node matches? This is likely only ever called by OrderManager, which will check that the stiching node id matches.
+  /// TODO: (shawnkchan) should we still check that the stitching node matches? This is likely only ever called by OrderManager, which will check that the stiching node id matches.
 
   /// check that decision point of this order matches with the first node of the incoming order and if the first node of the incoming order is released
   node::Node stitching_node{order.nodes().front()};
