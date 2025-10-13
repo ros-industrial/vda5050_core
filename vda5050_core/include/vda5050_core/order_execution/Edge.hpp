@@ -28,7 +28,7 @@ namespace vda5050_core {
 
 namespace edge {
 
-/// @brief Class representing a VDA5050 Edge
+/// \brief Class representing a VDA5050 Edge
 class Edge : public order_graph_element::OrderGraphElement
 {
 public:
