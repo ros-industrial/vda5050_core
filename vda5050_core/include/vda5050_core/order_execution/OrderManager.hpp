@@ -106,13 +106,6 @@ private:
   /// \brief Reject an order
   /// TODO This is currently incomplete. To find out what logic needs to be handled during order rejection
   void reject_order();
-
-  /// \brief Checks if orderId of order is different to the orderId of the order that the vehicle currently holds
-  //
-  /// \param order The received order
-  ///
-  /// \return True if the received order's orderId is different
-  bool is_new_order(order::Order order);
 };
 
 }  // namespace order_manager
