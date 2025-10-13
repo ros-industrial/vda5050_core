@@ -100,9 +100,6 @@ private:
   /// \param valid_order The validated order
   void accept_new_order(order::Order order);
 
-  /// \brief Checks if an order's graph is valid
-  bool is_graph_valid();
-
   /// \brief Reject an order
   /// TODO This is currently incomplete. To find out what logic needs to be handled during order rejection
   void reject_order();
