@@ -19,9 +19,9 @@
 #ifndef VDA5050_CORE__ORDER_EXECUTION__ORDER_HPP_
 #define VDA5050_CORE__ORDER_EXECUTION__ORDER_HPP_
 
+#include <cstdint>
 #include <string>
 #include <vector>
-#include <cstdint>
 
 #include "vda5050_core/order_execution/Edge.hpp"
 #include "vda5050_core/order_execution/Node.hpp"
@@ -33,7 +33,9 @@ namespace order {
 class Order
 {
 public:
-  Order(std::string order_id, uint32_t order_update_id, std::vector<node::Node> nodes, std::vector<edge::Edge> edges);
+  Order(
+    std::string order_id, uint32_t order_update_id,
+    std::vector<node::Node> nodes, std::vector<edge::Edge> edges);
 
   std::string order_id()
   {
@@ -64,7 +66,7 @@ public:
   {
     return base_;
   }
-  
+
   std::vector<order_graph_element::OrderGraphElement>& horizon()
   {
     return horizon_;
@@ -76,16 +78,17 @@ public:
   /// \return The last node of the order's base
   const node::Node& decision_point() const
   {
-   return static_cast<const node::Node&>(base_.back());
+    return decision_point_;
   }
 
   /// \brief Update the Order's current horizon
-  void set_horizon(std::vector<order_graph_element::OrderGraphElement>& new_horizon);
+  void set_horizon(
+    std::vector<order_graph_element::OrderGraphElement>& new_horizon);
 
   /// @brief Stitch this order with another order and update the order_update_id if stitching is successful
-  /// @param order 
+  /// @param order
   void stitch_and_set_order_update_id(order::Order order);
-  
+
 private:
   std::string order_id_;
   uint32_t order_update_id_;
@@ -94,13 +97,14 @@ private:
   std::vector<order_graph_element::OrderGraphElement> graph_;
   std::vector<order_graph_element::OrderGraphElement> base_;
   std::vector<order_graph_element::OrderGraphElement> horizon_;
+  node::Node decision_point_;
 
   /// @brief Populate the graph_ member variable
   void populate_graph();
 
-  /// \brief Idempotent function to populate the base_ member variable with all released nodes and edges. 
+  /// \brief Idempotent function to populate the base_ member variable with all released nodes and edges.
   void populate_base();
-  
+
   /// \brief Idempotent function to populate the horizon_ member variable with all unreleased nodes and edges
   void populate_horizon();
 
@@ -111,6 +115,8 @@ private:
   /// \param order_update_id the new order_update_id.
   void set_order_update_id(uint32_t order_update_id);
 
+  /// \brief Get the last released node in the order.
+  node::Node set_decision_point(std::vector<node::Node>);
 };
 
 }  // namespace order

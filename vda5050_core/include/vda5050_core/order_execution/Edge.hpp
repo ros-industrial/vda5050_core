@@ -32,8 +32,8 @@ class Edge : public order_graph_element::OrderGraphElement
 {
 public:
   Edge(
-    uint32_t sequence_id, bool released, std::string edge_id, std::string start_node_id,
-    std::string end_node_id);
+    uint32_t sequence_id, bool released, std::string edge_id,
+    std::string start_node_id, std::string end_node_id);
 
   std::string get_edge_id() const
   {

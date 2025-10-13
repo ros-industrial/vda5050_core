@@ -19,12 +19,12 @@
 #ifndef VDA5050_CORE__ORDER_EXECUTION__ORDER_MANAGER_HPP_
 #define VDA5050_CORE__ORDER_EXECUTION__ORDER_MANAGER_HPP_
 
-#include <vector>
 #include <optional>
+#include <vector>
 
+#include "vda5050_core/order_execution/IStateManager.hpp"
 #include "vda5050_core/order_execution/Order.hpp"
 #include "vda5050_core/order_execution/OrderGraphValidator.hpp"
-#include "vda5050_core/order_execution/IStateManager.hpp"
 
 namespace vda5050_core {
 namespace order_manager {
@@ -38,10 +38,10 @@ public:
   /// \brief Checks that an order is valid and processes the order
   void validate_and_parse_order(order::Order);
 
-  /// \brief Returns the next graph element of the current order that is to be executed 
+  /// \brief Returns the next graph element of the current order that is to be executed
   ///
-  /// \return A Node or Edge object that is to be executed next. Returns 
-  std::optional<order_graph_element::OrderGraphElement> node_sequencing();
+  /// \return A Node or Edge object that is to be executed next. Returns
+  std::optional<order_graph_element::OrderGraphElement> next_graph_element();
 
 private:
   /// \brief Reference to the StateManager running on the AGV
@@ -60,24 +60,24 @@ private:
 
   /// \brief Checks that vehicle is ready to accept a new order
   ///
-  /// \return 
+  /// \return
   bool is_vehicle_ready_for_new_order();
 
   /// \brief Checks that vehicle is no longer executing an order
   ///
-  /// \return 
+  /// \return
   bool is_vehicle_still_executing();
 
   /// \brief Checks that vehicle is not waiting for an update (vehicle has no horizon)
   ///
-  /// \return 
+  /// \return
   bool is_vehicle_waiting_for_update();
 
   /// \brief Checks if the received order's first node is within range of the AGV's current position
   ///
   /// \param start_node
   ///
-  /// \return 
+  /// \return
   bool is_node_trivially_reachable(node::Node& start_node);
 
   bool is_update_order_valid_continuation(order::Order& order);
@@ -94,9 +94,9 @@ private:
 
   /// \brief Checks if orderId of order is different to the orderId of the order that the vehicle currently holds
   //
-  /// \param order the newly received order 
+  /// \param order the newly received order
   ///
-  /// \return 
+  /// \return
   bool is_new_order(order::Order order);
 };
 

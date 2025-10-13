@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#include <string>
 #include <cstdint>
+#include <string>
 
 #include "vda5050_core/order_execution/OrderGraphElement.hpp"
 
@@ -25,12 +25,9 @@ namespace vda5050_core {
 namespace order_graph_element {
 
 OrderGraphElement::OrderGraphElement(uint32_t sequence_id, bool released)
-: sequence_id_ {sequence_id}
-, released_ {released}
+: sequence_id_{sequence_id}, released_{released}
 {
 }
-
-
 
 }  // namespace order_graph_element
 }  // namespace vda5050_core

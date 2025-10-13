@@ -26,8 +26,8 @@ namespace vda5050_core {
 namespace edge {
 
 Edge::Edge(
-  uint32_t sequence_id, bool released, std::string edge_id, std::string start_node_id,
-  std::string end_node_id)
+  uint32_t sequence_id, bool released, std::string edge_id,
+  std::string start_node_id, std::string end_node_id)
 : order_graph_element::OrderGraphElement(sequence_id, released),
   edge_id{edge_id},
   start_node_id{start_node_id},

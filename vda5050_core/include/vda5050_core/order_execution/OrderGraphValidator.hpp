@@ -48,7 +48,9 @@ public:
   /// \brief Checks that the nodes and edges in a VDA5050 Order form a valid graph according to the VDA5050 specification sheet.
   ///
   /// \return True if nodes and edges create a valid graph, false otherwise
-  bool is_valid_graph(std::vector<vda5050_core::node::Node>& nodes, std::vector<vda5050_core::edge::Edge>& edges);
+  bool is_valid_graph(
+    std::vector<vda5050_core::node::Node>& nodes,
+    std::vector<vda5050_core::edge::Edge>& edges);
 
 private:
   // std::vector<vda5050_core::node::Node>& nodes;
@@ -60,7 +62,9 @@ private:
   /// \brief Checks that the nodes and edges contained in a VDA5050 Order are arranged according to their sequenceId
   ///
   /// \return True if nodes and edges are arranged according to their sequenceId, false otherwise
-  bool is_in_traversal_order(std::vector<vda5050_core::node::Node>& nodes, std::vector<vda5050_core::edge::Edge>& edges);
+  bool is_in_traversal_order(
+    std::vector<vda5050_core::node::Node>& nodes,
+    std::vector<vda5050_core::edge::Edge>& edges);
 
   /// \brief Checks that startNodeId and endNodeId of all edges in a VDA5050 Order match with its the start and end nodeIds
   ///

@@ -43,9 +43,9 @@ public:
 
   /// \brief Custom < operator to enable sorting of OrderGraphElement objects by sequence_id
   ///
-  /// \param order_graph_element 
-  /// \return True if sequenceId of this OrderGraphElement is smaller than the one it is compared to. 
-  bool operator < (const OrderGraphElement& order_graph_element) const
+  /// \param order_graph_element
+  /// \return True if sequenceId of this OrderGraphElement is smaller than the one it is compared to.
+  bool operator<(const OrderGraphElement& order_graph_element) const
   {
     return sequence_id_ < order_graph_element.sequence_id();
   }

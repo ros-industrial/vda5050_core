@@ -29,10 +29,11 @@ namespace order_graph_validator {
 
 /// TODO (shawnkchan) maybe this should take in an Order object instead so that we can specify which orderId is errornous
 /// TODO Refactor this to take in an Order object instead, will make validation logic easier
-OrderGraphValidator::OrderGraphValidator()
-{}
+OrderGraphValidator::OrderGraphValidator() {}
 
-bool OrderGraphValidator::is_valid_graph(std::vector<vda5050_core::node::Node>& nodes, std::vector<vda5050_core::edge::Edge>& edges)
+bool OrderGraphValidator::is_valid_graph(
+  std::vector<vda5050_core::node::Node>& nodes,
+  std::vector<vda5050_core::edge::Edge>& edges)
 {
   /// TODO: (shawnkchan) Check if it is even possible to send an Order with zero nodes. If not possible, get rid of this.
   /// Does not seem to be any guarantee that this list is not empty, so will leave this check here.
@@ -78,7 +79,9 @@ bool OrderGraphValidator::is_valid_graph(std::vector<vda5050_core::node::Node>& 
   return true;
 }
 
-bool OrderGraphValidator::is_in_traversal_order(std::vector<vda5050_core::node::Node>& nodes, std::vector<vda5050_core::edge::Edge>& edges)
+bool OrderGraphValidator::is_in_traversal_order(
+  std::vector<vda5050_core::node::Node>& nodes,
+  std::vector<vda5050_core::edge::Edge>& edges)
 {
   std::queue<vda5050_core::node::Node> node_queue;
   std::queue<vda5050_core::edge::Edge> edge_queue;
@@ -132,7 +135,8 @@ bool OrderGraphValidator::is_in_traversal_order(std::vector<vda5050_core::node::
   return true;
 }
 
-bool OrderGraphValidator::is_valid_edges(std::vector<vda5050_core::edge::Edge>& edges)
+bool OrderGraphValidator::is_valid_edges(
+  std::vector<vda5050_core::edge::Edge>& edges)
 {
   for (vda5050_core::edge::Edge e : edges)
   {

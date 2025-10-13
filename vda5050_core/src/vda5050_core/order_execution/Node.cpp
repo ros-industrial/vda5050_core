@@ -26,7 +26,8 @@ namespace vda5050_core {
 namespace node {
 
 Node::Node(uint32_t sequence_id, bool released, std::string node_id)
-: order_graph_element::OrderGraphElement(sequence_id, released), node_id_{node_id}
+: order_graph_element::OrderGraphElement(sequence_id, released),
+  node_id_{node_id}
 {
 }
 
