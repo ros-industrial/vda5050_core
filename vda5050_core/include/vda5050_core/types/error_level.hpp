@@ -74,4 +74,3 @@ inline void from_json(const json& j, ErrorLevel& level)
 }  // namespace vda5050_core
 
 #endif  // VDA5050_CORE__TYPES__ERROR_LEVEL_HPP_
-

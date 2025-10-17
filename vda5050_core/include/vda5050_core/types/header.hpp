@@ -53,7 +53,7 @@ struct Header
   std::string serial_number;
 };
 
-void to_json(json& j, const Header& d)
+inline void to_json(json& j, const Header& d)
 {
   j["headerId"] = d.header_id;
 
@@ -83,7 +83,7 @@ void to_json(json& j, const Header& d)
   j["serialNumber"] = d.serial_number;
 }
 
-void from_json(const json& j, Header& d)
+inline void from_json(const json& j, Header& d)
 {
   d.header_id = j.at("headerId");
 

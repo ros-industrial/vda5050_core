@@ -38,7 +38,7 @@ namespace vda5050_core {
 
 namespace state_manager {
 
-using namespace vda5050_core::types; 
+using namespace vda5050_core::types;
 
 class StateManager
 {
@@ -227,7 +227,7 @@ public:
   ///
   /// \param state the state to write to
   ///
-  void dumpTo(State& state);
+  void dump_to(State& state);
 };
 
 }  // namespace state_manager

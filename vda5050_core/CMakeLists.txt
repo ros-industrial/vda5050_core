@@ -99,9 +99,10 @@ if(BUILD_TESTING)
     test/unit/mqtt_client/test_mqtt_client_interface.cpp
     test/unit/logger/test_logger.cpp
     test/unit/logger/test_default_logger.cpp
+    test/unit/state_manager/test_state_manager.cpp
     test/integration/mqtt_client/test_paho_mqtt_client.cpp
   )
-  target_link_libraries(test_mqtt_client mqtt_client logger)
+  target_link_libraries(test_mqtt_client mqtt_client logger state_manager)
 endif()
 
 ament_package()

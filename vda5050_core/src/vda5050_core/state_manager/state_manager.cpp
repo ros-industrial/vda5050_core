@@ -58,8 +58,7 @@ bool StateManager::set_driving(bool driving)
   return changed;
 }
 
-void StateManager::set_distance_since_last_node(
-  double distance_since_last_node)
+void StateManager::set_distance_since_last_node(double distance_since_last_node)
 {
   std::unique_lock lock(this->mutex_);
   this->distance_since_last_node_ = distance_since_last_node;
@@ -127,5 +126,89 @@ const std::vector<Load>& StateManager::get_loads()
   }
 }
 
-}  // namespace msg
+bool StateManager::set_operating_mode(OperatingMode operating_mode)
+{
+  std::unique_lock lock(this->mutex_);
+  bool changed = this->operating_mode_ != operating_mode;
+  this->operating_mode_ = operating_mode;
+  return changed;
+}
+
+OperatingMode StateManager::get_operating_mode()
+{
+  std::shared_lock lock(
+    this->mutex_);  // Ensure that mode is not being altered at the moment
+  return this->operating_mode_;
+}
+
+void StateManager::set_battery_state(const BatteryState& battery_state)
+{
+  std::unique_lock lock(this->mutex_);
+  this->battery_state_ = battery_state;
+}
+
+const BatteryState& StateManager::get_battery_state()
+{
+  std::shared_lock lock(
+    this->mutex_);  // Ensure that battery is not being altered at the moment
+  return this->battery_state_;
+}
+
+bool StateManager::set_safety_state(const SafetyState& safety_state)
+{
+  std::unique_lock lock(this->mutex_);
+  auto before = this->safety_state_;
+  this->safety_state_ = safety_state;
+  return before != (safety_state);
+}
+
+const SafetyState& StateManager::get_safety_state()
+{
+  std::shared_lock lock(
+    this->mutex_);  // Ensure that safety is not being altered at the moment
+  return this->safety_state_;
+}
+
+void StateManager::request_new_base()
+{
+  std::unique_lock lock(this->mutex_);
+  this->new_base_request_ = true;
+}
+
+bool StateManager::add_error(const Error& error)
+{
+  std::unique_lock lock(this->mutex_);
+  this->errors_.push_back(error);
+  return true;
+}
+
+std::vector<Error> StateManager::get_errors() const
+{
+  std::shared_lock lock(this->mutex_);
+  return this->errors_;
+}
+
+void StateManager::add_info(const Info& info)
+{
+  std::unique_lock lock(this->mutex_);
+  this->information_.push_back(info);
+}
+
+void StateManager::dump_to(State& state)
+{
+  std::shared_lock lock(this->mutex_);
+  state.agv_position = this->agv_position_;
+  state.battery_state = this->battery_state_;
+  state.distance_since_last_node = this->distance_since_last_node_;
+  state.driving = this->driving_;
+  state.errors = this->errors_;
+  state.information = this->information_;
+  state.loads = this->loads_;
+  state.new_base_request = this->new_base_request_;
+  state.operating_mode = this->operating_mode_;
+  state.safety_state = this->safety_state_;
+  state.velocity = this->velocity_;
+}
+
+}  // namespace state_manager
 }  // namespace vda5050_core
