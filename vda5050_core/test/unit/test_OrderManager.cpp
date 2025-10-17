@@ -110,13 +110,13 @@ TEST_F(OrderManagerTest, NewOrderNoCurrentOrder)
     EXPECT_CALL(stateManager, set_new_order(_));
   }
 
-  EXPECT_NO_THROW(orderManager.validate_and_parse_order(fully_released_order));
+  EXPECT_NO_THROW(orderManager.make_new_order(fully_released_order));
 }
 
-/// \brief Test if OrderManager successfully parses a new, valid order while no current order exists on the vehicle. Assumes that vehicle is ready to receive a new order.
+/// \brief Test if OrderManager successfully parses a new, valid order while a current order exists on the vehicle. Assumes that vehicle is ready to receive a new order.
 TEST_F(OrderManagerTest, NewOrderWithCurrentOrder)
 {
-  orderManager.validate_and_parse_order(fully_released_order);
+  orderManager.make_new_order(fully_released_order);
 
   {
     InSequence seq;
@@ -132,13 +132,13 @@ TEST_F(OrderManagerTest, NewOrderWithCurrentOrder)
     EXPECT_CALL(stateManager, set_new_order(_));
   }
 
-  EXPECT_NO_THROW(orderManager.validate_and_parse_order(order2));
+  EXPECT_NO_THROW(orderManager.make_new_order(order2));
 }
 
 /// \brief Test if OrderManager rejects order and throws an error if vehicle is still executing an order
 TEST_F(OrderManagerTest, NewOrderNodeStatesNotEmpty)
 {
-  orderManager.validate_and_parse_order(fully_released_order);
+  orderManager.make_new_order(fully_released_order);
 
   {
     InSequence seq;
@@ -149,13 +149,13 @@ TEST_F(OrderManagerTest, NewOrderNodeStatesNotEmpty)
   }
 
   EXPECT_THROW(
-    orderManager.validate_and_parse_order(order2), std::runtime_error);
+    orderManager.make_new_order(order2), std::runtime_error);
 }
 
 /// \brief Test if OrderManager rejects order and throws an error if vehicle still has a horizon and is waiting on an update
 TEST_F(OrderManagerTest, NewOrderVehicleWaitingForUpdate)
 {
-  orderManager.validate_and_parse_order(fully_released_order);
+  orderManager.make_new_order(fully_released_order);
 
   {
     InSequence seq;
@@ -166,14 +166,14 @@ TEST_F(OrderManagerTest, NewOrderVehicleWaitingForUpdate)
   }
 
   EXPECT_THROW(
-    orderManager.validate_and_parse_order(order2), std::runtime_error);
+    orderManager.make_new_order(order2), std::runtime_error);
 }
 
 /// \brief Test if OrderManager rejects order and throws an error if the new order's first node is not trivially reachable by the vehicle
 TEST_F(OrderManagerTest, NewOrderNodeNotTriviallyReachable)
 {
   /// parse a valid order first
-  orderManager.validate_and_parse_order(fully_released_order);
+  orderManager.make_new_order(fully_released_order);
 
   /// create an order with a non-trivially reachable node
   vda5050_core::node::Node n7{7, true, "node7"};
@@ -189,14 +189,14 @@ TEST_F(OrderManagerTest, NewOrderNodeNotTriviallyReachable)
   EXPECT_CALL(stateManager, last_node_id()).WillOnce(Return("node5"));
 
   EXPECT_THROW(
-    orderManager.validate_and_parse_order(unreachableOrder),
+    orderManager.make_new_order(unreachableOrder),
     std::runtime_error);
 }
 
 /// \brief Test if OrderManager successfully parses a valid order update when the vehicle is ready for one
 TEST_F(OrderManagerTest, NewOrderReadyForOrderUpdate)
 {
-  orderManager.validate_and_parse_order(partially_released_order);
+  orderManager.make_new_order(partially_released_order);
 
   {
     InSequence seq;
@@ -207,7 +207,7 @@ TEST_F(OrderManagerTest, NewOrderReadyForOrderUpdate)
     EXPECT_CALL(stateManager, append_states_for_update(_));
   }
 
-  EXPECT_NO_THROW(orderManager.validate_and_parse_order(order_update));
+  EXPECT_NO_THROW(orderManager.update_current_order(order_update));
 }
 
 /// \brief Test if OrderManager rejects order and throws an error if the order update is deprecated
@@ -217,7 +217,7 @@ TEST_F(OrderManagerTest, OrderUpdateDeprecated)
     EXPECT_CALL(stateManager, cleanup_previous_order()).Times(AtLeast(1));
     EXPECT_CALL(stateManager, set_new_order(_));
   }
-  orderManager.validate_and_parse_order(partially_released_order);
+  orderManager.make_new_order(partially_released_order);
 
   {
     EXPECT_CALL(stateManager, node_states_empty()).WillOnce(Return(false));
@@ -226,7 +226,7 @@ TEST_F(OrderManagerTest, OrderUpdateDeprecated)
     EXPECT_CALL(stateManager, clear_horizon()).Times(AtLeast(1));
     EXPECT_CALL(stateManager, append_states_for_update(_));
   }
-  orderManager.validate_and_parse_order(order_update);
+  orderManager.update_current_order(order_update);
 
   std::vector<vda5050_core::node::Node> deprecated_update_nodes{n3, n5, n7};
   std::vector<vda5050_core::edge::Edge> deprecated_update_edges{e4, e6};

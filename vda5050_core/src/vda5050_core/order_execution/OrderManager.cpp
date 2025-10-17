@@ -27,19 +27,9 @@ namespace order_manager {
 OrderManager::OrderManager(IStateManager& sm)
 : state_manager_{sm}, current_graph_element_index_{0} {};
 
-void OrderManager::validate_and_parse_order(order::Order received_order)
+void OrderManager::update_current_order(order::Order received_order)
 {
-  /// TODO Should OrderManager be doing JSON validation?
-
-  /// check that graph of the received order is valid
-  if (!graph_validator_.is_valid_graph(
-        received_order.nodes(), received_order.edges()))
-  {
-    reject_order();
-    throw std::runtime_error(
-      "OrderManager error: Graph of the received order is invalid.");
-  }
-  /// received order is an update of a current order
+  /// Check that this is actually an update order
   if (
     current_order_.has_value() &&
     received_order.order_id() == current_order_->order_id())
@@ -108,8 +98,17 @@ void OrderManager::validate_and_parse_order(order::Order received_order)
       }
     }
   }
-  /// received order is new
   else
+  {
+    /// TODO Check if it is okay to be throwing an error and rejecting the order, as this will only occur due to how we are implementing this in a BTree
+    reject_order();
+    throw std::runtime_error("OrderManager error: Expected an update order but was given a new order.");
+  }
+}
+
+void OrderManager::make_new_order(order::Order received_order)
+{
+  if (!current_order_.has_value() || (current_order_.has_value() && received_order.order_id() != current_order_->order_id()))
   {
     bool vehicle_ready_for_new_order = is_vehicle_ready_for_new_order();
     bool node_is_trivially_reachable =
@@ -146,9 +145,13 @@ void OrderManager::validate_and_parse_order(order::Order received_order)
           "OrderManager error: Received order's start node is not trivially "
           "reachable.");
       }
-    }
+    }  
   }
-  return;
+  else
+  {
+    reject_order();
+    throw std::runtime_error("OrderManager error: Expected a new order but was given an order the same orderId.");
+  }
 }
 
 std::optional<order_graph_element::OrderGraphElement>
@@ -229,7 +232,7 @@ void OrderManager::accept_new_order(order::Order order)
 
 void OrderManager::reject_order()
 {
-  /// TODO: Implement any logic for order rejection
+  /// TODO: Call StateManager.add_error()
   return;
 }
 

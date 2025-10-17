@@ -38,10 +38,15 @@ public:
   /// \param sm Reference to the StateManager tracking the vehicle's current state.
   OrderManager(IStateManager& sm);
 
-  /// \brief Checks that an order is valid and processes the order.
+  /// \brief Updates the current order on the vehicle.
   ///
-  /// \param order The order to be processed.
-  void validate_and_parse_order(order::Order order);
+  /// \param order The order update to be applied on the current order.
+  void update_current_order(order::Order order);
+
+  /// \brief Puts a new order on the vehicle
+  ///
+  /// \param order The new order to be stored and executed by the vehicle
+  void make_new_order(order::Order order);
 
   /// \brief Returns the next graph element of the current order that is to be executed.
   ///
