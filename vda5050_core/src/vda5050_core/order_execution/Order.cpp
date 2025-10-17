@@ -93,12 +93,12 @@ void Order::set_order_update_id(uint32_t new_order_update_id)
 
 void Order::populate_graph()
 {
-  for (node::Node n : nodes_)
+  for (node::Node& n : nodes_)
   {
     graph_.push_back(n);
   }
 
-  for (edge::Edge e : edges_)
+  for (edge::Edge& e : edges_)
   {
     graph_.push_back(e);
   }
