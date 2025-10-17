@@ -16,29 +16,29 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__CONTROL_POINT_HPP_
-#define VDA5050_CORE__STATE__CONTROL_POINT_HPP_
+#ifndef VDA5050_CORE__TYPES__CONTROL_POINT_HPP_
+#define VDA5050_CORE__TYPES__CONTROL_POINT_HPP_
 
 #include <nlohmann/json.hpp>
 #include <optional>
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct ControlPoint
-/// @brief  ControlPoint describing a trajectory (NURBS)
+/// \struct ControlPoint
+/// \brief  ControlPoint describing a trajectory (NURBS)
 struct ControlPoint
 {
-  /// @brief X-coordinate described in the world
+  /// \brief X-coordinate described in the world
   ///        coordinate system.
   double x = 0.0;
 
-  /// @brief Y-coordinate described in the world
+  /// \brief Y-coordinate described in the world
   ///        coordinate system.
   double y = 0.0;
 
-  /// @brief Degree of the NURBS curve defining the trajectory.
+  /// \brief Degree of the NURBS curve defining the trajectory.
   ///        If not defined, the default value is 1.
   ///        Valid range: [1, 10]
   double weight = 1.0;
@@ -66,7 +66,7 @@ inline void from_json(const json& j, ControlPoint& point)
   }
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__CONTROL_POINT_HPP_
+#endif  // VDA5050_CORE__TYPES__CONTROL_POINT_HPP_

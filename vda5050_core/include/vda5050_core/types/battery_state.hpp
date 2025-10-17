@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__BATTERY_STATE_HPP_
-#define VDA5050_CORE__STATE__BATTERY_STATE_HPP_
+#ifndef VDA5050_CORE__TYPES__BATTERY_STATE_HPP_
+#define VDA5050_CORE__TYPES__BATTERY_STATE_HPP_
 
 #include <cstdint>
 #include <nlohmann/json.hpp>
@@ -25,30 +25,30 @@
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct BatteryState
-/// @brief Contains all battery-related
+/// \struct BatteryState
+/// \brief Contains all battery-related
 ///information.
 struct BatteryState
 {
-  /// @brief State of Charge:
+  /// \brief State of Charge:
   double battery_charge = 0.0;
 
-  /// @brief Battery Voltage.
+  /// \brief Battery Voltage.
   std::optional<double> battery_voltage;
 
-  /// @brief State describing the battery's health.
-  /// @note  Valid range: [0, 100], unit: %
+  /// \brief State describing the battery's health.
+  /// \note  Valid range: [0, 100], unit: %
   std::optional<int8_t> battery_health;
 
-  /// @brief “true”: charging in progress.
+  /// \brief “true”: charging in progress.
   ///        “false”: AGV is currently not charging.
   bool charging = false;
 
-  /// @brief Estimated reach with current state of
+  /// \brief Estimated reach with current state of
   ///        charge.
-  /// @note  Valid range: [0, uint32.max]
+  /// \note  Valid range: [0, uint32.max]
   std::optional<uint32_t> reach;
 };
 
@@ -89,7 +89,7 @@ inline void from_json(const json& j, BatteryState& state)
     state.reach = std::nullopt;
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__BATTERY_STATE_HPP_
+#endif  // VDA5050_CORE__TYPES__BATTERY_STATE_HPP_

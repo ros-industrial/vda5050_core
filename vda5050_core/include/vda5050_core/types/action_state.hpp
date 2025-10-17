@@ -16,21 +16,21 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__ACTION_STATE_HPP_
-#define VDA5050_CORE__STATE__ACTION_STATE_HPP_
+#ifndef VDA5050_CORE__TYPES__ACTION_STATE_HPP_
+#define VDA5050_CORE__TYPES__ACTION_STATE_HPP_
 
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <string>
 
-#include "vda5050_core/state/action_status.hpp"
+#include "vda5050_core/types/action_status.hpp"
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct ActionState
-/// @brief Contains an array of all actions from
+/// \struct ActionState
+/// \brief Contains an array of all actions from
 ///        the current order and all received
 ///        instantActions since the last order.
 ///        The action states are kept until a new
@@ -50,27 +50,27 @@ namespace msg {
 ///        resultDescription.
 struct ActionState
 {
-  /// @brief Unique identifier of the action.
+  /// \brief Unique identifier of the action.
   std::string action_id;
 
-  /// @brief Unique identifier of the action.
+  /// \brief Unique identifier of the action.
   ///        Type of the action.
   ///        Optional: Only for informational or
   ///        visualization purposes. MC is aware
   ///        of action type as dispatched in the order.
   std::optional<std::string> action_type;
 
-  /// @brief Additional information on the current action.
+  /// brief Additional information on the current action.
   std::optional<std::string> action_description;
 
-  /// @brief The current state of the action
+  /// \brief The current state of the action
   ///
-  /// @note Enum {'WAITING', 'INITIALIZING',
+  /// \note Enum {'WAITING', 'INITIALIZING',
   ///       'RUNNING', 'PAUSED', 'FINISHED',
   ///       'FAILED'}
-  ActionStatus action_status = vda5050_core::msg::ActionStatus::WAITING;
+  ActionStatus action_status = vda5050_core::types::ActionStatus::WAITING;
 
-  /// @brief Description of the result, e.g., the
+  /// \brief Description of the result, e.g., the
   ///        result of an RFID reading.
   ///        Errors will be transmitted in errors.
   std::optional<std::string> result_description;
@@ -133,8 +133,8 @@ inline void from_json(const json& j, ActionState& state)
   }
 }
 
-}  // namespace msg
+}  // namespace types
 
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__ACTION_STATE_HPP_
+#endif  // VDA5050_CORE__TYPES__ACTION_STATE_HPP_

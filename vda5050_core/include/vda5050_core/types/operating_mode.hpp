@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__OPERATING_MODE_HPP_
-#define VDA5050_CORE__STATE__OPERATING_MODE_HPP_
+#ifndef VDA5050_CORE__TYPES__OPERATING_MODE_HPP_
+#define VDA5050_CORE__TYPES__OPERATING_MODE_HPP_
 
 #include <cstdint>
 #include <nlohmann/json.hpp>
@@ -25,7 +25,7 @@
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
 /// @enum  OperatingMode
 /// @brief Current operating mode of the AGV
@@ -108,7 +108,7 @@ inline void from_json(const json& j, OperatingMode& mode)
     throw std::invalid_argument("Invalid OperatingMode string: " + str);
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__OPERATING_MODE_HPP_
+#endif  // VDA5050_CORE__TYPES__OPERATING_MODE_HPP_

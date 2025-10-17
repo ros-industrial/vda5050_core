@@ -16,27 +16,27 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__LOAD_DIMENSIONS_HPP_
-#define VDA5050_CORE__STATE__LOAD_DIMENSIONS_HPP_
+#ifndef VDA5050_CORE__TYPES__LOAD_DIMENSIONS_HPP_
+#define VDA5050_CORE__TYPES__LOAD_DIMENSIONS_HPP_
 
 #include <nlohmann/json.hpp>
 #include <optional>
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct LoadDimensions
-/// @brief  Dimensions of the loads bounding box in meters.
+/// \struct LoadDimensions
+/// \brief  Dimensions of the loads bounding box in meters.
 struct LoadDimensions
 {
-  /// @brief Absolute length of the loads bounding box in meter.
+  /// \brief Absolute length of the loads bounding box in meter.
   double length = 0.0;
 
-  /// @brief Absolute width of the loads bounding box in meter.
+  /// \brief Absolute width of the loads bounding box in meter.
   double width = 0.0;
 
-  /// @brief Absolute height of the loads bounding box in meter.
+  /// \brief Absolute height of the loads bounding box in meter.
   ///        Optional: Set value only if known.
   std::optional<double> height;
 };
@@ -64,7 +64,7 @@ inline void from_json(const json& j, LoadDimensions& dim)
   }
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__LOAD_DIMENSIONS_HPP_
+#endif  // VDA5050_CORE__TYPES__LOAD_DIMENSIONS_HPP_

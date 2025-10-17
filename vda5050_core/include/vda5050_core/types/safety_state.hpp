@@ -16,29 +16,29 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__SAFETY_STATE_HPP_
-#define VDA5050_CORE__STATE__SAFETY_STATE_HPP_
+#ifndef VDA5050_CORE__TYPES__SAFETY_STATE_HPP_
+#define VDA5050_CORE__TYPES__SAFETY_STATE_HPP_
 
 #include <nlohmann/json.hpp>
 
-#include "vda5050_core/state/e_stop.hpp"
+#include "vda5050_core/types/e_stop.hpp"
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct SafetyState
-/// @brief  Contains all safety-related information
+/// \struct SafetyState
+/// \brief  Contains all safety-related information
 struct SafetyState
 {
-  /// @brief Acknowledge-Type of eStop:
+  /// \brief Acknowledge-Type of eStop:
   ///        AUTOACK: auto-acknowledgeable e-stop is activated, e.g., by bumper or protective field.
   ///        MANUAL: e-stop hast to be acknowledged manually at the vehicle.
   ///        REMOTE: facility e-stop has to be acknowledged remotely.
   ///        NONE: no e-stop activated.
   EStop e_stop = EStop::NONE;
 
-  /// @brief Protective field violation. True: field is violated. False: field is not violated.
+  /// \brief Protective field violation. True: field is violated. False: field is not violated.
   bool field_violation = false;
 };
 
@@ -55,7 +55,7 @@ inline void from_json(const json& j, SafetyState& s)
   j.at("field_violation").get_to(s.field_violation);
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__SAFETY_STATE_HPP_
+#endif  // VDA5050_CORE__TYPES__SAFETY_STATE_HPP_

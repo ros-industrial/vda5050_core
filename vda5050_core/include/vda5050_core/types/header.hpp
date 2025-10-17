@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__HEADER_HPP_
-#define VDA5050_CORE__STATE__HEADER_HPP_
+#ifndef VDA5050_CORE__TYPES__HEADER_HPP_
+#define VDA5050_CORE__TYPES__HEADER_HPP_
 
 #include <chrono>
 #include <cstdint>
@@ -28,28 +28,28 @@
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
 constexpr const char* k_iso8601_fmt = "%Y-%m-%dT%H:%M:%S";
 
 struct Header
 {
-  /// @brief Header ID of the message.
+  /// \brief Header ID of the message.
   ///        The headerId is defined per topic and incremented by 1 with
   ///        each sent (but not necessarily received) message.
   uint32_t header_id = 0;
 
-  /// @brief Timestamp (ISO8601, UTC); YYYY-MM-
+  /// \brief Timestamp (ISO8601, UTC); YYYY-MM-
   ///        DDTHH:mm:ss.ffZ(e.g., "2017-04-15T11:40:03.12Z")
   std::chrono::time_point<std::chrono::system_clock> timestamp;
 
-  /// @brief Version of the protocol [Major].[Minor].[Patch] (e.g., 1.3.2).
+  /// \brief Version of the protocol [Major].[Minor].[Patch] (e.g., 1.3.2).
   std::string version;
 
-  /// @brief Manufacturer of the AGV
+  /// \brief Manufacturer of the AGV
   std::string manufacturer;
 
-  /// @brief Serial number of the AGV.
+  /// \brief Serial number of the AGV.
   std::string serial_number;
 };
 
@@ -128,7 +128,7 @@ void from_json(const json& j, Header& d)
   d.serial_number = j.at("serialNumber");
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__HEADER_HPP_
+#endif  // VDA5050_CORE__TYPES__HEADER_HPP_

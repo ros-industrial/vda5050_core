@@ -16,38 +16,38 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__NODE_STATE_HPP_
-#define VDA5050_CORE__STATE__NODE_STATE_HPP_
+#ifndef VDA5050_CORE__TYPES__NODE_STATE_HPP_
+#define VDA5050_CORE__TYPES__NODE_STATE_HPP_
 
 #include <cstdint>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <string>
 
-#include "vda5050_core/state/node_position.hpp"
+#include "vda5050_core/types/node_position.hpp"
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct NodeState
-/// @brief  Array of nodeState-Objects, that need to be traversed for fulfilling the order. Empty list if idle.
+/// \struct NodeState
+/// \brief  Array of nodeState-Objects, that need to be traversed for fulfilling the order. Empty list if idle.
 struct NodeState
 {
-  /// @brief Unique node identification
+  /// \brief Unique node identification
   std::string node_id;
 
-  /// @brief sequenceId to discern multiple nodes with same nodeId
+  /// \brief sequenceId to discern multiple nodes with same nodeId
   uint32_t sequence_id = 0;
 
-  /// @brief Additional information on the node
+  /// \brief Additional information on the node
   std::optional<std::string> node_description;
 
-  /// @brief Node position. The object is defined in chapter 5.4 Topic: Order (from master control to AGV).
+  /// \brief Node position. The object is defined in chapter 5.4 Topic: Order (from master control to AGV).
   ///        Optional:Master control has this information. Can be sent additionally, e.g., for debugging purposes..
   std::optional<NodePosition> node_position;
 
-  /// @brief  "True: indicates that the node is part of the base. False: indicates that the node is part of the horizon.
+  /// \brief  "True: indicates that the node is part of the base. False: indicates that the node is part of the horizon.
   bool released = false;
 };
 
@@ -88,7 +88,7 @@ inline void from_json(const json& j, NodeState& n)
   }
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__NODE_STATE_HPP_
+#endif  // VDA5050_CORE__TYPES__NODE_STATE_HPP_

@@ -16,39 +16,39 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__EDGE_STATE_HPP_
-#define VDA5050_CORE__STATE__EDGE_STATE_HPP_
+#ifndef VDA5050_CORE__TYPES__EDGE_STATE_HPP_
+#define VDA5050_CORE__TYPES__EDGE_STATE_HPP_
 
 #include <cstdint>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <string>
 
-#include "vda5050_core/state/trajectory.hpp"
+#include "vda5050_core/types/trajectory.hpp"
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct ControlPoint
-/// @brief  ControlPoint describing a trajectory (NURBS)
+/// \struct ControlPoint
+/// \brief  ControlPoint describing a trajectory (NURBS)
 struct EdgeState
 {
-  /// @brief Unique edge identification
+  /// \brief Unique edge identification
   std::string edge_id;
 
-  /// @brief sequenceId to differentiate between multiple edges with
+  /// \brief sequenceId to differentiate between multiple edges with
   ///        the same edgeId
   uint32_t sequence_id = 0;
 
-  /// @brief Additional information on the edge
+  /// \brief Additional information on the edge
   std::optional<std::string> edge_description;
 
-  /// @brief True indicates that the edge is part of the base.
+  /// \brief True indicates that the edge is part of the base.
   ///        False indicates that the edge is part of the horizon.
   bool released = false;
 
-  /// @brief The trajectory is to be communicated as a NURBS.
+  /// \brief The trajectory is to be communicated as a NURBS.
   ///        Trajectory segments are from the point where the AGV
   ///        starts to enter the edge until the point where it
   ///        reports that the next node was traversed.
@@ -100,7 +100,7 @@ inline void from_json(const json& j, EdgeState& state)
   }
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__EDGE_STATE_HPP_
+#endif  // VDA5050_CORE__TYPES__EDGE_STATE_HPP_

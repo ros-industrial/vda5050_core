@@ -16,27 +16,27 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__VELOCITY_HPP_
-#define VDA5050_CORE__STATE__VELOCITY_HPP_
+#ifndef VDA5050_CORE__TYPES__VELOCITY_HPP_
+#define VDA5050_CORE__TYPES__VELOCITY_HPP_
 
 #include <nlohmann/json.hpp>
 #include <optional>
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct Velocity
-/// @brief The AGVs velocity in vehicle coordinate
+/// \struct Velocity
+/// \brief The AGVs velocity in vehicle coordinate
 struct Velocity
 {
-  /// @brief The AVGs velocity in its x directio
+  /// \brief The AVGs velocity in its x directio
   std::optional<double> vx;
 
-  /// @brief The AVGs velocity in its y direction
+  /// \brief The AVGs velocity in its y direction
   std::optional<double> vy;
 
-  /// @brief The AVGs turning speed around its z axis
+  /// \brief The AVGs turning speed around its z axis
   std::optional<double> omega;
 };
 
@@ -80,7 +80,7 @@ inline void from_json(const json& j, Velocity& v)
   }
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__VELOCITY_HPP_
+#endif  // VDA5050_CORE__TYPES__VELOCITY_HPP_

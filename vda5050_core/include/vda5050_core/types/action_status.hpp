@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__ACTION_STATUS_HPP_
-#define VDA5050_CORE__STATE__ACTION_STATUS_HPP_
+#ifndef VDA5050_CORE__TYPES__ACTION_STATUS_HPP_
+#define VDA5050_CORE__TYPES__ACTION_STATUS_HPP_
 
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -25,30 +25,30 @@
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @enum  ActionStatus
-/// @brief Represents the execution state of an action on the AGV.
+/// \enum  ActionStatus
+/// \brief Represents the execution state of an action on the AGV.
 enum class ActionStatus
 {
-  /// @brief Action was received by AGV but the node where it triggers was not yet
+  /// \brief Action was received by AGV but the node where it triggers was not yet
   ///        reached or the edge where it is active was not yet entered.
   WAITING,
 
-  /// @brief Action was triggered, preparatory measures are initiated.
+  /// \brief Action was triggered, preparatory measures are initiated.
   INITIALIZING,
 
-  /// @brief The action is running.
+  /// \brief The action is running.
   RUNNING,
 
-  /// @brief The action is paused because of a pause instantAction or external trigger
+  /// \brief The action is paused because of a pause instantAction or external trigger
   ///        (pause button on AGV)
   PAUSED,
 
-  /// @brief The action is finished. A result is reported via the resultDescription
+  /// \brief The action is finished. A result is reported via the resultDescription
   FINISHED,
 
-  /// @brief Action could not be finished for whatever reason.
+  /// \brief Action could not be finished for whatever reason.
   FAILED
 };
 
@@ -117,7 +117,7 @@ inline void from_json(const json& j, ActionStatus& status)
   throw std::invalid_argument("Invalid ActionStatus string: " + s);
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__ACTION_STATUS_HPP_
+#endif  // VDA5050_CORE__TYPES__ACTION_STATUS_HPP_

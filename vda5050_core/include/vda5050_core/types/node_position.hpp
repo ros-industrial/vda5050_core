@@ -16,31 +16,31 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__NODE_POSITION_HPP_
-#define VDA5050_CORE__STATE__NODE_POSITION_HPP_
+#ifndef VDA5050_CORE__TYPES__NODE_POSITION_HPP_
+#define VDA5050_CORE__TYPES__NODE_POSITION_HPP_
 
 #include <nlohmann/json.hpp>
 #include <optional>
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct NodePosition
-/// @brief  Node position. The object is defined in chapter 5.4 Topic: Order (from master control to AGV).
+/// \struct NodePosition
+/// \brief  Node position. The object is defined in chapter 5.4 Topic: Order (from master control to AGV).
 ///         Optional:Master control has this information.
 ///         Can be sent additionally, e.g., for debugging purposes.
 struct NodePosition
 {
-  /// @brief X-position on the map in reference to the
+  /// \brief X-position on the map in reference to the
   ///        map coordinate system in meters.
   double x = 0.0;
 
-  /// @brief Y-position on the map in reference to the
+  /// \brief Y-position on the map in reference to the
   ///        map coordinate system in meters.
   double y = 0.0;
 
-  /// @brief Range : [-PI... PI]
+  /// \brief Range : [-PI... PI]
   ///        Absolute orientation of the AGV on the node.
   ///        Optional: vehicle can plan the path by itself.
   ///        If defined, the AGV has to assume the theta
@@ -53,7 +53,7 @@ struct NodePosition
   //         rotation before entering the edge.
   std::optional<double> theta;
 
-  /// @brief Indicates how precisely an AGV shall match
+  /// \brief Indicates how precisely an AGV shall match
   ///        the position of a node for it to be considered traversed.
   ///
   ///        If = 0.0: no deviation is allowed (no
@@ -65,7 +65,7 @@ struct NodePosition
   ///        considered traversed.
   std::optional<double> allowed_deviation_x_y;
 
-  /// @brief Range: [0.0 … Pi] Indicates how precise the orientation
+  /// \brief Range: [0.0 … Pi] Indicates how precise the orientation
   ///        defined in theta has to be met on the node
   ///        by the AGV.
   ///        Indicates how precise the orientation
@@ -77,7 +77,7 @@ struct NodePosition
   ///        allowedDeviationTheta.
   std::optional<double> allowed_deviation_theta;
 
-  /// @brief Unique identification of the map on which
+  /// \brief Unique identification of the map on which
   ///        the position is referenced.
   ///        Each map has the same project-specific
   ///        global origin of coordinates.
@@ -88,7 +88,7 @@ struct NodePosition
   ///        node on the map of the target floor.
   std::string mapId;
 
-  /// @brief Additional information on the map
+  /// \brief Additional information on the map
   std::optional<std::string> map_description;
 };
 
@@ -150,8 +150,8 @@ inline void from_json(const json& j, NodePosition& n)
   }
 }
 
-}  // namespace msg
+}  // namespace types
 
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__NODE_POSITION_HPP_
+#endif  // VDA5050_CORE__TYPES__NODE_POSITION_HPP_

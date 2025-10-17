@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__STATE_HPP_
-#define VDA5050_CORE__STATE__STATE_HPP_
+#ifndef VDA5050_CORE__TYPES__STATE_HPP_
+#define VDA5050_CORE__TYPES__STATE_HPP_
 
 #include <cstdint>
 #include <nlohmann/json.hpp>
@@ -25,105 +25,101 @@
 #include <string>
 #include <vector>
 
-#include "vda5050_core/state/action_state.hpp"
-#include "vda5050_core/state/agv_position.hpp"
-#include "vda5050_core/state/battery_state.hpp"
-#include "vda5050_core/state/edge_state.hpp"
-#include "vda5050_core/state/error.hpp"
-#include "vda5050_core/state/header.hpp"
-#include "vda5050_core/state/info.hpp"
-#include "vda5050_core/state/load.hpp"
-#include "vda5050_core/state/map.hpp"
-#include "vda5050_core/state/node_state.hpp"
-#include "vda5050_core/state/operating_mode.hpp"
-#include "vda5050_core/state/safety_state.hpp"
-#include "vda5050_core/state/velocity.hpp"
+#include "vda5050_core/types/action_state.hpp"
+#include "vda5050_core/types/agv_position.hpp"
+#include "vda5050_core/types/battery_state.hpp"
+#include "vda5050_core/types/edge_state.hpp"
+#include "vda5050_core/types/error.hpp"
+#include "vda5050_core/types/header.hpp"
+#include "vda5050_core/types/info.hpp"
+#include "vda5050_core/types/load.hpp"
+#include "vda5050_core/types/node_state.hpp"
+#include "vda5050_core/types/operating_mode.hpp"
+#include "vda5050_core/types/safety_state.hpp"
+#include "vda5050_core/types/velocity.hpp"
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct State
-/// @brief  VDA5050 State Struct
+/// \struct State
+/// \brief  VDA5050 State Struct
 struct State
 {
-  /// @brief headerId of the message. The headerId is defined per topic and incremented by 1 with each sent (but not necessarily received) message.
+  /// \brief headerId of the message. The headerId is defined per topic and incremented by 1 with each sent (but not necessarily received) message.
   Header header;
 
-  /// @brief Array of map objects that are currently stored on the vehicle.
-  std::optional<std::vector<Map>> maps;
-
-  /// @brief Unique order identification of the current order or the previous finished order.
+  /// \brief Unique order identification of the current order or the previous finished order.
   ///        The orderId is kept until a new order is received.
   ///        Empty string (\"\") if no previous orderId is available.
   std::string order_id;
 
-  /// @brief Order Update Identification to identify that an order update has been accepted by the AGV. \"0\" if no previous orderUpdateId is available
+  /// \brief Order Update Identification to identify that an order update has been accepted by the AGV. \"0\" if no previous orderUpdateId is available
   uint32_t order_update_id = 0;
 
-  /// @brief Unique ID of the zone set that the AGV currently uses for path planning.
+  /// \brief Unique ID of the zone set that the AGV currently uses for path planning.
   ///        Must be the same as the one used in the order, otherwise the AGV is to reject the order.
   ///        Optional: If the AGV does not use zones, this field can be omitted.
   std::optional<std::string> zone_set_id;
 
-  /// @brief nodeID of last reached node or, if AGV is currently on a node, current node (e.g., \"node7\"). Empty string (\"\") if no lastNodeId is available.
+  /// \brief nodeID of last reached node or, if AGV is currently on a node, current node (e.g., \"node7\"). Empty string (\"\") if no lastNodeId is available.
   std::string last_node_id;
 
-  /// @brief sequenceId of the last reached node or, if the AGV is currently on a node, sequenceId of current node. \"0\" if no lastNodeSequenceId is available.
+  /// \brief sequenceId of the last reached node or, if the AGV is currently on a node, sequenceId of current node. \"0\" if no lastNodeSequenceId is available.
   uint32_t last_node_sequence_id = 0;
 
-  /// @brief Array of nodeState-Objects, that need to be traversed for fulfilling the order. Empty list if idle.
+  /// \brief Array of nodeState-Objects, that need to be traversed for fulfilling the order. Empty list if idle.
   std::vector<NodeState> node_states;
 
-  /// @brief Array of edgeState-Objects, that need to be traversed for fulfilling the order, empty list if idle.
+  /// \brief Array of edgeState-Objects, that need to be traversed for fulfilling the order, empty list if idle.
   std::vector<EdgeState> edge_states;
 
-  /// @brief Defines the position on a map in world coordinates. Each floor has its own map.
+  /// \brief Defines the position on a map in world coordinates. Each floor has its own map.
   std::optional<AgvPosition> agv_position;
 
-  /// @brief The AGVs velocity in vehicle coordinates
+  /// \brief The AGVs velocity in vehicle coordinates
   std::optional<Velocity> velocity;
 
-  /// @brief Loads, that are currently handled by the AGV. Optional: If AGV cannot determine load state, leave the array out of the state.
+  /// \brief Loads, that are currently handled by the AGV. Optional: If AGV cannot determine load state, leave the array out of the state.
   ///        If the AGV can determine the load state, but the array is empty, the AGV is considered unloaded.
   std::optional<std::vector<Load>> loads;
 
-  /// @brief True: indicates that the AGV is driving and/or rotating. Other movements of the AGV (e.g., lift movements) are not included here.
+  /// \brief True: indicates that the AGV is driving and/or rotating. Other movements of the AGV (e.g., lift movements) are not included here.
   ///        False: indicates that the AGV is neither driving nor rotating
   bool driving = false;
 
-  /// @brief True: AGV is currently in a paused state, either because of the push of a physical button on the AGV or because of an instantAction.
+  /// \brief True: AGV is currently in a paused state, either because of the push of a physical button on the AGV or because of an instantAction.
   ///        The AGV can resume the order.
   ///        False: The AGV is currently not in a paused state.
   std::optional<bool> paused;
 
-  /// @brief True: AGV is almost at the end of the base and will reduce speed if no new base is transmitted.
+  /// \brief True: AGV is almost at the end of the base and will reduce speed if no new base is transmitted.
   ///        Trigger for master control to send new base
   ///        False: no base update required.
   std::optional<bool> new_base_request;
 
-  /// @brief Used by line guided vehicles to indicate the distance it has been driving past the \"lastNodeId\".\nDistance is in meters.
+  /// \brief Used by line guided vehicles to indicate the distance it has been driving past the \"lastNodeId\".\nDistance is in meters.
   std::optional<double> distance_since_last_node;
 
-  /// @brief Contains a list of the current actions and the actions which are yet to be finished. This may include actions from previous nodes that are still in progress
+  /// \brief Contains a list of the current actions and the actions which are yet to be finished. This may include actions from previous nodes that are still in progress
   ///        When an action is completed, an updated state message is published with actionStatus set to finished and if applicable with the corresponding resultDescription.
   ///        The actionStates are kept until a new order is received.
   std::vector<ActionState> action_states;
 
-  /// @brief Contains all battery-related information.
+  /// \brief Contains all battery-related information.
   BatteryState battery_state;
 
-  /// @brief Current operating mode of the AGV
+  /// \brief Current operating mode of the AGV
   OperatingMode operating_mode = OperatingMode::AUTOMATIC;
 
-  /// @brief Type/name of error.
+  /// \brief Type/name of error.
   std::vector<Error> errors;
 
-  /// @brief Array of info-objects. An empty array indicates, that the AGV has no information.
+  /// \brief Array of info-objects. An empty array indicates, that the AGV has no information.
   ///        This should only be used for visualization or debugging – it must not be used for logic in master control.
   std::optional<std::vector<Info>> information;
 
-  /// @brief Contains all safety-related information.
+  /// \brief Contains all safety-related information.
   SafetyState safety_state;
 };
 
@@ -155,10 +151,6 @@ inline void to_json(json& j, const State& d)
   {
     j["loads"] =
       *d.loads;  // Keep possible "null" loads since they could represent an arbitrary load
-  }
-  if (d.maps.has_value())
-  {
-    j["maps"] = *d.maps;
   }
   if (d.new_base_request.has_value())
   {
@@ -209,10 +201,6 @@ inline void from_json(const json& j, State& d)
   {
     d.loads = j.at("loads").get<std::vector<Load>>();
   }
-  if (j.contains("maps"))
-  {
-    d.maps = j.at("maps").get<std::vector<Map>>();
-  }
   if (j.contains("newBaseRequest"))
   {
     d.new_base_request = j.at("newBaseRequest");
@@ -235,8 +223,8 @@ inline void from_json(const json& j, State& d)
     d.zone_set_id = j.at("zoneSetId");
   }
 }
-}  // namespace msg
+}  // namespace types
 
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__STATE_HPP
+#endif  // VDA5050_CORE__TYPES__STATE_HPP_

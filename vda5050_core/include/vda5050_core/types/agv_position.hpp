@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__AGV_POSITION_HPP_
-#define VDA5050_CORE__STATE__AGV_POSITION_HPP_
+#ifndef VDA5050_CORE__TYPES__AGV_POSITION_HPP_
+#define VDA5050_CORE__TYPES__AGV_POSITION_HPP_
 
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -25,18 +25,18 @@
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct AgvPosition
-/// @brief  Current position of the AGV on the
+/// \struct AgvPosition
+/// \brief  Current position of the AGV on the
 ///         map.
 struct AgvPosition
 {
-  /// @brief “true”: position is initialized.
+  /// \brief “true”: position is initialized.
   ///        “false”: position is not initialized.
   bool position_initialized = false;
 
-  /// @brief Describes the quality of the
+  /// \brief Describes the quality of the
   ///        localization and therefore, can be
   ///        used
   ///        Valid range: [0.0, 1.0]
@@ -44,29 +44,29 @@ struct AgvPosition
   ///        1.0: position known
   std::optional<double> localization_score;
 
-  /// @brief Value for the deviation range of the
+  /// \brief Value for the deviation range of the
   ///        position in meters.
   std::optional<double> deviation_range;
 
-  /// @brief X-position on the map in reference to
+  /// \brief X-position on the map in reference to
   ///        the map coordinate system.
   double x = 0.0;
 
-  /// @brief Y-position on the map in reference to
+  /// \brief Y-position on the map in reference to
   ///        the map coordinate system.
   double y = 0.0;
 
-  /// @brief Orientation of the AGV.
+  /// \brief Orientation of the AGV.
   ///        Valid range: [-Pi, Pi]
   ///        0.0: position unknown
   ///        1.0: position known
   double theta = 0.0;
 
-  /// @brief Unique identification of the map in
+  /// \brief Unique identification of the map in
   ///        which the position is referenced
   std::string map_id;
 
-  /// @brief Additional information on the map.
+  /// \brief Additional information on the map.
   std::optional<std::string> map_description;
 };
 
@@ -121,7 +121,7 @@ inline void from_json(const json& j, AgvPosition& pos)
     pos.map_description = std::nullopt;
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__AGV_POSITION_HPP_
+#endif  // VDA5050_CORE__TYPES__AGV_POSITION_HPP_

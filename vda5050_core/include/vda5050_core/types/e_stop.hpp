@@ -16,34 +16,34 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__E_STOP_HPP_
-#define VDA5050_CORE__STATE__E_STOP_HPP_
+#ifndef VDA5050_CORE__TYPES__E_STOP_HPP_
+#define VDA5050_CORE__TYPES__E_STOP_HPP_
 
 #include <nlohmann/json.hpp>
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @enum   EStop
-/// @brief  Acknowledge-Type of eStop:
+/// \enum   EStop
+/// \brief  Acknowledge-Type of eStop:
 ///         AUTOACK: auto-acknowledgeable e-stop is activated, e.g., by bumper or protective field.
 ///         MANUAL: e-stop hast to be acknowledged manually at the vehicle.
 ///         REMOTE: facility e-stop has to be acknowledged remotely.
 ///         NONE: no e-stop activated.
 enum class EStop
 {
-  /// @brief Auto-acknowledgeable e-stop is activated e.g. by bumper or
+  /// \brief Auto-acknowledgeable e-stop is activated e.g. by bumper or
   ///        protective field
   AUTOACK,
 
-  /// @brief E-stop has to be acknowledged manually at the vehicle.
+  /// \brief E-stop has to be acknowledged manually at the vehicle.
   MANUAL,
 
-  /// @brief Facility e-stop has to be acknowledged remotely
+  /// \brief Facility e-stop has to be acknowledged remotely
   REMOTE,
 
-  /// @brief No e-stop activated
+  /// \brief No e-stop activated
   NONE
 };
 
@@ -83,7 +83,7 @@ inline void from_json(const json& j, EStop& estop)
     throw std::invalid_argument("Invalid EStop value: " + s);
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__E_STOP_HPP_
+#endif  // VDA5050_CORE__TYPES__E_STOP_HPP_

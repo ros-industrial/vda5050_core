@@ -16,48 +16,42 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__ERROR_REFERENCE_HPP_
-#define VDA5050_CORE__STATE__ERROR_REFERENCE_HPP_
+#ifndef VDA5050_CORE__TYPES__INFO_REFERENCE_HPP_
+#define VDA5050_CORE__TYPES__INFO_REFERENCE_HPP_
 
 #include <nlohmann/json.hpp>
-#include <string>
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct ErrorReference
-/// @brief  Provide more information related to
-///         the error.
-struct ErrorReference
+/// \struct InfoReference
+/// \brief  Determines the type and value of reference
+struct InfoReference
 {
-  /// @brief Specifies the type of reference used
-  ///        (e.g., "nodeId", "edgeId", "orderId",
-  ///        "actionId", etc.).
+  /// \brief References the type of reference (e.g. orderId, headerId, actionId, etc.).
   std::string reference_key;
 
-  /// @brief The value that belongs to the
-  ///        reference key. For example, the ID of
-  ///        the node where the error occurred.
+  /// \brief References the value, which belongs to the key.
   std::string reference_value;
 };
 
 using json = nlohmann::json;
 
-inline void to_json(json& j, const ErrorReference& ref)
+inline void to_json(json& j, const InfoReference& ref)
 {
   j = json{
     {"reference_key", ref.reference_key},
     {"reference_value", ref.reference_value}};
 }
 
-inline void from_json(const json& j, ErrorReference& ref)
+inline void from_json(const json& j, InfoReference& ref)
 {
   j.at("reference_key").get_to(ref.reference_key);
   j.at("reference_value").get_to(ref.reference_value);
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__ERROR_REFERENCE_HPP_
+#endif  // VDA5050_CORE__TYPES__INFO_REFERENCE_HPP_

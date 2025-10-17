@@ -16,17 +16,17 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__ERROR_LEVEL_HPP_
-#define VDA5050_CORE__STATE__ERROR_LEVEL_HPP_
+#ifndef VDA5050_CORE__TYPES__ERROR_LEVEL_HPP_
+#define VDA5050_CORE__TYPES__ERROR_LEVEL_HPP_
 
 #include <nlohmann/json.hpp>
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @enum ErrorLevel
-/// @brief Enum {'WARNING', 'FATAL'}
+/// \enum ErrorLevel
+/// \brief Enum {'WARNING', 'FATAL'}
 ///        'WARNING': AGV is ready to start
 ///        (e.g., maintenance cycle expiration
 ///        warning).
@@ -35,10 +35,10 @@ namespace msg {
 ///        (e.g., laser scanner is contaminated).
 enum class ErrorLevel
 {
-  /// @brief AGV is ready to start (e.g. maintenance
+  /// \brief AGV is ready to start (e.g. maintenance
   ///          cycle expiration warning)
   WARNING,
-  /// @brief AGV is not in running condition, user
+  /// \brief AGV is not in running condition, user
   ///        intervention required (e.g. laser scanner
   ///        is contaminated)
   FATAL
@@ -70,7 +70,8 @@ inline void from_json(const json& j, ErrorLevel& level)
     throw std::invalid_argument("Invalid ErrorLevel value: " + s);
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__ERROR_LEVEL_HPP_
+#endif  // VDA5050_CORE__TYPES__ERROR_LEVEL_HPP_
+

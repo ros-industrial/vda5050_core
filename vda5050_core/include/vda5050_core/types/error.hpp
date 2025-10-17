@@ -16,49 +16,49 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__ERROR_HPP_
-#define VDA5050_CORE__STATE__ERROR_HPP_
+#ifndef VDA5050_CORE__TYPES__ERROR_HPP_
+#define VDA5050_CORE__TYPES__ERROR_HPP_
 
 #include <optional>
 #include <string>
 #include <vector>
 
 #include <nlohmann/json.hpp>
-#include "vda5050_core/state/error_level.hpp"
-#include "vda5050_core/state/error_reference.hpp"
+#include "vda5050_core/types/error_level.hpp"
+#include "vda5050_core/types/error_reference.hpp"
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct Error
-/// @brief  Array of error objects.
+/// \struct Error
+/// \brief  Array of error objects.
 ///         All active errors of the AGV should be
 ///         in the array.
 ///         An empty array indicates that the
 ///         AGV has no active errors.
 struct Error
 {
-  /// @brief Type/name of error
+  /// \brief Type/name of error
   std::string error_type;
 
-  /// @brief Array of references (e.g., nodeId,
+  /// \brief Array of references (e.g., nodeId,
   /// edgeId, orderId, actionId, etc.) to
   /// provide more information related to
   /// the error.
   std::optional<std::vector<ErrorReference>> error_references;
 
-  /// @brief Verbose description providing details
+  /// \brief Verbose description providing details
   ///        and possible causes of the error.
   std::optional<std::string> error_description;
 
   /// TODO: (johnaa) should this be optional?
-  /// @brief Hint on how to approach or solve the
+  /// \brief Hint on how to approach or solve the
   ///        reported error.
 
   std::optional<std::string> error_hint;
 
-  /// @brief Enum {warning, fatal}
+  /// \brief Enum {warning, fatal}
   /// warning: AGV is ready to start (e.g. maintenance
   ///          cycle expiration warning)
   /// fatal: AGV is not in running condition, user
@@ -123,7 +123,7 @@ inline void from_json(const json& j, Error& e)
   }
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__ERROR_HPP_
+#endif  // VDA5050_CORE__TYPES__ERROR_HPP_

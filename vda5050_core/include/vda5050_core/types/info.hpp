@@ -16,35 +16,35 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__INFO_HPP_
-#define VDA5050_CORE__STATE__INFO_HPP_
+#ifndef VDA5050_CORE__TYPES__INFO_HPP_
+#define VDA5050_CORE__TYPES__INFO_HPP_
 
 #include <optional>
 #include <string>
 #include <vector>
 
 #include <nlohmann/json.hpp>
-#include "vda5050_core/state/info_level.hpp"
-#include "vda5050_core/state/info_reference.hpp"
+#include "vda5050_core/types/info_level.hpp"
+#include "vda5050_core/types/info_reference.hpp"
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct Info
-/// @brief Information for visualization or debugging
+/// \struct Info
+/// \brief Information for visualization or debugging
 struct Info
 {
-  /// @brief Type/name of information
+  /// \brief Type/name of information
   std::string info_type;
 
-  /// @brief Array of references.
+  /// \brief Array of references.
   std::optional<std::vector<InfoReference>> info_references;
 
-  /// @brief Description of the information.
+  /// \brief Description of the information.
   std::optional<std::string> info_description;
 
-  /// @brief  Enum {'DEBUG', 'INFO'}
+  /// \brief  Enum {'DEBUG', 'INFO'}
   ///        'DEBUG': used for debugging.
   ///        'INFO': used for visualization.
   InfoLevel info_level = InfoLevel::DEBUG;
@@ -88,7 +88,7 @@ inline void from_json(const json& j, Info& i)
   }
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__INFO_HPP_
+#endif  // VDA5050_CORE__TYPES__INFO_HPP_

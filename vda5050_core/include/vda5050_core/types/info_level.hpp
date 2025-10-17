@@ -16,42 +16,53 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__INFO_REFERENCE_HPP_
-#define VDA5050_CORE__STATE__INFO_REFERENCE_HPP_
+#ifndef VDA5050_CORE__TYPES__INFO_LEVEL_HPP_
+#define VDA5050_CORE__TYPES__INFO_LEVEL_HPP_
 
 #include <nlohmann/json.hpp>
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct InfoReference
-/// @brief  Determines the type and value of reference
-struct InfoReference
+/// \enum InfoLevel
+/// \brief Information for debugging or visualization
+enum class InfoLevel
 {
-  /// @brief References the type of reference (e.g. orderId, headerId, actionId, etc.).
-  std::string reference_key;
+  /// \brief used for debugging
+  DEBUG,
 
-  /// @brief References the value, which belongs to the key.
-  std::string reference_value;
+  /// \brief used for visualization
+  INFO
 };
 
 using json = nlohmann::json;
 
-inline void to_json(json& j, const InfoReference& ref)
+inline void to_json(json& j, const InfoLevel& level)
 {
-  j = json{
-    {"reference_key", ref.reference_key},
-    {"reference_value", ref.reference_value}};
+  switch (level)
+  {
+    case InfoLevel::DEBUG:
+      j = "DEBUG";
+      break;
+    case InfoLevel::INFO:
+      j = "INFO";
+      break;
+  }
 }
 
-inline void from_json(const json& j, InfoReference& ref)
+inline void from_json(const json& j, InfoLevel& level)
 {
-  j.at("reference_key").get_to(ref.reference_key);
-  j.at("reference_value").get_to(ref.reference_value);
+  const std::string& s = j.get<std::string>();
+  if (s == "DEBUG")
+    level = InfoLevel::DEBUG;
+  else if (s == "INFO")
+    level = InfoLevel::INFO;
+  else
+    throw std::invalid_argument("Invalid InfoLevel value: " + s);
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__INFO_REFERENCE_HPP_
+#endif  // VDA5050_CORE__TYPES__INFO_LEVEL_HPP_

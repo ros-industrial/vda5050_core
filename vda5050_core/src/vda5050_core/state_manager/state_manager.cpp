@@ -19,38 +19,38 @@
 #include <algorithm>
 #include <mutex>
 
-#include "vda5050_core/state/status_manager.hpp"
+#include "vda5050_core/state_manager/state_manager.hpp"
 
 namespace vda5050_core {
 
-namespace msg {
+namespace state_manager {
 
-void StatusManager::set_agv_position(
+void StateManager::set_agv_position(
   const std::optional<AgvPosition>& agv_position)
 {
   std::unique_lock lock(this->mutex_);
   this->agv_position_ = agv_position;
 }
 
-std::optional<AgvPosition> StatusManager::get_agv_position()
+std::optional<AgvPosition> StateManager::get_agv_position()
 {
   std::shared_lock lock(this->mutex_);
   return this->agv_position_;
 }
 
-void StatusManager::set_velocity(const std::optional<Velocity>& velocity)
+void StateManager::set_velocity(const std::optional<Velocity>& velocity)
 {
   std::unique_lock lock(this->mutex_);
   this->velocity_ = velocity;
 }
 
-std::optional<Velocity> StatusManager::get_velocity() const
+std::optional<Velocity> StateManager::get_velocity() const
 {
   std::shared_lock lock(this->mutex_);
   return this->velocity_;
 }
 
-bool StatusManager::set_driving(bool driving)
+bool StateManager::set_driving(bool driving)
 {
   std::unique_lock lock(this->mutex_);
   bool changed = this->driving_ != driving;
@@ -58,20 +58,20 @@ bool StatusManager::set_driving(bool driving)
   return changed;
 }
 
-void StatusManager::set_distance_since_last_node(
+void StateManager::set_distance_since_last_node(
   double distance_since_last_node)
 {
   std::unique_lock lock(this->mutex_);
   this->distance_since_last_node_ = distance_since_last_node;
 }
 
-void StatusManager::reset_distance_since_last_node()
+void StateManager::reset_distance_since_last_node()
 {
   std::unique_lock lock(this->mutex_);
   this->distance_since_last_node_.reset();
 }
 
-bool StatusManager::add_load(const Load& load)
+bool StateManager::add_load(const Load& load)
 {
   std::unique_lock lock(this->mutex_);
 
@@ -87,7 +87,7 @@ bool StatusManager::add_load(const Load& load)
   return true;
 }
 
-bool StatusManager::remove_load(std::string_view load_id)
+bool StateManager::remove_load(std::string_view load_id)
 {
   std::unique_lock lock(this->mutex_);
 
@@ -109,7 +109,7 @@ bool StatusManager::remove_load(std::string_view load_id)
   return this->loads_->size() != before_size;
 }
 
-const std::vector<Load>& StatusManager::get_loads()
+const std::vector<Load>& StateManager::get_loads()
 {
   std::shared_lock lock(
     this->mutex_);  // Ensure that loads is not being altered at the moment

@@ -33,8 +33,8 @@ target_include_directories(logger
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-add_library(status_manager src/vda5050_core/state/status_manager.cpp)
-target_include_directories(status_manager
+add_library(state_manager src/vda5050_core/state_manager/state_manager.cpp)
+target_include_directories(state_manager
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -61,7 +61,7 @@ install(
   TARGETS
     mqtt_client
     logger
-    status_manager
+    state_manager
     vda5050_core
   EXPORT export_vda5050_core
   LIBRARY DESTINATION lib

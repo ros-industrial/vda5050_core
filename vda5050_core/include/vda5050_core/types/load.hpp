@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__LOAD_HPP_
-#define VDA5050_CORE__STATE__LOAD_HPP_
+#ifndef VDA5050_CORE__TYPES__LOAD_HPP_
+#define VDA5050_CORE__TYPES__LOAD_HPP_
 
 #include <cstdint>
 #include <optional>
@@ -25,43 +25,43 @@
 
 #include <nlohmann/json.hpp>
 
-#include "vda5050_core/state/bounding_box_reference.hpp"
-#include "vda5050_core/state/load_dimensions.hpp"
+#include "vda5050_core/types/bounding_box_reference.hpp"
+#include "vda5050_core/types/load_dimensions.hpp"
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct Load
-/// @brief  Loads that are currently handled by the AGV.
+/// \struct Load
+/// \brief  Loads that are currently handled by the AGV.
 ///         Optional: If AGV cannot determine load state,
 ///         leave the array out of the state.
 //          If the AGV can determine the load state, but the array is empty,
 ///         the AGV is considered unloaded.
 struct Load
 {
-  /// @brief Unique identification number of the load (e.g., barcode or RFID).
+  /// \brief Unique identification number of the load (e.g., barcode or RFID).
   ///        Empty field, if the AGV can identify the load, but did not identify the load yet.
   ///        Optional, if the AGV cannot identify the load.
   std::optional<std::string> load_id;
 
-  /// @brief Type of load.
+  /// \brief Type of load.
   std::optional<std::string> load_type;
 
-  /// @brief Indicates which load handling/carrying unit of the AGV is used,
+  /// \brief Indicates which load handling/carrying unit of the AGV is used,
   ///        e.g., in case the AGV has multiple spots/positions to carry loads.
   ///        Optional for vehicles with only one loadPosition.
   std::optional<std::string> load_position;
 
-  /// @brief Point of reference for the location of the bounding box.
+  /// \brief Point of reference for the location of the bounding box.
   ///        The point of reference is always the center of the bounding box bottom surface (at height = 0)
   ///        and is described in coordinates of the AGV coordinate system.
   std::optional<BoundingBoxReference> bounding_box_reference;
 
-  /// @brief Dimensions of the loads bounding box in meters.
+  /// \brief Dimensions of the loads bounding box in meters.
   std::optional<LoadDimensions> load_dimensions;
 
-  /// @brief Absolute weight of the load measured in kg.
+  /// \brief Absolute weight of the load measured in kg.
   std::optional<uint32_t> weight;
 };
 
@@ -138,7 +138,7 @@ inline void from_json(const json& j, Load& l)
   }
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__LOAD_HPP_
+#endif  // VDA5050_CORE__TYPES__LOAD_HPP_

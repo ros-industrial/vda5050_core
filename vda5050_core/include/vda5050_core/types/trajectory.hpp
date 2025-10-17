@@ -16,39 +16,39 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__TRAJECTORY_HPP_
-#define VDA5050_CORE__STATE__TRAJECTORY_HPP_
+#ifndef VDA5050_CORE__TYPES__TRAJECTORY_HPP_
+#define VDA5050_CORE__TYPES__TRAJECTORY_HPP_
 
 #include <cstdint>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <string>
 
-#include "vda5050_core/state/control_point.hpp"
+#include "vda5050_core/types/control_point.hpp"
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct EdgeState
-/// @brief Trajectory JSON object for this edge as NURBS.
+/// \struct EdgeState
+/// \brief Trajectory JSON object for this edge as NURBS.
 //         Defines the path, on which the AGV should
 //         move between the start node and the end
 //         node of the edge.
 struct Trajectory
 {
-  /// @brief Degree of the NURBS curve defining the trajectory.
+  /// \brief Degree of the NURBS curve defining the trajectory.
   ///        If not defined, the default value is 1.
   ///        Valid range: [1, 10]
   double degree = 1.0;
 
-  /// @brief Array of knot values of the NURBS
+  /// \brief Array of knot values of the NURBS
   ///        knotVector has size of number of control
   ///        points + degree + 1.
   ///        Valid range: [0.0 … 1.0]
   std::vector<double> knot_vector;
 
-  /// @brief Array of controlPoint objects defining the
+  /// \brief Array of controlPoint objects defining the
   ///        control points of the NURBS, explicitly
   ///        including the start and end point.
   std::vector<ControlPoint> control_points;
@@ -71,7 +71,7 @@ inline void from_json(const json& j, Trajectory& t)
   j.at("control_points").get_to(t.control_points);
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__TRAJECTORY_HPP_
+#endif  // VDA5050_CORE__TYPES__TRAJECTORY_HPP_

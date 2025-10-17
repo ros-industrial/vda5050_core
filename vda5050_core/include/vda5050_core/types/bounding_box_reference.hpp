@@ -16,32 +16,32 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE__BOUNDING_BOX_REFERENCE_HPP_
-#define VDA5050_CORE__STATE__BOUNDING_BOX_REFERENCE_HPP_
+#ifndef VDA5050_CORE__TYPES__BOUNDING_BOX_REFERENCE_HPP_
+#define VDA5050_CORE__TYPES__BOUNDING_BOX_REFERENCE_HPP_
 
 #include <nlohmann/json.hpp>
 #include <optional>
 
 namespace vda5050_core {
 
-namespace msg {
+namespace types {
 
-/// @struct BoundingBoxReference
-/// @brief  Point of reference for the location of the bounding box.
+/// \struct BoundingBoxReference
+/// \brief  Point of reference for the location of the bounding box.
 ///         The point of reference is always the center of the bounding box bottom surface (at height = 0)
 ///         and is described in coordinates of the AGV coordinate system.
 struct BoundingBoxReference
 {
-  /// @brief X-coordinate of the point of reference.
+  /// \brief X-coordinate of the point of reference.
   double x = 0.0;
 
-  /// @brief Y-coordinate of the point of reference.
+  /// \brief Y-coordinate of the point of reference.
   double y = 0.0;
 
-  /// @brief Z-coordinate of the point of reference.
+  /// \brief Z-coordinate of the point of reference.
   double z = 0.0;
 
-  /// @brief Orientation of the loads bounding box. Important for tugger, trains, etc.
+  /// \brief Orientation of the loads bounding box. Important for tugger, trains, etc.
   std::optional<double> theta;
 };
 
@@ -69,7 +69,7 @@ inline void from_json(const json& j, BoundingBoxReference& ref)
   }
 }
 
-}  // namespace msg
+}  // namespace types
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE__BOUNDING_BOX_REFERENCE_HPP_
+#endif  // VDA5050_CORE__TYPES__BOUNDING_BOX_REFERENCE_HPP_
