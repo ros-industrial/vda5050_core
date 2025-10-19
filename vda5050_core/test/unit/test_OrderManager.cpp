@@ -235,7 +235,7 @@ TEST_F(OrderManagerTest, OrderUpdateDeprecated)
     "order1", 0, deprecated_update_nodes, deprecated_update_edges};
 
   EXPECT_THROW(
-    orderManager.validate_and_parse_order(deprecated_update_order),
+    orderManager.update_current_order(deprecated_update_order),
     std::runtime_error);
 }
 
@@ -246,7 +246,7 @@ TEST_F(OrderManagerTest, OrderUpdateOnVehicle)
     EXPECT_CALL(stateManager, cleanup_previous_order()).Times(AtLeast(1));
     EXPECT_CALL(stateManager, set_new_order(_));
   }
-  orderManager.validate_and_parse_order(partially_released_order);
+  orderManager.make_new_order(partially_released_order);
 
   {
     EXPECT_CALL(stateManager, node_states_empty()).WillOnce(Return(false));
@@ -255,11 +255,11 @@ TEST_F(OrderManagerTest, OrderUpdateOnVehicle)
     EXPECT_CALL(stateManager, clear_horizon()).Times(AtLeast(1));
     EXPECT_CALL(stateManager, append_states_for_update(_));
   }
-  orderManager.validate_and_parse_order(order_update);
+  orderManager.update_current_order(order_update);
 
   ::testing::internal::CaptureStderr();
 
-  orderManager.validate_and_parse_order(order_update);
+  orderManager.update_current_order(order_update);
 
   std::string err = ::testing::internal::GetCapturedStderr();
   EXPECT_THAT(
@@ -273,7 +273,7 @@ TEST_F(OrderManagerTest, OrderUpdateInvalidContinuationOfCurrentOrder)
     EXPECT_CALL(stateManager, cleanup_previous_order()).Times(AtLeast(1));
     EXPECT_CALL(stateManager, set_new_order(_));
   }
-  orderManager.validate_and_parse_order(partially_released_order);
+  orderManager.make_new_order(partially_released_order);
 
   std::vector<vda5050_core::node::Node> invalid_continuation_nodes{n5, n7};
   std::vector<vda5050_core::edge::Edge> invalid_continuation_edges{e6};
@@ -287,7 +287,7 @@ TEST_F(OrderManagerTest, OrderUpdateInvalidContinuationOfCurrentOrder)
   }
 
   EXPECT_THROW(
-    orderManager.validate_and_parse_order(invalid_continuation),
+    orderManager.update_current_order(invalid_continuation),
     std::runtime_error);
 }
 
@@ -298,7 +298,7 @@ TEST_F(OrderManagerTest, GetNextGraphElement)
     EXPECT_CALL(stateManager, cleanup_previous_order()).Times(AtLeast(1));
     EXPECT_CALL(stateManager, set_new_order(_));
   }
-  orderManager.validate_and_parse_order(partially_released_order);
+  orderManager.make_new_order(partially_released_order);
 
   std::optional<vda5050_core::order_graph_element::OrderGraphElement> ge1 =
     orderManager.next_graph_element();
