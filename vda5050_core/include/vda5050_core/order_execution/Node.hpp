@@ -32,7 +32,8 @@ namespace node {
 class Node : public order_graph_element::OrderGraphElement
 {
 public:
-  using Ptr = std::shared_ptr<Node>; 
+  /// TODO (shawnkchan) addd shared_ptr to Node class
+  // using Ptr = std::shared_ptr<Node>; 
   /// \brief Node constructor
   ///
   /// \param sequence_id uint32 indicating the sequence number of this node in an order
