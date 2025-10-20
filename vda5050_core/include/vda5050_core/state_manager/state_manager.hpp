@@ -31,9 +31,9 @@
 #include "vda5050_core/types/info.hpp"
 #include "vda5050_core/types/load.hpp"
 #include "vda5050_core/types/operating_mode.hpp"
+#include "vda5050_core/types/order.hpp"
 #include "vda5050_core/types/safety_state.hpp"
 #include "vda5050_core/types/state.hpp"
-#include "vda5050_core/types/order.hpp"
 
 namespace vda5050_core {
 
@@ -169,14 +169,14 @@ public:
 
   /// \brief Set a new order on the vehicle (after clearing any existing order).
   /// \param order The new order to accept and store.
-  void set_new_order(const Order &order);
+  void set_new_order(const Order& order);
 
   /// \brief Clear the horizon nodes/edges from the current nodeStates and edgeStates.
   void clear_horizon();
 
   /// \brief Append an order update to the vehicle's current order (nodeStates/edgeStates).
   /// \param order_update The order update to append.
-  void append_states_for_update(Order &order_update);
+  void append_states_for_update(Order& order_update);
 };
 
 }  // namespace state_manager

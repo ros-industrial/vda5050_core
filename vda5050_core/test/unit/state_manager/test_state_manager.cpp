@@ -202,7 +202,9 @@ TEST_F(StateManagerTest, CleanupPreviousOrder)
 {
   Order order;
   order.order_id = "O1";
-  Node node; node.node_id = "n1"; node.sequence_id = 1;
+  Node node;
+  node.node_id = "n1";
+  node.sequence_id = 1;
   order.nodes.push_back(node);
   sm.set_new_order(order);
   sm.cleanup_previous_order();
@@ -221,8 +223,12 @@ TEST_F(StateManagerTest, SetNewOrder)
   Order order;
   order.order_id = "O1";
   order.order_update_id = 1;
-  Node node; node.node_id = "n1"; node.sequence_id = 1;
-  Edge edge; edge.edge_id = "e1"; edge.sequence_id = 2;
+  Node node;
+  node.node_id = "n1";
+  node.sequence_id = 1;
+  Edge edge;
+  edge.edge_id = "e1";
+  edge.sequence_id = 2;
   order.nodes.push_back(node);
   order.edges.push_back(edge);
 
@@ -241,9 +247,18 @@ TEST_F(StateManagerTest, ClearHorizon)
 {
   Order order;
   order.order_id = "O2";
-  Node n1; n1.node_id = "n1"; n1.sequence_id = 1; n1.released = true;
-  Node n2; n2.node_id = "n2"; n2.sequence_id = 2; n2.released = false;
-  Edge e1; e1.edge_id = "e1"; e1.sequence_id = 3; e1.released = false;
+  Node n1;
+  n1.node_id = "n1";
+  n1.sequence_id = 1;
+  n1.released = true;
+  Node n2;
+  n2.node_id = "n2";
+  n2.sequence_id = 2;
+  n2.released = false;
+  Edge e1;
+  e1.edge_id = "e1";
+  e1.sequence_id = 3;
+  e1.released = false;
   order.nodes = {n1, n2};
   order.edges = {e1};
 
@@ -261,14 +276,20 @@ TEST_F(StateManagerTest, AppendStatesForUpdate)
 {
   Order order1;
   order1.order_id = "O1";
-  Node n1; n1.node_id = "n1"; n1.sequence_id = 1;
+  Node n1;
+  n1.node_id = "n1";
+  n1.sequence_id = 1;
   order1.nodes.push_back(n1);
   sm.set_new_order(order1);
 
   Order order2;
   order2.order_id = "O2";
-  Node n2; n2.node_id = "n2"; n2.sequence_id = 2;
-  Edge e2; e2.edge_id = "e2"; e2.sequence_id = 3;
+  Node n2;
+  n2.node_id = "n2";
+  n2.sequence_id = 2;
+  Edge e2;
+  e2.edge_id = "e2";
+  e2.sequence_id = 3;
   order2.nodes.push_back(n2);
   order2.edges.push_back(e2);
   sm.append_states_for_update(order2);
