@@ -235,5 +235,101 @@ void StateManager::dump_to(State& state)
   state.safety_state = this->robot_state_.safety_state;
 }
 
+std::string StateManager::get_last_node_id() const {
+  std::shared_lock lock(this->mutex_);
+  return this->robot_state_.last_node_id;
+}
+
+uint32_t StateManager::get_last_node_sequence_id() const {
+  std::shared_lock lock(this->mutex_);
+  return this->robot_state_.last_node_sequence_id;
+}
+
+bool StateManager::is_node_states_empty() const {
+  std::shared_lock lock(this->mutex_);
+  return this->robot_state_.node_states.empty();
+}
+
+bool StateManager::are_action_states_still_executing() const {
+  std::shared_lock lock(this->mutex_);
+  for (const auto &action_state : this->robot_state_.action_states) {
+    if (action_state.action_status != ActionStatus::FINISHED &&
+        action_state.action_status != ActionStatus::FAILED) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void StateManager::cleanup_previous_order() {
+  std::unique_lock lock(this->mutex_);
+  this->robot_state_.order_id.clear();
+  this->robot_state_.order_update_id = 0;
+  this->robot_state_.zone_set_id.reset();
+  this->robot_state_.last_node_id.clear();
+  this->robot_state_.last_node_sequence_id = 0;
+  this->robot_state_.node_states.clear();
+  this->robot_state_.edge_states.clear();
+  this->robot_state_.action_states.clear();
+}
+
+void StateManager::set_new_order(const Order &order) {
+  std::unique_lock lock(this->mutex_);
+
+  // Temp fix to avoid deadlock if cleanup_previous_order is called
+  this->robot_state_.order_id.clear();
+  this->robot_state_.order_update_id = 0;
+  this->robot_state_.zone_set_id.reset();
+  this->robot_state_.last_node_id.clear();
+  this->robot_state_.last_node_sequence_id = 0;
+  this->robot_state_.node_states.clear();
+  this->robot_state_.edge_states.clear();
+  this->robot_state_.action_states.clear();
+
+  // TODO @(johnaa) define header assignment operator/
+  this->robot_state_.order_id = order.order_id;
+  this->robot_state_.order_update_id = order.order_update_id;
+  this->robot_state_.zone_set_id = order.zone_set_id;
+
+  for (const auto &node : order.nodes) {
+    NodeState node_state;
+    node_state.node_id = node.node_id;
+    node_state.sequence_id = node.sequence_id;
+    node_state.node_description = node.node_description;
+    node_state.node_position = node.node_position;
+    node_state.released = node.released;
+    this->robot_state_.node_states.push_back(node_state);
+  }
+
+  for (const auto &edge : order.edges) {
+    EdgeState edge_state;
+    edge_state.edge_id = edge.edge_id;
+    edge_state.sequence_id = edge.sequence_id;
+    edge_state.edge_description = edge.edge_description;
+    edge_state.trajectory = edge.trajectory;
+    edge_state.released = edge.released;
+    this->robot_state_.edge_states.push_back(edge_state);
+  }
+}
+
+void StateManager::clear_horizon() {
+  std::unique_lock lock(this->mutex_);
+  auto &nodes = this->robot_state_.node_states;
+  auto &edges = this->robot_state_.edge_states;
+
+  auto node_predicate = [](const NodeState &n) { return !n.released; };
+  auto edge_predicate = [](const EdgeState &e) { return !e.released; };
+
+  nodes.erase(std::remove_if(nodes.begin(), nodes.end(), node_predicate),
+              nodes.end());
+  edges.erase(std::remove_if(edges.begin(), edges.end(), edge_predicate),
+              edges.end());
+}
+
+// TODO @(johnaa) sounds like it does the same feature as set_new_order, to clear with @shawn
+void StateManager::append_states_for_update(Order &order_update) {
+  this->set_new_order(order_update);
+}
+
 }  // namespace state_manager
 }  // namespace vda5050_core

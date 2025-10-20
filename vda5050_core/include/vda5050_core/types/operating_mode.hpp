@@ -27,11 +27,11 @@ namespace vda5050_core {
 
 namespace types {
 
-/// @enum  OperatingMode
-/// @brief Current operating mode of the AGV
+/// \enum  OperatingMode
+/// \brief Current operating mode of the AGV
 enum class OperatingMode : uint8_t
 {
-  /// @brief AGV is under full control of the master control.
+  /// \brief AGV is under full control of the master control.
   ///        AGV drives and executes actions based on orders from the master
   ///        control.
   AUTOMATIC,
@@ -44,7 +44,7 @@ enum class OperatingMode : uint8_t
   //         The steering is under automatic control (non-safe HMI possible).
   SEMIAUTOMATIC,
 
-  /// @brief Master control is not in control of the AGV.
+  /// \brief Master control is not in control of the AGV.
   //         Supervisor doesn't send driving order or actions to the AGV.
   //         HMI can be used to control the steering and velocity and handling
   //         device of the AGV.
@@ -53,12 +53,12 @@ enum class OperatingMode : uint8_t
   //         orders (safe HMI required)
   MANUAL,
 
-  /// @brief Master control is not in control of the AGV.
+  /// \brief Master control is not in control of the AGV.
   //         Master control doesn't send driving order or actions to the AGV.
   //         Authorized personnel can reconfigure the AGV
   SERVICE,
 
-  /// @brief Master control is not in control of the AGV.
+  /// \brief Master control is not in control of the AGV.
   //         Supervisor doesn't send driving order or actions to the AGV.
   //         The AGV is being taught, e.g., mapping is done by a master control.
   TEACHIN
@@ -68,8 +68,11 @@ enum class OperatingMode : uint8_t
 /// \param os The output stream to write to.
 /// \param operating_mode The OperatingMode value to be converted to text.
 /// \return A reference to the modified output stream.
-constexpr std::ostream &operator<<(std::ostream &os, const OperatingMode &operating_mode) {
-  switch (operating_mode) {
+constexpr std::ostream& operator<<(
+  std::ostream& os, const OperatingMode& operating_mode)
+{
+  switch (operating_mode)
+  {
     case OperatingMode::AUTOMATIC:
       os << "AUTOMATIC";
       break;

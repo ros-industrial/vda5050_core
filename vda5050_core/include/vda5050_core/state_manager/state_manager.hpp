@@ -33,6 +33,7 @@
 #include "vda5050_core/types/operating_mode.hpp"
 #include "vda5050_core/types/safety_state.hpp"
 #include "vda5050_core/types/state.hpp"
+#include "vda5050_core/types/order.hpp"
 
 namespace vda5050_core {
 
@@ -51,6 +52,8 @@ private:
 
   /// \brief the distance since the last node of the AGV
   std::optional<double> distance_since_last_node_;
+
+  Order order_;
 
 public:
   /// \brief Set the current AGV position
@@ -144,6 +147,36 @@ public:
   /// \brief Dump all data to a vda5050::State
   /// \param state the state to write to
   void dump_to(State& state);
+
+  /// \brief Get the nodeId of the latest node the AGV has reached.
+  /// \return The last reached node's ID.
+  std::string get_last_node_id() const;
+
+  /// \brief Get the sequenceId of the latest node the AGV has reached.
+  /// \return The last reached node's sequence ID.
+  uint32_t get_last_node_sequence_id() const;
+
+  /// \brief Check whether the maintained nodeStates array is empty.
+  /// \return True if there are zero nodes, otherwise false.
+  bool is_node_states_empty() const;
+
+  /// \brief Check if any actionStates are still executing (not FINISHED or FAILED).
+  /// \return True if at least one action is still executing, otherwise false.
+  bool are_action_states_still_executing() const;
+
+  /// \brief Clear all state related to the currently stored order.
+  void cleanup_previous_order();
+
+  /// \brief Set a new order on the vehicle (after clearing any existing order).
+  /// \param order The new order to accept and store.
+  void set_new_order(const Order &order);
+
+  /// \brief Clear the horizon nodes/edges from the current nodeStates and edgeStates.
+  void clear_horizon();
+
+  /// \brief Append an order update to the vehicle's current order (nodeStates/edgeStates).
+  /// \param order_update The order update to append.
+  void append_states_for_update(Order &order_update);
 };
 
 }  // namespace state_manager
