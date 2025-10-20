@@ -55,7 +55,6 @@ struct Error
   /// TODO: (johnaa) should this be optional?
   /// \brief Hint on how to approach or solve the
   ///        reported error.
-
   std::optional<std::string> error_hint;
 
   /// \brief Enum {warning, fatal}
@@ -65,6 +64,26 @@ struct Error
   ///        intervention required (e.g. laser scanner
   ///        is contaminated)
   ErrorLevel error_level = ErrorLevel::WARNING;
+
+  /// \brief Compares two Error objects for equality.
+  /// \param other The Error instance to compare with.
+  /// \return True if errorType, errorReferences, errorDescription, and errorLevel are equal, otherwise false.
+  bool operator==(const Error& other) const
+  {
+    if (error_type != other.error_type) return false;
+    if (error_references != other.error_references) return false;
+    if (error_description != other.error_description) return false;
+    if (error_level != other.error_level) return false;
+    return true;
+  }
+
+  /// \brief Compares two Error objects for inequality.
+  /// \param other The Error instance to compare with.
+  /// \return True if any field differs, otherwise false.
+  inline bool operator!=(const Error& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 using json = nlohmann::json;

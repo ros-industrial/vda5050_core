@@ -52,6 +52,39 @@ enum class ActionStatus
   FAILED
 };
 
+/// \brief Write the enum-value to an ostream
+/// \param os the stream
+/// \param action_status the enum
+/// \return constexpr std::ostream&
+constexpr std::ostream& operator<<(
+  std::ostream& os, const ActionStatus& action_status)
+{
+  switch (action_status)
+  {
+    case ActionStatus::WAITING:
+      os << "WAITING";
+      break;
+    case ActionStatus::INITIALIZING:
+      os << "INITIALIZING";
+      break;
+    case ActionStatus::RUNNING:
+      os << "RUNNING";
+      break;
+    case ActionStatus::PAUSED:
+      os << "PAUSED";
+      break;
+    case ActionStatus::FINISHED:
+      os << "FINISHED";
+      break;
+    case ActionStatus::FAILED:
+      os << "FAILED";
+      break;
+    default:
+      os.setstate(std::ios_base::failbit);
+  }
+  return os;
+}
+
 using json = nlohmann::json;
 
 inline void to_json(json& j, const ActionStatus& status)

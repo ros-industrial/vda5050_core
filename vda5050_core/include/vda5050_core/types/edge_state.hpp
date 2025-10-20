@@ -53,6 +53,29 @@ struct EdgeState
   ///        starts to enter the edge until the point where it
   ///        reports that the next node was traversed.
   std::optional<Trajectory> trajectory;
+
+  /// \brief Compares two EdgeState objects for equality.
+  /// \param other The EdgeState instance to compare with.
+  /// \return True if edge_id, sequence_id, edge_description,
+  /// released, and trajectory are equal, otherwise false.
+  inline bool operator==(const EdgeState& other) const
+  {
+    if (this->edge_id != other.edge_id) return false;
+    if (this->sequence_id != other.sequence_id) return false;
+    if (this->edge_description != other.edge_description) return false;
+    if (this->released != other.released) return false;
+    if (this->trajectory != other.trajectory) return false;
+
+    return true;
+  }
+
+  /// \brief Compares two EdgeState objects for inequality.
+  /// \param other The EdgeState instance to compare with.
+  /// \return True if any field differs, otherwise false.
+  inline bool operator!=(const EdgeState& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 using json = nlohmann::json;

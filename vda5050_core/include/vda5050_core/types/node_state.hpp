@@ -49,6 +49,28 @@ struct NodeState
 
   /// \brief  "True: indicates that the node is part of the base. False: indicates that the node is part of the horizon.
   bool released = false;
+
+  /// \brief Compares two NodeState objects for equality.
+  /// \param other The NodeState instance to compare with.
+  /// \return True if node_description, node_id, node_position, released, and sequence_id are equal, otherwise false.
+  inline bool operator==(const NodeState& other) const
+  {
+    if (this->node_description != other.node_description) return false;
+    if (this->node_id != other.node_id) return false;
+    if (this->node_position != other.node_position) return false;
+    if (this->released != other.released) return false;
+    if (this->sequence_id != other.sequence_id) return false;
+
+    return true;
+  }
+
+  /// \brief Compares two NodeState objects for inequality.
+  /// \param other The NodeState instance to compare with.
+  /// \return True if any field differs, otherwise false.
+  inline bool operator!=(const NodeState& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 using json = nlohmann::json;

@@ -90,6 +90,32 @@ struct NodePosition
 
   /// \brief Additional information on the map
   std::optional<std::string> map_description;
+
+  /// \brief Compares two NodePosition objects for equality.
+  /// \param other The NodePosition instance to compare with.
+  /// \return True if allowed_deviation_theta, allowed_deviation_x_y, map_description, mapId, theta, x, and y are equal, otherwise false
+  inline bool operator==(const NodePosition& other) const
+  {
+    if (this->allowed_deviation_theta != other.allowed_deviation_theta)
+      return false;
+    if (this->allowed_deviation_x_y != other.allowed_deviation_x_y)
+      return false;
+    if (this->map_description != other.map_description) return false;
+    if (this->mapId != other.mapId) return false;
+    if (this->theta != other.theta) return false;
+    if (this->x != other.x) return false;
+    if (this->y != other.y) return false;
+
+    return true;
+  }
+
+  /// \brief Compares two NodePosition objects for inequality.
+  /// \param other The NodePosition instance to compare with.
+  /// \return True if any field differs, otherwise false.
+  inline bool operator!=(const NodePosition& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 using json = nlohmann::json;

@@ -43,6 +43,26 @@ struct BoundingBoxReference
 
   /// \brief Orientation of the loads bounding box. Important for tugger, trains, etc.
   std::optional<double> theta;
+
+  /// \brief Compares two BoundingBoxReference objects for equality.
+  /// \param other The BoundingBoxReference instance to compare with.
+  /// \return True if all position and orientation fields are equal, otherwise false.
+  inline bool operator==(const BoundingBoxReference& other) const noexcept(true)
+  {
+    if (this->x != other.x) return false;
+    if (this->y != other.y) return false;
+    if (this->z != other.z) return false;
+    if (this->theta != other.theta) return false;
+    return true;
+  }
+
+  /// \brief Compares two BoundingBoxReference objects for inequality.
+  /// \param other The BoundingBoxReference instance to compare with.
+  /// \return True if any field differs, otherwise false.
+  inline bool operator!=(const BoundingBoxReference& other) const noexcept(true)
+  {
+    return !(this->operator==(other));
+  }
 };
 
 using json = nlohmann::json;

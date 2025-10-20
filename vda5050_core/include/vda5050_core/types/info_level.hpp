@@ -36,6 +36,27 @@ enum class InfoLevel
   INFO
 };
 
+/// \brief Outputs a textual representation of an InfoLevel value to the given stream.
+/// \param os The output stream to write to.
+/// \param info_level The InfoLevel value to be converted to text.
+/// \return A reference to the modified output stream.
+constexpr std::ostream& operator<<(
+  std::ostream& os, const InfoLevel& info_level)
+{
+  switch (info_level)
+  {
+    case InfoLevel::DEBUG:
+      os << "DEBUG";
+      break;
+    case InfoLevel::INFO:
+      os << "INFO";
+      break;
+    default:
+      os.setstate(std::ios_base::failbit);
+  }
+  return os;
+}
+
 using json = nlohmann::json;
 
 inline void to_json(json& j, const InfoLevel& level)

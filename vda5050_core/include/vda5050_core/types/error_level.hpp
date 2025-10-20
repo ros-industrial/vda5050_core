@@ -44,6 +44,27 @@ enum class ErrorLevel
   FATAL
 };
 
+/// \brief Outputs a textual representation of an ErrorLevel value to the given stream.
+/// \param os The output stream to write to.
+/// \param error_level The ErrorLevel value to be converted to text.
+/// \return A reference to the modified output stream.
+constexpr std::ostream& operator<<(
+  std::ostream& os, const ErrorLevel& error_level)
+{
+  switch (error_level)
+  {
+    case ErrorLevel::WARNING:
+      os << "WARNING";
+      break;
+    case ErrorLevel::FATAL:
+      os << "FATAl";
+      break;
+    default:
+      os.setstate(std::ios_base::failbit);
+  }
+  return os;
+}
+
 using json = nlohmann::json;
 
 inline void to_json(json& j, const ErrorLevel& level)

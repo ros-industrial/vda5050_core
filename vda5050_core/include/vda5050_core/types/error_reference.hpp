@@ -40,6 +40,24 @@ struct ErrorReference
   ///        reference key. For example, the ID of
   ///        the node where the error occurred.
   std::string reference_value;
+
+  /// \brief Compares two ErrorReference objects for equality.
+  /// \param other The ErrorReference instance to compare with.
+  /// \return True if reference_key and reference_value are equal, otherwise false.
+  bool operator==(const ErrorReference& other) const
+  {
+    if (reference_key != other.reference_key) return false;
+    if (reference_value != other.reference_value) return false;
+    return true;
+  }
+
+  /// \brief Compares two ErrorReference objects for inequality.
+  /// \param other The ErrorReference instance to compare with.
+  /// \return True if any field differs, otherwise false.
+  inline bool operator!=(const ErrorReference& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 using json = nlohmann::json;

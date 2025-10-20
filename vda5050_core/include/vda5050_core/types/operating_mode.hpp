@@ -64,6 +64,33 @@ enum class OperatingMode : uint8_t
   TEACHIN
 };
 
+/// \brief Outputs a textual representation of an OperatingMode value to the given stream.
+/// \param os The output stream to write to.
+/// \param operating_mode The OperatingMode value to be converted to text.
+/// \return A reference to the modified output stream.
+constexpr std::ostream &operator<<(std::ostream &os, const OperatingMode &operating_mode) {
+  switch (operating_mode) {
+    case OperatingMode::AUTOMATIC:
+      os << "AUTOMATIC";
+      break;
+    case OperatingMode::SEMIAUTOMATIC:
+      os << "SEMIAUTOMATIC";
+      break;
+    case OperatingMode::MANUAL:
+      os << "MANUAL";
+      break;
+    case OperatingMode::SERVICE:
+      os << "SERVICE";
+      break;
+    case OperatingMode::TEACHIN:
+      os << "TEACHIN";
+      break;
+    default:
+      os.setstate(std::ios_base::failbit);
+  }
+  return os;
+}
+
 using json = nlohmann::json;
 
 inline void to_json(json& j, const OperatingMode& mode)

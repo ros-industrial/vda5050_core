@@ -51,7 +51,36 @@ struct Header
 
   /// \brief Serial number of the AGV.
   std::string serial_number;
+
+  /// \brief Compares two Header objects for equality.
+  /// \param other The Header instance to compare with.
+  /// \return True if header_id, timestamp (to the nearest second), version, manufacturer, and serial_number are equal, otherwise false.
+  inline bool operator==(const Header& other) const
+  {
+    if (header_id != other.header_id) return false;
+    if (
+      std::chrono::duration_cast<std::chrono::seconds>(
+        timestamp.time_since_epoch()) !=
+      std::chrono::duration_cast<std::chrono::seconds>(
+        other.timestamp.time_since_epoch()))
+      return false;
+    if (version != other.version) return false;
+    if (manufacturer != other.manufacturer) return false;
+    if (serial_number != other.serial_number) return false;
+    return true;
+  }
+
+  /// \brief Compares two Header objects for inequality.
+  /// \param other The Header instance to compare with.
+  /// \return True if any field differs, otherwise false.
+  inline bool operator!=(const Header& other) const
+  {
+    return !this->operator==(other);
+  }
 };
+
+using namespace vda5050_core::types;
+using nlohmann::json;
 
 inline void to_json(json& j, const Header& d)
 {

@@ -121,6 +121,45 @@ struct State
 
   /// \brief Contains all safety-related information.
   SafetyState safety_state;
+
+  /// \brief Compares two State objects for equality.
+  /// \param other The State instance to compare with.
+  /// \return True if all fields are equal, otherwise false.
+  inline bool operator==(const State& other) const
+  {
+    if (this->header != other.header) return false;
+    if (this->order_id != other.order_id) return false;
+    if (this->order_update_id != other.order_update_id) return false;
+    if (this->zone_set_id != other.zone_set_id) return false;
+    if (this->last_node_id != other.last_node_id) return false;
+    if (this->last_node_sequence_id != other.last_node_sequence_id)
+      return false;
+    if (this->node_states != other.node_states) return false;
+    if (this->edge_states != other.edge_states) return false;
+    if (this->agv_position != other.agv_position) return false;
+    if (this->velocity != other.velocity) return false;
+    if (this->loads != other.loads) return false;
+    if (this->driving != other.driving) return false;
+    if (this->paused != other.paused) return false;
+    if (this->new_base_request != other.new_base_request) return false;
+    if (this->distance_since_last_node != other.distance_since_last_node)
+      return false;
+    if (this->action_states != other.action_states) return false;
+    if (this->battery_state != other.battery_state) return false;
+    if (this->operating_mode != other.operating_mode) return false;
+    if (this->errors != other.errors) return false;
+    if (this->information != other.information) return false;
+    if (this->safety_state != other.safety_state) return false;
+    return true;
+  }
+
+  /// \brief Compares two State objects for inequality.
+  /// \param other The State instance to compare with.
+  /// \return True if any field differs, otherwise false.
+  inline bool operator!=(const State& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 using json = nlohmann::json;

@@ -50,6 +50,27 @@ struct BatteryState
   ///        charge.
   /// \note  Valid range: [0, uint32.max]
   std::optional<uint32_t> reach;
+
+  /// \brief Compares two BatteryState objects for equality.
+  /// \param other The BatteryState instance to compare with.
+  /// \return True if all compared fields are equal, otherwise false.
+  inline bool operator==(const BatteryState& other) const
+  {
+    if (battery_charge != other.battery_charge) return false;
+    if (battery_voltage != other.battery_voltage) return false;
+    if (battery_health != other.battery_health) return false;
+    if (charging != other.charging) return false;
+    if (reach != other.reach) return false;
+    return true;
+  }
+
+  /// \brief Compares two BatteryState objects for inequality.
+  /// \param other The BatteryState instance to compare with.
+  /// \return True if any compared field differs, otherwise false.
+  inline bool operator!=(const BatteryState& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 using json = nlohmann::json;

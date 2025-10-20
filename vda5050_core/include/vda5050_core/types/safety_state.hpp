@@ -41,26 +41,24 @@ struct SafetyState
   /// \brief Protective field violation. True: field is violated. False: field is not violated.
   bool field_violation = false;
 
-  ///
   /// \brief Equality operator
-  ///
   /// \param other the other object to compare to
   /// \return is equal?
-  ///
-  inline bool operator==(const SafetyState &other) const {
+  inline bool operator==(const SafetyState& other) const
+  {
     if (this->e_stop != other.e_stop) return false;
     if (this->field_violation != other.field_violation) return false;
 
     return true;
   }
 
-  ///
   /// \brief Inequality operator
-  ///
   /// \param other the other object to compare to
   /// \return is not equal?
-  ///
-  inline bool operator!=(const SafetyState &other) const { return !this->operator==(other); }
+  inline bool operator!=(const SafetyState& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 using json = nlohmann::json;

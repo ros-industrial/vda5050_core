@@ -34,6 +34,24 @@ struct InfoReference
 
   /// \brief References the value, which belongs to the key.
   std::string reference_value;
+
+  /// \brief Compares two InfoReference objects for equality.
+  /// \param other The InfoReference instance to compare with.
+  /// \return True if reference_key and reference_value are equal, otherwise false.
+  bool operator==(const InfoReference& other) const
+  {
+    if (reference_key != other.reference_key) return false;
+    if (reference_value != other.reference_value) return false;
+    return true;
+  }
+
+  /// \brief Compares two InfoReference objects for inequality.
+  /// \param other The InfoReference instance to compare with.
+  /// \return True if any field differs, otherwise false.
+  inline bool operator!=(const InfoReference& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 using json = nlohmann::json;

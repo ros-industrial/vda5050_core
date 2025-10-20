@@ -52,6 +52,26 @@ struct Trajectory
   ///        control points of the NURBS, explicitly
   ///        including the start and end point.
   std::vector<ControlPoint> control_points;
+
+  /// \brief Compares two Trajectory objects for equality.
+  /// \param other The Trajectory instance to compare with.
+  /// \return True if degree, knotVector, and controlPoints are equal, otherwise false.
+  inline bool operator==(const Trajectory& other) const
+  {
+    if (this->degree != other.degree) return false;
+    if (this->knot_vector != other.knot_vector) return false;
+    if (this->control_points != other.control_points) return false;
+
+    return true;
+  }
+
+  /// \brief Compares two Trajectory objects for inequality.
+  /// \param other The Trajectory instance to compare with.
+  /// \return True if any field differs, otherwise false.
+  inline bool operator!=(const Trajectory& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 using json = nlohmann::json;

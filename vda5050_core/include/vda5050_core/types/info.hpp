@@ -48,6 +48,26 @@ struct Info
   ///        'DEBUG': used for debugging.
   ///        'INFO': used for visualization.
   InfoLevel info_level = InfoLevel::DEBUG;
+
+  /// \brief Compares two Info objects for equality.
+  /// \param other The Info instance to compare with.
+  /// \return True if infoType, infoReferences, infoDescription, and infoLevel are equal, otherwise false.
+  bool operator==(const Info& other) const
+  {
+    if (info_type != other.info_type) return false;
+    if (info_references != other.info_references) return false;
+    if (info_description != other.info_description) return false;
+    if (info_level != other.info_level) return false;
+    return true;
+  }
+
+  /// \brief Compares two Info objects for inequality.
+  /// \param other The Info instance to compare with.
+  /// \return True if any field differs, otherwise false.
+  inline bool operator!=(const Info& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 using json = nlohmann::json;

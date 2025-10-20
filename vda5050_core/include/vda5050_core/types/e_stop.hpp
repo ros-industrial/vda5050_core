@@ -47,6 +47,32 @@ enum class EStop
   NONE
 };
 
+/// \brief Outputs a textual representation of an EStop value to the given stream.
+/// \param os The output stream to write to.
+/// \param e_stop The EStop value to be converted to text.
+/// \return A reference to the modified output stream.
+constexpr std::ostream& operator<<(std::ostream& os, const EStop& e_stop)
+{
+  switch (e_stop)
+  {
+    case EStop::AUTOACK:
+      os << "AUTOACK";
+      break;
+    case EStop::MANUAL:
+      os << "MANUAL";
+      break;
+    case EStop::REMOTE:
+      os << "REMOTE";
+      break;
+    case EStop::NONE:
+      os << "NONE";
+      break;
+    default:
+      os.setstate(std::ios_base::failbit);
+  }
+  return os;
+}
+
 using json = nlohmann::json;
 
 inline void to_json(json& j, const EStop& estop)

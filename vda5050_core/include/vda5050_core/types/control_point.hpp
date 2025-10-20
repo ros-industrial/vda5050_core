@@ -42,6 +42,26 @@ struct ControlPoint
   ///        If not defined, the default value is 1.
   ///        Valid range: [1, 10]
   double weight = 1.0;
+
+  /// \brief Compares two ControlPoint objects for equality.
+  /// \param other The ControlPoint instance to compare with.
+  /// \return True if x, y, and weight are equal, otherwise false.
+  inline bool operator==(const ControlPoint& other) const
+  {
+    if (this->x != other.x) return false;
+    if (this->y != other.y) return false;
+    if (this->weight != other.weight) return false;
+
+    return true;
+  }
+
+  /// \brief Compares two ControlPoint objects for inequality.
+  /// \param other The ControlPoint instance to compare with.
+  /// \return True if any field differs, otherwise false.
+  inline bool operator!=(const ControlPoint& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 using json = nlohmann::json;

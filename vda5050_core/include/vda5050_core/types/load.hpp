@@ -63,6 +63,29 @@ struct Load
 
   /// \brief Absolute weight of the load measured in kg.
   std::optional<uint32_t> weight;
+
+  /// \brief Compares two Load objects for equality.
+  /// \param other The Load instance to compare with.
+  /// \return True if load_id, load_type, weight, load_dimensions, bounding_box_reference, and load_position are equal, otherwise false.
+  inline bool operator==(const Load& other) const noexcept(true)
+  {
+    if (this->load_id != other.load_id) return false;
+    if (this->load_type != other.load_type) return false;
+    if (this->weight != other.weight) return false;
+    if (this->load_dimensions != other.load_dimensions) return false;
+    if (this->bounding_box_reference != other.bounding_box_reference)
+      return false;
+    if (this->load_position != other.load_position) return false;
+    return true;
+  }
+
+  /// \brief Compares two Load objects for inequality.
+  /// \param other The Load instance to compare with.
+  /// \return True if any field differs, otherwise false.
+  inline bool operator!=(const Load& other) const noexcept(true)
+  {
+    return !(this->operator==(other));
+  }
 };
 
 using json = nlohmann::json;

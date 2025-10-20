@@ -74,7 +74,31 @@ struct ActionState
   ///        result of an RFID reading.
   ///        Errors will be transmitted in errors.
   std::optional<std::string> result_description;
+
   ///
+  /// \brief Equality operator
+  ///
+  /// \param other the other object to compare to
+  /// \return is equal?
+  inline bool operator==(const ActionState& other) const
+  {
+    if (this->action_id != other.action_id) return false;
+    if (this->action_type != other.action_type) return false;
+    if (this->action_description != other.action_description) return false;
+    if (this->action_status != other.action_status) return false;
+    if (this->result_description != other.result_description) return false;
+
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  /// \return is not equal?
+  inline bool operator!=(const ActionState& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 using json = nlohmann::json;

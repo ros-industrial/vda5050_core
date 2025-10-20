@@ -68,6 +68,28 @@ struct AgvPosition
 
   /// \brief Additional information on the map.
   std::optional<std::string> map_description;
+
+  /// \brief Compare two AgvPosition objects for equality.
+  /// \param other The AgvPosition instance to compare with.
+  /// \return True if all compared fields are equal, otherwise false.
+  inline bool operator==(const AgvPosition& other) const
+  {
+    if (position_initialized != other.position_initialized) return false;
+    if (localization_score != other.localization_score) return false;
+    if (deviation_range != other.deviation_range) return false;
+    if (x != other.x) return false;
+    if (y != other.y) return false;
+    if (theta != other.theta) return false;
+    return true;
+  }
+
+  /// \brief Compare two AgvPosition objects for inequality.
+  /// \param other The AgvPosition instance to compare with.
+  /// \return True if all compared fields are not equal, otherwise true.
+  inline bool operator!=(const AgvPosition& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 using json = nlohmann::json;

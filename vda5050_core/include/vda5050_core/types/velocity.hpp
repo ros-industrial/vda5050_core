@@ -38,6 +38,25 @@ struct Velocity
 
   /// \brief The AVGs turning speed around its z axis
   std::optional<double> omega;
+
+  /// \brief Compares two Velocity objects for equality.
+  /// \param other The Velocity instance to compare with.
+  /// \return True if vx, vy, and omega are equal, otherwise false.
+  inline bool operator==(const Velocity& other) const
+  {
+    if (vx != other.vx) return false;
+    if (vy != other.vy) return false;
+    if (omega != other.omega) return false;
+    return true;
+  }
+
+  /// \brief Compares two Velocity objects for inequality.
+  /// \param other The Velocity instance to compare with.
+  /// \return True if any field differs, otherwise false.
+  inline bool operator!=(const Velocity& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 using json = nlohmann::json;

@@ -39,6 +39,25 @@ struct LoadDimensions
   /// \brief Absolute height of the loads bounding box in meter.
   ///        Optional: Set value only if known.
   std::optional<double> height;
+
+  /// \brief Compares two LoadDimensions objects for equality.
+  /// \param other The LoadDimensions instance to compare with.
+  /// \return True if length, width, and height are equal, otherwise false.
+  inline bool operator==(const LoadDimensions& other) const noexcept(true)
+  {
+    if (this->length != other.length) return false;
+    if (this->width != other.width) return false;
+    if (this->height != other.height) return false;
+    return true;
+  }
+
+  /// \brief Compares two LoadDimensions objects for inequality.
+  /// \param other The LoadDimensions instance to compare with.
+  /// \return True if any dimension differs, otherwise false.
+  inline bool operator!=(const LoadDimensions& other) const noexcept(true)
+  {
+    return !(this->operator==(other));
+  }
 };
 
 using json = nlohmann::json;
