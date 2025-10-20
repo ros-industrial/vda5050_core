@@ -83,13 +83,13 @@ using json = nlohmann::json;
 inline void to_json(json& j, const EdgeState& state)
 {
   j = json{
-    {"edge_id", state.edge_id},
-    {"sequence_id", state.sequence_id},
+    {"edgeId", state.edge_id},
+    {"sequenceId", state.sequence_id},
     {"released", state.released}};
 
   if (state.edge_description.has_value())
   {
-    j["edge_description"] = state.edge_description.value();
+    j["edgeDescription"] = state.edge_description.value();
   }
 
   if (state.trajectory.has_value())
@@ -100,13 +100,13 @@ inline void to_json(json& j, const EdgeState& state)
 
 inline void from_json(const json& j, EdgeState& state)
 {
-  j.at("edge_id").get_to(state.edge_id);
-  j.at("sequence_id").get_to(state.sequence_id);
+  j.at("edgeId").get_to(state.edge_id);
+  j.at("sequenceId").get_to(state.sequence_id);
   j.at("released").get_to(state.released);
 
-  if (j.contains("edge_description") && !j.at("edge_description").is_null())
+  if (j.contains("edgeDescription") && !j.at("edgeDescription").is_null())
   {
-    state.edge_description = j.at("edge_description").get<std::string>();
+    state.edge_description = j.at("edgeDescription").get<std::string>();
   }
   else
   {

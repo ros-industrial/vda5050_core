@@ -59,14 +59,14 @@ using json = nlohmann::json;
 inline void to_json(json& j, const InfoReference& ref)
 {
   j = json{
-    {"reference_key", ref.reference_key},
-    {"reference_value", ref.reference_value}};
+    {"referenceKey", ref.reference_key},
+    {"referenceValue", ref.reference_value}};
 }
 
 inline void from_json(const json& j, InfoReference& ref)
 {
-  j.at("reference_key").get_to(ref.reference_key);
-  j.at("reference_value").get_to(ref.reference_value);
+  j.at("referenceKey").get_to(ref.reference_key);
+  j.at("referenceValue").get_to(ref.reference_value);
 }
 
 }  // namespace types

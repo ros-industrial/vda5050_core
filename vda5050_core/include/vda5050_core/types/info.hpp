@@ -74,37 +74,37 @@ using json = nlohmann::json;
 
 inline void to_json(json& j, const Info& i)
 {
-  j = json{{"info_type", i.info_type}, {"info_level", i.info_level}};
+  j = json{{"infoType", i.info_type}, {"infoLevel", i.info_level}};
 
   if (i.info_references.has_value())
   {
-    j["info_references"] = i.info_references.value();
+    j["infoReferences"] = i.info_references.value();
   }
 
   if (i.info_description.has_value())
   {
-    j["info_description"] = i.info_description.value();
+    j["infoDescription"] = i.info_description.value();
   }
 }
 
 inline void from_json(const json& j, Info& i)
 {
-  j.at("info_type").get_to(i.info_type);
-  j.at("info_level").get_to(i.info_level);
+  j.at("infoType").get_to(i.info_type);
+  j.at("infoLevel").get_to(i.info_level);
 
-  if (j.contains("info_references") && !j.at("info_references").is_null())
+  if (j.contains("infoReferences") && !j.at("infoReferences").is_null())
   {
     i.info_references =
-      j.at("info_references").get<std::vector<InfoReference>>();
+      j.at("infoReferences").get<std::vector<InfoReference>>();
   }
   else
   {
     i.info_references = std::nullopt;
   }
 
-  if (j.contains("info_description") && !j.at("info_description").is_null())
+  if (j.contains("infoDescription") && !j.at("infoDescription").is_null())
   {
-    i.info_description = j.at("info_description").get<std::string>();
+    i.info_description = j.at("infoDescription").get<std::string>();
   }
 }
 

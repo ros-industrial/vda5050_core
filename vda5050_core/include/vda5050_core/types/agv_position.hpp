@@ -97,48 +97,48 @@ using json = nlohmann::json;
 inline void to_json(json& j, const AgvPosition& pos)
 {
   j = json{
-    {"position_initialized", pos.position_initialized},
+    {"positionInitialized", pos.position_initialized},
     {"x", pos.x},
     {"y", pos.y},
     {"theta", pos.theta},
-    {"map_id", pos.map_id}};
+    {"mapId", pos.map_id}};
 
   if (pos.localization_score.has_value())
   {
-    j["localization_score"] = pos.localization_score.value();
+    j["localizationScore"] = pos.localization_score.value();
   }
 
   if (pos.deviation_range.has_value())
   {
-    j["deviation_range"] = pos.deviation_range.value();
+    j["deviationRange"] = pos.deviation_range.value();
   }
 
   if (pos.map_description.has_value())
   {
-    j["map_description"] = pos.map_description.value();
+    j["mapDescription"] = pos.map_description.value();
   }
 }
 
 inline void from_json(const json& j, AgvPosition& pos)
 {
-  j.at("position_initialized").get_to(pos.position_initialized);
+  j.at("positionInitialized").get_to(pos.position_initialized);
   j.at("x").get_to(pos.x);
   j.at("y").get_to(pos.y);
   j.at("theta").get_to(pos.theta);
-  j.at("map_id").get_to(pos.map_id);
+  j.at("mapId").get_to(pos.map_id);
 
-  if (j.contains("localization_score") && !j.at("localization_score").is_null())
-    pos.localization_score = j.at("localization_score").get<double>();
+  if (j.contains("localizationScore") && !j.at("localizationScore").is_null())
+    pos.localization_score = j.at("localizationScore").get<double>();
   else
     pos.localization_score = std::nullopt;
 
-  if (j.contains("deviation_range") && !j.at("deviation_range").is_null())
-    pos.deviation_range = j.at("deviation_range").get<double>();
+  if (j.contains("deviationRange") && !j.at("deviationRange").is_null())
+    pos.deviation_range = j.at("deviationRange").get<double>();
   else
     pos.deviation_range = std::nullopt;
 
-  if (j.contains("map_description") && !j.at("map_description").is_null())
-    pos.map_description = j.at("map_description").get<std::string>();
+  if (j.contains("mapDescription") && !j.at("mapDescription").is_null())
+    pos.map_description = j.at("mapDescription").get<std::string>();
   else
     pos.map_description = std::nullopt;
 }

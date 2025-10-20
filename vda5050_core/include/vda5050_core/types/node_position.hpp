@@ -131,17 +131,17 @@ inline void to_json(json& j, const NodePosition& n)
 
   if (n.allowed_deviation_x_y.has_value())
   {
-    j["allowed_deviation_x_y"] = n.allowed_deviation_x_y.value();
+    j["allowedDeviationXY"] = n.allowed_deviation_x_y.value();
   }
 
   if (n.allowed_deviation_theta.has_value())
   {
-    j["allowed_deviation_theta"] = n.allowed_deviation_theta.value();
+    j["allowedDeviationTheta"] = n.allowed_deviation_theta.value();
   }
 
   if (n.map_description.has_value())
   {
-    j["map_description"] = n.map_description.value();
+    j["mapDescription"] = n.map_description.value();
   }
 }
 
@@ -157,22 +157,22 @@ inline void from_json(const json& j, NodePosition& n)
   }
 
   if (
-    j.contains("allowed_deviation_x_y") &&
-    !j.at("allowed_deviation_x_y").is_null())
+    j.contains("allowedDeviationXY") &&
+    !j.at("allowedDeviationXY").is_null())
   {
-    n.allowed_deviation_x_y = j.at("allowed_deviation_x_y").get<double>();
+    n.allowed_deviation_x_y = j.at("allowedDeviationXY").get<double>();
   }
 
   if (
-    j.contains("allowed_deviation_theta") &&
-    !j.at("allowed_deviation_theta").is_null())
+    j.contains("allowedDeviationTheta") &&
+    !j.at("allowedDeviationTheta").is_null())
   {
-    n.allowed_deviation_theta = j.at("allowed_deviation_theta").get<double>();
+    n.allowed_deviation_theta = j.at("allowedDeviationTheta").get<double>();
   }
 
-  if (j.contains("map_description") && !j.at("map_description").is_null())
+  if (j.contains("mapDescription") && !j.at("mapDescription").is_null())
   {
-    n.map_description = j.at("map_description").get<std::string>();
+    n.map_description = j.at("mapDescription").get<std::string>();
   }
 }
 

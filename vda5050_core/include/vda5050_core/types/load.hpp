@@ -96,27 +96,27 @@ inline void to_json(json& j, const Load& l)
 
   if (l.load_id.has_value())
   {
-    j["load_id"] = l.load_id.value();
+    j["loadId"] = l.load_id.value();
   }
 
   if (l.load_type.has_value())
   {
-    j["load_type"] = l.load_type.value();
+    j["loadType"] = l.load_type.value();
   }
 
   if (l.load_position.has_value())
   {
-    j["load_position"] = l.load_position.value();
+    j["loadPosition"] = l.load_position.value();
   }
 
   if (l.bounding_box_reference.has_value())
   {
-    j["bounding_box_reference"] = l.bounding_box_reference.value();
+    j["boundingBoxReference"] = l.bounding_box_reference.value();
   }
 
   if (l.load_dimensions.has_value())
   {
-    j["load_dimensions"] = l.load_dimensions.value();
+    j["loadDimensions"] = l.load_dimensions.value();
   }
 
   if (l.weight.has_value())
@@ -127,32 +127,32 @@ inline void to_json(json& j, const Load& l)
 
 inline void from_json(const json& j, Load& l)
 {
-  if (j.contains("load_id") && !j.at("load_id").is_null())
+  if (j.contains("loadId") && !j.at("loadId").is_null())
   {
-    l.load_id = j.at("load_id").get<std::string>();
+    l.load_id = j.at("loadId").get<std::string>();
   }
 
-  if (j.contains("load_type") && !j.at("load_type").is_null())
+  if (j.contains("loadType") && !j.at("loadType").is_null())
   {
-    l.load_type = j.at("load_type").get<std::string>();
+    l.load_type = j.at("loadType").get<std::string>();
   }
 
-  if (j.contains("load_position") && !j.at("load_position").is_null())
+  if (j.contains("loadPosition") && !j.at("loadPosition").is_null())
   {
-    l.load_position = j.at("load_position").get<std::string>();
+    l.load_position = j.at("loadPosition").get<std::string>();
   }
 
   if (
-    j.contains("bounding_box_reference") &&
-    !j.at("bounding_box_reference").is_null())
+    j.contains("boundingBoxReference") &&
+    !j.at("boundingBoxReference").is_null())
   {
     l.bounding_box_reference =
-      j.at("bounding_box_reference").get<BoundingBoxReference>();
+      j.at("boundingBoxReference").get<BoundingBoxReference>();
   }
 
-  if (j.contains("load_dimensions") && !j.at("load_dimensions").is_null())
+  if (j.contains("loadDimensions") && !j.at("loadDimensions").is_null())
   {
-    l.load_dimensions = j.at("load_dimensions").get<LoadDimensions>();
+    l.load_dimensions = j.at("loadDimensions").get<LoadDimensions>();
   }
 
   if (j.contains("weight") && !j.at("weight").is_null())

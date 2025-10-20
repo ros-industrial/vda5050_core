@@ -78,35 +78,35 @@ using json = nlohmann::json;
 inline void to_json(json& j, const NodeState& n)
 {
   j = json{
-    {"node_id", n.node_id},
-    {"sequence_id", n.sequence_id},
+    {"nodeId", n.node_id},
+    {"sequenceId", n.sequence_id},
     {"released", n.released}};
 
   if (n.node_description.has_value())
   {
-    j["node_description"] = n.node_description.value();
+    j["nodeDescription"] = n.node_description.value();
   }
 
   if (n.node_position.has_value())
   {
-    j["node_position"] = n.node_position.value();
+    j["nodePosition"] = n.node_position.value();
   }
 }
 
 inline void from_json(const json& j, NodeState& n)
 {
-  j.at("node_id").get_to(n.node_id);
-  j.at("sequence_id").get_to(n.sequence_id);
+  j.at("nodeId").get_to(n.node_id);
+  j.at("sequenceId").get_to(n.sequence_id);
   j.at("released").get_to(n.released);
 
-  if (j.contains("node_description") && !j.at("node_description").is_null())
+  if (j.contains("nodeDescription") && !j.at("nodeDescription").is_null())
   {
-    n.node_description = j.at("node_description").get<std::string>();
+    n.node_description = j.at("nodeDescription").get<std::string>();
   }
 
-  if (j.contains("node_position") && !j.at("node_position").is_null())
+  if (j.contains("nodePosition") && !j.at("nodePosition").is_null())
   {
-    n.node_position = j.at("node_position").get<NodePosition>();
+    n.node_position = j.at("nodePosition").get<NodePosition>();
   }
 }
 

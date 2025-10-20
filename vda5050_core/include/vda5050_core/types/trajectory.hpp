@@ -80,15 +80,15 @@ inline void to_json(json& j, const Trajectory& t)
 {
   j = json{
     {"degree", t.degree},
-    {"knot_vector", t.knot_vector},
-    {"control_points", t.control_points}};
+    {"knotVector", t.knot_vector},
+    {"controlPoints", t.control_points}};
 }
 
 inline void from_json(const json& j, Trajectory& t)
 {
   j.at("degree").get_to(t.degree);
-  j.at("knot_vector").get_to(t.knot_vector);
-  j.at("control_points").get_to(t.control_points);
+  j.at("knotVector").get_to(t.knot_vector);
+  j.at("controlPoints").get_to(t.control_points);
 }
 
 }  // namespace types

@@ -78,29 +78,29 @@ using json = nlohmann::json;
 inline void to_json(json& j, const BatteryState& state)
 {
   j = json{
-    {"battery_charge", state.battery_charge}, {"charging", state.charging}};
+    {"batteryCharge", state.battery_charge}, {"charging", state.charging}};
 
   if (state.battery_voltage.has_value())
-    j["battery_voltage"] = state.battery_voltage.value();
+    j["batteryVoltage"] = state.battery_voltage.value();
 
   if (state.battery_health.has_value())
-    j["battery_health"] = state.battery_health.value();
+    j["batteryHealth"] = state.battery_health.value();
 
   if (state.reach.has_value()) j["reach"] = state.reach.value();
 }
 
 inline void from_json(const json& j, BatteryState& state)
 {
-  j.at("battery_charge").get_to(state.battery_charge);
+  j.at("batteryCharge").get_to(state.battery_charge);
   j.at("charging").get_to(state.charging);
 
-  if (j.contains("battery_voltage") && !j.at("battery_voltage").is_null())
-    state.battery_voltage = j.at("battery_voltage").get<double>();
+  if (j.contains("batteryVoltage") && !j.at("batteryVoltage").is_null())
+    state.battery_voltage = j.at("batteryVoltage").get<double>();
   else
     state.battery_voltage = std::nullopt;
 
-  if (j.contains("battery_health") && !j.at("battery_health").is_null())
-    state.battery_health = j.at("battery_health").get<int8_t>();
+  if (j.contains("batteryHealth") && !j.at("batteryHealth").is_null())
+    state.battery_health = j.at("batteryHealth").get<int8_t>();
   else
     state.battery_health = std::nullopt;
 

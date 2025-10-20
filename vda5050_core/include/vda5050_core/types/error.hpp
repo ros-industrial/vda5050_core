@@ -90,51 +90,51 @@ using json = nlohmann::json;
 
 inline void to_json(json& j, const Error& e)
 {
-  j = json{{"error_type", e.error_type}, {"error_level", e.error_level}};
+  j = json{{"errorType", e.error_type}, {"errorLevel", e.error_level}};
 
   if (e.error_references.has_value())
   {
-    j["error_references"] = e.error_references.value();
+    j["errorReferences"] = e.error_references.value();
   }
 
   if (e.error_description.has_value())
   {
-    j["error_description"] = e.error_description.value();
+    j["errorDescription"] = e.error_description.value();
   }
 
   if (e.error_hint.has_value())
   {
-    j["error_hint"] = e.error_hint.value();
+    j["errorHint"] = e.error_hint.value();
   }
 }
 
 inline void from_json(const json& j, Error& e)
 {
-  j.at("error_type").get_to(e.error_type);
-  j.at("error_level").get_to(e.error_level);
+  j.at("errorType").get_to(e.error_type);
+  j.at("errorLevel").get_to(e.error_level);
 
-  if (j.contains("error_references") && !j.at("error_references").is_null())
+  if (j.contains("errorReferences") && !j.at("errorReferences").is_null())
   {
     e.error_references =
-      j.at("error_references").get<std::vector<ErrorReference>>();
+      j.at("errorReferences").get<std::vector<ErrorReference>>();
   }
   else
   {
     e.error_references = std::nullopt;
   }
 
-  if (j.contains("error_description") && !j.at("error_description").is_null())
+  if (j.contains("errorDescription") && !j.at("errorDescription").is_null())
   {
-    e.error_description = j.at("error_description").get<std::string>();
+    e.error_description = j.at("errorDescription").get<std::string>();
   }
   else
   {
     e.error_description = std::nullopt;
   }
 
-  if (j.contains("error_hint") && !j.at("error_hint").is_null())
+  if (j.contains("errorHint") && !j.at("errorHint").is_null())
   {
-    e.error_hint = j.at("error_hint").get<std::string>();
+    e.error_hint = j.at("errorHint").get<std::string>();
   }
   else
   {

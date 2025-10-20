@@ -65,13 +65,13 @@ using json = nlohmann::json;
 
 inline void to_json(json& j, const SafetyState& s)
 {
-  j = json{{"e_stop", s.e_stop}, {"field_violation", s.field_violation}};
+  j = json{{"eStop", s.e_stop}, {"fieldViolation", s.field_violation}};
 }
 
 inline void from_json(const json& j, SafetyState& s)
 {
-  j.at("e_stop").get_to(s.e_stop);
-  j.at("field_violation").get_to(s.field_violation);
+  j.at("eStop").get_to(s.e_stop);
+  j.at("fieldViolation").get_to(s.field_violation);
 }
 
 }  // namespace types
