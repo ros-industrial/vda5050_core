@@ -46,187 +46,103 @@ private:
   /// \brief the mutex protecting the data
   mutable std::shared_mutex mutex_;
 
-  /// \brief all loads of the AGV
-  std::optional<std::vector<Load>> loads_;
-  /// \brief the flag if a new base request is active
-  std::optional<bool> new_base_request_;
-
-  /// \brief The current battery state of the AGV
-  BatteryState battery_state_;
-
-  /// \brief The current operating mode of the AGV
-  OperatingMode operating_mode_ = OperatingMode::SERVICE;
-
-  /// \brief The current errors of the AGV
-  std::vector<Error> errors_;
-
-  /// \brief The current informations of the AGV
-  std::vector<Info> information_;
-
-  /// \brief the current safety state of the AGV
-  SafetyState safety_state_;
-
-  /// \brief the current position of the AGV
-  std::optional<AgvPosition> agv_position_;
-
-  /// \brief the current velocity of the AGV
-  std::optional<Velocity> velocity_;
-
-  /// \brief the current driving state of the AGV
-  bool driving_ = false;
+  /// \brief Internal State of the AGV
+  State robot_state_;
 
   /// \brief the distance since the last node of the AGV
   std::optional<double> distance_since_last_node_;
 
 public:
-  ///
   /// \brief Set the current AGV position
-  ///
   /// \param agv_position the agv position
-  ///
   void set_agv_position(const std::optional<AgvPosition>& agv_position);
 
-  ///
   /// \brief Get the current AGV position (if set)
-  ///
   /// \return std::optional<AGVPosition> the current AGV position of std::nullopt
-  ///
   std::optional<AgvPosition> get_agv_position();
 
-  ///
   /// \brief Set the current velocity
-  ///
   /// \param velocity the velocity
-  ///
   void set_velocity(const std::optional<Velocity>& velocity);
 
-  ///
   /// \brief Get the Velocity (if set)
-  ///
   /// \return std::optional<Velocity> the velocity of std::nullopt
-  ///
   std::optional<Velocity> get_velocity() const;
 
-  ///
   /// \brief Set the driving flag of the AGV
-  ///
   /// \param driving is the agv driving?
   /// \return true, if the driving flag changed
-  ///
   bool set_driving(bool driving);
 
-  ///
   /// \brief Set the distance since the last node as in vda5050
-  ///
   /// \param distance_since_last_node the new distance since the last node
-  ///
   void set_distance_since_last_node(double distance_since_last_node);
 
-  ///
   /// \brief Reset the distance since the last node
-  ///
   void reset_distance_since_last_node();
 
-  ///
+  /// \brief Get the current distance since the last node.
+  /// \return The current distance since the last node, or std::nullopt if not set.
+  std::optional<double> get_distance_since_last_node() const;
+
   /// \brief Add a new load to the state
-  ///
   /// \param load  the load to add
   /// \return true if the loads changed (in this case always)
-  ///
   bool add_load(const Load& load);
 
-  ///
   /// \brief Remove a load by it's id from the loads array
-  ///
   /// \param load_id the id of the load to remove
   /// \return true if at least one load was removed
-  ///
   bool remove_load(std::string_view load_id);
 
-  ///
   /// \brief Get the current loads
-  ///
   /// \return const std::vector<Load>& the current loads
-  ///
   const std::vector<Load>& get_loads();
 
-  ///
   /// \brief Set the current operating mode of the AGV
-  ///
   /// \param operating_mode the new operating mode
   /// \return true if the operating mode changed
-  ///
   bool set_operating_mode(OperatingMode operating_mode);
 
-  ///
   /// \brief Get the current operating mode from the state
-  ///
   /// \return OperatingMode the current operating mode
-  ///
   OperatingMode get_operating_mode();
 
-  ///
   /// \brief Set the current battery state of the AGV
-  ///
   /// \param battery_state the battery state
-  ///
   void set_battery_state(const BatteryState& battery_state);
 
-  ///
   /// \brief Get the current battery state from the state
-  ///
   /// \return const BatteryState& the current battery state
-  ///
   const BatteryState& get_battery_state();
 
-  ///
   /// \brief Set the current safety state of the AGV
-  ///
   /// \param safety_state the safety state
-  ///
   /// \return true if the state changed
-  ///
   bool set_safety_state(const SafetyState& safety_state);
 
-  ///
   /// \brief Get the current safety state from the state
-  ///
   /// \return const SafetyState& the current safety state
-  ///
   const SafetyState& get_safety_state();
 
-  ///
   /// \brief Set the request new base flag to true
-  ///
   void request_new_base();
 
-  ///
   /// \brief Add an error to the state
-  ///
   /// \param error the error to add
   /// \return true if the errors array changed (in this case always)
-  ///
   bool add_error(const Error& error);
 
-  ///
   /// \brief Get a copy of the current errors
-  ///
   /// \return std::vector<Error>
-  ///
   std::vector<Error> get_errors() const;
 
-  ///
   /// \brief Add a new information to the state
-  ///
   /// \param info the information to add
-  ///
   void add_info(const Info& info);
 
-  ///
   /// \brief Dump all data to a vda5050::State
-  ///
   /// \param state the state to write to
-  ///
   void dump_to(State& state);
 };
 

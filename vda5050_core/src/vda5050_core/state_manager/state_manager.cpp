@@ -29,32 +29,32 @@ void StateManager::set_agv_position(
   const std::optional<AgvPosition>& agv_position)
 {
   std::unique_lock lock(this->mutex_);
-  this->agv_position_ = agv_position;
+  this->robot_state_.agv_position = agv_position;
 }
 
 std::optional<AgvPosition> StateManager::get_agv_position()
 {
   std::shared_lock lock(this->mutex_);
-  return this->agv_position_;
+  return this->robot_state_.agv_position;
 }
 
 void StateManager::set_velocity(const std::optional<Velocity>& velocity)
 {
   std::unique_lock lock(this->mutex_);
-  this->velocity_ = velocity;
+  this->robot_state_.velocity = velocity;
 }
 
 std::optional<Velocity> StateManager::get_velocity() const
 {
   std::shared_lock lock(this->mutex_);
-  return this->velocity_;
+  return this->robot_state_.velocity;
 }
 
 bool StateManager::set_driving(bool driving)
 {
   std::unique_lock lock(this->mutex_);
-  bool changed = this->driving_ != driving;
-  this->driving_ = driving;
+  bool changed = this->robot_state_.driving != driving;
+  this->robot_state_.driving = driving;
   return changed;
 }
 
@@ -70,17 +70,23 @@ void StateManager::reset_distance_since_last_node()
   this->distance_since_last_node_.reset();
 }
 
+std::optional<double> StateManager::get_distance_since_last_node() const
+{
+  std::shared_lock lock(this->mutex_);
+  return this->distance_since_last_node_;
+}
+
 bool StateManager::add_load(const Load& load)
 {
   std::unique_lock lock(this->mutex_);
 
-  if (!this->loads_.has_value())
+  if (!this->robot_state_.loads.has_value())
   {
-    this->loads_ = {load};
+    this->robot_state_.loads = {load};
   }
   else
   {
-    this->loads_->push_back(load);
+    this->robot_state_.loads->push_back(load);
   }
 
   return true;
@@ -90,7 +96,7 @@ bool StateManager::remove_load(std::string_view load_id)
 {
   std::unique_lock lock(this->mutex_);
 
-  if (!this->loads_.has_value())
+  if (!this->robot_state_.loads.has_value())
   {
     return false;
   }
@@ -99,13 +105,15 @@ bool StateManager::remove_load(std::string_view load_id)
     return load.load_id == load_id;
   };
 
-  auto before_size = this->loads_->size();
+  auto before_size = this->robot_state_.loads->size();
 
-  this->loads_->erase(
-    std::remove_if(this->loads_->begin(), this->loads_->end(), match_id),
-    this->loads_->end());
+  this->robot_state_.loads->erase(
+    std::remove_if(
+      this->robot_state_.loads->begin(), this->robot_state_.loads->end(),
+      match_id),
+    this->robot_state_.loads->end());
 
-  return this->loads_->size() != before_size;
+  return this->robot_state_.loads->size() != before_size;
 }
 
 const std::vector<Load>& StateManager::get_loads()
@@ -116,9 +124,9 @@ const std::vector<Load>& StateManager::get_loads()
   const static std::vector<Load> empty;
 
   // value_or turns empty into a stack object, so this if block is required
-  if (this->loads_.has_value())
+  if (this->robot_state_.loads.has_value())
   {
-    return *this->loads_;
+    return *this->robot_state_.loads;
   }
   else
   {
@@ -129,8 +137,8 @@ const std::vector<Load>& StateManager::get_loads()
 bool StateManager::set_operating_mode(OperatingMode operating_mode)
 {
   std::unique_lock lock(this->mutex_);
-  bool changed = this->operating_mode_ != operating_mode;
-  this->operating_mode_ = operating_mode;
+  bool changed = this->robot_state_.operating_mode != operating_mode;
+  this->robot_state_.operating_mode = operating_mode;
   return changed;
 }
 
@@ -138,27 +146,27 @@ OperatingMode StateManager::get_operating_mode()
 {
   std::shared_lock lock(
     this->mutex_);  // Ensure that mode is not being altered at the moment
-  return this->operating_mode_;
+  return this->robot_state_.operating_mode;
 }
 
 void StateManager::set_battery_state(const BatteryState& battery_state)
 {
   std::unique_lock lock(this->mutex_);
-  this->battery_state_ = battery_state;
+  this->robot_state_.battery_state = battery_state;
 }
 
 const BatteryState& StateManager::get_battery_state()
 {
   std::shared_lock lock(
     this->mutex_);  // Ensure that battery is not being altered at the moment
-  return this->battery_state_;
+  return this->robot_state_.battery_state;
 }
 
 bool StateManager::set_safety_state(const SafetyState& safety_state)
 {
   std::unique_lock lock(this->mutex_);
-  auto before = this->safety_state_;
-  this->safety_state_ = safety_state;
+  auto before = this->robot_state_.safety_state;
+  this->robot_state_.safety_state = safety_state;
   return before != (safety_state);
 }
 
@@ -166,48 +174,65 @@ const SafetyState& StateManager::get_safety_state()
 {
   std::shared_lock lock(
     this->mutex_);  // Ensure that safety is not being altered at the moment
-  return this->safety_state_;
+  return this->robot_state_.safety_state;
 }
 
 void StateManager::request_new_base()
 {
   std::unique_lock lock(this->mutex_);
-  this->new_base_request_ = true;
+  this->robot_state_.new_base_request = true;
 }
 
 bool StateManager::add_error(const Error& error)
 {
   std::unique_lock lock(this->mutex_);
-  this->errors_.push_back(error);
+  this->robot_state_.errors.push_back(error);
   return true;
 }
 
 std::vector<Error> StateManager::get_errors() const
 {
   std::shared_lock lock(this->mutex_);
-  return this->errors_;
+  return this->robot_state_.errors;
 }
 
 void StateManager::add_info(const Info& info)
 {
   std::unique_lock lock(this->mutex_);
-  this->information_.push_back(info);
+
+  if (!this->robot_state_.information.has_value())
+  {
+    this->robot_state_.information = std::vector<Info>{};
+  }
+
+  this->robot_state_.information->push_back(info);
 }
 
 void StateManager::dump_to(State& state)
 {
   std::shared_lock lock(this->mutex_);
-  state.agv_position = this->agv_position_;
-  state.battery_state = this->battery_state_;
-  state.distance_since_last_node = this->distance_since_last_node_;
-  state.driving = this->driving_;
-  state.errors = this->errors_;
-  state.information = this->information_;
-  state.loads = this->loads_;
-  state.new_base_request = this->new_base_request_;
-  state.operating_mode = this->operating_mode_;
-  state.safety_state = this->safety_state_;
-  state.velocity = this->velocity_;
+
+  state.header = this->robot_state_.header;
+  state.order_id = this->robot_state_.order_id;
+  state.order_update_id = this->robot_state_.order_update_id;
+  state.zone_set_id = this->robot_state_.zone_set_id;
+  state.last_node_id = this->robot_state_.last_node_id;
+  state.last_node_sequence_id = this->robot_state_.last_node_sequence_id;
+  state.node_states = this->robot_state_.node_states;
+  state.edge_states = this->robot_state_.edge_states;
+  state.agv_position = this->robot_state_.agv_position;
+  state.velocity = this->robot_state_.velocity;
+  state.loads = this->robot_state_.loads;
+  state.driving = this->robot_state_.driving;
+  state.paused = this->robot_state_.paused;
+  state.new_base_request = this->robot_state_.new_base_request;
+  state.distance_since_last_node = this->robot_state_.distance_since_last_node;
+  state.action_states = this->robot_state_.action_states;
+  state.battery_state = this->robot_state_.battery_state;
+  state.operating_mode = this->robot_state_.operating_mode;
+  state.errors = this->robot_state_.errors;
+  state.information = this->robot_state_.information;
+  state.safety_state = this->robot_state_.safety_state;
 }
 
 }  // namespace state_manager

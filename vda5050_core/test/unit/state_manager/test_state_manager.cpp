@@ -22,7 +22,8 @@
 using namespace vda5050_core::state_manager;
 using namespace vda5050_core::types;
 
-class StateManagerTest : public ::testing::Test {
+class StateManagerTest : public ::testing::Test
+{
 protected:
   StateManager sm;
 };
@@ -73,7 +74,7 @@ TEST_F(StateManagerTest, AddAndRemoveLoad)
 
   EXPECT_TRUE(sm.add_load(load));
 
-  const auto &loads = sm.get_loads();
+  const auto& loads = sm.get_loads();
   ASSERT_EQ(loads.size(), 1);
   EXPECT_EQ(loads[0].load_id, "test_load");
 
@@ -81,13 +82,22 @@ TEST_F(StateManagerTest, AddAndRemoveLoad)
   EXPECT_TRUE(sm.get_loads().empty());
 }
 
-TEST_F(StateManagerTest, SetOperatingMode)
+TEST_F(StateManagerTest, SetAndGetOperatingMode)
 {
-  EXPECT_TRUE(sm.set_operating_mode(OperatingMode::AUTOMATIC));
   EXPECT_EQ(sm.get_operating_mode(), OperatingMode::AUTOMATIC);
-  EXPECT_FALSE(sm.set_operating_mode(OperatingMode::AUTOMATIC));  // no change
-}
 
+  EXPECT_FALSE(sm.set_operating_mode(OperatingMode::AUTOMATIC));
+  EXPECT_EQ(sm.get_operating_mode(), OperatingMode::AUTOMATIC);
+
+  EXPECT_TRUE(sm.set_operating_mode(OperatingMode::MANUAL));
+  EXPECT_EQ(sm.get_operating_mode(), OperatingMode::MANUAL);
+
+  EXPECT_TRUE(sm.set_operating_mode(OperatingMode::SERVICE));
+  EXPECT_EQ(sm.get_operating_mode(), OperatingMode::SERVICE);
+
+  EXPECT_FALSE(sm.set_operating_mode(OperatingMode::SERVICE));
+  EXPECT_EQ(sm.get_operating_mode(), OperatingMode::SERVICE);
+}
 TEST_F(StateManagerTest, SetBatteryState)
 {
   BatteryState battery;
@@ -95,25 +105,25 @@ TEST_F(StateManagerTest, SetBatteryState)
   battery.battery_voltage = 48.2;
 
   sm.set_battery_state(battery);
-  const auto &b = sm.get_battery_state();
+  const auto& b = sm.get_battery_state();
   EXPECT_DOUBLE_EQ(b.battery_charge, 0.8);
   EXPECT_DOUBLE_EQ(b.battery_voltage.value(), 48.2);
 }
 
 TEST_F(StateManagerTest, SetSafetyState)
 {
-    SafetyState s;
-    s.e_stop = EStop::AUTOACK;
+  SafetyState s;
+  s.e_stop = EStop::AUTOACK;
 
-    EXPECT_TRUE(sm.set_safety_state(s));
+  EXPECT_TRUE(sm.set_safety_state(s));
 
-    SafetyState current = sm.get_safety_state();
-    EXPECT_EQ(current.e_stop, EStop::AUTOACK);
+  SafetyState current = sm.get_safety_state();
+  EXPECT_EQ(current.e_stop, EStop::AUTOACK);
 
-    s.e_stop = EStop::NONE;
-    EXPECT_TRUE(sm.set_safety_state(s));
-    current = sm.get_safety_state();
-    EXPECT_EQ(current.e_stop, EStop::NONE);
+  s.e_stop = EStop::NONE;
+  EXPECT_TRUE(sm.set_safety_state(s));
+  current = sm.get_safety_state();
+  EXPECT_EQ(current.e_stop, EStop::NONE);
 }
 
 TEST_F(StateManagerTest, AddErrorAndInfo)
@@ -154,4 +164,20 @@ TEST_F(StateManagerTest, DumpState)
   EXPECT_NEAR(state.agv_position.value().x, 1.0, 1e-6);
   EXPECT_NEAR(state.agv_position.value().y, 2.0, 1e-6);
   EXPECT_NEAR(state.agv_position.value().theta, 3.14, 1e-6);
+}
+TEST_F(StateManagerTest, SetGetAndResetDistanceSinceLastNode)
+{
+  sm.set_distance_since_last_node(12.34);
+  auto d1 = sm.get_distance_since_last_node();
+  ASSERT_TRUE(d1.has_value());
+  EXPECT_DOUBLE_EQ(*d1, 12.34);
+
+  sm.set_distance_since_last_node(5.0);
+  auto d2 = sm.get_distance_since_last_node();
+  ASSERT_TRUE(d2.has_value());
+  EXPECT_DOUBLE_EQ(*d2, 5.0);
+
+  sm.reset_distance_since_last_node();
+  auto d3 = sm.get_distance_since_last_node();
+  EXPECT_FALSE(d3.has_value());
 }
