@@ -21,8 +21,8 @@
 
 #include <vector>
 
-#include "vda5050_core/order_execution/Edge.hpp"
-#include "vda5050_core/order_execution/Node.hpp"
+#include "vda5050_core/order_execution/edge.hpp"
+#include "vda5050_core/order_execution/node.hpp"
 
 namespace vda5050_core {
 namespace order_graph_validator {

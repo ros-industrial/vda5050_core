@@ -24,9 +24,9 @@
 #include <string>
 #include <vector>
 
-#include "vda5050_core/order_execution/Edge.hpp"
-#include "vda5050_core/order_execution/Node.hpp"
-#include "vda5050_core/order_execution/Order.hpp"
+#include "vda5050_core/order_execution/edge.hpp"
+#include "vda5050_core/order_execution/node.hpp"
+#include "vda5050_core/order_execution/order.hpp"
 
 namespace vda5050_core {
 namespace order {

@@ -34,36 +34,36 @@ target_include_directories(vda5050_core
   INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-add_library(order_graph_element src/vda5050_core/order_execution/OrderGraphElement.cpp)
+add_library(order_graph_element src/vda5050_core/order_execution/order_graph_element.cpp)
 target_include_directories(order_graph_element
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-add_library(edge src/vda5050_core/order_execution/Edge.cpp)
+add_library(edge src/vda5050_core/order_execution/edge.cpp)
 target_include_directories(edge
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(edge order_graph_element)
 
-add_library(node src/vda5050_core/order_execution/Node.cpp)
+add_library(node src/vda5050_core/order_execution/node.cpp)
 target_include_directories(node
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(node order_graph_element)
 
-add_library(order_graph_validator src/vda5050_core/order_execution/OrderGraphValidator.cpp)
+add_library(order_graph_validator src/vda5050_core/order_execution/order_graph_validator.cpp)
 target_include_directories(order_graph_validator
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(order_graph_validator edge node)
 
-add_library(order src/vda5050_core/order_execution/Order.cpp)
+add_library(order src/vda5050_core/order_execution/order.cpp)
 target_include_directories(order
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(order edge node)
 
-add_library(order_manager src/vda5050_core/order_execution/OrderManager.cpp)
+add_library(order_manager src/vda5050_core/order_execution/order_manager.cpp)
 target_include_directories(order_manager
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
@@ -119,17 +119,17 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_gtest REQUIRED)
   ament_add_gtest(${PROJECT_NAME}_order_graph_validator_test
-    test/unit/test_OrderGraphValidator.cpp
-    src/vda5050_core/order_execution/Edge.cpp
-    src/vda5050_core/order_execution/Node.cpp
-    src/vda5050_core/order_execution/OrderGraphValidator.cpp
-    src/vda5050_core/order_execution/OrderGraphElement.cpp)
+    test/unit/order_manager/test_order_graph_validator.cpp
+    src/vda5050_core/order_execution/edge.cpp
+    src/vda5050_core/order_execution/node.cpp
+    src/vda5050_core/order_execution/order_graph_validator.cpp
+    src/vda5050_core/order_execution/order_graph_element.cpp)
   target_include_directories(${PROJECT_NAME}_order_graph_validator_test
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
   ament_add_gmock(${PROJECT_NAME}_test_OrderManager
-    test/unit/test_OrderManager.cpp)
+    test/unit/order_manager/test_order_manager.cpp)
   target_include_directories(${PROJECT_NAME}_test_OrderManager
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)

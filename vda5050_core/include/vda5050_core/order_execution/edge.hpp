@@ -22,7 +22,7 @@
 #include <cstdint>
 #include <string>
 
-#include "vda5050_core/order_execution/OrderGraphElement.hpp"
+#include "vda5050_core/order_execution/order_graph_element.hpp"
 
 namespace vda5050_core {
 

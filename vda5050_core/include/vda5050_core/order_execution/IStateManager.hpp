@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <string>
 
-#include "vda5050_core/order_execution/Order.hpp"
+#include "vda5050_core/order_execution/order.hpp"
 
 class IStateManager
 {

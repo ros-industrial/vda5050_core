@@ -23,8 +23,8 @@
 #include <vector>
 
 #include "vda5050_core/order_execution/IStateManager.hpp"
-#include "vda5050_core/order_execution/Order.hpp"
-#include "vda5050_core/order_execution/OrderGraphValidator.hpp"
+#include "vda5050_core/order_execution/order.hpp"
+#include "vda5050_core/order_execution/order_graph_validator.hpp"
 
 namespace vda5050_core {
 namespace order_manager {

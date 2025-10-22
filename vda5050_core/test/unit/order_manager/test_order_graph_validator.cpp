@@ -18,9 +18,9 @@
 
 #include <gtest/gtest.h>
 
-#include "vda5050_core/order_execution/Edge.hpp"
-#include "vda5050_core/order_execution/Node.hpp"
-#include "vda5050_core/order_execution/OrderGraphValidator.hpp"
+#include "vda5050_core/order_execution/edge.hpp"
+#include "vda5050_core/order_execution/node.hpp"
+#include "vda5050_core/order_execution/order_graph_validator.hpp"
 
 class OrderGraphValidatorTest : public testing::Test
 {

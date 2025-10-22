@@ -27,6 +27,9 @@ namespace vda5050_core {
 
 namespace types {
 
+
+using json = nlohmann::json;
+
 /// @struct ActionParameter
 /// @brief  Defines the type and value field of the action parameter
 struct ActionParameter
@@ -55,8 +58,6 @@ struct ActionParameter
     return !this->operator==(other);
   }
 };
-
-using json = nlohmann::json;
 
 inline void to_json(json& j, const ActionParameter& d)
 {

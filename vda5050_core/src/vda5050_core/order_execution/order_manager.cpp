@@ -19,7 +19,7 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "vda5050_core/order_execution/OrderManager.hpp"
+#include "vda5050_core/order_execution/order_manager.hpp"
 
 namespace vda5050_core {
 namespace order_manager {

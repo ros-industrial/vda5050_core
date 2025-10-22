@@ -20,11 +20,11 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "vda5050_core/order_execution/Edge.hpp"
+#include "vda5050_core/order_execution/edge.hpp"
 #include "vda5050_core/order_execution/IStateManager.hpp"
-#include "vda5050_core/order_execution/Node.hpp"
-#include "vda5050_core/order_execution/Order.hpp"
-#include "vda5050_core/order_execution/OrderManager.hpp"
+#include "vda5050_core/order_execution/node.hpp"
+#include "vda5050_core/order_execution/order.hpp"
+#include "vda5050_core/order_execution/order_manager.hpp"
 
 using ::testing::_;
 using ::testing::AtLeast;
