@@ -123,7 +123,8 @@ if(BUILD_TESTING)
     src/vda5050_core/order_execution/edge.cpp
     src/vda5050_core/order_execution/node.cpp
     src/vda5050_core/order_execution/order_graph_validator.cpp
-    src/vda5050_core/order_execution/order_graph_element.cpp)
+    src/vda5050_core/order_execution/order_graph_element.cpp
+    src/vda5050_core/state_manager/state_manager.cpp)
   target_include_directories(${PROJECT_NAME}_order_graph_validator_test
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
@@ -134,7 +135,7 @@ if(BUILD_TESTING)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
   target_link_libraries(${PROJECT_NAME}_test_OrderManager
-    order_graph_validator edge node order_graph_element order_manager)
+    order_graph_validator edge node order_graph_element order_manager state_manager)
 endif()
 
 ament_package()

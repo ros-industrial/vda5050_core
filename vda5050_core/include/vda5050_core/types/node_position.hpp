@@ -156,9 +156,7 @@ inline void from_json(const json& j, NodePosition& n)
     n.theta = j.at("theta").get<double>();
   }
 
-  if (
-    j.contains("allowedDeviationXY") &&
-    !j.at("allowedDeviationXY").is_null())
+  if (j.contains("allowedDeviationXY") && !j.at("allowedDeviationXY").is_null())
   {
     n.allowed_deviation_x_y = j.at("allowedDeviationXY").get<double>();
   }

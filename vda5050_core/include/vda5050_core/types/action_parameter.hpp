@@ -27,7 +27,6 @@ namespace vda5050_core {
 
 namespace types {
 
-
 using json = nlohmann::json;
 
 /// @struct ActionParameter

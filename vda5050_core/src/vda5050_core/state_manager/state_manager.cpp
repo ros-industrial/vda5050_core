@@ -295,7 +295,6 @@ void StateManager::set_new_order(const Order& order)
   this->robot_state_.edge_states.clear();
   this->robot_state_.action_states.clear();
 
-  // TODO @(johnaa) define header assignment operator/
   this->robot_state_.order_id = order.order_id;
   this->robot_state_.order_update_id = order.order_update_id;
   this->robot_state_.zone_set_id = order.zone_set_id;
@@ -323,6 +322,45 @@ void StateManager::set_new_order(const Order& order)
   }
 }
 
+void StateManager::set_new_order(const vda5050_core::order::Order& order)
+{
+  std::unique_lock lock(this->mutex_);
+
+  this->robot_state_.order_id.clear();
+  this->robot_state_.order_update_id = 0;
+  this->robot_state_.zone_set_id.reset();
+  this->robot_state_.last_node_id.clear();
+  this->robot_state_.last_node_sequence_id = 0;
+  this->robot_state_.node_states.clear();
+  this->robot_state_.edge_states.clear();
+  this->robot_state_.action_states.clear();
+
+  this->robot_state_.order_id = order.order_id();
+  this->robot_state_.order_update_id = order.order_update_id();
+  // TODO @(johnaa) missing zone_id getter
+  const std::vector<node::Node>& v_nodes = order.nodes();
+
+  for (const auto& node : v_nodes)
+  {
+    NodeState node_state;
+    node_state.node_id = node.node_id();
+    node_state.sequence_id = node.sequence_id();
+    node_state.released = node.released();
+    this->robot_state_.node_states.push_back(node_state);
+  }
+
+  const std::vector<edge::Edge>& v_edges = order.edges();
+
+  for (const auto& edge : v_edges)
+  {
+    EdgeState edge_state;
+    edge_state.edge_id = edge.get_edge_id();
+    edge_state.sequence_id = edge.sequence_id();
+    edge_state.released = edge.released();
+    this->robot_state_.edge_states.push_back(edge_state);
+  }
+}
+
 void StateManager::clear_horizon()
 {
   std::unique_lock lock(this->mutex_);
@@ -338,8 +376,13 @@ void StateManager::clear_horizon()
     std::remove_if(edges.begin(), edges.end(), edge_predicate), edges.end());
 }
 
-// TODO @(johnaa) sounds like it does the same feature as set_new_order, to clear with @shawn
+// TODO @(johnaa) sounds like it does the same feature as set_new_order, to clear with @shawnkchan
 void StateManager::append_states_for_update(Order& order_update)
+{
+  this->set_new_order(order_update);
+}
+
+void StateManager::append_states_for_update(vda5050_core::order::Order& order_update)
 {
   this->set_new_order(order_update);
 }

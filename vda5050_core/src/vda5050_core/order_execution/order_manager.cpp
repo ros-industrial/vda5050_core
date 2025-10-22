@@ -24,7 +24,7 @@
 namespace vda5050_core {
 namespace order_manager {
 
-OrderManager::OrderManager(IStateManager& sm)
+OrderManager::OrderManager(StateManager& sm)
 : state_manager_{sm}, current_graph_element_index_{0} {};
 
 void OrderManager::update_current_order(order::Order received_order)
@@ -80,9 +80,9 @@ void OrderManager::update_current_order(order::Order received_order)
     {
       if (
         (received_order.nodes().front().sequence_id() !=
-         state_manager_.last_node_sequence_id()) &&
+         state_manager_.get_last_node_sequence_id()) &&
         (received_order.nodes().front().node_id() !=
-         state_manager_.last_node_id()))
+         state_manager_.get_last_node_id()))
       {
         reject_order();
         throw std::runtime_error(
@@ -92,7 +92,7 @@ void OrderManager::update_current_order(order::Order received_order)
       else
       {
         /// TODO call StateManager to populate newly added states
-        state_manager_.update_current_order(received_order);
+        state_manager_.append_states_for_update(received_order);
 
         current_order_->stitch_and_set_order_update_id(received_order);
       }
@@ -182,8 +182,8 @@ bool OrderManager::is_vehicle_ready_for_new_order()
 bool OrderManager::is_vehicle_still_executing()
 {
   bool node_states_empty =
-    state_manager_.node_states_empty();  /// check if node states are empty
-  bool action_states_executing = state_manager_.action_states_still_executing();
+    state_manager_.is_node_states_empty();  /// check if node states are empty
+  bool action_states_executing = state_manager_.are_action_states_still_executing();
   bool vehicle_is_executing = !node_states_empty && action_states_executing;
 
   return vehicle_is_executing;
@@ -204,7 +204,7 @@ bool OrderManager::is_node_trivially_reachable(node::Node& start_node)
   /// check if the vehicle is on the received order's start node
   std::string last_node_id =
     state_manager_
-      .last_node_id();  /// query for lastNodeId, or the current node that the vehicle is on (Note to self: this node is guaranteed to be in the current order)
+      .get_last_node_id();  /// query for lastNodeId, or the current node that the vehicle is on (Note to self: this node is guaranteed to be in the current order)
   std::string start_node_id = start_node.node_id();
   if (last_node_id == start_node_id)
   {

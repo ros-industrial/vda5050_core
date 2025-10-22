@@ -33,7 +33,7 @@ class Node : public order_graph_element::OrderGraphElement
 {
 public:
   /// TODO (shawnkchan) addd shared_ptr to Node class
-  // using Ptr = std::shared_ptr<Node>; 
+  // using Ptr = std::shared_ptr<Node>;
   /// \brief Node constructor
   ///
   /// \param sequence_id uint32 indicating the sequence number of this node in an order
@@ -44,6 +44,16 @@ public:
   std::string node_id() const
   {
     return node_id_;
+  }
+
+  bool released() const
+  {
+    return released_;
+  }
+
+  uint32_t sequence_id() const
+  {
+    return sequence_id_;
   }
 
 private:

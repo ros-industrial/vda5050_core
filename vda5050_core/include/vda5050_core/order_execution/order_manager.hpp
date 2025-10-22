@@ -22,12 +22,14 @@
 #include <optional>
 #include <vector>
 
-#include "vda5050_core/order_execution/IStateManager.hpp"
 #include "vda5050_core/order_execution/order.hpp"
 #include "vda5050_core/order_execution/order_graph_validator.hpp"
+#include "vda5050_core/state_manager/state_manager.hpp"
 
 namespace vda5050_core {
 namespace order_manager {
+
+using vda5050_core::state_manager::StateManager;
 
 /// \brief Class that handles incoming orders on a vehicle.
 class OrderManager
@@ -36,7 +38,7 @@ public:
   /// \brief OrderManager constructor
   ///
   /// \param sm Reference to the StateManager tracking the vehicle's current state.
-  OrderManager(IStateManager& sm);
+  OrderManager(StateManager& sm);
 
   /// \brief Updates the current order on the vehicle.
   ///
@@ -55,7 +57,7 @@ public:
 
 private:
   /// \brief Reference to the StateManager running on the vehicle
-  IStateManager& state_manager_;
+  StateManager& state_manager_;
 
   /// \brief The order that is currently on the vehicle
   std::optional<order::Order> current_order_;

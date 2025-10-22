@@ -77,8 +77,8 @@ using json = nlohmann::json;
 
 inline void to_json(json& j, const BatteryState& state)
 {
-  j = json{
-    {"batteryCharge", state.battery_charge}, {"charging", state.charging}};
+  j =
+    json{{"batteryCharge", state.battery_charge}, {"charging", state.charging}};
 
   if (state.battery_voltage.has_value())
     j["batteryVoltage"] = state.battery_voltage.value();

@@ -25,6 +25,10 @@
 #include <shared_mutex>
 #include <string>
 
+#include "vda5050_core/order_execution/edge.hpp"
+#include "vda5050_core/order_execution/node.hpp"
+#include "vda5050_core/order_execution/order.hpp"
+
 #include "vda5050_core/types/agv_position.hpp"
 #include "vda5050_core/types/battery_state.hpp"
 #include "vda5050_core/types/error.hpp"
@@ -52,8 +56,6 @@ private:
 
   /// \brief the distance since the last node of the AGV
   std::optional<double> distance_since_last_node_;
-
-  Order order_;
 
 public:
   /// \brief Set the current AGV position
@@ -171,12 +173,20 @@ public:
   /// \param order The new order to accept and store.
   void set_new_order(const Order& order);
 
+  /// \brief Set a new order on the vehicle (after clearing any existing order).
+  /// \param order The new order to accept and store.
+  void set_new_order(const vda5050_core::order::Order& order);
+
   /// \brief Clear the horizon nodes/edges from the current nodeStates and edgeStates.
   void clear_horizon();
 
   /// \brief Append an order update to the vehicle's current order (nodeStates/edgeStates).
   /// \param order_update The order update to append.
   void append_states_for_update(Order& order_update);
+
+  /// \brief Append an order update to the vehicle's current order (nodeStates/edgeStates).
+  /// \param order_update The order update to append.
+  void append_states_for_update(vda5050_core::order::Order& order_update);
 };
 
 }  // namespace state_manager

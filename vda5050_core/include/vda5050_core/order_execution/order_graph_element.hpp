@@ -41,7 +41,7 @@ public:
     return sequence_id_;
   }
 
-  bool released()
+  bool released() const
   {
     return released_;
   }

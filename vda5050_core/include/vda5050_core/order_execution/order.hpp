@@ -44,12 +44,12 @@ public:
     std::string order_id, uint32_t order_update_id,
     std::vector<node::Node> nodes, std::vector<edge::Edge> edges);
 
-  std::string order_id()
+  std::string order_id() const
   {
     return order_id_;
   }
 
-  uint32_t order_update_id()
+  uint32_t order_update_id() const
   {
     return order_update_id_;
   }
@@ -59,7 +59,17 @@ public:
     return nodes_;
   }
 
+  const std::vector<node::Node>& nodes() const
+  {
+    return nodes_;
+  }
+
   std::vector<edge::Edge>& edges()
+  {
+    return edges_;
+  }
+
+  const std::vector<edge::Edge>& edges() const
   {
     return edges_;
   }
@@ -69,7 +79,17 @@ public:
     return graph_;
   }
 
+  const std::vector<order_graph_element::OrderGraphElement>& graph() const
+  {
+    return graph_;
+  }
+
   std::vector<order_graph_element::OrderGraphElement>& base()
+  {
+    return base_;
+  }
+
+  const std::vector<order_graph_element::OrderGraphElement>& base() const
   {
     return base_;
   }
@@ -79,6 +99,10 @@ public:
     return horizon_;
   }
 
+  const std::vector<order_graph_element::OrderGraphElement>& horizon() const
+  {
+    return horizon_;
+  }
   /// TODO: Is it safe to assume that the base is guaranteed to end with a Node? What should be responsible for error checking?.
   const node::Node& decision_point() const
   {
