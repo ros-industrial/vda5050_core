@@ -195,7 +195,7 @@ TEST_F(StateManagerTest, NodeStatesEmpty)
 
 TEST_F(StateManagerTest, AreActionStatesStillExecuting)
 {
-  EXPECT_FALSE(sm.are_action_states_still_executing());
+  EXPECT_TRUE(sm.are_action_states_still_executing());
 }
 
 TEST_F(StateManagerTest, CleanupPreviousOrder)

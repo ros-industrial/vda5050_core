@@ -256,6 +256,9 @@ bool StateManager::is_node_states_empty() const
 bool StateManager::are_action_states_still_executing() const
 {
   std::shared_lock lock(this->mutex_);
+
+  if (this->robot_state_.action_states.empty()) return true;
+  
   for (const auto& action_state : this->robot_state_.action_states)
   {
     if (
@@ -271,14 +274,9 @@ bool StateManager::are_action_states_still_executing() const
 void StateManager::cleanup_previous_order()
 {
   std::unique_lock lock(this->mutex_);
-  this->robot_state_.order_id.clear();
-  this->robot_state_.order_update_id = 0;
-  this->robot_state_.zone_set_id.reset();
-  this->robot_state_.last_node_id.clear();
-  this->robot_state_.last_node_sequence_id = 0;
-  this->robot_state_.node_states.clear();
-  this->robot_state_.edge_states.clear();
-  this->robot_state_.action_states.clear();
+  std::string last_node_id = this->robot_state_.last_node_id;
+  this->robot_state_ = State();
+  this->robot_state_.last_node_id = last_node_id;
 }
 
 void StateManager::set_new_order(const Order& order)
@@ -286,14 +284,9 @@ void StateManager::set_new_order(const Order& order)
   std::unique_lock lock(this->mutex_);
 
   // Temp fix to avoid deadlock if cleanup_previous_order is called
-  this->robot_state_.order_id.clear();
-  this->robot_state_.order_update_id = 0;
-  this->robot_state_.zone_set_id.reset();
-  this->robot_state_.last_node_id.clear();
-  this->robot_state_.last_node_sequence_id = 0;
-  this->robot_state_.node_states.clear();
-  this->robot_state_.edge_states.clear();
-  this->robot_state_.action_states.clear();
+  std::string last_node_id = this->robot_state_.last_node_id;
+  this->robot_state_ = State();
+  this->robot_state_.last_node_id = last_node_id;
 
   this->robot_state_.order_id = order.order_id;
   this->robot_state_.order_update_id = order.order_update_id;
@@ -326,14 +319,10 @@ void StateManager::set_new_order(const vda5050_core::order::Order& order)
 {
   std::unique_lock lock(this->mutex_);
 
-  this->robot_state_.order_id.clear();
-  this->robot_state_.order_update_id = 0;
-  this->robot_state_.zone_set_id.reset();
-  this->robot_state_.last_node_id.clear();
-  this->robot_state_.last_node_sequence_id = 0;
-  this->robot_state_.node_states.clear();
-  this->robot_state_.edge_states.clear();
-  this->robot_state_.action_states.clear();
+  std::string last_node_id = this->robot_state_.last_node_id;
+  this->robot_state_ = State();
+  this->robot_state_.last_node_id = last_node_id;
+
 
   this->robot_state_.order_id = order.order_id();
   this->robot_state_.order_update_id = order.order_update_id();
