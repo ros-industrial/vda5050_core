@@ -258,7 +258,7 @@ bool StateManager::are_action_states_still_executing() const
   std::shared_lock lock(this->mutex_);
 
   if (this->robot_state_.action_states.empty()) return true;
-  
+
   for (const auto& action_state : this->robot_state_.action_states)
   {
     if (
@@ -323,7 +323,6 @@ void StateManager::set_new_order(const vda5050_core::order::Order& order)
   this->robot_state_ = State();
   this->robot_state_.last_node_id = last_node_id;
 
-
   this->robot_state_.order_id = order.order_id();
   this->robot_state_.order_update_id = order.order_update_id();
   // TODO @(johnaa) missing zone_id getter
@@ -371,7 +370,8 @@ void StateManager::append_states_for_update(Order& order_update)
   this->set_new_order(order_update);
 }
 
-void StateManager::append_states_for_update(vda5050_core::order::Order& order_update)
+void StateManager::append_states_for_update(
+  vda5050_core::order::Order& order_update)
 {
   this->set_new_order(order_update);
 }

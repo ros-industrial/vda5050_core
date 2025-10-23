@@ -168,7 +168,6 @@ TEST_F(OrderManagerTest, OrderUpdateDeprecated)
 /// \brief Test if OrderManager discards the order update if it is already on the vehicle
 TEST_F(OrderManagerTest, OrderUpdateOnVehicle)
 {
-
   orderManager.make_new_order(partially_released_order);
 
   orderManager.update_current_order(order_update);
@@ -185,7 +184,6 @@ TEST_F(OrderManagerTest, OrderUpdateOnVehicle)
 /// \brief Test if OrderManager rejects order and throws an error if the update order is not a valid continuation of a previous order
 TEST_F(OrderManagerTest, OrderUpdateInvalidContinuationOfCurrentOrder)
 {
-
   orderManager.make_new_order(partially_released_order);
 
   std::vector<vda5050_core::node::Node> invalid_continuation_nodes{n5, n7};
@@ -202,7 +200,6 @@ TEST_F(OrderManagerTest, OrderUpdateInvalidContinuationOfCurrentOrder)
 /// \brief Test if OrderManager returns the graph elements from the base of an order correctly
 TEST_F(OrderManagerTest, GetNextGraphElement)
 {
-
   orderManager.make_new_order(partially_released_order);
 
   std::optional<vda5050_core::order_graph_element::OrderGraphElement> ge1 =

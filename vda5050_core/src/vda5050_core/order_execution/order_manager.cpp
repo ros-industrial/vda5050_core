@@ -102,13 +102,18 @@ void OrderManager::update_current_order(order::Order received_order)
   {
     /// TODO Check if it is okay to be throwing an error and rejecting the order, as this will only occur due to how we are implementing this in a BTree
     reject_order();
-    throw std::runtime_error("OrderManager error: Expected an update order but was given a new order.");
+    throw std::runtime_error(
+      "OrderManager error: Expected an update order but was given a new "
+      "order.");
   }
 }
 
 void OrderManager::make_new_order(order::Order received_order)
 {
-  if (!current_order_.has_value() || (current_order_.has_value() && received_order.order_id() != current_order_->order_id()))
+  if (
+    !current_order_.has_value() ||
+    (current_order_.has_value() &&
+     received_order.order_id() != current_order_->order_id()))
   {
     bool vehicle_ready_for_new_order = is_vehicle_ready_for_new_order();
     bool node_is_trivially_reachable =
@@ -145,12 +150,14 @@ void OrderManager::make_new_order(order::Order received_order)
           "OrderManager error: Received order's start node is not trivially "
           "reachable.");
       }
-    }  
+    }
   }
   else
   {
     reject_order();
-    throw std::runtime_error("OrderManager error: Expected a new order but was given an order the same orderId.");
+    throw std::runtime_error(
+      "OrderManager error: Expected a new order but was given an order the "
+      "same orderId.");
   }
 }
 
@@ -183,7 +190,8 @@ bool OrderManager::is_vehicle_still_executing()
 {
   bool node_states_empty =
     state_manager_.is_node_states_empty();  /// check if node states are empty
-  bool action_states_executing = state_manager_.are_action_states_still_executing();
+  bool action_states_executing =
+    state_manager_.are_action_states_still_executing();
   bool vehicle_is_executing = !node_states_empty && action_states_executing;
 
   return vehicle_is_executing;

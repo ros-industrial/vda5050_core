@@ -35,7 +35,7 @@ bool OrderGraphValidator::is_valid_graph(
   std::vector<vda5050_core::node::Node>& nodes,
   std::vector<vda5050_core::edge::Edge>& edges)
 {
-  /// TODO: (shawnkchan) Check if it is even possible to send an Order with zero nodes (should Order class just protect against this?). If not possible, get rid of this. 
+  /// TODO: (shawnkchan) Check if it is even possible to send an Order with zero nodes (should Order class just protect against this?). If not possible, get rid of this.
   /// Does not seem to be any guarantee that this list is not empty, so will leave this check here.
   if (nodes.empty())
   {
