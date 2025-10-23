@@ -4,7 +4,7 @@ AccessModifierOffset: -2
 AlignAfterOpenBracket: AlwaysBreak
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortBlocksOnASingleLine: Empty
-# BreakAfterAttributes: Always
+BreakAfterAttributes: Always
 BreakConstructorInitializers: BeforeColon
 BreakBeforeBraces: Custom
 BraceWrapping:
