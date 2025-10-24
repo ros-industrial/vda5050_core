@@ -1,0 +1,95 @@
+/*
+ * Copyright (C) 2025 ROS-Industrial Consortium Asia Pacific
+ * Advanced Remanufacturing and Technology Centre
+ * A*STAR Research Entities (Co. Registration No. 199702110H)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef VDA5050_TYPES__NODE_POSITION_HPP_
+#define VDA5050_TYPES__NODE_POSITION_HPP_
+
+#include <optional>
+#include <string>
+
+namespace vda5050_types {
+
+/// @struct NodePosition
+/// @brief  Node position. The object is defined in chapter 5.4 Topic: Order (from master control to AGV).
+///         Optional:Master control has this information.
+///         Can be sent additionally, e.g., for debugging purposes.
+struct NodePosition
+{
+  /// @brief X-position on the map in reference to the
+  ///        map coordinate system in meters.
+  double x = 0.0;
+
+  /// @brief Y-position on the map in reference to the
+  ///        map coordinate system in meters.
+  double y = 0.0;
+
+  /// @brief Range : [-PI... PI]
+  ///        Absolute orientation of the AGV on the node.
+  ///        Optional: vehicle can plan the path by itself.
+  ///        If defined, the AGV has to assume the theta
+  ///        angle on this node.
+  //         If previous edge disallows rotation, the AGV
+  //         shall rotate on the node.
+  //         If following edge has a differing orientation
+  //         defined but disallows rotation, the AGV is to
+  //         rotate on the node to the edges desired
+  //         rotation before entering the edge.
+  std::optional<double> theta;
+
+  /// @brief Indicates how precisely an AGV shall match
+  ///        the position of a node for it to be considered traversed.
+  ///
+  ///        If = 0.0: no deviation is allowed (no
+  ///        deviation means within the normal
+  ///        tolerance of the AGV manufacturer).
+  ///        If > 0.0: allowed deviation radius in meters.
+  ///        If the AGV passes a node within the
+  ///        deviation radius, the node can be
+  ///        considered traversed.
+  std::optional<double> allowed_deviation_x_y;
+
+  /// @brief Range: [0.0 … Pi] Indicates how precise the orientation
+  ///        defined in theta has to be met on the node
+  ///        by the AGV.
+  ///        Indicates how precise the orientation
+  ///        defined in theta has to be met on the node
+  ///        by the AGV.
+  ///        The lowest acceptable angle is theta -
+  ///        allowedDeviationTheta and the highest
+  ///        acceptable angle is theta +
+  ///        allowedDeviationTheta.
+  std::optional<double> allowed_deviation_theta;
+
+  /// @brief Unique identification of the map on which
+  ///        the position is referenced.
+  ///        Each map has the same project-specific
+  ///        global origin of coordinates.
+  ///        When an AGV uses an elevator, e.g.,
+  ///        leading from a departure floor to a target
+  ///        floor, it will disappear off the map of the
+  ///        departure floor and spawn in the related lift
+  ///        node on the map of the target floor.
+  std::string mapId;
+
+  /// @brief Additional information on the map
+  std::optional<std::string> map_description;
+};
+
+}  // namespace vda5050_types
+
+#endif  // VDA5050_TYPES__NODE_POSITION_HPP_

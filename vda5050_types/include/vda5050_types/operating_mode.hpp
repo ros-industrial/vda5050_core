@@ -1,0 +1,65 @@
+/*
+ * Copyright (C) 2025 ROS-Industrial Consortium Asia Pacific
+ * Advanced Remanufacturing and Technology Centre
+ * A*STAR Research Entities (Co. Registration No. 199702110H)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef VDA5050_TYPES__OPERATING_MODE_HPP_
+#define VDA5050_TYPES__OPERATING_MODE_HPP_
+
+#include <cstdint>
+
+namespace vda5050_types {
+
+/// @enum  OperatingMode
+/// @brief Current operating mode of the AGV
+enum class OperatingMode : uint8_t
+{
+  /// @brief AGV is under full control of the master control.
+  ///        AGV drives and executes actions based on orders from the master
+  ///        control.
+  AUTOMATIC,
+
+  /// \brief AGV is under control of the master control.
+  //         AGV drives and executes actions based on orders from the master
+  //         control.
+  //         The driving speed is controlled by the HMI (speed can't exceed the
+  //         speed of automatic mode).
+  //         The steering is under automatic control (non-safe HMI possible).
+  SEMIAUTOMATIC,
+
+  /// @brief Master control is not in control of the AGV.
+  //         Supervisor doesn't send driving order or actions to the AGV.
+  //         HMI can be used to control the steering and velocity and handling
+  //         device of the AGV.
+  //         Location of the AGV is sent to the master control.
+  //         When AGV enters or leaves this mode, it immediately clears all the
+  //         orders (safe HMI required)
+  MANUAL,
+
+  /// @brief Master control is not in control of the AGV.
+  //         Master control doesn't send driving order or actions to the AGV.
+  //         Authorized personnel can reconfigure the AGV
+  SERVICE,
+
+  /// @brief Master control is not in control of the AGV.
+  //         Supervisor doesn't send driving order or actions to the AGV.
+  //         The AGV is being taught, e.g., mapping is done by a master control.
+  TEACHIN
+};
+
+}  // namespace vda5050_types
+
+#endif  // VDA5050_TYPES__OPERATING_MODE_HPP_
