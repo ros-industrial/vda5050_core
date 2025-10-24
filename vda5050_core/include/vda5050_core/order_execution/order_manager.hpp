@@ -21,6 +21,7 @@
 
 #include <optional>
 #include <vector>
+#include <cstdint>
 
 #include "vda5050_core/order_execution/order.hpp"
 #include "vda5050_core/order_execution/order_graph_validator.hpp"
@@ -38,17 +39,19 @@ public:
   /// \brief OrderManager constructor
   ///
   /// \param sm Reference to the StateManager tracking the vehicle's current state.
-  OrderManager(StateManager& sm);
+  OrderManager();
 
   /// \brief Updates the current order on the vehicle.
   ///
   /// \param order The order update to be applied on the current order.
-  void update_current_order(order::Order order);
+  ///
+  /// \return True if order update has been accepted by the order manager, false otherwise.
+  bool update_current_order(order::Order order, uint32_t last_node_sequence_id, std::string last_node_id);
 
   /// \brief Puts a new order on the vehicle
   ///
   /// \param order The new order to be stored and executed by the vehicle
-  void make_new_order(order::Order order);
+  bool make_new_order(order::Order order);
 
   /// \brief Returns the next graph element of the current order that is to be executed.
   ///
@@ -56,9 +59,6 @@ public:
   std::optional<order_graph_element::OrderGraphElement> next_graph_element();
 
 private:
-  /// \brief Reference to the StateManager running on the vehicle
-  StateManager& state_manager_;
-
   /// \brief The order that is currently on the vehicle
   std::optional<order::Order> current_order_;
 

@@ -24,10 +24,10 @@
 namespace vda5050_core {
 namespace order_manager {
 
-OrderManager::OrderManager(StateManager& sm)
-: state_manager_{sm}, current_graph_element_index_{0} {};
+OrderManager::OrderManager()
+: current_graph_element_index_{0} {};
 
-void OrderManager::update_current_order(order::Order received_order)
+bool OrderManager::update_current_order(order::Order received_order, uint32_t last_node_sequence_id, std::string last_node_id)
 {
   /// Check that this is actually an update order
   if (
@@ -60,51 +60,38 @@ void OrderManager::update_current_order(order::Order received_order)
         received_order.nodes().front().node_id() !=
         current_order_->decision_point().node_id())
       {
+        /// order update is rejected as the nodeIds of the stitching nodes do not match
         reject_order();
-        throw std::runtime_error(
-          "OrderManager error: nodeIds of the stitching nodes do not match.");
+        return false;
       }
 
       else
       {
-        /// TODO call StateManager to clear horizon (OR call some API to update the state)
-        state_manager_.clear_horizon();
-
-        current_order_->stitch_and_set_order_update_id(received_order);
-
-        /// TODO call StateManager to append states to the ones that are currently running
-        state_manager_.append_states_for_update(received_order);
+        /// order update can be accepted as it is a continuation of the currently running order
+        return true;
       }
     }
     else
     {
-      if (
-        (received_order.nodes().front().sequence_id() !=
-         state_manager_.get_last_node_sequence_id()) &&
-        (received_order.nodes().front().node_id() !=
-         state_manager_.get_last_node_id()))
+      if (received_order.nodes().front().sequence_id() != last_node_sequence_id && received_order.nodes().front().node_id() != last_node_id)
       {
+        /// update order is rejected as it is not a valid continuation of the previously completed order
         reject_order();
-        throw std::runtime_error(
-          "OrderManager error: Order update is not a valid continuation of the "
-          "previously compeleted order.");
+        return false;
       }
       else
       {
-        /// TODO call StateManager to populate newly added states
-        state_manager_.append_states_for_update(received_order);
-
-        current_order_->stitch_and_set_order_update_id(received_order);
+        /// order update can be accepted as it is a continuation of the previously executed order
+        return true;
       }
     }
   }
   else
   {
     /// TODO Check if it is okay to be throwing an error and rejecting the order, as this will only occur due to how we are implementing this in a BTree
+    /// update order is rejected as a new order was given instead of an update order
     reject_order();
-    throw std::runtime_error(
-      "OrderManager error: Expected an update order but was given a new "
-      "order.");
+    return false;
   }
 }
 
