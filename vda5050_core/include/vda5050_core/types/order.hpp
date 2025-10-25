@@ -34,7 +34,7 @@ namespace vda5050_core {
 
 namespace types {
 
-/// @struct  Order
+/// @struct Order
 /// @brief A graph of nodes and edges, represents the complete mission
 ///        sent from the master control system
 struct Order
