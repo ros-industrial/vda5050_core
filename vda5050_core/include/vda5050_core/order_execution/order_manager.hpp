@@ -25,12 +25,11 @@
 
 #include "vda5050_core/order_execution/order.hpp"
 #include "vda5050_core/order_execution/order_graph_validator.hpp"
-#include "vda5050_core/state_manager/state_manager.hpp"
+#include "vda5050_core/types/state.hpp"
 
 namespace vda5050_core {
-namespace order_manager {
 
-using vda5050_core::state_manager::StateManager;
+namespace order_manager {
 
 /// \brief Class that handles incoming orders on a vehicle.
 class OrderManager
@@ -41,17 +40,22 @@ public:
   /// \param sm Reference to the StateManager tracking the vehicle's current state.
   OrderManager();
 
+  /// TODO: i think it may make more sense to pass in a snapshot of the state 
   /// \brief Updates the current order on the vehicle.
   ///
   /// \param order The order update to be applied on the current order.
+  /// \param state A snapshot of the vehicle's current state 
   ///
   /// \return True if order update has been accepted by the order manager, false otherwise.
-  bool update_current_order(order::Order order, uint32_t last_node_sequence_id, std::string last_node_id);
+  bool update_current_order(order::Order order, vda5050_core::types::State& state);
 
   /// \brief Puts a new order on the vehicle
   ///
-  /// \param order The new order to be stored and executed by the vehicle
-  bool make_new_order(order::Order order);
+  /// \param order The new Order object to be stored and executed by the vehicle
+  /// \param state A snapshot of the vehicle's current state
+  ///
+  /// \return True if the new order has been accepted by the order manager, false otherwise
+  bool make_new_order(order::Order order, vda5050_core::types::State& state);
 
   /// \brief Returns the next graph element of the current order that is to be executed.
   ///
@@ -73,27 +77,17 @@ private:
   /// \brief Variable storing a graph validator to check the Order's graph
   order_graph_validator::OrderGraphValidator graph_validator_;
 
-  /// \brief Checks that the vehicle is ready to accept a new order
-  ///
-  /// \return True if ready to accept a new order
-  bool is_vehicle_ready_for_new_order();
-
   /// \brief Checks that vehicle is no longer executing an order
   ///
+  /// \param state A snapshot of the vehicle's current state
+  ///
   /// \return True if vehicle is not executing an order
-  bool is_vehicle_still_executing();
+  bool is_vehicle_still_executing(vda5050_core::types::State& state);
 
   /// \brief Checks that vehicle is not waiting for an update to its current order (i.e: the vehicle's current order has no horizon)
   ///
   /// \return True if vehicle is waiting for an update to its current order
   bool is_vehicle_waiting_for_update();
-
-  /// \brief Checks if the received order's first node is within range of the vehicle's current position
-  ///
-  /// \param start_node The first node of the received order
-  ///
-  /// \return True if start_node can be reached from the vehicle's current position
-  bool is_node_trivially_reachable(node::Node& start_node);
 
   /// \brief Checks if order_update is a valid continuation from the current order on the vehicle
   ///
