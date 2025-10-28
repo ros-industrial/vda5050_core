@@ -29,7 +29,7 @@ namespace order_manager {
 OrderManager::OrderManager()
 : current_graph_element_index_{0} {};
 
-bool OrderManager::update_current_order(order::Order received_order, vda5050_core::types::State& state)
+bool OrderManager::update_current_order(order::Order received_order, const vda5050_core::types::State& state)
 {
   /// Check that this is actually an update order
   if (
@@ -40,8 +40,10 @@ bool OrderManager::update_current_order(order::Order received_order, vda5050_cor
     if (received_order.order_update_id() < current_order_->order_update_id())
     {
       reject_order();
-      throw std::runtime_error(
-        "OrderManager error: Order update is deprecated.");
+      
+      std::cerr << "OrderManager error: Order update is deprecated." << "\n";
+
+      return false;
     }
 
     /// check if order update is currently on the vehicle
@@ -49,13 +51,14 @@ bool OrderManager::update_current_order(order::Order received_order, vda5050_cor
       received_order.order_update_id() == current_order_->order_update_id())
     {
       /// discard message as vehicle already has this update
-
-      /// TODO Is this a sufficient method to notify of a discarded message?
       std::cerr << "OrderManager warning: Received duplicate order update (ID: "
                 << received_order.order_update_id() << ") for order "
                 << received_order.order_id() << ". Discarding message." << '\n';
+      
+      /// TODO: KIV to change this once the return struct has been decided
+      return false;
     }
-    /// is the vehicle still executing the current order/waiting for an update?
+
     else if (is_vehicle_still_executing(state) && is_vehicle_waiting_for_update())
     {
       if (
@@ -97,25 +100,52 @@ bool OrderManager::update_current_order(order::Order received_order, vda5050_cor
   }
 }
 
-bool OrderManager::make_new_order(order::Order received_order, vda5050_core::types::State& state)
+bool OrderManager::make_new_order(order::Order received_order, const vda5050_core::types::State& state)
 {
   if (
     !current_order_.has_value() ||
     (current_order_.has_value() &&
      received_order.order_id() != current_order_->order_id()))
   {
+    
+
+    // std::cout << "current order has value? : " << current_order_.has_value() << "\n";
+
+    // std::cout << "is vehicle still executing: " << is_vehicle_still_executing(state) << "\n";
+    // std::cout << "is_vehicle waiting for update: " << is_vehicle_waiting_for_update() << "\n";
+    // std::cout << "is vehicle ready for new order: " << vehicle_ready_for_new_order << "\n";
+    // std::cout << !current_order_ << "\n";
+
+    
+
+    /// if no current order exists, the vehicle can accept a new order
+    if (
+      !current_order_)
+    {
+      std::cout << "accepting new order" << "\n";
+      accept_new_order(received_order);
+
+      return true;
+    }
     /// if the vehicle is not carrying out an action and if the vehicle has no horizon, it can accept a new order
     bool vehicle_ready_for_new_order = !is_vehicle_still_executing(state) && !is_vehicle_waiting_for_update();
 
     /// TODO: This assumes that StateManager sets lastNodeId once the vehicle is within deviation range
     bool node_is_trivially_reachable = received_order.nodes().front().node_id() == state.last_node_id;
 
-    /// if no current order exists, the vehicle can accept a new order
-    if (
-      !current_order_ ||
-      (vehicle_ready_for_new_order && node_is_trivially_reachable))
+    std::cout << "current order has value? : " << current_order_.has_value() << "\n";
+
+    std::cout << "is vehicle still executing: " << is_vehicle_still_executing(state) << "\n";
+    std::cout << "is_vehicle waiting for update: " << is_vehicle_waiting_for_update() << "\n";
+    std::cout << "is vehicle ready for new order: " << vehicle_ready_for_new_order << "\n";
+    std::cout << !current_order_ << "\n";
+
+    if (vehicle_ready_for_new_order && node_is_trivially_reachable)
     {
+      std::cout << "vehicle ready for new order and node trivially reachable" << "\n";
       accept_new_order(received_order);
+
+      return true;
     }
     else
     {
@@ -124,23 +154,18 @@ bool OrderManager::make_new_order(order::Order received_order, vda5050_core::typ
 
       if (!vehicle_ready_for_new_order && !node_is_trivially_reachable)
       {
-        throw std::runtime_error(
-          "OrderManager error: Vehicle is not ready to accept a new order and "
-          "received order's start node is not trivially reachable.");
+        std::cerr << "OrderManager error: Vehicle is not ready to accept a new order and received order's start node is not trivially reachable." << "\n";
       }
       else if (!vehicle_ready_for_new_order)
       {
-        throw std::runtime_error(
-          "OrderManager error: Vehicle is not ready to accept a new order. "
-          "Vehicle is either still executing or waiting for an order update to "
-          "its order's Horizon.");
+        std::cerr << "OrderManager error: Vehicle is not ready to accept a new order. Vehicle is either still executing or waiting for an order update." << "\n";
       }
       else if (!node_is_trivially_reachable)
       {
-        throw std::runtime_error(
-          "OrderManager error: Received order's start node is not trivially "
-          "reachable.");
+        std::cerr << "OrderManager error: Received order's start node is not trivially reachable." << "\n";
       }
+
+      return false;
     }
   }
   else
@@ -149,6 +174,8 @@ bool OrderManager::make_new_order(order::Order received_order, vda5050_core::typ
     throw std::runtime_error(
       "OrderManager error: Expected a new order but was given an order the "
       "same orderId.");
+
+    return false;
   }
 }
 
@@ -168,10 +195,13 @@ OrderManager::next_graph_element()
   return graph_element;
 }
 
-bool OrderManager::is_vehicle_still_executing(vda5050_core::types::State& state)
+bool OrderManager::is_vehicle_still_executing(const vda5050_core::types::State& state)
 {
   bool node_states_empty = state.node_states.empty();
+
   bool action_states_executing { false };
+
+  // std::cout << "Node states empty? " << node_states_empty << "\n";
 
   if (!state.action_states.empty())
   {
@@ -184,13 +214,19 @@ bool OrderManager::is_vehicle_still_executing(vda5050_core::types::State& state)
       } 
     }
   }
-  /// vehicle still has nodes to execute or 
+  // std::cout << "Action states executing? " << action_states_executing << "\n";
+  /// return true if node states are not empty or if action states are still executing
+  /// vehicle still has nodes to execute or has ations that are not finished or not failed
+  std::cout << "are node states empty " << node_states_empty << "\n";
+  std::cout << "are action states executing " << action_states_executing << "\n"; 
   return !node_states_empty || action_states_executing;
 }
 
 bool OrderManager::is_vehicle_waiting_for_update()
 {
   /// if horizon size is not 0, vehicle is waiting on an update
+  // std::cout << "horizon size" << current_order_->horizon().size() << "\n";
+
   if (current_order_->horizon().size() != 0)
   {
     return true;

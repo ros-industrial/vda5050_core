@@ -187,6 +187,10 @@ public:
   /// \brief Append an order update to the vehicle's current order (nodeStates/edgeStates).
   /// \param order_update The order update to append.
   void append_states_for_update(vda5050_core::order::Order& order_update);
+
+  /// @brief Get the current robot state.
+  /// @return const State& the current robot state.
+  const State& get_state();
 };
 
 }  // namespace state_manager

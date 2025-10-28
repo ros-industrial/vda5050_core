@@ -29,9 +29,9 @@ Edge::Edge(
   uint32_t sequence_id, bool released, std::string edge_id,
   std::string start_node_id, std::string end_node_id)
 : order_graph_element::OrderGraphElement(sequence_id, released),
-  edge_id{edge_id},
-  start_node_id{start_node_id},
-  end_node_id{end_node_id}
+  edge_id_{edge_id},
+  start_node_id_{start_node_id},
+  end_node_id_{end_node_id}
 {
 }
 
