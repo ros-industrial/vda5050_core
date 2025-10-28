@@ -107,17 +107,6 @@ bool OrderManager::make_new_order(order::Order received_order, const vda5050_cor
     (current_order_.has_value() &&
      received_order.order_id() != current_order_->order_id()))
   {
-    
-
-    // std::cout << "current order has value? : " << current_order_.has_value() << "\n";
-
-    // std::cout << "is vehicle still executing: " << is_vehicle_still_executing(state) << "\n";
-    // std::cout << "is_vehicle waiting for update: " << is_vehicle_waiting_for_update() << "\n";
-    // std::cout << "is vehicle ready for new order: " << vehicle_ready_for_new_order << "\n";
-    // std::cout << !current_order_ << "\n";
-
-    
-
     /// if no current order exists, the vehicle can accept a new order
     if (
       !current_order_)
@@ -132,13 +121,6 @@ bool OrderManager::make_new_order(order::Order received_order, const vda5050_cor
 
     /// TODO: This assumes that StateManager sets lastNodeId once the vehicle is within deviation range
     bool node_is_trivially_reachable = received_order.nodes().front().node_id() == state.last_node_id;
-
-    std::cout << "current order has value? : " << current_order_.has_value() << "\n";
-
-    std::cout << "is vehicle still executing: " << is_vehicle_still_executing(state) << "\n";
-    std::cout << "is_vehicle waiting for update: " << is_vehicle_waiting_for_update() << "\n";
-    std::cout << "is vehicle ready for new order: " << vehicle_ready_for_new_order << "\n";
-    std::cout << !current_order_ << "\n";
 
     if (vehicle_ready_for_new_order && node_is_trivially_reachable)
     {
@@ -214,11 +196,6 @@ bool OrderManager::is_vehicle_still_executing(const vda5050_core::types::State& 
       } 
     }
   }
-  // std::cout << "Action states executing? " << action_states_executing << "\n";
-  /// return true if node states are not empty or if action states are still executing
-  /// vehicle still has nodes to execute or has ations that are not finished or not failed
-  std::cout << "are node states empty " << node_states_empty << "\n";
-  std::cout << "are action states executing " << action_states_executing << "\n"; 
   return !node_states_empty || action_states_executing;
 }
 
