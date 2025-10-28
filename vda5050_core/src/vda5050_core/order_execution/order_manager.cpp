@@ -111,7 +111,6 @@ bool OrderManager::make_new_order(order::Order received_order, const vda5050_cor
     if (
       !current_order_)
     {
-      std::cout << "accepting new order" << "\n";
       accept_new_order(received_order);
 
       return true;
@@ -124,7 +123,6 @@ bool OrderManager::make_new_order(order::Order received_order, const vda5050_cor
 
     if (vehicle_ready_for_new_order && node_is_trivially_reachable)
     {
-      std::cout << "vehicle ready for new order and node trivially reachable" << "\n";
       accept_new_order(received_order);
 
       return true;
@@ -180,10 +178,7 @@ OrderManager::next_graph_element()
 bool OrderManager::is_vehicle_still_executing(const vda5050_core::types::State& state)
 {
   bool node_states_empty = state.node_states.empty();
-
   bool action_states_executing { false };
-
-  // std::cout << "Node states empty? " << node_states_empty << "\n";
 
   if (!state.action_states.empty())
   {
@@ -202,8 +197,6 @@ bool OrderManager::is_vehicle_still_executing(const vda5050_core::types::State& 
 bool OrderManager::is_vehicle_waiting_for_update()
 {
   /// if horizon size is not 0, vehicle is waiting on an update
-  // std::cout << "horizon size" << current_order_->horizon().size() << "\n";
-
   if (current_order_->horizon().size() != 0)
   {
     return true;
