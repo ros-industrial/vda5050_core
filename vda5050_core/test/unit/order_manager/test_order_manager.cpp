@@ -166,12 +166,25 @@ TEST_F(OrderManagerTest, NewOrderWithCurrentOrder)
   EXPECT_EQ(is_second_order_accepted, true);
 }
 
-// /// \brief Test if OrderManager rejects order and throws an error if vehicle is still executing an order
-// TEST_F(OrderManagerTest, NewOrderNodeStatesNotEmpty)
-// {
-//   orderManager.make_new_order(fully_released_order);
-//   EXPECT_THROW(orderManager.make_new_order(order2), std::runtime_error);
-// }
+/// \brief Test if OrderManager rejects an order if vehicle is still executing an order
+TEST_F(OrderManagerTest, NewOrderNodeStatesNotEmpty)
+{
+  bool is_first_order_accepted { orderManager.make_new_order(fully_released_order, init_state) };
+
+  EXPECT_EQ(is_first_order_accepted, true);
+
+  /// create State with non-empty NodeStates
+  std::vector<vda5050_core::node::Node> unexecuted_nodes {n3, n5};
+  std::vector<vda5050_core::edge::Edge> unexecuted_edges {e4};
+  std::vector<vda5050_core::types::NodeState> fully_released_node_states {create_node_states(unexecuted_nodes)};
+  std::vector<vda5050_core::types::EdgeState> fully_released_edge_states {create_edge_states(unexecuted_edges)};
+  fully_released_state.node_states = fully_released_node_states;
+  fully_released_state.edge_states = fully_released_edge_states;
+
+  bool is_second_order_accepted { orderManager.make_new_order(order2, fully_released_state) };
+
+  EXPECT_EQ(is_second_order_accepted, false);
+}
 
 // /// \brief Test if OrderManager rejects order and throws an error if vehicle still has a horizon and is waiting on an update
 // TEST_F(OrderManagerTest, NewOrderVehicleWaitingForUpdate)
