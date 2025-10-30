@@ -22,6 +22,7 @@
 #include <optional>
 #include <vector>
 #include <cstdint>
+#include <memory>
 
 #include "vda5050_core/order_execution/order.hpp"
 #include "vda5050_core/order_execution/order_graph_validator.hpp"
@@ -60,7 +61,7 @@ public:
   /// \brief Returns the next graph element of the current order that is to be executed.
   ///
   /// \return The graph element that is to be executed next.
-  std::optional<order_graph_element::OrderGraphElement> next_graph_element();
+  std::optional<std::shared_ptr<order_graph_element::OrderGraphElement>> next_graph_element();
 
 private:
   /// \brief The order that is currently on the vehicle

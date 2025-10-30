@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <string>
+#include <memory>
 
 #include "vda5050_core/order_execution/order_graph_element.hpp"
 

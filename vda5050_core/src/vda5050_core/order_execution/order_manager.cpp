@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <memory>
 
 #include "vda5050_core/order_execution/order_manager.hpp"
 #include "vda5050_core/types/state.hpp"
@@ -163,15 +164,14 @@ bool OrderManager::make_new_order(order::Order received_order, const vda5050_cor
   }
 }
 
-std::optional<order_graph_element::OrderGraphElement>
+std::optional<std::shared_ptr<order_graph_element::OrderGraphElement>>
 OrderManager::next_graph_element()
 {
-  /// TODO Might need to redesign this to enable the nodeId, edgeId, etc to be accessed.
   if (current_graph_element_index_ >= current_order_->base().size())
   {
     return std::nullopt;
   }
-  order_graph_element::OrderGraphElement graph_element =
+  std::shared_ptr<order_graph_element::OrderGraphElement> graph_element =
     current_order_->base().at(current_graph_element_index_);
 
   current_graph_element_index_++;

@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <string>
+#include <memory>
 
 namespace vda5050_core {
 
@@ -37,6 +38,8 @@ public:
   OrderGraphElement(uint32_t sequence_id, bool released);
 
   using Ptr = std::shared_ptr<OrderGraphElement>;
+
+  virtual ~OrderGraphElement() = default;
 
   uint32_t sequence_id() const
   {

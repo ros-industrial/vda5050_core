@@ -19,6 +19,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <vector>
+#include <memory>
 
 #include "vda5050_core/order_execution/edge.hpp"
 #include "vda5050_core/order_execution/node.hpp"
@@ -326,21 +327,37 @@ TEST_F(OrderManagerTest, OrderUpdateInvalidContinuationOfCurrentOrder)
 /// \brief Test if OrderManager returns the graph elements from the base of an order correctly
 TEST_F(OrderManagerTest, GetNextGraphElement)
 {
-  orderManager.make_new_order(partially_released_order, init_state);
+  bool is_first_order_accepted = orderManager.make_new_order(partially_released_order, init_state);
 
-  std::optional<vda5050_core::order_graph_element::OrderGraphElement> ge1 =
-    orderManager.next_graph_element();
-  EXPECT_EQ(ge1->sequence_id(), n1.sequence_id());
+  EXPECT_EQ(is_first_order_accepted, true);
 
-  std::optional<vda5050_core::order_graph_element::OrderGraphElement> ge2 =
-    orderManager.next_graph_element();
-  EXPECT_EQ(ge2->sequence_id(), e2.sequence_id());
+  if (auto graph_element_ref = orderManager.next_graph_element())
+  {
+    auto graph_element = graph_element_ref.value();
+    if(auto node = std::dynamic_pointer_cast<vda5050_core::node::Node>(graph_element))
+    {
+      EXPECT_EQ(node->node_id(), n1.node_id());
+    }
+  }
 
-  std::optional<vda5050_core::order_graph_element::OrderGraphElement> ge3 =
-    orderManager.next_graph_element();
-  EXPECT_EQ(ge3->sequence_id(), n3.sequence_id());
+  if (auto graph_element_ref = orderManager.next_graph_element())
+  {
+    auto graph_element = graph_element_ref.value();
+    if(auto edge = std::dynamic_pointer_cast<vda5050_core::edge::Edge>(graph_element))
+    {
+      EXPECT_EQ(edge->edge_id(), e2.edge_id());
+    }
+  }
 
-  std::optional<vda5050_core::order_graph_element::OrderGraphElement>
-    nullEelment = orderManager.next_graph_element();
-  EXPECT_EQ(nullEelment, std::nullopt);
+  if (auto graph_element_ref = orderManager.next_graph_element())
+  {
+    auto graph_element = graph_element_ref.value();
+    if(auto node = std::dynamic_pointer_cast<vda5050_core::node::Node>(graph_element))
+    {
+      EXPECT_EQ(node->node_id(), n3.node_id());
+    }
+  }
+
+  auto final_element = orderManager.next_graph_element();
+  EXPECT_FALSE(final_element.has_value());
 }

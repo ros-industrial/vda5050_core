@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include "vda5050_core/order_execution/edge.hpp"
 #include "vda5050_core/order_execution/node.hpp"
@@ -64,27 +65,32 @@ public:
     return edges_;
   }
 
-  std::vector<order_graph_element::OrderGraphElement>& graph()
+  std::vector<std::shared_ptr<order_graph_element::OrderGraphElement>>& graph()
   {
     return graph_;
   }
 
-  std::vector<std::shared_ptr<order_graph_element::OrderGraphElement>>& test_graph()
-  {
-    return test_graph_;
-  }
-
-  const std::vector<order_graph_element::OrderGraphElement>& graph() const
+  const std::vector<std::shared_ptr<order_graph_element::OrderGraphElement>>& graph() const
   {
     return graph_;
   }
 
-  const std::vector<order_graph_element::OrderGraphElement>& base() const
+  std::vector<std::shared_ptr<order_graph_element::OrderGraphElement>>& base()
   {
     return base_;
   }
 
-  const std::vector<order_graph_element::OrderGraphElement>& horizon() const
+  const std::vector<std::shared_ptr<order_graph_element::OrderGraphElement>>& base() const
+  {
+    return base_;
+  }
+
+  std::vector<std::shared_ptr<order_graph_element::OrderGraphElement>>& horizon()
+  {
+    return horizon_;
+  }
+
+  const std::vector<std::shared_ptr<order_graph_element::OrderGraphElement>>& horizon() const
   {
     return horizon_;
   }
@@ -113,15 +119,13 @@ private:
   std::vector<edge::Edge> edges_;
 
   /// \brief The graph created by the nodes and edges of this order.
-  std::vector<order_graph_element::OrderGraphElement> graph_;
-
-  std::vector<std::shared_ptr<order_graph_element::OrderGraphElement>> test_graph_;
+  std::vector<std::shared_ptr<order_graph_element::OrderGraphElement>> graph_;
 
   /// \brief The base of this order. Contains the released nodes and edges sorted in ascending sequenceId
-  std::vector<order_graph_element::OrderGraphElement> base_;
+  std::vector<std::shared_ptr<order_graph_element::OrderGraphElement>> base_;
 
   /// \brief The horizion of this order. Contains the unreleased nodes and edges sorted in ascending sequenceId
-  std::vector<order_graph_element::OrderGraphElement> horizon_;
+  std::vector<std::shared_ptr<order_graph_element::OrderGraphElement>> horizon_;
 
   /// \brief The last node in this order's base, or the last released node according to sequenceId
   node::Node decision_point_;
@@ -134,6 +138,9 @@ private:
 
   /// \brief Idempotent function to populate the horizon_ member variable with all unreleased nodes and edges.
   void populate_horizon();
+
+  ///
+  void populate_base_and_horizon();
 
   /// \brief Stitch this order with another order.
   void stitch_order(order::Order order);
