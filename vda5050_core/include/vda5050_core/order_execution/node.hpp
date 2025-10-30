@@ -41,6 +41,8 @@ public:
   /// \param node_id String that uniquely identifies this node.
   Node(uint32_t sequence_id, bool released, std::string node_id);
 
+  using Ptr = std::shared_ptr<Node>;
+
   std::string node_id() const
   {
     return node_id_;

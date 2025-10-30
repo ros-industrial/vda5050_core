@@ -64,6 +64,16 @@ public:
     return edges_;
   }
 
+  std::vector<order_graph_element::OrderGraphElement>& graph()
+  {
+    return graph_;
+  }
+
+  std::vector<std::shared_ptr<order_graph_element::OrderGraphElement>>& test_graph()
+  {
+    return test_graph_;
+  }
+
   const std::vector<order_graph_element::OrderGraphElement>& graph() const
   {
     return graph_;
@@ -104,6 +114,8 @@ private:
 
   /// \brief The graph created by the nodes and edges of this order.
   std::vector<order_graph_element::OrderGraphElement> graph_;
+
+  std::vector<std::shared_ptr<order_graph_element::OrderGraphElement>> test_graph_;
 
   /// \brief The base of this order. Contains the released nodes and edges sorted in ascending sequenceId
   std::vector<order_graph_element::OrderGraphElement> base_;

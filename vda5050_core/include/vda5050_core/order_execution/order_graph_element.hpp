@@ -36,6 +36,8 @@ public:
   /// \param released Boolean indicating true if this graph element is part of the base, false if it is part of the horizon.
   OrderGraphElement(uint32_t sequence_id, bool released);
 
+  using Ptr = std::shared_ptr<OrderGraphElement>;
+
   uint32_t sequence_id() const
   {
     return sequence_id_;
