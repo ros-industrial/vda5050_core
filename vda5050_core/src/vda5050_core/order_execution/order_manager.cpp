@@ -51,7 +51,7 @@ bool OrderManager::update_current_order(order::Order received_order, const vda50
       received_order.order_update_id() == current_order_->order_update_id())
     {
       /// discard message as vehicle already has this update
-      std::cerr << "OrderManager warning: Received duplicate order update (ID: "
+      std::cerr << "OrderManager warning: Received duplicate order update (orderUpdateId="
                 << received_order.order_update_id() << ") for order "
                 << received_order.order_id() << ". Discarding message." << '\n';
       
@@ -65,7 +65,7 @@ bool OrderManager::update_current_order(order::Order received_order, const vda50
         received_order.nodes().front().node_id() !=
         current_order_->decision_point().node_id())
       {
-        /// order update is rejected as the nodeIds of the stitching nodes do not match
+        std::cerr << "OrderManager error: Order update rejected as nodeIds of the stitching nodes do not match." << "\n";
         reject_order();
         return false;
       }
@@ -73,6 +73,8 @@ bool OrderManager::update_current_order(order::Order received_order, const vda50
       else
       {
         /// order update can be accepted as it is a continuation of the currently running order
+        /// TODO: Update internal state
+        current_order_->stitch_and_set_order_update_id(received_order);
         return true;
       }
     }
@@ -80,13 +82,15 @@ bool OrderManager::update_current_order(order::Order received_order, const vda50
     {
       if (received_order.nodes().front().sequence_id() != state.last_node_sequence_id && received_order.nodes().front().node_id() != state.last_node_id)
       {
-        /// update order is rejected as it is not a valid continuation of the previously completed order
+        std::cerr << "OrderManager error: Order update rejected as it is not a valid continuation of the previously completed order." << "\n";
         reject_order();
         return false;
       }
       else
       {
         /// order update can be accepted as it is a continuation of the previously executed order
+        /// TODO: Update internal state
+        current_order_->stitch_and_set_order_update_id(received_order);
         return true;
       }
     }
