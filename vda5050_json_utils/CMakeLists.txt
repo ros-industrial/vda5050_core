@@ -26,6 +26,7 @@ add_library(vda5050_json_utils INTERFACE)
 target_link_libraries(vda5050_json_utils
   INTERFACE
     vda5050_types::vda5050_types
+    nlohmann_json::nlohmann_json
 )
 
 target_include_directories(vda5050_json_utils
@@ -75,7 +76,18 @@ if(BUILD_TESTING)
   ament_cppcheck()
 
   find_package(ament_cmake_cpplint REQUIRED)
-  ament_cpplint()
+
+  set(cpplint_filters
+    "-whitespace/newline"
+  )
+  set(cpplint_root_paths
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/"
+  )
+
+  ament_cpplint(
+    FILTERS "${cpplint_filters}"
+    ROOT "${cpplint_root_paths}"
+  )
 
   find_package(ament_cmake_clang_format REQUIRED)
   ament_clang_format(
@@ -84,6 +96,25 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_copyright REQUIRED)
   ament_copyright()
+
+  find_package(ament_cmake_gtest REQUIRED)
+
+  set(tests test/test_json_utils.cpp)
+  if(ENABLE_ROS2)
+    list(APPEND tests test/test_json_utils_ros2.cpp)
+  endif()
+
+  ament_add_gtest(json_utils_struct_test ${tests})
+
+  target_include_directories(json_utils_struct_test
+    PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  )
+
+  target_link_libraries(json_utils_struct_test
+      vda5050_json_utils
+  )
 endif()
 
 ament_package()
