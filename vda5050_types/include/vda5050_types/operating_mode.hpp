@@ -23,40 +23,30 @@
 
 namespace vda5050_types {
 
-/// @enum  OperatingMode
-/// @brief Current operating mode of the AGV
-enum class OperatingMode : uint8_t
+/// \brief Enum values for operatingMode
+enum class OperatingMode
 {
-  /// @brief AGV is under full control of the master control.
-  ///        AGV drives and executes actions based on orders from the master
-  ///        control.
+  /// \brief AGV is under full control of the master control. It drives
+  /// and executes actions based on orders from the master control
   AUTOMATIC,
 
-  /// \brief AGV is under control of the master control.
-  //         AGV drives and executes actions based on orders from the master
-  //         control.
-  //         The driving speed is controlled by the HMI (speed can't exceed the
-  //         speed of automatic mode).
-  //         The steering is under automatic control (non-safe HMI possible).
+  /// \brief AGV is under control of the master control in areas like
+  /// driving and executing actions. The driving speeds is however
+  /// controlled by the HMI
   SEMIAUTOMATIC,
 
-  /// @brief Master control is not in control of the AGV.
-  //         Supervisor doesn't send driving order or actions to the AGV.
-  //         HMI can be used to control the steering and velocity and handling
-  //         device of the AGV.
-  //         Location of the AGV is sent to the master control.
-  //         When AGV enters or leaves this mode, it immediately clears all the
-  //         orders (safe HMI required)
+  /// \brief AGV is not under control of the master control. HMI can
+  /// be used to control the AGV. Only location of the AGV is sent to
+  /// the master control
   MANUAL,
 
-  /// @brief Master control is not in control of the AGV.
-  //         Master control doesn't send driving order or actions to the AGV.
-  //         Authorized personnel can reconfigure the AGV
+  /// \brief AGV is not under the control of the master
+  /// control and it doesn't send order or actions to it. Authorized
+  /// personnel can reconfigure the AGV
   SERVICE,
 
-  /// @brief Master control is not in control of the AGV.
-  //         Supervisor doesn't send driving order or actions to the AGV.
-  //         The AGV is being taught, e.g., mapping is done by a master control.
+  /// \brief AGV is not under the control of the master control. It is
+  /// being taught
   TEACHIN
 };
 

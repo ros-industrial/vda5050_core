@@ -23,15 +23,38 @@
 
 namespace vda5050_types {
 
-/// @struct InfoReference
-/// @brief  Determines the type and value of reference
+/// \brief Describes a variable and its value related to the information
+/// Part of the state message
 struct InfoReference
 {
-  /// @brief References the type of reference (e.g. orderId, headerId, actionId, etc.).
+  /// \brief Specifies the type of reference used
+  /// (e.g., nodeId, edgeId, orderId, actionId, etc.)
   std::string reference_key;
 
-  /// @brief References the value, which belongs to the key.
+  /// \brief The value that belongs to the reference key
   std::string reference_value;
+
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  bool operator==(const InfoReference& other) const
+  {
+    if (reference_key != other.reference_key) return false;
+    if (reference_value != other.reference_value) return false;
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const InfoReference& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 }  // namespace vda5050_types

@@ -27,25 +27,55 @@
 
 namespace vda5050_types {
 
-/// @struct NodeState
-/// @brief  Array of nodeState-Objects, that need to be traversed for fulfilling the order. Empty list if idle.
+/// \brief Provides information about the node to be traversed
+/// for fulfilling the order
+/// Part of the state message
 struct NodeState
 {
-  /// @brief Unique node identification
+  /// \brief Unique node identification
   std::string node_id;
 
-  /// @brief sequenceId to discern multiple nodes with same nodeId
+  /// \brief A sequence identification to differentiate
+  /// multiple nodes with the same ID
   uint32_t sequence_id = 0;
 
-  /// @brief Additional information on the node
+  /// \brief Additional information on the node
   std::optional<std::string> node_description;
 
-  /// @brief Node position. The object is defined in chapter 5.4 Topic: Order (from master control to AGV).
-  ///        Optional:Master control has this information. Can be sent additionally, e.g., for debugging purposes..
+  /// \brief Position of the node on the active AGV map in
+  /// world coordinate system
   std::optional<NodePosition> node_position;
 
-  /// @brief  "True: indicates that the node is part of the base. False: indicates that the node is part of the horizon.
+  /// \brief Defines if the node is part of the base or horizon
+  ///    - True indicates node is part of the base
+  ///    - False indicates node is part of the horizon
   bool released = false;
+
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  inline bool operator==(const NodeState& other) const
+  {
+    if (this->node_description != other.node_description) return false;
+    if (this->node_id != other.node_id) return false;
+    if (this->node_position != other.node_position) return false;
+    if (this->released != other.released) return false;
+    if (this->sequence_id != other.sequence_id) return false;
+
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const NodeState& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 }  // namespace vda5050_types

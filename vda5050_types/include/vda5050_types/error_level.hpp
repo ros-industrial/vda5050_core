@@ -21,22 +21,13 @@
 
 namespace vda5050_types {
 
-/// @enum ErrorLevel
-/// @brief Enum {'WARNING', 'FATAL'}
-///        'WARNING': AGV is ready to start
-///        (e.g., maintenance cycle expiration
-///        warning).
-///        'FATAL': AGV is not in running
-///        condition, user intervention required
-///        (e.g., laser scanner is contaminated).
+/// \brief Enum values for errorLevel
 enum class ErrorLevel
 {
-  /// @brief AGV is ready to start (e.g. maintenance
-  ///          cycle expiration warning)
+  /// \brief AGV is ready to drive without human intervention
   WARNING,
-  /// @brief AGV is not in running condition, user
-  ///        intervention required (e.g. laser scanner
-  ///        is contaminated)
+
+  /// \brief AGV is not in running condition
   FATAL
 };
 

@@ -26,52 +26,51 @@
 
 namespace vda5050_types {
 
-/// @struct ActionState
-/// @brief Contains an array of all actions from
-///        the current order and all received
-///        instantActions since the last order.
-///        The action states are kept until a new
-///        order is received. Action states,
-///        except for running instant actions,
-///        are removed upon receiving a new
-///        order.
-///        This may include actions from
-///        previous nodes, that are still in
-///        progress.
-///
-///        When an action is completed, an
-///        updated state message is published
-///        with actionStatus set to 'FINISHED'
-///        and if applicable with the
-///        corresponding
-///        resultDescription.
+/// \brief Describes the state of the action carried out by the AGV
+/// Part of the state message
 struct ActionState
 {
-  /// @brief Unique identifier of the action.
+  /// \brief Unique identifier of the action
   std::string action_id;
 
-  /// @brief Unique identifier of the action.
-  ///        Type of the action.
-  ///        Optional: Only for informational or
-  ///        visualization purposes. MC is aware
-  ///        of action type as dispatched in the order.
+  /// \brief The type of this action. Only for visualization
+  /// purposes as the order already knows the type of the action
   std::optional<std::string> action_type;
 
-  /// @brief Additional information on the current action.
+  /// \brief Additional information on the current action.
   std::optional<std::string> action_description;
 
-  /// @brief The current state of the action
-  ///
-  /// @note Enum {'WAITING', 'INITIALIZING',
-  ///       'RUNNING', 'PAUSED', 'FINISHED',
-  ///       'FAILED'}
+  /// \brief The current progress of the action
   ActionStatus action_status = ActionStatus::WAITING;
 
-  /// @brief Description of the result, e.g., the
-  ///        result of an RFID reading.
-  ///        Errors will be transmitted in errors.
+  /// \brief Description of the result. Errors will be transmitted
+  /// in the errors field
   std::optional<std::string> result_description;
+
+  /// \brief Equality operator
   ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  inline bool operator==(const ActionState& other) const
+  {
+    if (this->action_id != other.action_id) return false;
+    if (this->action_type != other.action_type) return false;
+    if (this->action_description != other.action_description) return false;
+    if (this->action_status != other.action_status) return false;
+    if (this->result_description != other.result_description) return false;
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const ActionState& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 }  // namespace vda5050_types

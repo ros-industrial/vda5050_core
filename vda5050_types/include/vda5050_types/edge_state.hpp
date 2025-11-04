@@ -27,29 +27,53 @@
 
 namespace vda5050_types {
 
-/// @struct ControlPoint
-/// @brief  ControlPoint describing a trajectory (NURBS)
+/// \brief Provides information about the edge
+/// Part of the state message
 struct EdgeState
 {
-  /// @brief Unique edge identification
+  /// \brief Unique edge identification
   std::string edge_id;
 
-  /// @brief sequenceId to differentiate between multiple edges with
-  ///        the same edgeId
+  /// \brief A sequence ID to differentiate multiple edges with the same ID
   uint32_t sequence_id = 0;
 
-  /// @brief Additional information on the edge
+  /// \brief Additional information on the edge
   std::optional<std::string> edge_description;
 
-  /// @brief True indicates that the edge is part of the base.
-  ///        False indicates that the edge is part of the horizon.
+  /// \brief Defines if the edge is part of the base or horizon
+  ///   - True indicates edge is part of the base
+  ///   - False indicates edge is part of the horizon
   bool released = false;
 
-  /// @brief The trajectory is to be communicated as a NURBS.
-  ///        Trajectory segments are from the point where the AGV
-  ///        starts to enter the edge until the point where it
-  ///        reports that the next node was traversed.
+  /// \brief The trajectory in NURBS, defined as starting from the point
+  /// the AGV starts to enter the edge until the point where it reports the
+  /// next node as traversed
   std::optional<Trajectory> trajectory;
+
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  inline bool operator==(const EdgeState& other) const
+  {
+    if (this->edge_id != other.edge_id) return false;
+    if (this->sequence_id != other.sequence_id) return false;
+    if (this->edge_description != other.edge_description) return false;
+    if (this->released != other.released) return false;
+    if (this->trajectory != other.trajectory) return false;
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const EdgeState& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 }  // namespace vda5050_types

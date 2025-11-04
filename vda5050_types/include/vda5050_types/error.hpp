@@ -28,40 +28,46 @@
 
 namespace vda5050_types {
 
-/// @struct Error
-/// @brief  Array of error objects.
-///         All active errors of the AGV should be
-///         in the array.
-///         An empty array indicates that the
-///         AGV has no active errors.
+/// \brief Error information conveyed by the AGV
+/// Part of the state message
 struct Error
 {
-  /// @brief Type/name of error
+  /// \brief Type/name of error
   std::string error_type;
 
-  /// @brief Array of references (e.g., nodeId,
-  /// edgeId, orderId, actionId, etc.) to
-  /// provide more information related to
-  /// the error.
+  /// \brief Array of references to identify the source of the error
   std::optional<std::vector<ErrorReference>> error_references;
 
-  /// @brief Verbose description providing details
-  ///        and possible causes of the error.
+  /// \brief Verbose description providing details
+  /// and possible causes of the error
   std::optional<std::string> error_description;
 
-  /// TODO: (johnaa) should this be optional?
-  /// @brief Hint on how to approach or solve the
-  ///        reported error.
-
-  std::optional<std::string> error_hint;
-
-  /// @brief Enum {warning, fatal}
-  /// warning: AGV is ready to start (e.g. maintenance
-  ///          cycle expiration warning)
-  /// fatal: AGV is not in running condition, user
-  ///        intervention required (e.g. laser scanner
-  ///        is contaminated)
+  /// \brief Severity of error
   ErrorLevel error_level = ErrorLevel::WARNING;
+
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  bool operator==(const Error& other) const
+  {
+    if (error_type != other.error_type) return false;
+    if (error_references != other.error_references) return false;
+    if (error_description != other.error_description) return false;
+    if (error_level != other.error_level) return false;
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const Error& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 }  // namespace vda5050_types

@@ -24,47 +24,70 @@
 
 namespace vda5050_types {
 
-/// @struct AgvPosition
-/// @brief  Current position of the AGV on the
-///         map.
-struct AgvPosition
+/// \brief Defines the position on the map in world coordinate system
+/// Part of the state message
+struct AGVPosition
 {
-  /// @brief “true”: position is initialized.
-  ///        “false”: position is not initialized.
+  /// \brief Indicates if the AGV's position is initialized
+  ///   - True if position is initialized
+  ///   - False if position is not initialized
   bool position_initialized = false;
 
-  /// @brief Describes the quality of the
-  ///        localization and therefore, can be
-  ///        used
-  ///        Valid range: [0.0, 1.0]
-  ///        0.0: position unknown
-  ///        1.0: position known
+  /// \brief Desribes the quality of localization and can be
+  /// used to describe the accuracy of the current position information
+  /// Primarily for logging and visualization purposes
+  ///   - 0.0 denotes position unknown
+  ///   - 1.0 denotes position known
   std::optional<double> localization_score;
 
-  /// @brief Value for the deviation range of the
-  ///        position in meters.
+  /// \brief Deviation from position in meters. Optional for vehicles
+  /// that cannot estimate their deviation
   std::optional<double> deviation_range;
 
-  /// @brief X-position on the map in reference to
-  ///        the map coordinate system.
+  /// \brief X-position on the map in reference to
+  /// the map coordinate system.
   double x = 0.0;
 
-  /// @brief Y-position on the map in reference to
-  ///        the map coordinate system.
+  /// \brief Y-position on the map in reference to
+  /// the map coordinate system.
   double y = 0.0;
 
-  /// @brief Orientation of the AGV.
-  ///        Valid range: [-Pi, Pi]
-  ///        0.0: position unknown
-  ///        1.0: position known
+  /// \brief Orientation of the AGV in radians
+  /// Valid range: [-PI, PI]
   double theta = 0.0;
 
-  /// @brief Unique identification of the map in
-  ///        which the position is referenced
+  /// \brief Unique identification of the map in
+  /// which the position is referenced
   std::string map_id;
 
-  /// @brief Additional information on the map.
+  /// \brief Additional information on the map.
   std::optional<std::string> map_description;
+
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  inline bool operator==(const AGVPosition& other) const
+  {
+    if (position_initialized != other.position_initialized) return false;
+    if (localization_score != other.localization_score) return false;
+    if (deviation_range != other.deviation_range) return false;
+    if (x != other.x) return false;
+    if (y != other.y) return false;
+    if (theta != other.theta) return false;
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const AGVPosition& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 }  // namespace vda5050_types

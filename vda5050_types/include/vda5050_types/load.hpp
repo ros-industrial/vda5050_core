@@ -28,37 +28,60 @@
 
 namespace vda5050_types {
 
-/// @struct Load
-/// @brief  Loads that are currently handled by the AGV.
-///         Optional: If AGV cannot determine load state,
-///         leave the array out of the state.
-//          If the AGV can determine the load state, but the array is empty,
-///         the AGV is considered unloaded.
+/// \brief Information about the load the AGV is carrying
+/// Part of the state message
 struct Load
 {
-  /// @brief Unique identification number of the load (e.g., barcode or RFID).
-  ///        Empty field, if the AGV can identify the load, but did not identify the load yet.
-  ///        Optional, if the AGV cannot identify the load.
+  /// \brief Unique ID of the load
+  ///   - Empty field if the AGV can identify the load but
+  ///     hasn't identified it yet
+  ///   - Optional if the AGV cannot identify the load
   std::optional<std::string> load_id;
 
-  /// @brief Type of load.
+  /// \brief Type of load.
   std::optional<std::string> load_type;
 
-  /// @brief Indicates which load handling/carrying unit of the AGV is used,
-  ///        e.g., in case the AGV has multiple spots/positions to carry loads.
-  ///        Optional for vehicles with only one loadPosition.
+  /// \brief Indicates which load handling/carrying unit of the AGV is used,
+  /// e.g., in case the AGV has multiple spots/positions to carry loads
   std::optional<std::string> load_position;
 
-  /// @brief Point of reference for the location of the bounding box.
-  ///        The point of reference is always the center of the bounding box bottom surface (at height = 0)
-  ///        and is described in coordinates of the AGV coordinate system.
+  /// \brief Point of reference for the location of the bounding box. It is
+  /// always the center of the bounding box bottom surface (at height = 0)
+  /// and is described in coordinates of the AGV coordinate system
   std::optional<BoundingBoxReference> bounding_box_reference;
 
-  /// @brief Dimensions of the loads bounding box in meters.
+  /// \brief Dimensions of the loads bounding box in meters
   std::optional<LoadDimensions> load_dimensions;
 
-  /// @brief Absolute weight of the load measured in kg.
-  std::optional<uint32_t> weight;
+  /// \brief Absolute weight of the load measured in kg
+  std::optional<double> weight;
+
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  inline bool operator==(const Load& other) const
+  {
+    if (this->load_id != other.load_id) return false;
+    if (this->load_type != other.load_type) return false;
+    if (this->weight != other.weight) return false;
+    if (this->load_dimensions != other.load_dimensions) return false;
+    if (this->bounding_box_reference != other.bounding_box_reference)
+      return false;
+    if (this->load_position != other.load_position) return false;
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const Load& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 }  // namespace vda5050_types

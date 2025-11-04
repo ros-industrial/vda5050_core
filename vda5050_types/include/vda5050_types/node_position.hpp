@@ -24,70 +24,76 @@
 
 namespace vda5050_types {
 
-/// @struct NodePosition
-/// @brief  Node position. The object is defined in chapter 5.4 Topic: Order (from master control to AGV).
-///         Optional:Master control has this information.
-///         Can be sent additionally, e.g., for debugging purposes.
+/// \brief Defines a position on a map in world coordinate system
+/// Part of the state message
 struct NodePosition
 {
-  /// @brief X-position on the map in reference to the
-  ///        map coordinate system in meters.
+  /// \brief X-position of the AGV on the map in reference to the
+  /// world coordinate system in meters.
   double x = 0.0;
 
-  /// @brief Y-position on the map in reference to the
-  ///        map coordinate system in meters.
+  /// \brief Y-position of the AGV on the map in reference to the
+  /// world coordinate system in meters.
   double y = 0.0;
 
-  /// @brief Range : [-PI... PI]
-  ///        Absolute orientation of the AGV on the node.
-  ///        Optional: vehicle can plan the path by itself.
-  ///        If defined, the AGV has to assume the theta
-  ///        angle on this node.
-  //         If previous edge disallows rotation, the AGV
-  //         shall rotate on the node.
-  //         If following edge has a differing orientation
-  //         defined but disallows rotation, the AGV is to
-  //         rotate on the node to the edges desired
-  //         rotation before entering the edge.
+  /// \brief Orientation of the AGV in radians. If provided,
+  /// the AGV must assume the orientation on this node
+  ///    - If the previous edge, disallows rotation then the AGV
+  ///      must rotate on the node
+  ///    - If the following edge has a different orientation but
+  ///      disallows rotation then the AGV must rotate on the node
+  ///      before entering the edge
+  /// Valid range: [-PI, PI]
   std::optional<double> theta;
 
-  /// @brief Indicates how precisely an AGV shall match
-  ///        the position of a node for it to be considered traversed.
-  ///
-  ///        If = 0.0: no deviation is allowed (no
-  ///        deviation means within the normal
-  ///        tolerance of the AGV manufacturer).
-  ///        If > 0.0: allowed deviation radius in meters.
-  ///        If the AGV passes a node within the
-  ///        deviation radius, the node can be
-  ///        considered traversed.
+  /// \brief Indicates how accurate the AGV must be to drive over a node
+  /// for it to count as traversed
+  ///    - If deviation = 0, then the AGV must traverese the node within the
+  ///      normal tolerance of the AGV manufacturer
+  ///    - If deviation > 0, then the AGV can traverse the node within the
+  ///      deviation radius
   std::optional<double> allowed_deviation_x_y;
 
-  /// @brief Range: [0.0 … Pi] Indicates how precise the orientation
-  ///        defined in theta has to be met on the node
-  ///        by the AGV.
-  ///        Indicates how precise the orientation
-  ///        defined in theta has to be met on the node
-  ///        by the AGV.
-  ///        The lowest acceptable angle is theta -
-  ///        allowedDeviationTheta and the highest
-  ///        acceptable angle is theta +
-  ///        allowedDeviationTheta.
+  /// \brief Indicates how precise the orientation defined in theta has to be met
+  /// on the node by the AGV.
+  /// Valid range: [0, PI]
   std::optional<double> allowed_deviation_theta;
 
-  /// @brief Unique identification of the map on which
-  ///        the position is referenced.
-  ///        Each map has the same project-specific
-  ///        global origin of coordinates.
-  ///        When an AGV uses an elevator, e.g.,
-  ///        leading from a departure floor to a target
-  ///        floor, it will disappear off the map of the
-  ///        departure floor and spawn in the related lift
-  ///        node on the map of the target floor.
-  std::string mapId;
+  /// \brief Unique identification of the map on which the AGV is currently
+  /// operating
+  std::string map_id;
 
-  /// @brief Additional information on the map
+  /// \brief Additional information on the map
   std::optional<std::string> map_description;
+
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  inline bool operator==(const NodePosition& other) const
+  {
+    if (this->allowed_deviation_theta != other.allowed_deviation_theta)
+      return false;
+    if (this->allowed_deviation_x_y != other.allowed_deviation_x_y)
+      return false;
+    if (this->map_description != other.map_description) return false;
+    if (this->map_id != other.map_id) return false;
+    if (this->theta != other.theta) return false;
+    if (this->x != other.x) return false;
+    if (this->y != other.y) return false;
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const NodePosition& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 }  // namespace vda5050_types

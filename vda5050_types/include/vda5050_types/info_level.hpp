@@ -21,14 +21,13 @@
 
 namespace vda5050_types {
 
-/// @enum InfoLevel
-/// @brief Information for debugging or visualization
+/// \brief Enum values for infoLevel
 enum class InfoLevel
 {
-  /// @brief used for debugging
+  /// \brief Used for debugging
   DEBUG,
 
-  /// @brief used for visualization
+  /// \brief Used for visualization
   INFO
 };
 

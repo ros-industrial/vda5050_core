@@ -23,18 +23,40 @@
 
 namespace vda5050_types {
 
-/// @struct Velocity
-/// @brief The AGVs velocity in vehicle coordinate
+/// \brief The AGV's velocity in vehicle coordinate
 struct Velocity
 {
-  /// @brief The AVGs velocity in its x directio
+  /// \brief Velocity in the x direction
   std::optional<double> vx;
 
-  /// @brief The AVGs velocity in its y direction
+  /// \brief Velocity in the y direction
   std::optional<double> vy;
 
-  /// @brief The AVGs turning speed around its z axis
+  /// \brief Turning speed around the z axis
   std::optional<double> omega;
+
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  inline bool operator==(const Velocity& other) const
+  {
+    if (vx != other.vx) return false;
+    if (vy != other.vy) return false;
+    if (omega != other.omega) return false;
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const Velocity& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 }  // namespace vda5050_types

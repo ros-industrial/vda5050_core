@@ -21,22 +21,43 @@
 
 namespace vda5050_types {
 
-/// @struct ControlPoint
-/// @brief  ControlPoint describing a trajectory (NURBS)
+/// \brief  ControlPoint describing a trajectory (NURBS)
+/// Part of the state message
 struct ControlPoint
 {
-  /// @brief X-coordinate described in the world
-  ///        coordinate system.
+  /// \brief X-coordinate described in the world coordinate system
   double x = 0.0;
 
-  /// @brief Y-coordinate described in the world
-  ///        coordinate system.
+  /// \brief Y-coordinate described in the world coordinate system
   double y = 0.0;
 
-  /// @brief Degree of the NURBS curve defining the trajectory.
-  ///        If not defined, the default value is 1.
-  ///        Valid range: [1, 10]
+  /// \brief Degree of the NURBS curve defining the trajectory. If not
+  /// defined, the default value is 1.
+  /// Valid range: [1, 10]
   double weight = 1.0;
+
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  inline bool operator==(const ControlPoint& other) const
+  {
+    if (this->x != other.x) return false;
+    if (this->y != other.y) return false;
+    if (this->weight != other.weight) return false;
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const ControlPoint& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 }  // namespace vda5050_types

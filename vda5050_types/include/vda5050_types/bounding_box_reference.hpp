@@ -23,23 +23,48 @@
 
 namespace vda5050_types {
 
-/// @struct BoundingBoxReference
-/// @brief  Point of reference for the location of the bounding box.
-///         The point of reference is always the center of the bounding box bottom surface (at height = 0)
-///         and is described in coordinates of the AGV coordinate system.
+/// \brief Point of reference for the location of the bounding box. The point of
+/// reference is always the center of the bounding box bottom surface
+/// (at height = 0) and is described in coordinates of the AGV’s coordinate
+/// system
+/// Part of the state message
 struct BoundingBoxReference
 {
-  /// @brief X-coordinate of the point of reference.
+  /// \brief X-coordinate of the point of reference
   double x = 0.0;
 
-  /// @brief Y-coordinate of the point of reference.
+  /// \brief Y-coordinate of the point of reference
   double y = 0.0;
 
-  /// @brief Z-coordinate of the point of reference.
+  /// \brief Z-coordinate of the point of reference
   double z = 0.0;
 
-  /// @brief Orientation of the loads bounding box. Important for tugger, trains, etc.
+  /// \brief Orientation of the bounding box
   std::optional<double> theta;
+
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  inline bool operator==(const BoundingBoxReference& other) const
+  {
+    if (this->x != other.x) return false;
+    if (this->y != other.y) return false;
+    if (this->z != other.z) return false;
+    if (this->theta != other.theta) return false;
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const BoundingBoxReference& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 }  // namespace vda5050_types

@@ -23,19 +23,41 @@
 
 namespace vda5050_types {
 
-/// @struct LoadDimensions
-/// @brief  Dimensions of the loads bounding box in meters.
+/// \brief Dimensions of the load's bounding box in meters
+/// Part of the state message
 struct LoadDimensions
 {
-  /// @brief Absolute length of the loads bounding box in meter.
+  /// \brief Absolute length of the loads bounding box in meter
   double length = 0.0;
 
-  /// @brief Absolute width of the loads bounding box in meter.
+  /// \brief Absolute width of the loads bounding box in meter
   double width = 0.0;
 
-  /// @brief Absolute height of the loads bounding box in meter.
-  ///        Optional: Set value only if known.
+  /// \brief Absolute height of the loads bounding box in meter
   std::optional<double> height;
+
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  inline bool operator==(const LoadDimensions& other) const
+  {
+    if (this->length != other.length) return false;
+    if (this->width != other.width) return false;
+    if (this->height != other.height) return false;
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const LoadDimensions& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 }  // namespace vda5050_types

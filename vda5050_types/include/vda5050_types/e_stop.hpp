@@ -21,25 +21,19 @@
 
 namespace vda5050_types {
 
-/// @enum   EStop
-/// @brief  Acknowledge-Type of eStop:
-///         AUTOACK: auto-acknowledgeable e-stop is activated, e.g., by bumper or protective field.
-///         MANUAL: e-stop hast to be acknowledged manually at the vehicle.
-///         REMOTE: facility e-stop has to be acknowledged remotely.
-///         NONE: no e-stop activated.
+/// \brief Enum values for eStop
 enum class EStop
 {
-  /// @brief Auto-acknowledgeable e-stop is activated e.g. by bumper or
-  ///        protective field
+  /// \brief Auto-acknowledgeable e-stop is activated
   AUTOACK,
 
-  /// @brief E-stop has to be acknowledged manually at the vehicle.
+  /// \brief E-stop has to be acknowledged manually at the vehicle
   MANUAL,
 
-  /// @brief Facility e-stop has to be acknowledged remotely
+  /// \brief Facility e-stop has to be acknowledged remotely
   REMOTE,
 
-  /// @brief No e-stop activated
+  /// \brief No e-stop activated
   NONE
 };
 

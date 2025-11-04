@@ -28,23 +28,45 @@
 
 namespace vda5050_types {
 
-/// @struct Info
-/// @brief Information for visualization or debugging
+/// \brief Messages carrying information for visualization or debugging
+/// Part of the state message
 struct Info
 {
-  /// @brief Type/name of information
+  /// \brief Type/name of information
   std::string info_type;
 
-  /// @brief Array of references.
+  /// \brief Array of references to identify the source of the information
   std::optional<std::vector<InfoReference>> info_references;
 
-  /// @brief Description of the information.
+  /// \brief Verbose description of the information
   std::optional<std::string> info_description;
 
-  /// @brief  Enum {'DEBUG', 'INFO'}
-  ///        'DEBUG': used for debugging.
-  ///        'INFO': used for visualization.
+  /// \brief Type of the information
   InfoLevel info_level = InfoLevel::DEBUG;
+
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  bool operator==(const Info& other) const
+  {
+    if (info_type != other.info_type) return false;
+    if (info_references != other.info_references) return false;
+    if (info_description != other.info_description) return false;
+    if (info_level != other.info_level) return false;
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const Info& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 }  // namespace vda5050_types

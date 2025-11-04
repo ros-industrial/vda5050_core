@@ -23,20 +23,39 @@
 
 namespace vda5050_types {
 
-/// @struct ErrorReference
-/// @brief  Provide more information related to
-///         the error.
+/// \brief Describes a variable and its value related to the error
+/// Part of the state message
 struct ErrorReference
 {
-  /// @brief Specifies the type of reference used
-  ///        (e.g., "nodeId", "edgeId", "orderId",
-  ///        "actionId", etc.).
+  /// \brief Specifies the type of reference used
+  /// (e.g., nodeId, edgeId, orderId, actionId, etc.)
   std::string reference_key;
 
-  /// @brief The value that belongs to the
-  ///        reference key. For example, the ID of
-  ///        the node where the error occurred.
+  /// \brief The value that belongs to the reference key. For
+  /// example, the ID of the node where the error occurred
   std::string reference_value;
+
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  bool operator==(const ErrorReference& other) const
+  {
+    if (reference_key != other.reference_key) return false;
+    if (reference_value != other.reference_value) return false;
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const ErrorReference& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 }  // namespace vda5050_types

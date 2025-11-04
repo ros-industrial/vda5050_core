@@ -21,10 +21,18 @@
 
 namespace vda5050_types {
 
+/// \brief Enum values for connectionState
 enum class ConnectionState
 {
+  /// \brief The connection between the broker and AGV is active
   ONLINE,
+
+  /// \brief The connection between AGV and broker has gone offline in a
+  /// coordinated way
   OFFLINE,
+
+  /// \brief The connection between AGV and broker has ended unexpectedly
+  /// (e.g. used in MQTT last-will-message)
   CONNECTIONBROKEN
 };
 

@@ -23,19 +23,40 @@
 
 namespace vda5050_types {
 
-/// @struct SafetyState
-/// @brief  Contains all safety-related information
+/// \brief Provides information about the safety state of the AGV
+/// Part of the state message
 struct SafetyState
 {
-  /// @brief Acknowledge-Type of eStop:
-  ///        AUTOACK: auto-acknowledgeable e-stop is activated, e.g., by bumper or protective field.
-  ///        MANUAL: e-stop hast to be acknowledged manually at the vehicle.
-  ///        REMOTE: facility e-stop has to be acknowledged remotely.
-  ///        NONE: no e-stop activated.
+  /// \brief Acknowledgement type of the emergency stop
   EStop e_stop = EStop::NONE;
 
-  /// @brief Protective field violation. True: field is violated. False: field is not violated.
+  /// \brief Protective field violation
+  ///   - True if field is violated
+  ///   - False if field is not violated
   bool field_violation = false;
+
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  inline bool operator==(const SafetyState& other) const
+  {
+    if (this->e_stop != other.e_stop) return false;
+    if (this->field_violation != other.field_violation) return false;
+
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const SafetyState& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 }  // namespace vda5050_types

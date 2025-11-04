@@ -28,25 +28,56 @@ namespace vda5050_types {
 
 constexpr const char* ISO8601_FORMAT = "%Y-%m-%dT%H:%M:%S";
 
+/// \brief The VDA 5050 header sent with each message. These
+/// are common fields across all message schemas
 struct Header
 {
-  /// @brief Header ID of the message.
-  ///        The headerId is defined per topic and incremented by 1 with
-  ///        each sent (but not necessarily received) message.
+  /// \brief Header ID of the message. It is defined per topic and incremented
+  /// by 1 with each sent (but not necessarily received) message.
   uint32_t header_id = 0;
 
-  /// @brief Timestamp (ISO8601, UTC); YYYY-MM-
-  ///        DDTHH:mm:ss.ffZ(e.g., "2017-04-15T11:40:03.12Z")
+  /// \brief Timestamp (ISO8601, UTC)
+  /// YYYY-MM-DDTHH:mm:ss.ffZ (e.g., "2017-04-15T11:40:03.12Z")
   std::chrono::time_point<std::chrono::system_clock> timestamp;
 
-  /// @brief Version of the protocol [Major].[Minor].[Patch] (e.g., 1.3.2).
+  /// \brief Version of the protocol [Major].[Minor].[Patch] (e.g., 1.3.2).
   std::string version;
 
-  /// @brief Manufacturer of the AGV
+  /// \brief Manufacturer of the AGV
   std::string manufacturer;
 
-  /// @brief Serial number of the AGV.
+  /// \brief Serial number of the AGV.
   std::string serial_number;
+
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  inline bool operator==(const Header& other) const
+  {
+    if (header_id != other.header_id) return false;
+    if (
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+        timestamp.time_since_epoch()) !=
+      std::chrono::duration_cast<std::chrono::milliseconds>(
+        other.timestamp.time_since_epoch()))
+      return false;
+    if (version != other.version) return false;
+    if (manufacturer != other.manufacturer) return false;
+    if (serial_number != other.serial_number) return false;
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const Header& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 }  // namespace vda5050_types

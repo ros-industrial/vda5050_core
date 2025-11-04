@@ -25,28 +25,47 @@
 
 namespace vda5050_types {
 
-/// @struct EdgeState
-/// @brief Trajectory JSON object for this edge as NURBS.
-//         Defines the path, on which the AGV should
-//         move between the start node and the end
-//         node of the edge.
+/// \brief Trajectory described as a NURBS (points defining a spline)
+/// Part of the state message
 struct Trajectory
 {
-  /// @brief Degree of the NURBS curve defining the trajectory.
-  ///        If not defined, the default value is 1.
-  ///        Valid range: [1, 10]
+  /// \brief The number of control points that influence a point on the
+  /// curve. Increasing this value increases the continuity of the curve
+  /// Valid range: [1, infinity)
   double degree = 1.0;
 
-  /// @brief Array of knot values of the NURBS
-  ///        knotVector has size of number of control
-  ///        points + degree + 1.
-  ///        Valid range: [0.0 … 1.0]
+  /// \brief Sequence of parameter values determining how the control point
+  /// affects the NURBS curve
+  /// Valid range: [0.0, 1.0]
   std::vector<double> knot_vector;
 
-  /// @brief Array of controlPoint objects defining the
-  ///        control points of the NURBS, explicitly
-  ///        including the start and end point.
+  /// \brief Array of control points from beginning to end, defining the
+  /// NURBS, explicitly including the start and end point.
   std::vector<ControlPoint> control_points;
+
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  inline bool operator==(const Trajectory& other) const
+  {
+    if (this->degree != other.degree) return false;
+    if (this->knot_vector != other.knot_vector) return false;
+    if (this->control_points != other.control_points) return false;
+
+    return true;
+  }
+
+  /// \brief Inequality operator
+  ///
+  /// \param other the other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const Trajectory& other) const
+  {
+    return !this->operator==(other);
+  }
 };
 
 }  // namespace vda5050_types
