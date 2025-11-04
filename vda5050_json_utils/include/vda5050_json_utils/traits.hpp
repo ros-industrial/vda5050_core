@@ -30,9 +30,11 @@
 #include <vda5050_types/connection.hpp>
 #include <vda5050_types/connection_state.hpp>
 #include <vda5050_types/header.hpp>
+#include <vda5050_types/operating_mode.hpp>
 
 #ifdef ENABLE_ROS2
 #include <vda5050_msgs/msg/connection.hpp>
+#include <vda5050_msgs/msg/state.hpp>
 #endif  // ENABLE_ROS2
 
 namespace vda5050_json_utils {
@@ -134,7 +136,7 @@ struct timestamp_traits<int64_t>
 {
   static std::string to_string(const int64_t& millisec)
   {
-    using namespace std::chrono;
+    using std::chrono::milliseconds;
 
     TimePoint time_point{milliseconds(millisec)};
     return to_iso8601(time_point);
@@ -142,7 +144,8 @@ struct timestamp_traits<int64_t>
 
   static int64_t from_string(const std::string& time_string)
   {
-    using namespace std::chrono;
+    using std::chrono::duration_cast;
+    using std::chrono::milliseconds;
 
     auto time_point = from_iso8601(time_string);
     return duration_cast<milliseconds>(time_point.time_since_epoch()).count();
@@ -159,7 +162,7 @@ struct connection_state_traits<vda5050_types::ConnectionState>
 {
   static std::string to_string(const vda5050_types::ConnectionState& state)
   {
-    using namespace vda5050_types;
+    using vda5050_types::ConnectionState;
 
     switch (state)
     {
@@ -176,7 +179,7 @@ struct connection_state_traits<vda5050_types::ConnectionState>
 
   static vda5050_types::ConnectionState from_string(const std::string& state)
   {
-    using namespace vda5050_types;
+    using vda5050_types::ConnectionState;
 
     if (state == "ONLINE") return ConnectionState::ONLINE;
     if (state == "OFFLINE") return ConnectionState::OFFLINE;
@@ -192,7 +195,8 @@ struct connection_state_traits<std::string>
 {
   static std::string to_string(const std::string& state)
   {
-    using namespace vda5050_msgs::msg;
+    using vda5050_msgs::msg::Connection;
+
     if (
       state == Connection::ONLINE || state == Connection::OFFLINE ||
       state == Connection::CONNECTIONBROKEN)
@@ -204,7 +208,8 @@ struct connection_state_traits<std::string>
 
   static std::string from_string(const std::string& state)
   {
-    using namespace vda5050_msgs::msg;
+    using vda5050_msgs::msg::Connection;
+
     if (
       state == Connection::ONLINE || state == Connection::OFFLINE ||
       state == Connection::CONNECTIONBROKEN)
@@ -214,7 +219,87 @@ struct connection_state_traits<std::string>
     throw std::runtime_error("Invalid connectionState string");
   }
 };
+#endif  // ENABLE_ROS2
 
+//=============================================================================
+template <typename T>
+struct operating_mode_traits;
+
+//=============================================================================
+template <>
+struct operating_mode_traits<vda5050_types::OperatingMode>
+{
+  static std::string to_string(const vda5050_types::OperatingMode& mode)
+  {
+    using vda5050_types::OperatingMode;
+
+    switch (mode)
+    {
+      case OperatingMode::AUTOMATIC:
+        return "AUTOMATIC";
+      case OperatingMode::SEMIAUTOMATIC:
+        return "SEMIAUTOMATIC";
+      case OperatingMode::MANUAL:
+        return "MANUAL";
+      case OperatingMode::SERVICE:
+        return "SERVICE";
+      case OperatingMode::TEACHIN:
+        return "TEACHIN";
+      default:
+        throw std::runtime_error("Invalid OperatingMode enum value");
+    }
+  }
+
+  static vda5050_types::OperatingMode from_string(const std::string& mode)
+  {
+    using vda5050_types::OperatingMode;
+
+    if (mode == "AUTOMATIC") return OperatingMode::AUTOMATIC;
+    if (mode == "SEMIAUTOMATIC") return OperatingMode::SEMIAUTOMATIC;
+    if (mode == "MANUAL") return OperatingMode::MANUAL;
+    if (mode == "SERVICE") return OperatingMode::SERVICE;
+    if (mode == "TEACHIN") return OperatingMode::TEACHIN;
+    throw std::runtime_error("Invalid operatingMode string");
+  }
+};
+
+//=============================================================================
+#ifdef ENABLE_ROS2
+template <>
+struct operating_mode_traits<std::string>
+{
+  static std::string to_string(const std::string& mode)
+  {
+    using vda5050_msgs::msg::State;
+
+    if (
+      mode == State::OPERATING_MODE_AUTOMATIC ||
+      mode == State::OPERATING_MODE_SEMIAUTOMATIC ||
+      mode == State::OPERATING_MODE_MANUAL ||
+      mode == State::OPERATING_MODE_SERVICE ||
+      mode == State::OPERATING_MODE_TEACHIN)
+    {
+      return mode;
+    }
+    throw std::runtime_error("Invalid operating_mode value");
+  }
+
+  static std::string from_string(const std::string& mode)
+  {
+    using vda5050_msgs::msg::State;
+
+    if (
+      mode == State::OPERATING_MODE_AUTOMATIC ||
+      mode == State::OPERATING_MODE_SEMIAUTOMATIC ||
+      mode == State::OPERATING_MODE_MANUAL ||
+      mode == State::OPERATING_MODE_SERVICE ||
+      mode == State::OPERATING_MODE_TEACHIN)
+    {
+      return mode;
+    }
+    throw std::runtime_error("Invalid operatingMode string");
+  }
+};
 #endif  // ENABLE_ROS2
 
 }  // namespace vda5050_json_utils
