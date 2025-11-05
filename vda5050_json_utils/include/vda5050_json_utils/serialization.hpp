@@ -25,11 +25,15 @@
 
 #include <vda5050_types/connection.hpp>
 #include <vda5050_types/header.hpp>
+#include <vda5050_types/node_position.hpp>
+#include <vda5050_types/node_state.hpp>
 #include <vda5050_types/state.hpp>
 
 #ifdef ENABLE_ROS2
 #include <vda5050_msgs/msg/connection.hpp>
 #include <vda5050_msgs/msg/header.hpp>
+#include <vda5050_msgs/msg/node_position.hpp>
+#include <vda5050_msgs/msg/node_state.hpp>
 #include <vda5050_msgs/msg/state.hpp>
 #endif  // ENABLE_ROS2
 
@@ -70,18 +74,6 @@ void from_json(const nlohmann::json& j, HeaderT& msg)
 
 }  // namespace header_detail
 
-//=============================================================================
-inline void to_json(nlohmann::json& j, const Header& msg)
-{
-  vda5050_types::header_detail::to_json(j, msg);
-}
-
-//=============================================================================
-inline void from_json(const nlohmann::json& j, Header& msg)
-{
-  vda5050_types::header_detail::from_json(j, msg);
-}
-
 namespace connection_detail {
 
 //=============================================================================
@@ -89,8 +81,9 @@ template <typename ConnectionT>
 void to_json(nlohmann::json& j, const ConnectionT& msg)
 {
   using vda5050_json_utils::connection_state_traits;
+  using vda5050_types::header_detail::to_json;
 
-  header_detail::to_json(j, msg.header);
+  to_json(j, msg.header);
 
   j["connectionState"] =
     connection_state_traits<decltype(msg.connection_state)>::to_string(
@@ -102,8 +95,9 @@ template <typename ConnectionT>
 void from_json(const nlohmann::json& j, ConnectionT& msg)
 {
   using vda5050_json_utils::connection_state_traits;
+  using vda5050_types::header_detail::from_json;
 
-  header_detail::from_json(j, msg.header);
+  from_json(j, msg.header);
 
   msg.connection_state =
     connection_state_traits<decltype(msg.connection_state)>::from_string(
@@ -112,17 +106,147 @@ void from_json(const nlohmann::json& j, ConnectionT& msg)
 
 }  // namespace connection_detail
 
+namespace node_position_detail {
+
 //=============================================================================
-inline void to_json(nlohmann::json& j, const Connection& msg)
+template <typename NodePositionT>
+void to_json(nlohmann::json& j, const NodePositionT& msg)
 {
-  vda5050_types::connection_detail::to_json(j, msg);
+  using theta_trait =
+    vda5050_json_utils::optional_field_traits<decltype(msg.theta)>;
+  using allowed_deviation_x_y_trait = vda5050_json_utils::optional_field_traits<
+    decltype(msg.allowed_deviation_x_y)>;
+  using allowed_deviation_theta_trait =
+    vda5050_json_utils::optional_field_traits<
+      decltype(msg.allowed_deviation_theta)>;
+  using map_description_trait =
+    vda5050_json_utils::optional_field_traits<decltype(msg.map_description)>;
+
+  j["x"] = msg.x;
+  j["y"] = msg.y;
+  j["mapId"] = msg.map_id;
+
+  if (theta_trait::has_value(msg.theta))
+  {
+    j["theta"] = theta_trait::get(msg.theta);
+  }
+
+  if (allowed_deviation_x_y_trait::has_value(msg.allowed_deviation_x_y))
+  {
+    j["allowedDeviationXY"] =
+      allowed_deviation_x_y_trait::get(msg.allowed_deviation_x_y);
+  }
+
+  if (allowed_deviation_theta_trait::has_value(msg.allowed_deviation_theta))
+  {
+    j["allowedDeviationTheta"] =
+      allowed_deviation_theta_trait::get(msg.allowed_deviation_theta);
+  }
+
+  if (map_description_trait::has_value(msg.map_description))
+  {
+    j["mapDescription"] = map_description_trait::get(msg.map_description);
+  }
 }
 
 //=============================================================================
-inline void from_json(const nlohmann::json& j, Connection& msg)
+template <typename NodePositionT>
+void from_json(const nlohmann::json& j, NodePositionT& msg)
 {
-  vda5050_types::connection_detail::from_json(j, msg);
+  using theta_trait =
+    vda5050_json_utils::optional_field_traits<decltype(msg.theta)>;
+  using allowed_deviation_x_y_trait = vda5050_json_utils::optional_field_traits<
+    decltype(msg.allowed_deviation_x_y)>;
+  using allowed_deviation_theta_trait =
+    vda5050_json_utils::optional_field_traits<
+      decltype(msg.allowed_deviation_theta)>;
+  using map_description_trait =
+    vda5050_json_utils::optional_field_traits<decltype(msg.map_description)>;
+
+  msg.x = j.at("x").get<double>();
+  msg.y = j.at("y").get<double>();
+  msg.map_id = j.at("mapId").get<std::string>();
+
+  if (j.contains("theta"))
+  {
+    theta_trait::set(msg.theta, j.at("theta").get<double>());
+  }
+
+  if (j.contains("allowedDeviationXY"))
+  {
+    allowed_deviation_x_y_trait::set(
+      msg.allowed_deviation_x_y, j.at("allowedDeviationXY").get<double>());
+  }
+
+  if (j.contains("allowedDeviationTheta"))
+  {
+    allowed_deviation_theta_trait::set(
+      msg.allowed_deviation_theta, j.at("allowedDeviationTheta").get<double>());
+  }
+
+  if (j.contains("mapDescription"))
+  {
+    map_description_trait::set(
+      msg.map_description, j.at("mapDescription").get<std::string>());
+  }
 }
+
+}  // namespace node_position_detail
+
+namespace node_state_detail {
+
+//=============================================================================
+template <typename NodeStateT>
+void to_json(nlohmann::json& j, const NodeStateT& msg)
+{
+  using vda5050_types::node_position_detail::to_json;
+  using node_description_trait =
+    vda5050_json_utils::optional_field_traits<decltype(msg.node_description)>;
+  using node_position_trait =
+    vda5050_json_utils::optional_field_traits<decltype(msg.node_position)>;
+
+  j["nodeId"] = msg.node_id;
+  j["sequenceId"] = msg.sequence_id;
+  j["released"] = msg.released;
+
+  if (node_description_trait::has_value(msg.node_description))
+  {
+    j["nodeDescription"] = node_description_trait::get(msg.node_description);
+  }
+
+  if (node_position_trait::has_value(msg.node_position))
+  {
+    j["nodePosition"] = node_position_trait::get(msg.node_position);
+  }
+}
+
+//=============================================================================
+template <typename NodeStateT>
+void from_json(const nlohmann::json& j, NodeStateT& msg)
+{
+  using vda5050_types::node_position_detail::to_json;
+  using node_description_trait =
+    vda5050_json_utils::optional_field_traits<decltype(msg.node_description)>;
+  using node_position_trait =
+    vda5050_json_utils::optional_field_traits<decltype(msg.node_position)>;
+
+  msg.node_id = j.at("nodeId").get<std::string>();
+  msg.sequence_id = j.at("sequenceId").get<uint32_t>();
+  msg.released = j.at("released").get<bool>();
+
+  if (j.contains("nodeDescription"))
+  {
+    node_description_trait::set(
+      msg.node_description, j.at("nodeDescription").get<std::string>());
+  }
+
+  if (j.contains("nodePosition"))
+  {
+    node_position_trait::set(msg.node_position, j.at("nodePosition"));
+  }
+}
+
+}  // namespace node_state_detail
 
 namespace state_detail {
 
@@ -131,8 +255,10 @@ template <typename StateT>
 void to_json(nlohmann::json& j, const StateT& msg)
 {
   using vda5050_json_utils::operating_mode_traits;
+  using vda5050_types::header_detail::to_json;
+  using vda5050_types::node_state_detail::to_json;
 
-  header_detail::to_json(j, msg.header);
+  to_json(j, msg.header);
 
   j["orderId"] = msg.order_id;
   j["orderUpdateId"] = msg.order_update_id;
@@ -143,6 +269,8 @@ void to_json(nlohmann::json& j, const StateT& msg)
   j["operatingMode"] =
     operating_mode_traits<decltype(msg.operating_mode)>::to_string(
       msg.operating_mode);
+
+  j["nodeStates"] = msg.node_states;
 }
 
 //=============================================================================
@@ -151,8 +279,9 @@ void from_json(const nlohmann::json& j, StateT& msg)
 {
   using vda5050_json_utils::operating_mode_traits;
   using vda5050_types::header_detail::from_json;
+  using vda5050_types::node_state_detail::from_json;
 
-  header_detail::from_json(j, msg.header);
+  from_json(j, msg.header);
 
   msg.order_id = j.at("orderId").get<std::string>();
   msg.order_update_id = j.at("orderUpdateId").get<uint32_t>();
@@ -163,17 +292,61 @@ void from_json(const nlohmann::json& j, StateT& msg)
   msg.operating_mode =
     operating_mode_traits<decltype(msg.operating_mode)>::from_string(
       j.at("operatingMode").get<std::string>());
+
+  msg.node_states = j.at("nodeStates");
 }
 
 }  // namespace state_detail
 
-//=============================================================================
+}  // namespace vda5050_types
+
+namespace vda5050_types {
+
+inline void to_json(nlohmann::json& j, const Header& msg)
+{
+  vda5050_types::header_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Header& msg)
+{
+  vda5050_types::header_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Connection& msg)
+{
+  vda5050_types::connection_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Connection& msg)
+{
+  vda5050_types::connection_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const NodePosition& msg)
+{
+  vda5050_types::node_position_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, NodePosition& msg)
+{
+  vda5050_types::node_position_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const NodeState& msg)
+{
+  vda5050_types::node_state_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, NodeState& msg)
+{
+  vda5050_types::node_state_detail::from_json(j, msg);
+}
+
 inline void to_json(nlohmann::json& j, const State& msg)
 {
   vda5050_types::state_detail::to_json(j, msg);
 }
 
-//=============================================================================
 inline void from_json(const nlohmann::json& j, State& msg)
 {
   vda5050_types::state_detail::from_json(j, msg);
@@ -205,6 +378,26 @@ inline void to_json(nlohmann::json& j, const Connection& msg)
 inline void from_json(const nlohmann::json& j, Connection& msg)
 {
   vda5050_types::connection_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const NodePosition& msg)
+{
+  vda5050_types::node_position_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, NodePosition& msg)
+{
+  vda5050_types::node_position_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const NodeState& msg)
+{
+  vda5050_types::node_state_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, NodeState& msg)
+{
+  vda5050_types::node_state_detail::from_json(j, msg);
 }
 
 inline void to_json(nlohmann::json& j, const State& msg)

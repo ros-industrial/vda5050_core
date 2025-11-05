@@ -23,9 +23,11 @@
 #include <ctime>
 #include <iomanip>
 #include <limits>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 #include <vda5050_types/connection.hpp>
 #include <vda5050_types/connection_state.hpp>
@@ -33,6 +35,7 @@
 #include <vda5050_types/operating_mode.hpp>
 
 #ifdef ENABLE_ROS2
+#include <rosidl_runtime_cpp/bounded_vector.hpp>
 #include <vda5050_msgs/msg/connection.hpp>
 #include <vda5050_msgs/msg/state.hpp>
 #endif  // ENABLE_ROS2
@@ -298,6 +301,56 @@ struct operating_mode_traits<std::string>
       return mode;
     }
     throw std::runtime_error("Invalid operatingMode string");
+  }
+};
+#endif  // ENABLE_ROS2
+
+//=============================================================================
+template <typename T>
+struct optional_field_traits;
+
+//=============================================================================
+template <typename T>
+struct optional_field_traits<std::optional<T>>
+{
+  static bool has_value(const std::optional<T>& opt)
+  {
+    return opt.has_value();
+  }
+
+  static const T& get(const std::optional<T>& opt)
+  {
+    return opt.value();
+  }
+
+  static void set(std::optional<T>& opt, T&& val)
+  {
+    opt = std::move(val);
+  }
+};
+
+//=============================================================================
+#ifdef ENABLE_ROS2
+template <typename T, std::size_t Max, typename Alloc>
+struct optional_field_traits<rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>>
+{
+  static bool has_value(
+    const rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>& opt)
+  {
+    return !opt.empty();
+  }
+
+  static const T& get(
+    const rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>& opt)
+  {
+    return opt.front();
+  }
+
+  static void set(
+    rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>& opt, T&& val)
+  {
+    opt.clear();
+    opt.push_back(std::move(val));
   }
 };
 #endif  // ENABLE_ROS2
