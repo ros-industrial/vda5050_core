@@ -20,6 +20,8 @@
 
 #include <vda5050_types/connection.hpp>
 #include <vda5050_types/header.hpp>
+#include <vda5050_types/node_position.hpp>
+#include <vda5050_types/node_state.hpp>
 #include <vda5050_types/state.hpp>
 
 #include "vda5050_json_utils/serialization.hpp"
@@ -28,10 +30,13 @@
 
 using vda5050_types::Connection;
 using vda5050_types::Header;
+using vda5050_types::NodePosition;
+using vda5050_types::NodeState;
 using vda5050_types::State;
 
 // List of types to be tested for serialization round-trip
-using SerializableTypes = ::testing::Types<Connection, Header, State>;
+using SerializableTypes =
+  ::testing::Types<Connection, Header, NodePosition, NodeState, State>;
 
 template <typename T>
 class SerializationTest : public ::testing::Test

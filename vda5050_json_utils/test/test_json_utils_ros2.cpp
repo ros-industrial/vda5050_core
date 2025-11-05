@@ -22,6 +22,8 @@
 
 #include <vda5050_msgs/msg/connection.hpp>
 #include <vda5050_msgs/msg/header.hpp>
+#include <vda5050_msgs/msg/node_position.hpp>
+#include <vda5050_msgs/msg/node_state.hpp>
 #include <vda5050_msgs/msg/state.hpp>
 
 #include "vda5050_json_utils/serialization.hpp"
@@ -30,10 +32,13 @@
 
 using vda5050_msgs::msg::Connection;
 using vda5050_msgs::msg::Header;
+using vda5050_msgs::msg::NodePosition;
+using vda5050_msgs::msg::NodeState;
 using vda5050_msgs::msg::State;
 
 // List of types to be tested for serialization round-trip
-using SerializableTypesROS2 = ::testing::Types<Connection, Header, State>;
+using SerializableTypesROS2 =
+  ::testing::Types<Connection, Header, NodePosition, NodeState, State>;
 
 template <typename T>
 class SerializationTestROS2 : public ::testing::Test

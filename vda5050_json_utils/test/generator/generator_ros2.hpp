@@ -26,10 +26,14 @@
 
 #include <vda5050_msgs/msg/connection.hpp>
 #include <vda5050_msgs/msg/header.hpp>
+#include <vda5050_msgs/msg/node_position.hpp>
+#include <vda5050_msgs/msg/node_state.hpp>
 #include <vda5050_msgs/msg/state.hpp>
 
 using vda5050_msgs::msg::Connection;
 using vda5050_msgs::msg::Header;
+using vda5050_msgs::msg::NodePosition;
+using vda5050_msgs::msg::NodeState;
 using vda5050_msgs::msg::State;
 
 /// \brief Utility class to generate random instances of VDA 5050 message types
@@ -40,9 +44,12 @@ public:
   RandomDataGeneratorROS2()
   : rng_(std::random_device()()),
     uint_dist_(0, std::numeric_limits<uint32_t>::max()),
+    float_dist_(
+      std::numeric_limits<double>::min(), std::numeric_limits<double>::max()),
     bool_dist_(0, 1),
     string_length_dist_(0, 50),
-    milliseconds_dist_(0, 4000000000000L)
+    milliseconds_dist_(0, 4000000000000L),
+    size_dist_(0, 10)
   {
     // Nothing to do
   }
@@ -51,9 +58,12 @@ public:
   explicit RandomDataGeneratorROS2(uint32_t seed)
   : rng_(seed),
     uint_dist_(0, std::numeric_limits<uint32_t>::max()),
+    float_dist_(
+      std::numeric_limits<double>::min(), std::numeric_limits<double>::max()),
     bool_dist_(0, 1),
     string_length_dist_(0, 50),
-    milliseconds_dist_(0, 4000000000000L)
+    milliseconds_dist_(0, 4000000000000L),
+    size_dist_(0, 10)
   {
     // Nothing to do
   }
@@ -62,6 +72,12 @@ public:
   uint32_t generate_random_uint()
   {
     return uint_dist_(rng_);
+  }
+
+  /// \brief Generate a random 64-bit floating-point number
+  double generate_random_float()
+  {
+    return float_dist_(rng_);
   }
 
   /// \brief Generate a random boolean value
@@ -75,6 +91,12 @@ public:
   {
     std::uniform_int_distribution<uint8_t> index_dist(0, size - 1);
     return index_dist(rng_);
+  }
+
+  /// \brief Generate a random value for vector length
+  uint8_t generate_random_size()
+  {
+    return size_dist_(rng_);
   }
 
   /// \brief Generate a random alphanumerical string with length upto 50
@@ -123,6 +145,18 @@ public:
     return states[state_idx];
   }
 
+  /// \brief Generate a random vector of type T
+  template <typename T>
+  std::vector<T> generate_random_vector(const uint8_t size)
+  {
+    std::vector<T> vec(size);
+    for (auto it = vec.begin(); it != vec.end(); ++it)
+    {
+      *it = generate<T>();
+    }
+    return vec;
+  }
+
   /// \brief Generate a fully populated message of a supported type
   template <typename T>
   T generate()
@@ -141,6 +175,24 @@ public:
       msg.manufacturer = generate_random_string();
       msg.serial_number = generate_random_string();
     }
+    else if constexpr (std::is_same_v<T, NodePosition>)
+    {
+      msg.x = generate_random_float();
+      msg.y = generate_random_float();
+      msg.theta.push_back(generate_random_float());
+      msg.allowed_deviation_x_y.push_back(generate_random_float());
+      msg.allowed_deviation_theta.push_back(generate_random_float());
+      msg.map_id = generate_random_string();
+      msg.map_description.push_back(generate_random_string());
+    }
+    else if constexpr (std::is_same_v<T, NodeState>)
+    {
+      msg.node_id = generate_random_string();
+      msg.sequence_id = generate_random_uint();
+      msg.node_description.push_back(generate_random_string());
+      msg.node_position.push_back(generate<NodePosition>());
+      msg.released = generate_random_bool();
+    }
     else if constexpr (std::is_same_v<T, State>)
     {
       msg.header = generate<Header>();
@@ -154,8 +206,8 @@ public:
       // msg.new_base_request.push_back(generate_random_bool());
       // msg.distance_since_last_node.push_back(generate_random_float());
       msg.operating_mode = generate_random_operating_mode();
-      // msg.node_states =
-      //   generate_random_vector<NodeState>(generate_random_size());
+      msg.node_states =
+        generate_random_vector<NodeState>(generate_random_size());
       // msg.edge_states =
       //   generate_random_vector<EdgeState>(generate_random_size());
       // msg.agv_position.push_back(generate<AGVPosition>());
@@ -184,6 +236,9 @@ private:
   /// \brief Distribution for unsigned 32-bit integers
   std::uniform_int_distribution<uint32_t> uint_dist_;
 
+  /// \brief Distribution for 64-bit floating-point numbers
+  std::uniform_real_distribution<double> float_dist_;
+
   /// \brief Distribution for a boolean value
   std::uniform_int_distribution<int> bool_dist_;
 
@@ -192,6 +247,9 @@ private:
 
   /// \brief Distribution for milliseconds from epoch
   std::uniform_int_distribution<int64_t> milliseconds_dist_;
+
+  /// \brief Distribution for random vector size
+  std::uniform_int_distribution<uint8_t> size_dist_;
 };
 
 #endif  // VDA5050_JSON_UTILS__TEST__GENERATOR__GENERATOR_ROS2_HPP_
