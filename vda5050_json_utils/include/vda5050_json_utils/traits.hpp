@@ -29,19 +29,97 @@
 #include <string>
 #include <utility>
 
+#include <vda5050_types/action_status.hpp>
 #include <vda5050_types/connection.hpp>
 #include <vda5050_types/connection_state.hpp>
+#include <vda5050_types/e_stop.hpp>
+#include <vda5050_types/error_level.hpp>
 #include <vda5050_types/header.hpp>
 #include <vda5050_types/operating_mode.hpp>
 
 #ifdef ENABLE_ROS2
 #include <rosidl_runtime_cpp/bounded_vector.hpp>
+#include <vda5050_msgs/msg/action_state.hpp>
 #include <vda5050_msgs/msg/connection.hpp>
+#include <vda5050_msgs/msg/error.hpp>
+#include <vda5050_msgs/msg/safety_state.hpp>
 #include <vda5050_msgs/msg/state.hpp>
 #endif  // ENABLE_ROS2
 
 namespace vda5050_json_utils {
 
+//=============================================================================
+template <typename T>
+struct optional_field_traits;
+
+//=============================================================================
+template <typename T>
+struct optional_field_traits<std::optional<T>>
+{
+  static bool has_value(const std::optional<T>& opt)
+  {
+    return opt.has_value();
+  }
+
+  static const T& get(const std::optional<T>& opt)
+  {
+    return opt.value();
+  }
+
+  static void set(std::optional<T>& opt, T&& val)
+  {
+    opt = std::move(val);
+  }
+};
+
+//=============================================================================
+#ifdef ENABLE_ROS2
+template <typename T, typename Alloc>
+struct optional_field_traits<rosidl_runtime_cpp::BoundedVector<T, 1, Alloc>>
+{
+  static bool has_value(
+    const rosidl_runtime_cpp::BoundedVector<T, 1, Alloc>& opt)
+  {
+    return !opt.empty();
+  }
+
+  static const T& get(const rosidl_runtime_cpp::BoundedVector<T, 1, Alloc>& opt)
+  {
+    return opt.front();
+  }
+
+  static void set(rosidl_runtime_cpp::BoundedVector<T, 1, Alloc>& opt, T&& val)
+  {
+    opt.clear();
+    opt.push_back(std::move(val));
+  }
+};
+
+template <typename T, std::size_t Max, typename Alloc>
+struct optional_field_traits<rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>>
+{
+  static bool has_value(
+    const rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>& opt)
+  {
+    return !opt.empty();
+  }
+
+  static const rosidl_runtime_cpp::BoundedVector<T, Max, Alloc> get(
+    const rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>& opt)
+  {
+    return opt;
+  }
+
+  static void set(
+    rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>& opt,
+    rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>&& val)
+  {
+    opt = std::move(val);
+  }
+};
+#endif  // ENABLE_ROS2
+
+//=============================================================================
 using TimePoint = std::chrono::time_point<std::chrono::system_clock>;
 
 //=============================================================================
@@ -307,50 +385,220 @@ struct operating_mode_traits<std::string>
 
 //=============================================================================
 template <typename T>
-struct optional_field_traits;
+struct action_status_traits;
 
 //=============================================================================
-template <typename T>
-struct optional_field_traits<std::optional<T>>
+template <>
+struct action_status_traits<vda5050_types::ActionStatus>
 {
-  static bool has_value(const std::optional<T>& opt)
+  static std::string to_string(const vda5050_types::ActionStatus& status)
   {
-    return opt.has_value();
+    using vda5050_types::ActionStatus;
+
+    switch (status)
+    {
+      case ActionStatus::WAITING:
+        return "WAITING";
+      case ActionStatus::INITIALIZING:
+        return "INITIALIZING";
+      case ActionStatus::RUNNING:
+        return "RUNNING";
+      case ActionStatus::PAUSED:
+        return "PAUSED";
+      case ActionStatus::FINISHED:
+        return "FINISHED";
+      case ActionStatus::FAILED:
+        return "FAILED";
+      default:
+        throw std::runtime_error("Invalid ActionStatus enum value");
+    }
   }
 
-  static const T& get(const std::optional<T>& opt)
+  static vda5050_types::ActionStatus from_string(const std::string& status)
   {
-    return opt.value();
-  }
+    using vda5050_types::ActionStatus;
 
-  static void set(std::optional<T>& opt, T&& val)
-  {
-    opt = std::move(val);
+    if (status == "WAITING") return ActionStatus::WAITING;
+    if (status == "INITIALIZING") return ActionStatus::INITIALIZING;
+    if (status == "RUNNING") return ActionStatus::RUNNING;
+    if (status == "PAUSED") return ActionStatus::PAUSED;
+    if (status == "FINISHED") return ActionStatus::FINISHED;
+    if (status == "FAILED") return ActionStatus::FAILED;
+    throw std::runtime_error("Invalid actionStatus string");
   }
 };
 
 //=============================================================================
 #ifdef ENABLE_ROS2
-template <typename T, std::size_t Max, typename Alloc>
-struct optional_field_traits<rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>>
+template <>
+struct action_status_traits<std::string>
 {
-  static bool has_value(
-    const rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>& opt)
+  static std::string to_string(const std::string& status)
   {
-    return !opt.empty();
+    using vda5050_msgs::msg::ActionState;
+    if (
+      status == ActionState::ACTION_STATUS_WAITING ||
+      status == ActionState::ACTION_STATUS_INITIALIZING ||
+      status == ActionState::ACTION_STATUS_RUNNING ||
+      status == ActionState::ACTION_STATUS_PAUSED ||
+      status == ActionState::ACTION_STATUS_FINISHED ||
+      status == ActionState::ACTION_STATUS_FAILED)
+    {
+      return status;
+    }
+    throw std::runtime_error("Invalid action_status value");
   }
 
-  static const T& get(
-    const rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>& opt)
+  static std::string from_string(const std::string& status)
   {
-    return opt.front();
+    using vda5050_msgs::msg::ActionState;
+
+    if (
+      status == ActionState::ACTION_STATUS_WAITING ||
+      status == ActionState::ACTION_STATUS_INITIALIZING ||
+      status == ActionState::ACTION_STATUS_RUNNING ||
+      status == ActionState::ACTION_STATUS_PAUSED ||
+      status == ActionState::ACTION_STATUS_FINISHED ||
+      status == ActionState::ACTION_STATUS_FAILED)
+    {
+      return status;
+    }
+    throw std::runtime_error("Invalid actionStatus string");
+  }
+};
+#endif  // ENABLE_ROS2
+
+//=============================================================================
+template <typename T>
+struct error_level_traits;
+
+//=============================================================================
+template <>
+struct error_level_traits<vda5050_types::ErrorLevel>
+{
+  static std::string to_string(const vda5050_types::ErrorLevel& level)
+  {
+    using vda5050_types::ErrorLevel;
+
+    switch (level)
+    {
+      case ErrorLevel::WARNING:
+        return "WARNING";
+      case ErrorLevel::FATAL:
+        return "FATAL";
+      default:
+        throw std::runtime_error("Invalid ErrorLevel enum value");
+    }
   }
 
-  static void set(
-    rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>& opt, T&& val)
+  static vda5050_types::ErrorLevel from_string(const std::string& level)
   {
-    opt.clear();
-    opt.push_back(std::move(val));
+    using vda5050_types::ErrorLevel;
+
+    if (level == "WARNING") return ErrorLevel::WARNING;
+    if (level == "FATAL") return ErrorLevel::FATAL;
+    throw std::runtime_error("Invalid errorLevel string");
+  }
+};
+
+//=============================================================================
+#ifdef ENABLE_ROS2
+template <>
+struct error_level_traits<std::string>
+{
+  static std::string to_string(const std::string& level)
+  {
+    using vda5050_msgs::msg::Error;
+    if (
+      level == Error::ERROR_LEVEL_WARNING || level == Error::ERROR_LEVEL_FATAL)
+    {
+      return level;
+    }
+    throw std::runtime_error("Invalid error_level value");
+  }
+
+  static std::string from_string(const std::string& level)
+  {
+    using vda5050_msgs::msg::Error;
+    if (
+      level == Error::ERROR_LEVEL_WARNING || level == Error::ERROR_LEVEL_FATAL)
+    {
+      return level;
+    }
+    throw std::runtime_error("Invalid errorLevel string");
+  }
+};
+#endif  // ENABLE_ROS2
+
+//=============================================================================
+template <typename T>
+struct e_stop_traits;
+
+//=============================================================================
+template <>
+struct e_stop_traits<vda5050_types::EStop>
+{
+  static std::string to_string(const vda5050_types::EStop& type)
+  {
+    using vda5050_types::EStop;
+
+    switch (type)
+    {
+      case EStop::AUTOACK:
+        return "AUTOACK";
+      case EStop::MANUAL:
+        return "MANUAL";
+      case EStop::REMOTE:
+        return "REMOTE";
+      case EStop::NONE:
+        return "NONE";
+      default:
+        throw std::runtime_error("Invalid EStop enum value");
+    }
+  }
+
+  static vda5050_types::EStop from_string(const std::string& type)
+  {
+    using vda5050_types::EStop;
+
+    if (type == "AUTOACK") return EStop::AUTOACK;
+    if (type == "MANUAL") return EStop::MANUAL;
+    if (type == "REMOTE") return EStop::REMOTE;
+    if (type == "NONE") return EStop::NONE;
+    throw std::runtime_error("Invalid eStop string");
+  }
+};
+
+//=============================================================================
+#ifdef ENABLE_ROS2
+template <>
+struct e_stop_traits<std::string>
+{
+  static std::string to_string(const std::string& type)
+  {
+    using vda5050_msgs::msg::SafetyState;
+
+    if (
+      type == SafetyState::E_STOP_AUTOACK ||
+      type == SafetyState::E_STOP_MANUAL ||
+      type == SafetyState::E_STOP_REMOTE || type == SafetyState::E_STOP_NONE)
+    {
+      return type;
+    }
+    throw std::runtime_error("Invalid e_stop value");
+  }
+
+  static std::string from_string(const std::string& type)
+  {
+    using vda5050_msgs::msg::SafetyState;
+    if (
+      type == SafetyState::E_STOP_AUTOACK ||
+      type == SafetyState::E_STOP_MANUAL ||
+      type == SafetyState::E_STOP_REMOTE || type == SafetyState::E_STOP_NONE)
+    {
+      return type;
+    }
+    throw std::runtime_error("Invalid eStop string");
   }
 };
 #endif  // ENABLE_ROS2
