@@ -18,25 +18,43 @@
 
 #include <gtest/gtest.h>
 
+#include <vda5050_types/action_state.hpp>
+#include <vda5050_types/battery_state.hpp>
 #include <vda5050_types/connection.hpp>
+#include <vda5050_types/control_point.hpp>
+#include <vda5050_types/edge_state.hpp>
+#include <vda5050_types/error.hpp>
+#include <vda5050_types/error_reference.hpp>
 #include <vda5050_types/header.hpp>
 #include <vda5050_types/node_position.hpp>
 #include <vda5050_types/node_state.hpp>
+#include <vda5050_types/safety_state.hpp>
 #include <vda5050_types/state.hpp>
+#include <vda5050_types/trajectory.hpp>
 
 #include "vda5050_json_utils/serialization.hpp"
 
 #include "generator/generator.hpp"
 
+using vda5050_types::ActionState;
+using vda5050_types::BatteryState;
 using vda5050_types::Connection;
+using vda5050_types::ControlPoint;
+using vda5050_types::EdgeState;
+using vda5050_types::Error;
+using vda5050_types::ErrorReference;
 using vda5050_types::Header;
 using vda5050_types::NodePosition;
 using vda5050_types::NodeState;
+using vda5050_types::SafetyState;
 using vda5050_types::State;
+using vda5050_types::Trajectory;
 
 // List of types to be tested for serialization round-trip
-using SerializableTypes =
-  ::testing::Types<Connection, Header, NodePosition, NodeState, State>;
+using SerializableTypes = ::testing::Types<
+  ActionState, BatteryState, Connection, ControlPoint, EdgeState, Error,
+  ErrorReference, Header, NodePosition, NodeState, SafetyState, State,
+  Trajectory>;
 
 template <typename T>
 class SerializationTest : public ::testing::Test

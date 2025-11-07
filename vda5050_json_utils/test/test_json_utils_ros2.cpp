@@ -20,25 +20,43 @@
 
 #include <rosidl_runtime_cpp/traits.hpp>
 
+#include <vda5050_msgs/msg/action_state.hpp>
+#include <vda5050_msgs/msg/battery_state.hpp>
 #include <vda5050_msgs/msg/connection.hpp>
+#include <vda5050_msgs/msg/control_point.hpp>
+#include <vda5050_msgs/msg/edge_state.hpp>
+#include <vda5050_msgs/msg/error.hpp>
+#include <vda5050_msgs/msg/error_reference.hpp>
 #include <vda5050_msgs/msg/header.hpp>
 #include <vda5050_msgs/msg/node_position.hpp>
 #include <vda5050_msgs/msg/node_state.hpp>
+#include <vda5050_msgs/msg/safety_state.hpp>
 #include <vda5050_msgs/msg/state.hpp>
+#include <vda5050_msgs/msg/trajectory.hpp>
 
 #include "vda5050_json_utils/serialization.hpp"
 
 #include "generator/generator_ros2.hpp"
 
+using vda5050_msgs::msg::ActionState;
+using vda5050_msgs::msg::BatteryState;
 using vda5050_msgs::msg::Connection;
+using vda5050_msgs::msg::ControlPoint;
+using vda5050_msgs::msg::EdgeState;
+using vda5050_msgs::msg::Error;
+using vda5050_msgs::msg::ErrorReference;
 using vda5050_msgs::msg::Header;
 using vda5050_msgs::msg::NodePosition;
 using vda5050_msgs::msg::NodeState;
+using vda5050_msgs::msg::SafetyState;
 using vda5050_msgs::msg::State;
+using vda5050_msgs::msg::Trajectory;
 
 // List of types to be tested for serialization round-trip
-using SerializableTypesROS2 =
-  ::testing::Types<Connection, Header, NodePosition, NodeState, State>;
+using SerializableTypesROS2 = ::testing::Types<
+  ActionState, BatteryState, Connection, ControlPoint, EdgeState, Error,
+  ErrorReference, Header, NodePosition, NodeState, SafetyState, State,
+  Trajectory>;
 
 template <typename T>
 class SerializationTestROS2 : public ::testing::Test
