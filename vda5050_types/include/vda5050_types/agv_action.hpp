@@ -19,40 +19,45 @@
 #ifndef VDA5050_TYPES__AGV_ACTION_HPP_
 #define VDA5050_TYPES__AGV_ACTION_HPP_
 
+#include <optional>
 #include <string>
 #include <vector>
-#include <optional>
 
-#include "vda5050_types/blocking_type.hpp"
-#include "vda5050_types/action_scope.hpp"
 #include "vda5050_types/action_parameter_factsheet.hpp"
+#include "vda5050_types/action_scope.hpp"
+#include "vda5050_types/blocking_type.hpp"
 
 namespace vda5050_types {
 
 /// \brief Actions with parameters supported by the AGV.
 /// This includes standard actions specified in VDA5050 and manufacturer-specific
 /// actions.
-struct AgvAction
+struct AGVAction
 {
-    std::string action_type;
+  /// \brief Unique type of action corresponding to action.actionType
+  std::string action_type;
 
-    std::vector<ActionScope> action_scopes;
+  /// \brief Array of allowed scopes for using this action type.
+  std::vector<ActionScope> action_scopes;
 
-    std::vector<ActionParameterFactsheet> action_parameters;
+  /// \brief Array of parameters an action has. If not defined, the action has no parameters.
+  std::vector<ActionParameterFactsheet> action_parameters;
 
-    std::optional<std::string> result_description;
+  /// \brief Free-form text: description of the result.
+  std::optional<std::string> result_description;
 
-    std::optional<std::string> action_description;
+  /// \brief Free-form text: description of the action.
+  std::optional<std::string> action_description;
 
-    std::optional<std::vector<BlockingType>> blocking_types;
-
+  /// \brief Array of possible blocking types for defined action.
+  std::optional<std::vector<BlockingType>> blocking_types;
 
   /// \brief Equality operator
   ///
   /// \param other The other object to compare to
   ///
   /// \return is equal?
-  inline bool operator==(const AgvAction& other) const
+  inline bool operator==(const AGVAction& other) const
   {
     if (this->action_type != other.action_type) return false;
     if (this->action_scopes != other.action_scopes) return false;
@@ -68,12 +73,12 @@ struct AgvAction
   /// \param other The other object to compare to
   ///
   /// \return is not equal?
-  inline bool operator!=(const AgvAction& other) const
+  inline bool operator!=(const AGVAction& other) const
   {
     return !(this->operator==(other));
   }
 };
 
-} // namespace vda5050_types
+}  // namespace vda5050_types
 
 #endif  // VDA5050_TYPES__AGV_ACTION_HPP_

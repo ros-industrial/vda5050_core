@@ -24,23 +24,23 @@ namespace vda5050_types {
 /// \brief Enum values for ActionParameterFactsheet
 enum class ValueDataType
 {
-    /// \brief Boolean data type
-    BOOL,
+  /// \brief Boolean data type
+  BOOL,
 
-    /// \brief Number data type
-    NUMBER,
+  /// \brief Number data type
+  NUMBER,
 
-    /// \brief Integer data type
-    INTEGER,
+  /// \brief Integer data type
+  INTEGER,
 
-    /// \brief Float data type
-    FLOAT,
+  /// \brief Float data type
+  FLOAT,
 
-    /// \brief Object data type
-    OBJECT,
+  /// \brief Object data type
+  OBJECT,
 
-    /// \brief Array data type
-    ARRAY
+  /// \brief Array data type
+  ARRAY
 };
 
 }  // namespace vda5050_types

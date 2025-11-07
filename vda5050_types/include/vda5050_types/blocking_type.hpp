@@ -19,21 +19,20 @@
 #ifndef VDA5050_TYPES__BLOCKING_TYPE_HPP_
 #define VDA5050_TYPES__BLOCKING_TYPE_HPP_
 
-namespace vda5050_types
-{
+namespace vda5050_types {
 
 enum class BlockingType
 {
-    /// \brief action can happen in parallel with others, including movement
-    NONE,
+  /// \brief action can happen in parallel with others, including movement
+  NONE,
 
-    /// \brief action can happen simultaneously with other actions, but not while moving
-    SOFT,
+  /// \brief action can happen simultaneously with other actions, but not while moving
+  SOFT,
 
-    /// \brief no other action can be performed while this action is running
-    HARD
+  /// \brief no other action can be performed while this action is running
+  HARD
 };
 
-} // namespace vda5050_types
+}  // namespace vda5050_types
 
-#endif  // VDA5050_TYPES__BLOCKING_TYPE_HPP_ 
+#endif  // VDA5050_TYPES__BLOCKING_TYPE_HPP_

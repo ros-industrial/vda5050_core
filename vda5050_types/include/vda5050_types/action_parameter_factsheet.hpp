@@ -19,8 +19,8 @@
 #ifndef VDA5050_TYPES__ACTION_PARAMETER_FACTSHEET_HPP_
 #define VDA5050_TYPES__ACTION_PARAMETER_FACTHSEET_HPP_
 
-#include <string>
 #include <optional>
+#include <string>
 
 #include "vda5050_types/value_data_type.hpp"
 
@@ -32,41 +32,41 @@ namespace vda5050_types {
 /// Describes the array of parameters that an action has.
 struct ActionParameterFactsheet
 {
-    /// \brief Key string for the parameter
-    std::string key;
+  /// \brief Key string for the parameter
+  std::string key;
 
-    /// \brief Data type of the value field in Order.ActionParameter
-    ValueDataType value_data_type;
+  /// \brief Data type of the value field in Order.ActionParameter
+  ValueDataType value_data_type;
 
-    /// \brief Free-form text: description of the parameter
-    std::optional<std::string> description;
+  /// \brief Free-form text: description of the parameter
+  std::optional<std::string> description;
 
-    /// \brief If set to "true", then this is an optional parameter. 
-    std::optional<bool> is_optional;
+  /// \brief If set to "true", then this is an optional parameter.
+  std::optional<bool> is_optional;
 
-    /// \brief Equality operator
-    ///
-    /// \param other The oher object to compare to 
-    /// 
-    /// \return is equal?
-    inline bool operator==(const ActionParameterFactsheet& other) const
-    {
-        if (this->key != other.key) return false;
-        if (this->value_data_type != other.value_data_type) return false;
-        if (this->description != other.description) return false;
-        if (this->is_optional != other.is_optional) return false;
-        return true;
-    }
+  /// \brief Equality operator
+  ///
+  /// \param other The oher object to compare to
+  ///
+  /// \return is equal?
+  inline bool operator==(const ActionParameterFactsheet& other) const
+  {
+    if (this->key != other.key) return false;
+    if (this->value_data_type != other.value_data_type) return false;
+    if (this->description != other.description) return false;
+    if (this->is_optional != other.is_optional) return false;
+    return true;
+  }
 
-    /// \brief Inequality operator
-    ///
-    /// \param other The other objet to compare to
-    /// 
-    /// \return is not equal?
-    inline bool operator!=(const ActionParameterFactsheet& other) const
-    {
-        return !(this->operator==(other));
-    }
+  /// \brief Inequality operator
+  ///
+  /// \param other The other objet to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const ActionParameterFactsheet& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 }  // namespace vda5050_types

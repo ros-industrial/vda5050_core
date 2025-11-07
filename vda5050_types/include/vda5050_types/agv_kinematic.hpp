@@ -16,30 +16,24 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_TYPES__ACTION_PARAMETER_VALUE_TYPE_HPP_
-#define VDA5050_TYPES__ACTION_PARAMETER_VALUE_TYPE_HPP_
+#ifndef VDA5050_TYPES__AGV_KINEMATIC_HPP_
+#define VDA5050_TYPES__AGV_KINEMATIC_HPP_
 
 namespace vda5050_types {
 
-// enum values for ActionParameterValue
-enum class ActionParameterValueType
+/// \brief Simplified description of AGV kinematics type for TypeSpecification.
+enum class AGVKinematic
 {
-  /// \brief Array type
-  ARRAY,
+  /// \brief Differential drive.
+  DIFF,
 
-  /// \brief Bool type
-  BOOL,
+  /// \brief Omni-directional vehicle.
+  OMNI,
 
-  /// \brief Number type
-  NUMBER,
-
-  /// \brief String type
-  STRING,
-
-  /// \brief Object type
-  OBJECT
+  /// \brief Three-wheel-driven vehicle or vehicle with similar kinematics.
+  THREEWHEEL
 };
 
 }  // namespace vda5050_types
 
-#endif  // VDA5050_TYPES__ACTION_PARAMETER_VALUE_TYPE_HPP_
+#endif  // VDA5050_TYPES__AGV_KINEMATIC_HPP_

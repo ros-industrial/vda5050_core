@@ -16,34 +16,35 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_TYPES__ACTION_PARAMETER_HPP_
-#define VDA5050_TYPES__ACTION_PARAMETER_HPP_
+#ifndef VDA5050_TYPES__POSITION_HPP_
+#define VDA5050_TYPES__POSITION_HPP_
 
-#include <string>
-
-#include "vda5050_types/action_parameter_value.hpp"
+#include <optional>
 
 namespace vda5050_types {
 
-/// \brief An object for the indicated action
-/// eg: deviceId, loadId, external triggers
-struct ActionParameter
+/// \brief Struct describing the pose of the AGV
+struct Position
 {
-  /// \brief The key of the parameter
-  std::string key;
+  /// \brief X-position in the AGV's coordinate system [m].
+  double x;
 
-  /// \brief The value of the parameter that belongs to the key
-  ActionParameterValue value;
+  /// \brief Y-position in the AGV's coordinate system [m].
+  double y;
+
+  /// \brief Orientation of the wheel in the AGV coordinate system [rad]. Mandatory for fixed wheels
+  std::optional<double> theta;
 
   /// \brief Equality operator
   ///
   /// \param other The other object to compare to
   ///
   /// \return is equal?
-  inline bool operator==(const ActionParameter& other) const
+  inline bool operator==(const Position& other) const
   {
-    if (this->key != other.key) return false;
-    if (this->value != other.value) return false;
+    if (this->x != other.x) return false;
+    if (this->y != other.y) return false;
+    if (this->theta != other.theta) return false;
     return true;
   }
 
@@ -51,8 +52,8 @@ struct ActionParameter
   ///
   /// \param other The other object to compare to
   ///
-  /// \return is equal?
-  inline bool operator!=(const ActionParameter& other) const
+  /// \return is not equal?
+  inline bool operator!=(const Position& other) const
   {
     return !(this->operator==(other));
   }
@@ -60,4 +61,4 @@ struct ActionParameter
 
 }  // namespace vda5050_types
 
-#endif  // VDA5050_TYPES__ACTION_PARAMETER_HPP_
+#endif  // VDA5050_TYPES__POSITION_HPP_

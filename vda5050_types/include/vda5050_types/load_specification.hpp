@@ -16,34 +16,37 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_TYPES__ACTION_PARAMETER_HPP_
-#define VDA5050_TYPES__ACTION_PARAMETER_HPP_
+#ifndef VDA5050_TYPES__LOAD_SPECIFICATION_HPP_
+#define VDA5050_TYPES__LOAD_SPECIFICATION_HPP_
 
+#include <optional>
 #include <string>
-
-#include "vda5050_types/action_parameter_value.hpp"
+#include <vector>
+#include "vda5050_types/load_set.hpp"
 
 namespace vda5050_types {
 
-/// \brief An object for the indicated action
-/// eg: deviceId, loadId, external triggers
-struct ActionParameter
+/// \brief Message specifying the load handling and supported load types of the AGV
+struct LoadSpecification
 {
-  /// \brief The key of the parameter
-  std::string key;
+  /// \brief Array of load positions / load handling devices.
+  /// This array contains the valid values for "state.loads[].loadPosition" and for the
+  /// action parameter "lhd" of pick-and-drop actions.
+  /// If this array doesn't exist or is empty, the AGV has no load handling device.
+  std::optional<std::vector<std::string>> load_positions;
 
-  /// \brief The value of the parameter that belongs to the key
-  ActionParameterValue value;
+  /// \brief Array of load sets that can be handled by the AGV.
+  std::optional<std::vector<LoadSet>> load_sets;
 
   /// \brief Equality operator
   ///
   /// \param other The other object to compare to
   ///
   /// \return is equal?
-  inline bool operator==(const ActionParameter& other) const
+  inline bool operator==(const LoadSpecification& other) const
   {
-    if (this->key != other.key) return false;
-    if (this->value != other.value) return false;
+    if (this->load_positions != other.load_positions) return false;
+    if (this->load_sets != other.load_sets) return false;
     return true;
   }
 
@@ -51,8 +54,8 @@ struct ActionParameter
   ///
   /// \param other The other object to compare to
   ///
-  /// \return is equal?
-  inline bool operator!=(const ActionParameter& other) const
+  /// \return is not equal?
+  inline bool operator!=(const LoadSpecification& other) const
   {
     return !(this->operator==(other));
   }
@@ -60,4 +63,4 @@ struct ActionParameter
 
 }  // namespace vda5050_types
 
-#endif  // VDA5050_TYPES__ACTION_PARAMETER_HPP_
+#endif  // VDA5050_TYPES__LOAD_SPECIFICATION_HPP_

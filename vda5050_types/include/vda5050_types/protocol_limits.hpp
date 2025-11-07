@@ -16,34 +16,39 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_TYPES__ACTION_PARAMETER_HPP_
-#define VDA5050_TYPES__ACTION_PARAMETER_HPP_
+#ifndef VDA5050_TYPES__PROTOCOL_LIMITS_HPP_
+#define VDA5050_TYPES__PROTOCOL_LIMITS_HPP_
 
-#include <string>
-
-#include "vda5050_types/action_parameter_value.hpp"
+#include "vda5050_types/max_array_lens.hpp"
+#include "vda5050_types/max_string_lens.hpp"
+#include "vda5050_types/timing.hpp"
 
 namespace vda5050_types {
 
-/// \brief An object for the indicated action
-/// eg: deviceId, loadId, external triggers
-struct ActionParameter
+/// \brief Message describing the protocol limitations of the AGV.
+/// If a parameter is not defined or set to zero then there is no explicit limit
+/// for that parameter
+struct ProtocolLimits
 {
-  /// \brief The key of the parameter
-  std::string key;
+  /// \brief Maximum lengths of strings
+  MaxStringLens max_string_lens;
 
-  /// \brief The value of the parameter that belongs to the key
-  ActionParameterValue value;
+  /// \brief Maximum lengths of arrays
+  MaxArrayLens max_array_lens;
+
+  /// \brief Timing information
+  Timing timing;
 
   /// \brief Equality operator
   ///
   /// \param other The other object to compare to
   ///
   /// \return is equal?
-  inline bool operator==(const ActionParameter& other) const
+  inline bool operator==(const ProtocolLimits& other) const
   {
-    if (this->key != other.key) return false;
-    if (this->value != other.value) return false;
+    if (this->max_string_lens != other.max_string_lens) return false;
+    if (this->max_array_lens != other.max_array_lens) return false;
+    if (this->timing != other.timing) return false;
     return true;
   }
 
@@ -51,8 +56,8 @@ struct ActionParameter
   ///
   /// \param other The other object to compare to
   ///
-  /// \return is equal?
-  inline bool operator!=(const ActionParameter& other) const
+  /// \return is not equal?
+  inline bool operator!=(const ProtocolLimits& other) const
   {
     return !(this->operator==(other));
   }
@@ -60,4 +65,4 @@ struct ActionParameter
 
 }  // namespace vda5050_types
 
-#endif  // VDA5050_TYPES__ACTION_PARAMETER_HPP_
+#endif  // VDA5050_TYPES__PROTOCOL_LIMITS_HPP_

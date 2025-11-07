@@ -16,30 +16,21 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_TYPES__ACTION_PARAMETER_VALUE_TYPE_HPP_
-#define VDA5050_TYPES__ACTION_PARAMETER_VALUE_TYPE_HPP_
+#ifndef VDA5050_TYPES__ORIENTATION_TYPE_HPP_
+#define VDA5050_TYPES__ORIENTATION_TYPE_HPP_
 
 namespace vda5050_types {
 
-// enum values for ActionParameterValue
-enum class ActionParameterValueType
+/// \brief Enum values for orientationType
+enum class OrientationType
 {
-  /// \brief Array type
-  ARRAY,
+  /// \brief Relative to the global project specific map coordinate system.
+  GLOBAL,
 
-  /// \brief Bool type
-  BOOL,
-
-  /// \brief Number type
-  NUMBER,
-
-  /// \brief String type
-  STRING,
-
-  /// \brief Object type
-  OBJECT
+  /// \brief Tangential to the edge.
+  TANGENTIAL,
 };
 
 }  // namespace vda5050_types
 
-#endif  // VDA5050_TYPES__ACTION_PARAMETER_VALUE_TYPE_HPP_
+#endif  // VDA5050_TYPES__ORIENTATION_TYPE_HPP_

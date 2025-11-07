@@ -16,34 +16,36 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_TYPES__ACTION_PARAMETER_HPP_
-#define VDA5050_TYPES__ACTION_PARAMETER_HPP_
+#ifndef VDA5050_TYPES__VEHICLE_CONFIG_HPP_
+#define VDA5050_TYPES__VEHICLE_CONFIG_HPP_
 
-#include <string>
-
-#include "vda5050_types/action_parameter_value.hpp"
+#include <optional>
+#include <vector>
+#include "vda5050_types/network.hpp"
+#include "vda5050_types/version_info.hpp"
 
 namespace vda5050_types {
 
-/// \brief An object for the indicated action
-/// eg: deviceId, loadId, external triggers
-struct ActionParameter
+/// \brief Details the software and hardware versions running on the vehicle,
+/// as well as a brief summary of network information.
+struct VehicleConfig
 {
-  /// \brief The key of the parameter
-  std::string key;
+  /// \brief Array of key-value pair objects containing software and hardware information.
+  std::optional<std::vector<VersionInfo>> versions;
 
-  /// \brief The value of the parameter that belongs to the key
-  ActionParameterValue value;
+  /// \brief Information about the vehicle's network connection.
+  /// The listed information shall not be updated while the vehicle is operating.
+  std::optional<Network> network;
 
   /// \brief Equality operator
   ///
   /// \param other The other object to compare to
   ///
   /// \return is equal?
-  inline bool operator==(const ActionParameter& other) const
+  inline bool operator==(const VehicleConfig& other) const
   {
-    if (this->key != other.key) return false;
-    if (this->value != other.value) return false;
+    if (this->versions != other.versions) return false;
+    if (this->network != other.network) return false;
     return true;
   }
 
@@ -51,8 +53,8 @@ struct ActionParameter
   ///
   /// \param other The other object to compare to
   ///
-  /// \return is equal?
-  inline bool operator!=(const ActionParameter& other) const
+  /// \return is not equal?
+  inline bool operator!=(const VehicleConfig& other) const
   {
     return !(this->operator==(other));
   }
@@ -60,4 +62,4 @@ struct ActionParameter
 
 }  // namespace vda5050_types
 
-#endif  // VDA5050_TYPES__ACTION_PARAMETER_HPP_
+#endif  // VDA5050_TYPES__VEHICLE_CONFIG_HPP_

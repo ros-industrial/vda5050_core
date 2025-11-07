@@ -16,31 +16,38 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_TYPES__ACTION_PARAMETER_VALUE_HPP_
-#define VDA5050_TYPES__ACTION_PARAMETER_VALUE_HPP_
-
-#include <cstdint>
-#include <string>
-
-#include "vda5050_types/action_parameter_value_type.hpp"
+#ifndef VDA5050_TYPES__POLYGON_POINT_HPP_
+#define VDA5050_TYPES__POLYGON_POINT_HPP_
 
 namespace vda5050_types {
 
-struct ActionParameterValue
+/// \brief A point in a polygon.
+struct PolygonPoint
 {
-  /// TODO (@shawnkchan) Named this differently to how we named it in vda5050_interfaces package so that it does not conflict with wheelDefinitions.type enum
-  ActionParameterValueType type;
+  /// \brief X-position of the polygon point [m].
+  double x;
 
-  std::string value;
+  /// \brief Y-position of the polygon point [m].
+  double y;
 
-  inline bool operator==(const ActionParameterValue& other) const
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  inline bool operator==(const PolygonPoint& other) const
   {
-    if (this->type != other.type) return false;
-    if (this->value != other.value) return false;
+    if (this->x != other.x) return false;
+    if (this->y != other.y) return false;
     return true;
   }
 
-  inline bool operator!=(const ActionParameterValue& other) const
+  /// \brief Inequality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const PolygonPoint& other) const
   {
     return !(this->operator==(other));
   }
@@ -48,4 +55,4 @@ struct ActionParameterValue
 
 }  // namespace vda5050_types
 
-#endif  // VDA5050_TYPES__ACTION_PARAMETER_VALUE_HPP_
+#endif  // VDA5050_TYPES__POLYGON_POINT_HPP_

@@ -16,31 +16,40 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_TYPES__ACTION_PARAMETER_VALUE_HPP_
-#define VDA5050_TYPES__ACTION_PARAMETER_VALUE_HPP_
+#ifndef VDA5050_TYPES__VERSION_INFO_HPP_
+#define VDA5050_TYPES__VERSION_INFO_HPP_
 
-#include <cstdint>
 #include <string>
-
-#include "vda5050_types/action_parameter_value_type.hpp"
 
 namespace vda5050_types {
 
-struct ActionParameterValue
+/// \brief Key-value pair containing software/hardware version information.
+struct VersionInfo
 {
-  /// TODO (@shawnkchan) Named this differently to how we named it in vda5050_interfaces package so that it does not conflict with wheelDefinitions.type enum
-  ActionParameterValueType type;
+  /// \brief Key of the software/hardware version used (e.g., softwareVersion).
+  std::string key;
 
+  /// \brief The version corresponding to the key (e.g., v1.12.4-beta).
   std::string value;
 
-  inline bool operator==(const ActionParameterValue& other) const
+  /// \brief Equality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is equal?
+  inline bool operator==(const VersionInfo& other) const
   {
-    if (this->type != other.type) return false;
+    if (this->key != other.key) return false;
     if (this->value != other.value) return false;
     return true;
   }
 
-  inline bool operator!=(const ActionParameterValue& other) const
+  /// \brief Inequality operator
+  ///
+  /// \param other The other object to compare to
+  ///
+  /// \return is not equal?
+  inline bool operator!=(const VersionInfo& other) const
   {
     return !(this->operator==(other));
   }
@@ -48,4 +57,4 @@ struct ActionParameterValue
 
 }  // namespace vda5050_types
 
-#endif  // VDA5050_TYPES__ACTION_PARAMETER_VALUE_HPP_
+#endif  // VDA5050_TYPES__VERSION_INFO_HPP_

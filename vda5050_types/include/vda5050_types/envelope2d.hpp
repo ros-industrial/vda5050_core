@@ -16,34 +16,39 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_TYPES__ACTION_PARAMETER_HPP_
-#define VDA5050_TYPES__ACTION_PARAMETER_HPP_
+#ifndef VDA5050_TYPES__ENVELOPE2D_HPP_
+#define VDA5050_TYPES__ENVELOPE2D_HPP_
 
+#include <optional>
 #include <string>
+#include <vector>
 
-#include "vda5050_types/action_parameter_value.hpp"
+#include "vda5050_types/polygon_point.hpp"
 
 namespace vda5050_types {
 
-/// \brief An object for the indicated action
-/// eg: deviceId, loadId, external triggers
-struct ActionParameter
+/// \brief AGV envelope curves in 2D.
+struct Envelope2d
 {
-  /// \brief The key of the parameter
-  std::string key;
+  /// \brief Name of the envelope curve set.
+  std::string set;
 
-  /// \brief The value of the parameter that belongs to the key
-  ActionParameterValue value;
+  /// \brief Envelope curve as an x/y-polygon. Polygon is assumed as closed and shall be non-self-intersecting.
+  std::vector<PolygonPoint> polygon_points;
+
+  /// \brief Free-form text: description of envelope curve set.
+  std::optional<std::string> description;
 
   /// \brief Equality operator
   ///
   /// \param other The other object to compare to
   ///
   /// \return is equal?
-  inline bool operator==(const ActionParameter& other) const
+  inline bool operator==(const Envelope2d& other) const
   {
-    if (this->key != other.key) return false;
-    if (this->value != other.value) return false;
+    if (this->set != other.set) return false;
+    if (this->polygon_points != other.polygon_points) return false;
+    if (this->description != other.description) return false;
     return true;
   }
 
@@ -51,8 +56,8 @@ struct ActionParameter
   ///
   /// \param other The other object to compare to
   ///
-  /// \return is equal?
-  inline bool operator!=(const ActionParameter& other) const
+  /// \return is not equal?
+  inline bool operator!=(const Envelope2d& other) const
   {
     return !(this->operator==(other));
   }
@@ -60,4 +65,4 @@ struct ActionParameter
 
 }  // namespace vda5050_types
 
-#endif  // VDA5050_TYPES__ACTION_PARAMETER_HPP_
+#endif  // VDA5050_TYPES__ENVELOPE2D_HPP_

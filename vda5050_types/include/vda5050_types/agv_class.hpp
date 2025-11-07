@@ -16,30 +16,27 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_TYPES__ACTION_PARAMETER_VALUE_TYPE_HPP_
-#define VDA5050_TYPES__ACTION_PARAMETER_VALUE_TYPE_HPP_
+#ifndef VDA5050_TYPES__AGV_CLASS_HPP_
+#define VDA5050_TYPES__AGV_CLASS_HPP_
 
 namespace vda5050_types {
 
-// enum values for ActionParameterValue
-enum class ActionParameterValueType
+/// \brief Simplified description of AGV class for TypeSpecification.
+enum class AGVClass
 {
-  /// \brief Array type
-  ARRAY,
+  /// \brief Forklift.
+  FORKLIFT,
 
-  /// \brief Bool type
-  BOOL,
+  /// \brief AGV with conveyors on it.
+  CONVEYOR,
 
-  /// \brief Number type
-  NUMBER,
+  /// \brief Tugger.
+  TUGGER,
 
-  /// \brief String type
-  STRING,
-
-  /// \brief Object type
-  OBJECT
+  /// \brief Load carrier with or without lifting unit.
+  CARRIER
 };
 
 }  // namespace vda5050_types
 
-#endif  // VDA5050_TYPES__ACTION_PARAMETER_VALUE_TYPE_HPP_
+#endif  // VDA5050_TYPES__AGV_CLASS_HPP_

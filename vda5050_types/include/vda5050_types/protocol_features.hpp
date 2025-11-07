@@ -16,34 +16,36 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_TYPES__ACTION_PARAMETER_HPP_
-#define VDA5050_TYPES__ACTION_PARAMETER_HPP_
+#ifndef VDA5050_TYPES__PROTOCOL_FEATURES_HPP_
+#define VDA5050_TYPES__PROTOCOL_FEATURES_HPP_
 
-#include <string>
-
-#include "vda5050_types/action_parameter_value.hpp"
+#include <vector>
+#include "vda5050_types/agv_action.hpp"
+#include "vda5050_types/optional_parameters.hpp"
 
 namespace vda5050_types {
 
-/// \brief An object for the indicated action
-/// eg: deviceId, loadId, external triggers
-struct ActionParameter
+/// \brief Message defining the actions and parameters supported by the AGV.
+struct ProtocolFeatures
 {
-  /// \brief The key of the parameter
-  std::string key;
+  /// \brief Array of supported and/or required optional parameters.
+  /// Optional parameters that are not listed here are assumed to be not supported
+  /// by the AGV
+  std::vector<OptionalParameters> optional_parameters;
 
-  /// \brief The value of the parameter that belongs to the key
-  ActionParameterValue value;
+  /// \brief Array of actions with parameters supported by this AGV. This includes
+  /// standard actions specified in VDA5050 and manufacturer-specific actions.
+  std::vector<AGVAction> agv_actions;
 
   /// \brief Equality operator
   ///
   /// \param other The other object to compare to
   ///
   /// \return is equal?
-  inline bool operator==(const ActionParameter& other) const
+  inline bool operator==(const ProtocolFeatures& other) const
   {
-    if (this->key != other.key) return false;
-    if (this->value != other.value) return false;
+    if (this->optional_parameters != other.optional_parameters) return false;
+    if (this->agv_actions != other.agv_actions) return false;
     return true;
   }
 
@@ -51,8 +53,8 @@ struct ActionParameter
   ///
   /// \param other The other object to compare to
   ///
-  /// \return is equal?
-  inline bool operator!=(const ActionParameter& other) const
+  /// \return is not equal?
+  inline bool operator!=(const ProtocolFeatures& other) const
   {
     return !(this->operator==(other));
   }
@@ -60,4 +62,4 @@ struct ActionParameter
 
 }  // namespace vda5050_types
 
-#endif  // VDA5050_TYPES__ACTION_PARAMETER_HPP_
+#endif  // VDA5050_TYPES__PROTOCOL_FEATURES_HPP_

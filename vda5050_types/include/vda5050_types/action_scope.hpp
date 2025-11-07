@@ -21,19 +21,19 @@
 
 namespace vda5050_types {
 
-/// \brief Enum values for allowed scopes in AgvAction
+/// \brief Enum values for allowed scopes in AgvAction.
 enum class ActionScope
 {
-    /// \brief useable as an instant_action
-    INSTANT,
+  /// \brief Useable as an instant_action.
+  INSTANT,
 
-    /// \brief useable on nodes
-    NODE,
+  /// \brief Useable on nodes.
+  NODE,
 
-    /// \brief useable on edges
-    EDGE
+  /// \brief Useable on edges.
+  EDGE
 };
 
-} // namespace vda5050_types
+}  // namespace vda5050_types
 
-#endif // VDA5050_TYPES__ACTION_SCOPE_HPP_
+#endif  // VDA5050_TYPES__ACTION_SCOPE_HPP_

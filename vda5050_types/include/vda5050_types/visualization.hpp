@@ -16,34 +16,40 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_TYPES__ACTION_PARAMETER_HPP_
-#define VDA5050_TYPES__ACTION_PARAMETER_HPP_
+#ifndef VDA5050_TYPES__VISUALIZATION_HPP_
+#define VDA5050_TYPES__VISUALIZATION_HPP_
 
-#include <string>
-
-#include "vda5050_types/action_parameter_value.hpp"
+#include <optional>
+#include "vda5050_types/agv_position.hpp"
+#include "vda5050_types/header.hpp"
+#include "vda5050_types/velocity.hpp"
 
 namespace vda5050_types {
 
-/// \brief An object for the indicated action
-/// eg: deviceId, loadId, external triggers
-struct ActionParameter
+/// \brief A message containing AGV position and/or velocity for visualization
+/// Published by the AGV on topic /visualization for near-real time
+/// position update.
+struct Visualization
 {
-  /// \brief The key of the parameter
-  std::string key;
+  /// \brief Message header that contains the common fields required across all messages
+  Header header;
 
-  /// \brief The value of the parameter that belongs to the key
-  ActionParameterValue value;
+  /// \brief Position of the AGV
+  std::optional<AGVPosition> agv_position;
+
+  /// \brief Velocity of the AGV in vehicle coordinates
+  std::optional<Velocity> velocity;
 
   /// \brief Equality operator
   ///
   /// \param other The other object to compare to
   ///
   /// \return is equal?
-  inline bool operator==(const ActionParameter& other) const
+  inline bool operator==(const Visualization& other) const
   {
-    if (this->key != other.key) return false;
-    if (this->value != other.value) return false;
+    if (this->header != other.header) return false;
+    if (this->agv_position != other.agv_position) return false;
+    if (this->velocity != other.velocity) return false;
     return true;
   }
 
@@ -51,8 +57,8 @@ struct ActionParameter
   ///
   /// \param other The other object to compare to
   ///
-  /// \return is equal?
-  inline bool operator!=(const ActionParameter& other) const
+  /// \return is not equal?
+  inline bool operator!=(const Visualization& other) const
   {
     return !(this->operator==(other));
   }
@@ -60,4 +66,4 @@ struct ActionParameter
 
 }  // namespace vda5050_types
 
-#endif  // VDA5050_TYPES__ACTION_PARAMETER_HPP_
+#endif  // VDA5050_TYPES__VISUALIZATION_HPP_

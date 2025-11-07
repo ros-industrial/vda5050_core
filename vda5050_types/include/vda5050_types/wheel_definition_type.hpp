@@ -16,30 +16,20 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_TYPES__ACTION_PARAMETER_VALUE_TYPE_HPP_
-#define VDA5050_TYPES__ACTION_PARAMETER_VALUE_TYPE_HPP_
+#ifndef VDA5050_TYPES__WHEEL_DEFINITION_TYPE_HPP_
+#define VDA5050_TYPES__WHEEL_DEFINITION_TYPE_HPP_
 
 namespace vda5050_types {
 
-// enum values for ActionParameterValue
-enum class ActionParameterValueType
+/// \brief Enum values for wheel definition
+enum class wheelDefinitionType
 {
-  /// \brief Array type
-  ARRAY,
-
-  /// \brief Bool type
-  BOOL,
-
-  /// \brief Number type
-  NUMBER,
-
-  /// \brief String type
-  STRING,
-
-  /// \brief Object type
-  OBJECT
+  DRIVE,
+  CASTER,
+  FIXED,
+  MECANUM
 };
 
 }  // namespace vda5050_types
 
-#endif  // VDA5050_TYPES__ACTION_PARAMETER_VALUE_TYPE_HPP_
+#endif  // VDA5050_TYPES__WHEEL_DEFINITION_TYPE_HPP_
