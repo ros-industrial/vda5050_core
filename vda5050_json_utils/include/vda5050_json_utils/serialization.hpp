@@ -25,29 +25,44 @@
 #include <nlohmann/json.hpp>
 
 #include <vda5050_types/action_state.hpp>
+#include <vda5050_types/agv_position.hpp>
+#include <vda5050_types/battery_state.hpp>
+#include <vda5050_types/bounding_box_reference.hpp>
 #include <vda5050_types/connection.hpp>
+#include <vda5050_types/control_point.hpp>
 #include <vda5050_types/edge_state.hpp>
 #include <vda5050_types/error.hpp>
 #include <vda5050_types/error_reference.hpp>
 #include <vda5050_types/header.hpp>
+#include <vda5050_types/info.hpp>
+#include <vda5050_types/info_reference.hpp>
+#include <vda5050_types/load.hpp>
 #include <vda5050_types/node_position.hpp>
 #include <vda5050_types/node_state.hpp>
 #include <vda5050_types/safety_state.hpp>
 #include <vda5050_types/state.hpp>
 #include <vda5050_types/trajectory.hpp>
+#include <vda5050_types/velocity.hpp>
 
 #ifdef ENABLE_ROS2
 #include <vda5050_msgs/msg/action_state.hpp>
+#include <vda5050_msgs/msg/agv_position.hpp>
+#include <vda5050_msgs/msg/battery_state.hpp>
+#include <vda5050_msgs/msg/bounding_box_reference.hpp>
 #include <vda5050_msgs/msg/connection.hpp>
 #include <vda5050_msgs/msg/edge_state.hpp>
 #include <vda5050_msgs/msg/error.hpp>
 #include <vda5050_msgs/msg/error_reference.hpp>
 #include <vda5050_msgs/msg/header.hpp>
+#include <vda5050_msgs/msg/info.hpp>
+#include <vda5050_msgs/msg/info_reference.hpp>
+#include <vda5050_msgs/msg/load.hpp>
 #include <vda5050_msgs/msg/node_position.hpp>
 #include <vda5050_msgs/msg/node_state.hpp>
 #include <vda5050_msgs/msg/safety_state.hpp>
 #include <vda5050_msgs/msg/state.hpp>
 #include <vda5050_msgs/msg/trajectory.hpp>
+#include <vda5050_msgs/msg/velocity.hpp>
 #endif  // ENABLE_ROS2
 
 #include "traits.hpp"
@@ -123,15 +138,15 @@ namespace node_position_detail {
 template <typename NodePositionT>
 void to_json(nlohmann::json& j, const NodePositionT& msg)
 {
-  using theta_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.theta)>;
-  using allowed_deviation_x_y_trait = vda5050_json_utils::optional_field_traits<
-    decltype(msg.allowed_deviation_x_y)>;
+  using vda5050_json_utils::optional_field_traits;
+
+  using theta_trait = optional_field_traits<decltype(msg.theta)>;
+  using allowed_deviation_x_y_trait =
+    optional_field_traits<decltype(msg.allowed_deviation_x_y)>;
   using allowed_deviation_theta_trait =
-    vda5050_json_utils::optional_field_traits<
-      decltype(msg.allowed_deviation_theta)>;
+    optional_field_traits<decltype(msg.allowed_deviation_theta)>;
   using map_description_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.map_description)>;
+    optional_field_traits<decltype(msg.map_description)>;
 
   j["x"] = msg.x;
   j["y"] = msg.y;
@@ -164,15 +179,15 @@ void to_json(nlohmann::json& j, const NodePositionT& msg)
 template <typename NodePositionT>
 void from_json(const nlohmann::json& j, NodePositionT& msg)
 {
-  using theta_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.theta)>;
-  using allowed_deviation_x_y_trait = vda5050_json_utils::optional_field_traits<
-    decltype(msg.allowed_deviation_x_y)>;
+  using vda5050_json_utils::optional_field_traits;
+
+  using theta_trait = optional_field_traits<decltype(msg.theta)>;
+  using allowed_deviation_x_y_trait =
+    optional_field_traits<decltype(msg.allowed_deviation_x_y)>;
   using allowed_deviation_theta_trait =
-    vda5050_json_utils::optional_field_traits<
-      decltype(msg.allowed_deviation_theta)>;
+    optional_field_traits<decltype(msg.allowed_deviation_theta)>;
   using map_description_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.map_description)>;
+    optional_field_traits<decltype(msg.map_description)>;
 
   msg.x = j.at("x").get<double>();
   msg.y = j.at("y").get<double>();
@@ -210,10 +225,12 @@ namespace node_state_detail {
 template <typename NodeStateT>
 void to_json(nlohmann::json& j, const NodeStateT& msg)
 {
+  using vda5050_json_utils::optional_field_traits;
+
   using node_description_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.node_description)>;
+    optional_field_traits<decltype(msg.node_description)>;
   using node_position_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.node_position)>;
+    optional_field_traits<decltype(msg.node_position)>;
 
   j["nodeId"] = msg.node_id;
   j["sequenceId"] = msg.sequence_id;
@@ -234,10 +251,12 @@ void to_json(nlohmann::json& j, const NodeStateT& msg)
 template <typename NodeStateT>
 void from_json(const nlohmann::json& j, NodeStateT& msg)
 {
+  using vda5050_json_utils::optional_field_traits;
+
   using node_description_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.node_description)>;
+    optional_field_traits<decltype(msg.node_description)>;
   using node_position_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.node_position)>;
+    optional_field_traits<decltype(msg.node_position)>;
 
   msg.node_id = j.at("nodeId").get<std::string>();
   msg.sequence_id = j.at("sequenceId").get<uint32_t>();
@@ -311,10 +330,11 @@ namespace edge_state_detail {
 template <typename EdgeStateT>
 void to_json(nlohmann::json& j, const EdgeStateT& msg)
 {
+  using vda5050_json_utils::optional_field_traits;
+
   using edge_description_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.edge_description)>;
-  using trajectory_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.trajectory)>;
+    optional_field_traits<decltype(msg.edge_description)>;
+  using trajectory_trait = optional_field_traits<decltype(msg.trajectory)>;
 
   j["edgeId"] = msg.edge_id;
   j["sequenceId"] = msg.sequence_id;
@@ -335,10 +355,11 @@ void to_json(nlohmann::json& j, const EdgeStateT& msg)
 template <typename EdgeStateT>
 void from_json(const nlohmann::json& j, EdgeStateT& msg)
 {
+  using vda5050_json_utils::optional_field_traits;
+
   using edge_description_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.edge_description)>;
-  using trajectory_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.trajectory)>;
+    optional_field_traits<decltype(msg.edge_description)>;
+  using trajectory_trait = optional_field_traits<decltype(msg.trajectory)>;
 
   msg.edge_id = j.at("edgeId").get<std::string>();
   msg.sequence_id = j.at("sequenceId").get<uint32_t>();
@@ -365,12 +386,13 @@ template <typename ActionStateT>
 void to_json(nlohmann::json& j, const ActionStateT& msg)
 {
   using vda5050_json_utils::action_status_traits;
-  using action_type_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.action_type)>;
+  using vda5050_json_utils::optional_field_traits;
+
+  using action_type_trait = optional_field_traits<decltype(msg.action_type)>;
   using action_description_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.action_description)>;
+    optional_field_traits<decltype(msg.action_description)>;
   using result_description_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.result_description)>;
+    optional_field_traits<decltype(msg.result_description)>;
 
   j["actionId"] = msg.action_id;
 
@@ -401,12 +423,14 @@ template <typename ActionStateT>
 void from_json(const nlohmann::json& j, ActionStateT& msg)
 {
   using vda5050_json_utils::action_status_traits;
-  using action_type_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.action_type)>;
+  using vda5050_json_utils::optional_field_traits;
+
+  using action_type_trait = optional_field_traits<decltype(msg.action_type)>;
   using action_description_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.action_description)>;
+    optional_field_traits<decltype(msg.action_description)>;
   using result_description_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.result_description)>;
+    optional_field_traits<decltype(msg.result_description)>;
+
   msg.action_id = j.at("actionId").get<std::string>();
 
   msg.action_status =
@@ -461,19 +485,21 @@ template <typename ErrorT>
 void to_json(nlohmann::json& j, const ErrorT& msg)
 {
   using vda5050_json_utils::error_level_traits;
-  using error_reference_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.error_references)>;
+  using vda5050_json_utils::optional_field_traits;
+
+  using error_references_trait =
+    optional_field_traits<decltype(msg.error_references)>;
   using error_description_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.error_description)>;
+    optional_field_traits<decltype(msg.error_description)>;
 
   j["errorType"] = msg.error_type;
 
   j["errorLevel"] =
     error_level_traits<decltype(msg.error_level)>::to_string(msg.error_level);
 
-  if (error_reference_trait::has_value(msg.error_references))
+  if (error_references_trait::has_value(msg.error_references))
   {
-    j["errorReferences"] = error_reference_trait::get(msg.error_references);
+    j["errorReferences"] = error_references_trait::get(msg.error_references);
   }
 
   if (error_description_trait::has_value(msg.error_description))
@@ -487,10 +513,12 @@ template <typename ErrorT>
 void from_json(const nlohmann::json& j, ErrorT& msg)
 {
   using vda5050_json_utils::error_level_traits;
-  using error_reference_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.error_references)>;
+  using vda5050_json_utils::optional_field_traits;
+
+  using error_references_trait =
+    optional_field_traits<decltype(msg.error_references)>;
   using error_description_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.error_description)>;
+    optional_field_traits<decltype(msg.error_description)>;
 
   msg.error_type = j.at("errorType").get<std::string>();
 
@@ -499,7 +527,7 @@ void from_json(const nlohmann::json& j, ErrorT& msg)
 
   if (j.contains("errorReferences"))
   {
-    error_reference_trait::set(msg.error_references, j.at("errorReferences"));
+    error_references_trait::set(msg.error_references, j.at("errorReferences"));
   }
 
   if (j.contains("errorDescription"))
@@ -517,12 +545,13 @@ namespace battery_state_detail {
 template <typename BatteryStateT>
 void to_json(nlohmann::json& j, const BatteryStateT& msg)
 {
+  using vda5050_json_utils::optional_field_traits;
+
   using battery_voltage_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.battery_voltage)>;
+    optional_field_traits<decltype(msg.battery_voltage)>;
   using battery_health_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.battery_health)>;
-  using reach_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.reach)>;
+    optional_field_traits<decltype(msg.battery_health)>;
+  using reach_trait = optional_field_traits<decltype(msg.reach)>;
 
   j["batteryCharge"] = msg.battery_charge;
   j["charging"] = msg.charging;
@@ -547,12 +576,13 @@ void to_json(nlohmann::json& j, const BatteryStateT& msg)
 template <typename BatteryStateT>
 void from_json(const nlohmann::json& j, BatteryStateT& msg)
 {
+  using vda5050_json_utils::optional_field_traits;
+
   using battery_voltage_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.battery_voltage)>;
+    optional_field_traits<decltype(msg.battery_voltage)>;
   using battery_health_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.battery_health)>;
-  using reach_trait =
-    vda5050_json_utils::optional_field_traits<decltype(msg.reach)>;
+    optional_field_traits<decltype(msg.battery_health)>;
+  using reach_trait = optional_field_traits<decltype(msg.reach)>;
 
   msg.battery_charge = j.at("batteryCharge").get<double>();
   msg.charging = j.at("charging").get<bool>();
@@ -604,6 +634,400 @@ void from_json(const nlohmann::json& j, SafetyStateT& msg)
 
 }  // namespace safety_state_detail
 
+namespace agv_position_detail {
+
+//=============================================================================
+template <typename AGVPositionT>
+void to_json(nlohmann::json& j, const AGVPositionT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using map_description_trait =
+    optional_field_traits<decltype(msg.map_description)>;
+  using localization_score_trait =
+    optional_field_traits<decltype(msg.localization_score)>;
+  using deviation_range_trait =
+    optional_field_traits<decltype(msg.deviation_range)>;
+
+  j["x"] = msg.x;
+  j["y"] = msg.y;
+  j["theta"] = msg.theta;
+  j["mapId"] = msg.map_id;
+  j["positionInitialized"] = msg.position_initialized;
+
+  if (map_description_trait::has_value(msg.map_description))
+  {
+    j["mapDescription"] = map_description_trait::get(msg.map_description);
+  }
+
+  if (localization_score_trait::has_value(msg.localization_score))
+  {
+    j["localizationScore"] =
+      localization_score_trait::get(msg.localization_score);
+  }
+
+  if (deviation_range_trait::has_value(msg.deviation_range))
+  {
+    j["deviationRange"] = deviation_range_trait::get(msg.deviation_range);
+  }
+}
+
+//=============================================================================
+template <typename AGVPositionT>
+void from_json(const nlohmann::json& j, AGVPositionT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using map_description_trait =
+    optional_field_traits<decltype(msg.map_description)>;
+  using localization_score_trait =
+    optional_field_traits<decltype(msg.localization_score)>;
+  using deviation_range_trait =
+    optional_field_traits<decltype(msg.deviation_range)>;
+
+  msg.x = j.at("x").get<double>();
+  msg.y = j.at("y").get<double>();
+  msg.theta = j.at("theta").get<double>();
+  msg.map_id = j.at("mapId").get<std::string>();
+  msg.position_initialized = j.at("positionInitialized").get<bool>();
+
+  if (j.contains("mapDescription"))
+  {
+    map_description_trait::set(
+      msg.map_description, j.at("mapDescription").get<std::string>());
+  }
+
+  if (j.contains("localizationScore"))
+  {
+    localization_score_trait::set(
+      msg.localization_score, j.at("localizationScore").get<double>());
+  }
+
+  if (j.contains("deviationRange"))
+  {
+    deviation_range_trait::set(
+      msg.deviation_range, j.at("deviationRange").get<double>());
+  }
+}
+
+}  // namespace agv_position_detail
+
+namespace velocity_detail {
+
+//=============================================================================
+template <typename VelocityT>
+void to_json(nlohmann::json& j, const VelocityT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using vx_trait = optional_field_traits<decltype(msg.vx)>;
+  using vy_trait = optional_field_traits<decltype(msg.vy)>;
+  using omega_trait = optional_field_traits<decltype(msg.omega)>;
+
+  if (vx_trait::has_value(msg.vx))
+  {
+    j["vx"] = vx_trait::get(msg.vx);
+  }
+
+  if (vy_trait::has_value(msg.vy))
+  {
+    j["vy"] = vy_trait::get(msg.vy);
+  }
+
+  if (omega_trait::has_value(msg.omega))
+  {
+    j["omega"] = omega_trait::get(msg.omega);
+  }
+}
+
+//=============================================================================
+template <typename VelocityT>
+void from_json(const nlohmann::json& j, VelocityT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using vx_trait = optional_field_traits<decltype(msg.vx)>;
+  using vy_trait = optional_field_traits<decltype(msg.vy)>;
+  using omega_trait = optional_field_traits<decltype(msg.omega)>;
+
+  if (j.contains("vx"))
+  {
+    vx_trait::set(msg.vx, j.at("vx").get<double>());
+  }
+
+  if (j.contains("vy"))
+  {
+    vy_trait::set(msg.vy, j.at("vy").get<double>());
+  }
+
+  if (j.contains("omega"))
+  {
+    omega_trait::set(msg.omega, j.at("omega").get<double>());
+  }
+}
+
+}  // namespace velocity_detail
+
+namespace bounding_box_reference_detail {
+
+//=============================================================================
+template <typename BoundingBoxReferenceT>
+void to_json(nlohmann::json& j, const BoundingBoxReferenceT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using theta_trait = optional_field_traits<decltype(msg.theta)>;
+
+  j["x"] = msg.x;
+  j["y"] = msg.y;
+  j["z"] = msg.z;
+
+  if (theta_trait::has_value(msg.theta))
+  {
+    j["theta"] = theta_trait::get(msg.theta);
+  }
+}
+
+//=============================================================================
+template <typename BoundingBoxReferenceT>
+void from_json(const nlohmann::json& j, BoundingBoxReferenceT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using theta_trait = optional_field_traits<decltype(msg.theta)>;
+
+  msg.x = j.at("x").get<double>();
+  msg.y = j.at("y").get<double>();
+  msg.z = j.at("z").get<double>();
+
+  if (j.contains("theta"))
+  {
+    theta_trait::set(msg.theta, j.at("theta").get<double>());
+  }
+}
+
+}  // namespace bounding_box_reference_detail
+
+namespace load_dimensions_detail {
+
+//=============================================================================
+template <typename LoadDimensionsT>
+void to_json(nlohmann::json& j, const LoadDimensionsT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using height_trait = optional_field_traits<decltype(msg.height)>;
+
+  j["length"] = msg.length;
+  j["width"] = msg.width;
+
+  if (height_trait::has_value(msg.height))
+  {
+    j["height"] = height_trait::get(msg.height);
+  }
+}
+
+//=============================================================================
+template <typename LoadDimensionsT>
+void from_json(const nlohmann::json& j, LoadDimensionsT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using height_trait = optional_field_traits<decltype(msg.height)>;
+
+  msg.length = j.at("length").get<double>();
+  msg.width = j.at("width").get<double>();
+
+  if (j.contains("height"))
+  {
+    height_trait::set(msg.height, j.at("height").get<double>());
+  }
+}
+
+}  // namespace load_dimensions_detail
+
+namespace load_detail {
+
+//=============================================================================
+template <typename LoadT>
+void to_json(nlohmann::json& j, const LoadT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using load_id_trait = optional_field_traits<decltype(msg.load_id)>;
+  using load_type_trait = optional_field_traits<decltype(msg.load_type)>;
+  using load_position_trait =
+    optional_field_traits<decltype(msg.load_position)>;
+  using bounding_box_reference_trait =
+    optional_field_traits<decltype(msg.bounding_box_reference)>;
+  using load_dimensions_trait =
+    optional_field_traits<decltype(msg.load_dimensions)>;
+  using weight_trait = optional_field_traits<decltype(msg.weight)>;
+
+  if (load_id_trait::has_value(msg.load_id))
+  {
+    j["loadId"] = load_id_trait::get(msg.load_id);
+  }
+
+  if (load_type_trait::has_value(msg.load_type))
+  {
+    j["loadType"] = load_type_trait::get(msg.load_type);
+  }
+
+  if (load_position_trait::has_value(msg.load_position))
+  {
+    j["loadPosition"] = load_position_trait::get(msg.load_position);
+  }
+
+  if (bounding_box_reference_trait::has_value(msg.bounding_box_reference))
+  {
+    j["boundingBoxReference"] =
+      bounding_box_reference_trait::get(msg.bounding_box_reference);
+  }
+
+  if (load_dimensions_trait::has_value(msg.load_dimensions))
+  {
+    j["loadDimensions"] = load_dimensions_trait::get(msg.load_dimensions);
+  }
+
+  if (weight_trait::has_value(msg.weight))
+  {
+    j["weight"] = weight_trait::get(msg.weight);
+  }
+}
+
+//=============================================================================
+template <typename LoadT>
+void from_json(const nlohmann::json& j, LoadT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using load_id_trait = optional_field_traits<decltype(msg.load_id)>;
+  using load_type_trait = optional_field_traits<decltype(msg.load_type)>;
+  using load_position_trait =
+    optional_field_traits<decltype(msg.load_position)>;
+  using bounding_box_reference_trait =
+    optional_field_traits<decltype(msg.bounding_box_reference)>;
+  using load_dimensions_trait =
+    optional_field_traits<decltype(msg.load_dimensions)>;
+  using weight_trait = optional_field_traits<decltype(msg.weight)>;
+
+  if (j.contains("loadId"))
+  {
+    load_id_trait::set(msg.load_id, j.at("loadId").get<std::string>());
+  }
+
+  if (j.contains("loadType"))
+  {
+    load_type_trait::set(msg.load_type, j.at("loadType").get<std::string>());
+  }
+
+  if (j.contains("loadPosition"))
+  {
+    load_position_trait::set(
+      msg.load_position, j.at("loadPosition").get<std::string>());
+  }
+
+  if (j.contains("boundingBoxReference"))
+  {
+    bounding_box_reference_trait::set(
+      msg.bounding_box_reference, j.at("boundingBoxReference"));
+  }
+
+  if (j.contains("loadDimensions"))
+  {
+    load_dimensions_trait::set(msg.load_dimensions, j.at("loadDimensions"));
+  }
+
+  if (j.contains("weight"))
+  {
+    weight_trait::set(msg.weight, j.at("weight").get<double>());
+  }
+}
+
+}  // namespace load_detail
+
+namespace info_reference_detail {
+
+//=============================================================================
+template <typename InfoReferenceT>
+void to_json(nlohmann::json& j, const InfoReferenceT& msg)
+{
+  j["referenceKey"] = msg.reference_key;
+  j["referenceValue"] = msg.reference_value;
+}
+
+//=============================================================================
+template <typename InfoReferenceT>
+void from_json(const nlohmann::json& j, InfoReferenceT& msg)
+{
+  msg.reference_key = j.at("referenceKey").get<std::string>();
+  msg.reference_value = j.at("referenceValue").get<std::string>();
+}
+
+}  // namespace info_reference_detail
+
+namespace info_detail {
+
+//=============================================================================
+template <typename InfoT>
+void to_json(nlohmann::json& j, const InfoT& msg)
+{
+  using vda5050_json_utils::info_level_traits;
+  using vda5050_json_utils::optional_field_traits;
+
+  using info_references_trait =
+    optional_field_traits<decltype(msg.info_references)>;
+  using info_description_trait =
+    optional_field_traits<decltype(msg.info_description)>;
+
+  j["infoType"] = msg.info_type;
+
+  j["infoLevel"] =
+    info_level_traits<decltype(msg.info_level)>::to_string(msg.info_level);
+
+  if (info_references_trait::has_value(msg.info_references))
+  {
+    j["infoReferences"] = info_references_trait::get(msg.info_references);
+  }
+
+  if (info_description_trait::has_value(msg.info_description))
+  {
+    j["infoDescription"] = info_description_trait::get(msg.info_description);
+  }
+}
+
+//=============================================================================
+template <typename InfoT>
+void from_json(const nlohmann::json& j, InfoT& msg)
+{
+  using vda5050_json_utils::info_level_traits;
+  using vda5050_json_utils::optional_field_traits;
+
+  using info_references_trait =
+    optional_field_traits<decltype(msg.info_references)>;
+  using info_description_trait =
+    optional_field_traits<decltype(msg.info_description)>;
+
+  msg.info_type = j.at("infoType").get<std::string>();
+
+  msg.info_level = info_level_traits<decltype(msg.info_level)>::from_string(
+    j.at("infoLevel").get<std::string>());
+
+  if (j.contains("infoReferences"))
+  {
+    info_references_trait::set(msg.info_references, j.at("infoReferences"));
+  }
+
+  if (j.contains("infoDescription"))
+  {
+    info_description_trait::set(
+      msg.info_description, j.at("infoDescription").get<std::string>());
+  }
+}
+
+}  // namespace info_detail
+
 namespace state_detail {
 
 //=============================================================================
@@ -611,6 +1035,18 @@ template <typename StateT>
 void to_json(nlohmann::json& j, const StateT& msg)
 {
   using vda5050_json_utils::operating_mode_traits;
+  using vda5050_json_utils::optional_field_traits;
+
+  using zone_set_id_trait = optional_field_traits<decltype(msg.zone_set_id)>;
+  using paused_trait = optional_field_traits<decltype(msg.paused)>;
+  using new_base_request_trait =
+    optional_field_traits<decltype(msg.new_base_request)>;
+  using distance_since_last_node_trait =
+    optional_field_traits<decltype(msg.distance_since_last_node)>;
+  using agv_position_trait = optional_field_traits<decltype(msg.agv_position)>;
+  using velocity_trait = optional_field_traits<decltype(msg.velocity)>;
+  using loads_trait = optional_field_traits<decltype(msg.loads)>;
+  using information_traits = optional_field_traits<decltype(msg.information)>;
 
   to_json(j, msg.header);
 
@@ -630,6 +1066,47 @@ void to_json(nlohmann::json& j, const StateT& msg)
   j["errors"] = msg.errors;
   j["batteryState"] = msg.battery_state;
   j["safetyState"] = msg.safety_state;
+
+  if (zone_set_id_trait::has_value(msg.zone_set_id))
+  {
+    j["zoneSetId"] = zone_set_id_trait::get(msg.zone_set_id);
+  }
+
+  if (paused_trait::has_value(msg.paused))
+  {
+    j["paused"] = paused_trait::get(msg.paused);
+  }
+
+  if (new_base_request_trait::has_value(msg.new_base_request))
+  {
+    j["newBaseRequest"] = new_base_request_trait::get(msg.new_base_request);
+  }
+
+  if (distance_since_last_node_trait::has_value(msg.distance_since_last_node))
+  {
+    j["distanceSinceLastNode"] =
+      distance_since_last_node_trait::get(msg.distance_since_last_node);
+  }
+
+  if (agv_position_trait::has_value(msg.agv_position))
+  {
+    j["agvPosition"] = agv_position_trait::get(msg.agv_position);
+  }
+
+  if (velocity_trait::has_value(msg.velocity))
+  {
+    j["velocity"] = velocity_trait::get(msg.velocity);
+  }
+
+  if (loads_trait::has_value(msg.loads))
+  {
+    j["loads"] = loads_trait::get(msg.loads);
+  }
+
+  if (information_traits::has_value(msg.information))
+  {
+    j["information"] = information_traits::get(msg.information);
+  }
 }
 
 //=============================================================================
@@ -637,6 +1114,18 @@ template <typename StateT>
 void from_json(const nlohmann::json& j, StateT& msg)
 {
   using vda5050_json_utils::operating_mode_traits;
+  using vda5050_json_utils::optional_field_traits;
+
+  using zone_set_id_trait = optional_field_traits<decltype(msg.zone_set_id)>;
+  using paused_trait = optional_field_traits<decltype(msg.paused)>;
+  using new_base_request_trait =
+    optional_field_traits<decltype(msg.new_base_request)>;
+  using distance_since_last_node_trait =
+    optional_field_traits<decltype(msg.distance_since_last_node)>;
+  using agv_position_trait = optional_field_traits<decltype(msg.agv_position)>;
+  using velocity_trait = optional_field_traits<decltype(msg.velocity)>;
+  using loads_trait = optional_field_traits<decltype(msg.loads)>;
+  using information_traits = optional_field_traits<decltype(msg.information)>;
 
   from_json(j, msg.header);
 
@@ -656,6 +1145,50 @@ void from_json(const nlohmann::json& j, StateT& msg)
   msg.errors = j.at("errors");
   msg.battery_state = j.at("batteryState");
   msg.safety_state = j.at("safetyState");
+
+  if (j.contains("zoneSetId"))
+  {
+    zone_set_id_trait::set(
+      msg.zone_set_id, j.at("zoneSetId").get<std::string>());
+  }
+
+  if (j.contains("paused"))
+  {
+    paused_trait::set(msg.paused, j.at("paused").get<bool>());
+  }
+
+  if (j.contains("newBaseRequest"))
+  {
+    new_base_request_trait::set(
+      msg.new_base_request, j.at("newBaseRequest").get<bool>());
+  }
+
+  if (j.contains("distanceSinceLastNode"))
+  {
+    distance_since_last_node_trait::set(
+      msg.distance_since_last_node,
+      j.at("distanceSinceLastNode").get<double>());
+  }
+
+  if (j.contains("agvPosition"))
+  {
+    agv_position_trait::set(msg.agv_position, j.at("agvPosition"));
+  }
+
+  if (j.contains("velocity"))
+  {
+    velocity_trait::set(msg.velocity, j.at("velocity"));
+  }
+
+  if (j.contains("loads"))
+  {
+    loads_trait::set(msg.loads, j.at("loads"));
+  }
+
+  if (j.contains("information"))
+  {
+    information_traits::set(msg.information, j.at("information"));
+  }
 }
 
 }  // namespace state_detail
@@ -783,6 +1316,76 @@ inline void to_json(nlohmann::json& j, const SafetyState& msg)
 inline void from_json(const nlohmann::json& j, SafetyState& msg)
 {
   vda5050_types::safety_state_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const AGVPosition& msg)
+{
+  vda5050_types::agv_position_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, AGVPosition& msg)
+{
+  vda5050_types::agv_position_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Velocity& msg)
+{
+  vda5050_types::velocity_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Velocity& msg)
+{
+  vda5050_types::velocity_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const BoundingBoxReference& msg)
+{
+  vda5050_types::bounding_box_reference_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, BoundingBoxReference& msg)
+{
+  vda5050_types::bounding_box_reference_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const LoadDimensions& msg)
+{
+  vda5050_types::load_dimensions_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, LoadDimensions& msg)
+{
+  vda5050_types::load_dimensions_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Load& msg)
+{
+  vda5050_types::load_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Load& msg)
+{
+  vda5050_types::load_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const InfoReference& msg)
+{
+  vda5050_types::info_reference_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, InfoReference& msg)
+{
+  vda5050_types::info_reference_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Info& msg)
+{
+  vda5050_types::info_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Info& msg)
+{
+  vda5050_types::info_detail::from_json(j, msg);
 }
 
 inline void to_json(nlohmann::json& j, const State& msg)
@@ -921,6 +1524,76 @@ inline void to_json(nlohmann::json& j, const SafetyState& msg)
 inline void from_json(const nlohmann::json& j, SafetyState& msg)
 {
   vda5050_types::safety_state_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const AGVPosition& msg)
+{
+  vda5050_types::agv_position_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, AGVPosition& msg)
+{
+  vda5050_types::agv_position_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Velocity& msg)
+{
+  vda5050_types::velocity_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Velocity& msg)
+{
+  vda5050_types::velocity_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const BoundingBoxReference& msg)
+{
+  vda5050_types::bounding_box_reference_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, BoundingBoxReference& msg)
+{
+  vda5050_types::bounding_box_reference_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const LoadDimensions& msg)
+{
+  vda5050_types::load_dimensions_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, LoadDimensions& msg)
+{
+  vda5050_types::load_dimensions_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Load& msg)
+{
+  vda5050_types::load_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Load& msg)
+{
+  vda5050_types::load_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const InfoReference& msg)
+{
+  vda5050_types::info_reference_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, InfoReference& msg)
+{
+  vda5050_types::info_reference_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Info& msg)
+{
+  vda5050_types::info_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Info& msg)
+{
+  vda5050_types::info_detail::from_json(j, msg);
 }
 
 inline void to_json(nlohmann::json& j, const State& msg)

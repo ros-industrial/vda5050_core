@@ -35,6 +35,7 @@
 #include <vda5050_types/e_stop.hpp>
 #include <vda5050_types/error_level.hpp>
 #include <vda5050_types/header.hpp>
+#include <vda5050_types/info_level.hpp>
 #include <vda5050_types/operating_mode.hpp>
 
 #ifdef ENABLE_ROS2
@@ -42,6 +43,7 @@
 #include <vda5050_msgs/msg/action_state.hpp>
 #include <vda5050_msgs/msg/connection.hpp>
 #include <vda5050_msgs/msg/error.hpp>
+#include <vda5050_msgs/msg/info.hpp>
 #include <vda5050_msgs/msg/safety_state.hpp>
 #include <vda5050_msgs/msg/state.hpp>
 #endif  // ENABLE_ROS2
@@ -83,7 +85,7 @@ struct optional_field_traits<rosidl_runtime_cpp::BoundedVector<T, 1, Alloc>>
     return !opt.empty();
   }
 
-  static const T& get(const rosidl_runtime_cpp::BoundedVector<T, 1, Alloc>& opt)
+  static const T get(const rosidl_runtime_cpp::BoundedVector<T, 1, Alloc>& opt)
   {
     return opt.front();
   }
@@ -436,6 +438,7 @@ struct action_status_traits<std::string>
   static std::string to_string(const std::string& status)
   {
     using vda5050_msgs::msg::ActionState;
+
     if (
       status == ActionState::ACTION_STATUS_WAITING ||
       status == ActionState::ACTION_STATUS_INITIALIZING ||
@@ -509,6 +512,7 @@ struct error_level_traits<std::string>
   static std::string to_string(const std::string& level)
   {
     using vda5050_msgs::msg::Error;
+
     if (
       level == Error::ERROR_LEVEL_WARNING || level == Error::ERROR_LEVEL_FATAL)
     {
@@ -520,6 +524,7 @@ struct error_level_traits<std::string>
   static std::string from_string(const std::string& level)
   {
     using vda5050_msgs::msg::Error;
+
     if (
       level == Error::ERROR_LEVEL_WARNING || level == Error::ERROR_LEVEL_FATAL)
     {
@@ -591,6 +596,7 @@ struct e_stop_traits<std::string>
   static std::string from_string(const std::string& type)
   {
     using vda5050_msgs::msg::SafetyState;
+
     if (
       type == SafetyState::E_STOP_AUTOACK ||
       type == SafetyState::E_STOP_MANUAL ||
@@ -599,6 +605,68 @@ struct e_stop_traits<std::string>
       return type;
     }
     throw std::runtime_error("Invalid eStop string");
+  }
+};
+#endif  // ENABLE_ROS2
+
+//=============================================================================
+template <typename T>
+struct info_level_traits;
+
+//=============================================================================
+template <>
+struct info_level_traits<vda5050_types::InfoLevel>
+{
+  static std::string to_string(const vda5050_types::InfoLevel& level)
+  {
+    using vda5050_types::InfoLevel;
+
+    switch (level)
+    {
+      case InfoLevel::INFO:
+        return "INFO";
+      case InfoLevel::DEBUG:
+        return "DEBUG";
+      default:
+        throw std::runtime_error("Invalid InfoLevel enum value");
+    }
+  }
+
+  static vda5050_types::InfoLevel from_string(const std::string& level)
+  {
+    using vda5050_types::InfoLevel;
+
+    if (level == "INFO") return InfoLevel::INFO;
+    if (level == "DEBUG") return InfoLevel::DEBUG;
+    throw std::runtime_error("Invalid infoLevel string");
+  }
+};
+
+//=============================================================================
+#ifdef ENABLE_ROS2
+template <>
+struct info_level_traits<std::string>
+{
+  static std::string to_string(const std::string& level)
+  {
+    using vda5050_msgs::msg::Info;
+
+    if (level == Info::INFO_LEVEL_INFO || level == Info::INFO_LEVEL_DEBUG)
+    {
+      return level;
+    }
+    throw std::runtime_error("Invalid info_level value");
+  }
+
+  static std::string from_string(const std::string& level)
+  {
+    using vda5050_msgs::msg::Info;
+
+    if (level == Info::INFO_LEVEL_INFO || level == Info::INFO_LEVEL_DEBUG)
+    {
+      return level;
+    }
+    throw std::runtime_error("Invalid infoLevel string");
   }
 };
 #endif  // ENABLE_ROS2
