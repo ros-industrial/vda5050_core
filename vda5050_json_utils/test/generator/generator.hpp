@@ -27,7 +27,9 @@
 
 #include <vda5050_types/action_state.hpp>
 #include <vda5050_types/action_status.hpp>
+#include <vda5050_types/agv_position.hpp>
 #include <vda5050_types/battery_state.hpp>
+#include <vda5050_types/bounding_box_reference.hpp>
 #include <vda5050_types/connection.hpp>
 #include <vda5050_types/connection_state.hpp>
 #include <vda5050_types/control_point.hpp>
@@ -37,16 +39,24 @@
 #include <vda5050_types/error_level.hpp>
 #include <vda5050_types/error_reference.hpp>
 #include <vda5050_types/header.hpp>
+#include <vda5050_types/info.hpp>
+#include <vda5050_types/info_level.hpp>
+#include <vda5050_types/info_reference.hpp>
+#include <vda5050_types/load.hpp>
+#include <vda5050_types/load_dimensions.hpp>
 #include <vda5050_types/node_position.hpp>
 #include <vda5050_types/node_state.hpp>
 #include <vda5050_types/operating_mode.hpp>
 #include <vda5050_types/safety_state.hpp>
 #include <vda5050_types/state.hpp>
 #include <vda5050_types/trajectory.hpp>
+#include <vda5050_types/velocity.hpp>
 
 using vda5050_types::ActionState;
 using vda5050_types::ActionStatus;
+using vda5050_types::AGVPosition;
 using vda5050_types::BatteryState;
+using vda5050_types::BoundingBoxReference;
 using vda5050_types::Connection;
 using vda5050_types::ConnectionState;
 using vda5050_types::ControlPoint;
@@ -56,12 +66,18 @@ using vda5050_types::ErrorLevel;
 using vda5050_types::ErrorReference;
 using vda5050_types::EStop;
 using vda5050_types::Header;
+using vda5050_types::Info;
+using vda5050_types::InfoLevel;
+using vda5050_types::InfoReference;
+using vda5050_types::Load;
+using vda5050_types::LoadDimensions;
 using vda5050_types::NodePosition;
 using vda5050_types::NodeState;
 using vda5050_types::OperatingMode;
 using vda5050_types::SafetyState;
 using vda5050_types::State;
 using vda5050_types::Trajectory;
+using vda5050_types::Velocity;
 
 /// \brief Utility class to generate random instances of VDA 5050 message types
 class RandomDataGenerator
@@ -205,12 +221,20 @@ public:
   }
 
   /// \brief Generate a random eStop value
-  vda5050_types::EStop generate_random_e_stop()
+  EStop generate_random_e_stop()
   {
-    std::vector<vda5050_types::EStop> types = {
+    std::vector<EStop> types = {
       EStop::AUTOACK, EStop::MANUAL, EStop::REMOTE, EStop::NONE};
     auto type_idx = generate_random_index(types.size());
     return types[type_idx];
+  }
+
+  /// \brief Generate a random infoLevel value
+  InfoLevel generate_random_info_level()
+  {
+    std::vector<InfoLevel> levels = {InfoLevel::INFO, InfoLevel::DEBUG};
+    auto level_idx = generate_random_index(levels.size());
+    return levels[level_idx];
   }
 
   /// \brief Generate a random vector of type float64
@@ -249,6 +273,17 @@ public:
       msg.action_status = generate_action_status();
       msg.result_description = generate_random_string();
     }
+    else if constexpr (std::is_same_v<T, AGVPosition>)
+    {
+      msg.x = generate_random_float();
+      msg.y = generate_random_float();
+      msg.theta = generate_random_float();
+      msg.map_id = generate_random_string();
+      msg.map_description = generate_random_string();
+      msg.position_initialized = generate_random_bool();
+      msg.localization_score = generate_random_float();
+      msg.deviation_range = generate_random_float();
+    }
     else if constexpr (std::is_same_v<T, BatteryState>)
     {
       msg.battery_charge = generate_random_percentage();
@@ -256,6 +291,13 @@ public:
       msg.battery_health = generate_random_int();
       msg.charging = generate_random_bool();
       msg.reach = generate_random_uint();
+    }
+    else if constexpr (std::is_same_v<T, BoundingBoxReference>)
+    {
+      msg.x = generate_random_float();
+      msg.y = generate_random_float();
+      msg.z = generate_random_float();
+      msg.theta = generate_random_float();
     }
     else if constexpr (std::is_same_v<T, Connection>)
     {
@@ -296,6 +338,33 @@ public:
       msg.manufacturer = generate_random_string();
       msg.serial_number = generate_random_string();
     }
+    else if constexpr (std::is_same_v<T, Info>)
+    {
+      msg.info_type = generate_random_string();
+      msg.info_references = generate_random_vector<InfoReference>(5);
+      msg.info_description = generate_random_string();
+      msg.info_level = generate_random_info_level();
+    }
+    else if constexpr (std::is_same_v<T, InfoReference>)
+    {
+      msg.reference_key = generate_random_string();
+      msg.reference_value = generate_random_string();
+    }
+    else if constexpr (std::is_same_v<T, Load>)
+    {
+      msg.load_id = generate_random_string();
+      msg.load_type = generate_random_string();
+      msg.load_position = generate_random_string();
+      msg.bounding_box_reference = generate<BoundingBoxReference>();
+      msg.load_dimensions = generate<LoadDimensions>();
+      msg.weight = generate_random_float();
+    }
+    else if constexpr (std::is_same_v<T, LoadDimensions>)
+    {
+      msg.length = generate_random_float();
+      msg.width = generate_random_float();
+      msg.height = generate_random_float();
+    }
     else if constexpr (std::is_same_v<T, NodePosition>)
     {
       msg.x = generate_random_float();
@@ -324,26 +393,26 @@ public:
       msg.header = generate<Header>();
       msg.order_id = generate_random_string();
       msg.order_update_id = generate_random_uint();
-      // msg.zone_set_id.push_back(generate_random_string());
+      msg.zone_set_id = generate_random_string();
       msg.last_node_id = generate_random_string();
       msg.last_node_sequence_id = generate_random_uint();
       msg.driving = generate_random_bool();
-      // msg.paused.push_back(generate_random_bool());
-      // msg.new_base_request.push_back(generate_random_bool());
-      // msg.distance_since_last_node.push_back(generate_random_float());
+      msg.paused = generate_random_bool();
+      msg.new_base_request = generate_random_bool();
+      msg.distance_since_last_node = generate_random_float();
       msg.operating_mode = generate_random_operating_mode();
       msg.node_states =
         generate_random_vector<NodeState>(generate_random_size());
       msg.edge_states =
         generate_random_vector<EdgeState>(generate_random_size());
-      // msg.agv_position.push_back(generate<AGVPosition>());
-      // msg.velocity.push_back(generate<Velocity>());
-      // msg.loads = generate_random_vector<Load>(generate_random_size());
+      msg.agv_position = generate<AGVPosition>();
+      msg.velocity = generate<Velocity>();
+      msg.loads = generate_random_vector<Load>(generate_random_size());
       msg.action_states =
         generate_random_vector<ActionState>(generate_random_size());
       msg.battery_state = generate<BatteryState>();
       msg.errors = generate_random_vector<Error>(generate_random_size());
-      // msg.information = generate_random_vector<Info>(generate_random_size());
+      msg.information = generate_random_vector<Info>(generate_random_size());
       msg.safety_state = generate<SafetyState>();
     }
     else if constexpr (std::is_same_v<T, Trajectory>)
@@ -352,6 +421,12 @@ public:
       msg.control_points =
         generate_random_vector<ControlPoint>(generate_random_size());
       msg.degree = 1.0;
+    }
+    else if constexpr (std::is_same_v<T, Velocity>)
+    {
+      msg.vx = generate_random_float();
+      msg.vy = generate_random_float();
+      msg.omega = generate_random_float();
     }
     else
     {

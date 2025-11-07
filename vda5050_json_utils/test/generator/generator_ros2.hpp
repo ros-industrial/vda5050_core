@@ -25,32 +25,46 @@
 #include <vector>
 
 #include <vda5050_msgs/msg/action_state.hpp>
+#include <vda5050_msgs/msg/agv_position.hpp>
 #include <vda5050_msgs/msg/battery_state.hpp>
+#include <vda5050_msgs/msg/bounding_box_reference.hpp>
 #include <vda5050_msgs/msg/connection.hpp>
 #include <vda5050_msgs/msg/control_point.hpp>
 #include <vda5050_msgs/msg/edge_state.hpp>
 #include <vda5050_msgs/msg/error.hpp>
 #include <vda5050_msgs/msg/error_reference.hpp>
 #include <vda5050_msgs/msg/header.hpp>
+#include <vda5050_msgs/msg/info.hpp>
+#include <vda5050_msgs/msg/info_reference.hpp>
+#include <vda5050_msgs/msg/load.hpp>
+#include <vda5050_msgs/msg/load_dimensions.hpp>
 #include <vda5050_msgs/msg/node_position.hpp>
 #include <vda5050_msgs/msg/node_state.hpp>
 #include <vda5050_msgs/msg/safety_state.hpp>
 #include <vda5050_msgs/msg/state.hpp>
 #include <vda5050_msgs/msg/trajectory.hpp>
+#include <vda5050_msgs/msg/velocity.hpp>
 
 using vda5050_msgs::msg::ActionState;
+using vda5050_msgs::msg::AGVPosition;
 using vda5050_msgs::msg::BatteryState;
+using vda5050_msgs::msg::BoundingBoxReference;
 using vda5050_msgs::msg::Connection;
 using vda5050_msgs::msg::ControlPoint;
 using vda5050_msgs::msg::EdgeState;
 using vda5050_msgs::msg::Error;
 using vda5050_msgs::msg::ErrorReference;
 using vda5050_msgs::msg::Header;
+using vda5050_msgs::msg::Info;
+using vda5050_msgs::msg::InfoReference;
+using vda5050_msgs::msg::Load;
+using vda5050_msgs::msg::LoadDimensions;
 using vda5050_msgs::msg::NodePosition;
 using vda5050_msgs::msg::NodeState;
 using vda5050_msgs::msg::SafetyState;
 using vda5050_msgs::msg::State;
 using vda5050_msgs::msg::Trajectory;
+using vda5050_msgs::msg::Velocity;
 
 /// \brief Utility class to generate random instances of VDA 5050 message types
 class RandomDataGeneratorROS2
@@ -169,43 +183,52 @@ public:
   /// \brief Generate a random operatingMode value
   std::string generate_random_operating_mode()
   {
-    std::vector<std::string> states = {
+    std::vector<std::string> modes = {
       State::OPERATING_MODE_AUTOMATIC, State::OPERATING_MODE_SEMIAUTOMATIC,
       State::OPERATING_MODE_MANUAL, State::OPERATING_MODE_SERVICE,
       State::OPERATING_MODE_TEACHIN};
-    auto state_idx = generate_random_index(states.size());
-    return states[state_idx];
+    auto mode_idx = generate_random_index(modes.size());
+    return modes[mode_idx];
   }
 
   /// \brief Generate a random actionStatus value
   std::string generate_action_status()
   {
-    std::vector<std::string> states = {
+    std::vector<std::string> statuses = {
       ActionState::ACTION_STATUS_WAITING,
       ActionState::ACTION_STATUS_INITIALIZING,
       ActionState::ACTION_STATUS_RUNNING, ActionState::ACTION_STATUS_PAUSED,
       ActionState::ACTION_STATUS_FINISHED};
-    auto state_idx = generate_random_index(states.size());
-    return states[state_idx];
+    auto status_idx = generate_random_index(statuses.size());
+    return statuses[status_idx];
   }
 
   /// \brief Generate a random errorLevel value
   std::string generate_random_error_level()
   {
-    std::vector<std::string> states = {
+    std::vector<std::string> levels = {
       Error::ERROR_LEVEL_WARNING, Error::ERROR_LEVEL_FATAL};
-    auto state_idx = generate_random_index(states.size());
-    return states[state_idx];
+    auto level_idx = generate_random_index(levels.size());
+    return levels[level_idx];
   }
 
   /// \brief Generate a random eStop value
   std::string generate_random_e_stop()
   {
-    std::vector<std::string> states = {
+    std::vector<std::string> types = {
       SafetyState::E_STOP_AUTOACK, SafetyState::E_STOP_MANUAL,
       SafetyState::E_STOP_REMOTE, SafetyState::E_STOP_NONE};
-    auto state_idx = generate_random_index(states.size());
-    return states[state_idx];
+    auto type_idx = generate_random_index(types.size());
+    return types[type_idx];
+  }
+
+  /// \brief Generate a random infoLevel value
+  std::string generate_random_info_level()
+  {
+    std::vector<std::string> levels = {
+      Info::INFO_LEVEL_INFO, Info::INFO_LEVEL_DEBUG};
+    auto level_idx = generate_random_index(levels.size());
+    return levels[level_idx];
   }
 
   /// \brief Generate a random vector of type float64
@@ -244,6 +267,17 @@ public:
       msg.action_status = generate_action_status();
       msg.result_description.push_back(generate_random_string());
     }
+    else if constexpr (std::is_same_v<T, AGVPosition>)
+    {
+      msg.x = generate_random_float();
+      msg.y = generate_random_float();
+      msg.theta = generate_random_float();
+      msg.map_id = generate_random_string();
+      msg.map_description.push_back(generate_random_string());
+      msg.position_initialized = generate_random_bool();
+      msg.localization_score.push_back(generate_random_float());
+      msg.deviation_range.push_back(generate_random_float());
+    }
     else if constexpr (std::is_same_v<T, BatteryState>)
     {
       msg.battery_charge = generate_random_percentage();
@@ -251,6 +285,13 @@ public:
       msg.battery_health.push_back(generate_random_int());
       msg.charging = generate_random_bool();
       msg.reach.push_back(generate_random_uint());
+    }
+    else if constexpr (std::is_same_v<T, BoundingBoxReference>)
+    {
+      msg.x = generate_random_float();
+      msg.y = generate_random_float();
+      msg.z = generate_random_float();
+      msg.theta.push_back(generate_random_float());
     }
     else if constexpr (std::is_same_v<T, Connection>)
     {
@@ -295,6 +336,37 @@ public:
       msg.manufacturer = generate_random_string();
       msg.serial_number = generate_random_string();
     }
+    else if constexpr (std::is_same_v<T, Info>)
+    {
+      msg.info_type = generate_random_string();
+      auto info_ref_vec = generate_random_vector<InfoReference>(10);
+      for (auto ref : info_ref_vec)
+      {
+        msg.info_references.push_back(ref);
+      }
+      msg.info_description.push_back(generate_random_string());
+      msg.info_level = generate_random_info_level();
+    }
+    else if constexpr (std::is_same_v<T, InfoReference>)
+    {
+      msg.reference_key = generate_random_string();
+      msg.reference_value = generate_random_string();
+    }
+    else if constexpr (std::is_same_v<T, Load>)
+    {
+      msg.load_id.push_back(generate_random_string());
+      msg.load_type.push_back(generate_random_string());
+      msg.load_position.push_back(generate_random_string());
+      msg.bounding_box_reference.push_back(generate<BoundingBoxReference>());
+      msg.load_dimensions.push_back(generate<LoadDimensions>());
+      msg.weight.push_back(generate_random_float());
+    }
+    else if constexpr (std::is_same_v<T, LoadDimensions>)
+    {
+      msg.length = generate_random_float();
+      msg.width = generate_random_float();
+      msg.height.push_back(generate_random_float());
+    }
     else if constexpr (std::is_same_v<T, NodePosition>)
     {
       msg.x = generate_random_float();
@@ -323,26 +395,34 @@ public:
       msg.header = generate<Header>();
       msg.order_id = generate_random_string();
       msg.order_update_id = generate_random_uint();
-      // msg.zone_set_id.push_back(generate_random_string());
+      msg.zone_set_id.push_back(generate_random_string());
       msg.last_node_id = generate_random_string();
       msg.last_node_sequence_id = generate_random_uint();
       msg.driving = generate_random_bool();
-      // msg.paused.push_back(generate_random_bool());
-      // msg.new_base_request.push_back(generate_random_bool());
-      // msg.distance_since_last_node.push_back(generate_random_float());
+      msg.paused.push_back(generate_random_bool());
+      msg.new_base_request.push_back(generate_random_bool());
+      msg.distance_since_last_node.push_back(generate_random_float());
       msg.operating_mode = generate_random_operating_mode();
       msg.node_states =
         generate_random_vector<NodeState>(generate_random_size());
       msg.edge_states =
         generate_random_vector<EdgeState>(generate_random_size());
-      // msg.agv_position.push_back(generate<AGVPosition>());
-      // msg.velocity.push_back(generate<Velocity>());
-      // msg.loads = generate_random_vector<Load>(generate_random_size());
+      msg.agv_position.push_back(generate<AGVPosition>());
+      msg.velocity.push_back(generate<Velocity>());
+      auto loads_vec = generate_random_vector<Load>(10);
+      for (auto load : loads_vec)
+      {
+        msg.loads.push_back(load);
+      }
       msg.action_states =
         generate_random_vector<ActionState>(generate_random_size());
       msg.battery_state = generate<BatteryState>();
       msg.errors = generate_random_vector<Error>(generate_random_size());
-      // msg.information = generate_random_vector<Info>(generate_random_size());
+      auto info_vec = generate_random_vector<Info>(10);
+      for (auto info : info_vec)
+      {
+        msg.information.push_back(info);
+      }
       msg.safety_state = generate<SafetyState>();
     }
     else if constexpr (std::is_same_v<T, Trajectory>)
@@ -351,6 +431,12 @@ public:
       msg.control_points =
         generate_random_vector<ControlPoint>(generate_random_size());
       msg.degree = 1.0;
+    }
+    else if constexpr (std::is_same_v<T, Velocity>)
+    {
+      msg.vx.push_back(generate_random_float());
+      msg.vy.push_back(generate_random_float());
+      msg.omega.push_back(generate_random_float());
     }
     else
     {
