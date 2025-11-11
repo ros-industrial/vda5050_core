@@ -26,7 +26,7 @@ namespace vda5050_core {
 namespace state_manager {
 
 //=============================================================================
-std::optional<std::string> StateManager::get_order_id() const noexcept
+std::optional<std::string> StateManager::get_order_id() const
 {
   std::shared_lock lock(this->mutex_);
   if (this->robot_state_.order_id.empty()) return std::nullopt;
@@ -35,7 +35,7 @@ std::optional<std::string> StateManager::get_order_id() const noexcept
 }
 
 //=============================================================================
-std::optional<uint32_t> StateManager::get_order_update_id() const noexcept
+std::optional<uint32_t> StateManager::get_order_update_id() const
 {
   std::shared_lock lock(this->mutex_);
   if (this->robot_state_.order_id.empty()) return std::nullopt;
@@ -44,7 +44,7 @@ std::optional<uint32_t> StateManager::get_order_update_id() const noexcept
 }
 
 //=============================================================================
-std::optional<std::string> StateManager::get_zone_set_id() const noexcept
+std::optional<std::string> StateManager::get_zone_set_id() const
 {
   std::shared_lock lock(this->mutex_);
   if (this->robot_state_.order_id.empty()) return std::nullopt;
@@ -61,7 +61,7 @@ void StateManager::set_agv_position(
 }
 
 //=============================================================================
-std::optional<AgvPosition> StateManager::get_agv_position() const noexcept
+std::optional<AgvPosition> StateManager::get_agv_position() const
 {
   std::shared_lock lock(this->mutex_);
   return this->robot_state_.agv_position;
@@ -75,7 +75,7 @@ void StateManager::set_velocity(const std::optional<Velocity>& velocity)
 }
 
 //=============================================================================
-std::optional<Velocity> StateManager::get_velocity() const noexcept
+std::optional<Velocity> StateManager::get_velocity() const
 {
   std::shared_lock lock(this->mutex_);
   return this->robot_state_.velocity;
@@ -105,8 +105,7 @@ void StateManager::reset_distance_since_last_node()
 }
 
 //=============================================================================
-std::optional<double> StateManager::get_distance_since_last_node()
-  const noexcept
+std::optional<double> StateManager::get_distance_since_last_node() const
 {
   std::shared_lock lock(this->mutex_);
   return this->robot_state_.distance_since_last_node;
@@ -183,7 +182,7 @@ bool StateManager::set_operating_mode(OperatingMode operating_mode)
 }
 
 //=============================================================================
-OperatingMode StateManager::get_operating_mode() const noexcept
+OperatingMode StateManager::get_operating_mode() const
 {
   std::shared_lock lock(
     this->mutex_);  // Ensure that mode is not being altered at the moment
@@ -198,7 +197,7 @@ void StateManager::set_battery_state(const BatteryState& battery_state)
 }
 
 //=============================================================================
-const BatteryState& StateManager::get_battery_state() const noexcept
+const BatteryState& StateManager::get_battery_state() const
 {
   std::shared_lock lock(
     this->mutex_);  // Ensure that battery is not being altered at the moment
@@ -215,7 +214,7 @@ bool StateManager::set_safety_state(const SafetyState& safety_state)
 }
 
 //=============================================================================
-const SafetyState& StateManager::get_safety_state() const noexcept
+const SafetyState& StateManager::get_safety_state() const
 {
   std::shared_lock lock(
     this->mutex_);  // Ensure that safety is not being altered at the moment
@@ -237,7 +236,7 @@ bool StateManager::add_error(const Error& error)
 }
 
 //=============================================================================
-std::vector<Error> StateManager::get_errors() const noexcept
+std::vector<Error> StateManager::get_errors() const
 {
   std::shared_lock lock(this->mutex_);
   return this->robot_state_.errors;
@@ -285,28 +284,28 @@ void StateManager::dump_to(State& state)
 }
 
 //=============================================================================
-std::string StateManager::get_last_node_id() const noexcept
+std::string StateManager::get_last_node_id() const
 {
   std::shared_lock lock(this->mutex_);
   return this->robot_state_.last_node_id;
 }
 
 //=============================================================================
-uint32_t StateManager::get_last_node_sequence_id() const noexcept
+uint32_t StateManager::get_last_node_sequence_id() const
 {
   std::shared_lock lock(this->mutex_);
   return this->robot_state_.last_node_sequence_id;
 }
 
 //=============================================================================
-bool StateManager::is_node_states_empty() const noexcept
+bool StateManager::is_node_states_empty() const
 {
   std::shared_lock lock(this->mutex_);
   return this->robot_state_.node_states.empty();
 }
 
 //=============================================================================
-bool StateManager::are_action_states_still_executing() const noexcept
+bool StateManager::are_action_states_still_executing() const
 {
   std::shared_lock lock(this->mutex_);
 

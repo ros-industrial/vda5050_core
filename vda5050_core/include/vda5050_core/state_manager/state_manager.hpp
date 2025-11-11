@@ -54,26 +54,26 @@ private:
   /// \brief Internal State of the AGV
   State robot_state_;
 
-public: 
+public:
   /// \brief get the current order_id
   /// \return order_id of the current order
-  std::optional<std::string> get_order_id() const noexcept;
+  std::optional<std::string> get_order_id() const;
 
   /// \brief get the current order_update_id
   /// \return order_update_id of the current order
-  std::optional<uint32_t> get_order_update_id() const noexcept;
+  std::optional<uint32_t> get_order_update_id() const;
 
   /// \brief get the current zone_set_id
   /// \return zone_set_id of the current order
-  std::optional<std::string> get_zone_set_id() const noexcept;
+  std::optional<std::string> get_zone_set_id() const;
 
   /// \brief Get the nodeId of the latest node the AGV has reached.
   /// \return The last reached node's ID.
-  std::string get_last_node_id() const noexcept;
+  std::string get_last_node_id() const;
 
   /// \brief Get the sequenceId of the latest node the AGV has reached.
   /// \return The last reached node's sequence ID.
-  uint32_t get_last_node_sequence_id() const noexcept;
+  uint32_t get_last_node_sequence_id() const;
 
   /// \brief Set the current AGV position
   /// \param agv_position the agv position
@@ -81,7 +81,7 @@ public:
 
   /// \brief Get the current AGV position (if set)
   /// \return std::optional<AGVPosition> the current AGV position of std::nullopt
-  std::optional<AgvPosition> get_agv_position() const noexcept;
+  std::optional<AgvPosition> get_agv_position() const;
 
   /// \brief Set the current velocity
   /// \param velocity the velocity
@@ -89,7 +89,7 @@ public:
 
   /// \brief Get the Velocity (if set)
   /// \return std::optional<Velocity> the velocity of std::nullopt
-  std::optional<Velocity> get_velocity() const noexcept;
+  std::optional<Velocity> get_velocity() const;
 
   /// \brief Set the driving flag of the AGV
   /// \param driving is the agv driving?
@@ -105,7 +105,7 @@ public:
 
   /// \brief Get the current distance since the last node.
   /// \return The current distance since the last node, or std::nullopt if not set.
-  std::optional<double> get_distance_since_last_node() const noexcept;
+  std::optional<double> get_distance_since_last_node() const;
 
   /// \brief Add a new load to the state
   /// \param load  the load to add
@@ -128,7 +128,7 @@ public:
 
   /// \brief Get the current operating mode from the state
   /// \return OperatingMode the current operating mode
-  OperatingMode get_operating_mode() const noexcept;
+  OperatingMode get_operating_mode() const;
 
   /// \brief Set the current battery state of the AGV
   /// \param battery_state the battery state
@@ -136,7 +136,7 @@ public:
 
   /// \brief Get the current battery state from the state
   /// \return const BatteryState& the current battery state
-  const BatteryState& get_battery_state() const noexcept;
+  const BatteryState& get_battery_state() const;
 
   /// \brief Set the current safety state of the AGV
   /// \param safety_state the safety state
@@ -145,7 +145,7 @@ public:
 
   /// \brief Get the current safety state from the state
   /// \return const SafetyState& the current safety state
-  const SafetyState& get_safety_state() const noexcept;
+  const SafetyState& get_safety_state() const;
 
   /// \brief Set the request new base flag to true
   void request_new_base();
@@ -157,7 +157,7 @@ public:
 
   /// \brief Get a copy of the current errors
   /// \return std::vector<Error>
-  std::vector<Error> get_errors() const noexcept;
+  std::vector<Error> get_errors() const;
 
   /// \brief Add a new information to the state
   /// \param info the information to add
@@ -169,11 +169,11 @@ public:
 
   /// \brief Check whether the maintained nodeStates array is empty.
   /// \return True if there are zero nodes, otherwise false.
-  bool is_node_states_empty() const noexcept;
+  bool is_node_states_empty() const;
 
   /// \brief Check if any actionStates are still executing (not FINISHED or FAILED).
   /// \return True if at least one action is still executing, otherwise false.
-  bool are_action_states_still_executing() const noexcept;
+  bool are_action_states_still_executing() const;
 
   /// \brief Clear all state related to the currently stored order.
   void cleanup_previous_order();
