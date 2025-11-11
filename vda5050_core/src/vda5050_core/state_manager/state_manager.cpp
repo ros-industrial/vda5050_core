@@ -397,7 +397,7 @@ void StateManager::set_new_order(const vda5050_core::order::Order& order)
   for (const auto& edge : v_edges)
   {
     EdgeState edge_state;
-    edge_state.edge_id = edge.get_edge_id();
+    edge_state.edge_id = edge.edge_id();
     edge_state.sequence_id = edge.sequence_id();
     edge_state.released = edge.released();
     this->robot_state_.edge_states.push_back(edge_state);
@@ -463,7 +463,7 @@ void StateManager::append_states_for_update(
 
   for (const auto& edge : edges)
   {
-    const auto eid = edge.get_edge_id();
+    const auto eid = edge.edge_id();
 
     bool exists = false;
     for (const auto& es : this->robot_state_.edge_states)
@@ -484,5 +484,11 @@ void StateManager::append_states_for_update(
     }
   }
 }
+const State& StateManager::get_state()
+{
+  std::shared_lock lock(this->mutex_);
+  return this->robot_state_;
+}
+
 }  // namespace state_manager
 }  // namespace vda5050_core

@@ -20,14 +20,16 @@
 #include <stdexcept>
 
 #include "vda5050_core/order_execution/order_manager.hpp"
+#include "vda5050_core/types/state.hpp"
+#include "vda5050_core/types/action_status.hpp"
 
 namespace vda5050_core {
 namespace order_manager {
 
-OrderManager::OrderManager(StateManager& sm)
-: state_manager_{sm}, current_graph_element_index_{0} {};
+OrderManager::OrderManager()
+: current_graph_element_index_{0} {};
 
-void OrderManager::update_current_order(order::Order received_order)
+bool OrderManager::update_current_order(order::Order received_order, const vda5050_core::types::State& state)
 {
   /// Check that this is actually an update order
   if (
@@ -38,8 +40,10 @@ void OrderManager::update_current_order(order::Order received_order)
     if (received_order.order_update_id() < current_order_->order_update_id())
     {
       reject_order();
-      throw std::runtime_error(
-        "OrderManager error: Order update is deprecated.");
+      
+      std::cerr << "OrderManager error: Order update is deprecated." << "\n";
+
+      return false;
     }
 
     /// check if order update is currently on the vehicle
@@ -47,84 +51,85 @@ void OrderManager::update_current_order(order::Order received_order)
       received_order.order_update_id() == current_order_->order_update_id())
     {
       /// discard message as vehicle already has this update
-
-      /// TODO Is this a sufficient method to notify of a discarded message?
-      std::cerr << "OrderManager warning: Received duplicate order update (ID: "
+      std::cerr << "OrderManager warning: Received duplicate order update (orderUpdateId="
                 << received_order.order_update_id() << ") for order "
                 << received_order.order_id() << ". Discarding message." << '\n';
+      
+      /// TODO: KIV to change this once the return struct has been decided
+      return false;
     }
-    /// is the vehicle still executing the current order/waiting for an update?
-    else if (is_vehicle_still_executing() && is_vehicle_waiting_for_update())
+
+    else if (is_vehicle_still_executing(state) && is_vehicle_waiting_for_update())
     {
       if (
         received_order.nodes().front().node_id() !=
         current_order_->decision_point().node_id())
       {
+        std::cerr << "OrderManager error: Order update rejected as nodeIds of the stitching nodes do not match." << "\n";
         reject_order();
-        throw std::runtime_error(
-          "OrderManager error: nodeIds of the stitching nodes do not match.");
+        return false;
       }
 
       else
       {
-        /// TODO call StateManager to clear horizon (OR call some API to update the state)
-        state_manager_.clear_horizon();
-
+        /// order update can be accepted as it is a continuation of the currently running order
+        /// TODO: Update internal state
         current_order_->stitch_and_set_order_update_id(received_order);
-
-        /// TODO call StateManager to append states to the ones that are currently running
-        state_manager_.append_states_for_update(received_order);
+        return true;
       }
     }
     else
     {
-      if (
-        (received_order.nodes().front().sequence_id() !=
-         state_manager_.get_last_node_sequence_id()) &&
-        (received_order.nodes().front().node_id() !=
-         state_manager_.get_last_node_id()))
+      if (received_order.nodes().front().sequence_id() != state.last_node_sequence_id && received_order.nodes().front().node_id() != state.last_node_id)
       {
+        std::cerr << "OrderManager error: Order update rejected as it is not a valid continuation of the previously completed order." << "\n";
         reject_order();
-        throw std::runtime_error(
-          "OrderManager error: Order update is not a valid continuation of the "
-          "previously compeleted order.");
+        return false;
       }
       else
       {
-        /// TODO call StateManager to populate newly added states
-        state_manager_.append_states_for_update(received_order);
-
+        /// order update can be accepted as it is a continuation of the previously executed order
+        /// TODO: Update internal state
         current_order_->stitch_and_set_order_update_id(received_order);
+        return true;
       }
     }
   }
   else
   {
     /// TODO Check if it is okay to be throwing an error and rejecting the order, as this will only occur due to how we are implementing this in a BTree
+    /// update order is rejected as a new order was given instead of an update order
     reject_order();
-    throw std::runtime_error(
-      "OrderManager error: Expected an update order but was given a new "
-      "order.");
+    return false;
   }
 }
 
-void OrderManager::make_new_order(order::Order received_order)
+bool OrderManager::make_new_order(order::Order received_order, const vda5050_core::types::State& state)
 {
   if (
     !current_order_.has_value() ||
     (current_order_.has_value() &&
      received_order.order_id() != current_order_->order_id()))
   {
-    bool vehicle_ready_for_new_order = is_vehicle_ready_for_new_order();
-    bool node_is_trivially_reachable =
-      is_node_trivially_reachable(received_order.nodes().front());
-
-    /// if no current order exists we can immediately accept it
+    /// if no current order exists, the vehicle can accept a new order
     if (
-      !current_order_ ||
-      (vehicle_ready_for_new_order && node_is_trivially_reachable))
+      !current_order_)
     {
       accept_new_order(received_order);
+
+      return true;
+    }
+    /// if the vehicle is not carrying out an action and if the vehicle has no horizon, it can accept a new order
+    bool vehicle_ready_for_new_order = !is_vehicle_still_executing(state) && !is_vehicle_waiting_for_update();
+
+    /// TODO: This assumes that StateManager sets lastNodeId once the vehicle is within deviation range
+    bool node_is_trivially_reachable = received_order.nodes().front().node_id() == state.last_node_id;
+
+    if (vehicle_ready_for_new_order && node_is_trivially_reachable)
+    {
+      accept_new_order(received_order);
+
+      return true;
     }
     else
     {
@@ -133,23 +138,18 @@ void OrderManager::make_new_order(order::Order received_order)
 
       if (!vehicle_ready_for_new_order && !node_is_trivially_reachable)
       {
-        throw std::runtime_error(
-          "OrderManager error: Vehicle is not ready to accept a new order and "
-          "received order's start node is not trivially reachable.");
+        std::cerr << "OrderManager error: Vehicle is not ready to accept a new order and received order's start node is not trivially reachable." << "\n";
       }
       else if (!vehicle_ready_for_new_order)
       {
-        throw std::runtime_error(
-          "OrderManager error: Vehicle is not ready to accept a new order. "
-          "Vehicle is either still executing or waiting for an order update to "
-          "its order's Horizon.");
+        std::cerr << "OrderManager error: Vehicle is not ready to accept a new order. Vehicle is either still executing or waiting for an order update." << "\n";
       }
       else if (!node_is_trivially_reachable)
       {
-        throw std::runtime_error(
-          "OrderManager error: Received order's start node is not trivially "
-          "reachable.");
+        std::cerr << "OrderManager error: Received order's start node is not trivially reachable." << "\n";
       }
+
+      return false;
     }
   }
   else
@@ -158,6 +158,8 @@ void OrderManager::make_new_order(order::Order received_order)
     throw std::runtime_error(
       "OrderManager error: Expected a new order but was given an order the "
       "same orderId.");
+
+    return false;
   }
 }
 
@@ -177,24 +179,23 @@ OrderManager::next_graph_element()
   return graph_element;
 }
 
-bool OrderManager::is_vehicle_ready_for_new_order()
+bool OrderManager::is_vehicle_still_executing(const vda5050_core::types::State& state)
 {
-  if (is_vehicle_still_executing() && is_vehicle_waiting_for_update())
+  bool node_states_empty = state.node_states.empty();
+  bool action_states_executing { false };
+
+  if (!state.action_states.empty())
   {
-    return false;
+    for (const auto& action_state : state.action_states)
+    {
+      if (action_state.action_status != vda5050_core::types::ActionStatus::FINISHED && action_state.action_status != vda5050_core::types::ActionStatus::FAILED)
+      {
+        action_states_executing = true;
+        break;
+      } 
+    }
   }
-  return true;
-}
-
-bool OrderManager::is_vehicle_still_executing()
-{
-  bool node_states_empty =
-    state_manager_.is_node_states_empty();  /// check if node states are empty
-  bool action_states_executing =
-    state_manager_.are_action_states_still_executing();
-  bool vehicle_is_executing = !node_states_empty && action_states_executing;
-
-  return vehicle_is_executing;
+  return !node_states_empty || action_states_executing;
 }
 
 bool OrderManager::is_vehicle_waiting_for_update()
@@ -207,31 +208,9 @@ bool OrderManager::is_vehicle_waiting_for_update()
   return false;
 }
 
-bool OrderManager::is_node_trivially_reachable(node::Node& start_node)
-{
-  /// check if the vehicle is on the received order's start node
-  std::string last_node_id =
-    state_manager_
-      .get_last_node_id();  /// query for lastNodeId, or the current node that the vehicle is on (Note to self: this node is guaranteed to be in the current order)
-  std::string start_node_id = start_node.node_id();
-  if (last_node_id == start_node_id)
-  {
-    return true;
-  }
-
-  /// No need to check if within deviation range as the StateManager should set lastNodeId appropriately if the vehicle is within deviation range
-  return false;
-}
-
 void OrderManager::accept_new_order(order::Order order)
 {
-  /// TODO tell StateManager to cleanup anything to do with previous order
-  state_manager_.cleanup_previous_order();
-
-  /// TODO pass stateManager the new order (set orderId, orderUpdateId, populate new states)
-  state_manager_.set_new_order(order);
-
-  /// update the current order on the AGV to the newly accepted order. orderId and orderUpdateId will be updated.
+  /// set the state of the current order to the newly accepted order. order_id_ and order_update_id will be updated.
   current_order_ = order;
 
   /// set the index to the start of the new order
@@ -240,7 +219,7 @@ void OrderManager::accept_new_order(order::Order order)
 
 void OrderManager::reject_order()
 {
-  /// TODO: Call StateManager.add_error()
+  /// TODO: this will eventually return some sort of struct that BTree will use 
   return;
 }
 

@@ -43,30 +43,30 @@ public:
     uint32_t sequence_id, bool released, std::string edge_id,
     std::string start_node_id, std::string end_node_id);
 
-  std::string get_edge_id() const
+  std::string edge_id() const
   {
-    return edge_id;
+    return edge_id_;
   }
 
-  std::string get_start_node_id() const
+  std::string start_node_id() const
   {
-    return start_node_id;
+    return start_node_id_;
   }
 
-  std::string get_end_node_id() const
+  std::string end_node_id() const
   {
-    return end_node_id;
+    return end_node_id_;
   }
 
 private:
   /// \brief String that uniquely identifies this edge.
-  std::string edge_id;
+  std::string edge_id_;
 
   /// \brief String indicating the first node of the order that this edge belongs to.
-  std::string start_node_id;
+  std::string start_node_id_;
 
   /// \brief String indicating the last node of the order that this edge belongs to.
-  std::string end_node_id;
+  std::string end_node_id_;
 };
 
 }  // namespace edge

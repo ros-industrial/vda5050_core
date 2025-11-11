@@ -141,8 +141,8 @@ bool OrderGraphValidator::is_valid_edges(
   for (vda5050_core::edge::Edge e : edges)
   {
     if (
-      e.get_start_node_id() != start_node_id &&
-      e.get_end_node_id() != end_node_id)
+      e.start_node_id() != start_node_id &&
+      e.end_node_id() != end_node_id)
     {
       return false;
     }

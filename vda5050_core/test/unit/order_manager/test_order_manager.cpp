@@ -24,7 +24,9 @@
 #include "vda5050_core/order_execution/node.hpp"
 #include "vda5050_core/order_execution/order.hpp"
 #include "vda5050_core/order_execution/order_manager.hpp"
-
+#include "vda5050_core/types/state.hpp"
+#include "vda5050_core/types/header.hpp"
+#include "vda5050_core/types/node_state.hpp"
 #include "vda5050_core/state_manager/state_manager.hpp"
 
 using ::testing::_;
@@ -43,86 +45,176 @@ protected:
   vda5050_core::edge::Edge e4{4, true, "edge4", "node1", "node5"};
   vda5050_core::node::Node n5{5, true, "node5"};
 
-  std::vector<vda5050_core::node::Node> nodes = {n1, n3, n5};
-  std::vector<vda5050_core::edge::Edge> edges = {e2, e4};
-
-  vda5050_core::order::Order fully_released_order{"order1", 0, nodes, edges};
+  std::vector<vda5050_core::node::Node> fully_released_nodes = {n1, n3, n5};
+  std::vector<vda5050_core::edge::Edge> fully_released_edges = {e2, e4};
+  vda5050_core::order::Order fully_released_order{"order1", 0, fully_released_nodes, fully_released_edges};
 
   /// create a valid new order that the vehicle can reach from the fully_released_order
-  // vda5050_core::node::Node n5 {5, true, "node5"};
   vda5050_core::edge::Edge e6{6, true, "edge6", "node5", "node7"};
   vda5050_core::node::Node n7{7, true, "node7"};
-
   std::vector<vda5050_core::node::Node> order2Nodes{n5, n7};
   std::vector<vda5050_core::edge::Edge> order2Edges{e6};
-
   vda5050_core::order::Order order2{"order2", 0, order2Nodes, order2Edges};
 
   /// Create a partially released order
   vda5050_core::edge::Edge unreleased_e4{4, false, "edge4", "node1", "node5"};
   vda5050_core::node::Node unreleased_n5{5, false, "node5"};
-
   std::vector<vda5050_core::node::Node> partially_released_nodes = {
     n1, n3, unreleased_n5};
   std::vector<vda5050_core::edge::Edge> partially_released_edges = {
     e2, unreleased_e4};
-
   vda5050_core::order::Order partially_released_order{
     "order1", 0, partially_released_nodes, partially_released_edges};
 
   /// Update the partially released order
   std::vector<vda5050_core::node::Node> order_update_nodes = {n3, n5};
   std::vector<vda5050_core::edge::Edge> order_update_edges = {e4};
-
   vda5050_core::order::Order order_update{
     "order1", 1, order_update_nodes, order_update_edges};
 
-  vda5050_core::state_manager::StateManager stateManager;
-  vda5050_core::order_manager::OrderManager orderManager{stateManager};
+  /// Instance of an OrderManager
+  vda5050_core::order_manager::OrderManager orderManager{};
+
+  /// Snapshot of the AGV's state if it has no existing order 
+  vda5050_core::types::State init_state{};
+
+  /// Snapshot of the AGV's state after accepting and completing fully_released_order
+  vda5050_core::types::State fully_released_state{};
+
+  /// Snapshot of the AGV's state after accepting and completing partially_released_order
+  vda5050_core::types::State partially_released_state{};
+
+  /// Snapshot of the AGV's state after accepting and completing order_update
+  vda5050_core::types::State order_update_state{};
+
+  /// Setup function that runs before each test
+  void SetUp() override
+  {
+    /// NOTE: fully_released_state is AFTER the vehicle has completed the order, so node and edge states should be empty!    
+    fully_released_state.order_id = "order1";
+    fully_released_state.last_node_id = "node5";
+    fully_released_state.last_node_sequence_id = 5;
+    fully_released_state.order_update_id = 0;
+
+    partially_released_state.order_id = "order1";
+    partially_released_state.last_node_id = "node3";
+    partially_released_state.last_node_sequence_id = 3;
+    partially_released_state.order_update_id = 0;
+
+    order_update_state.order_id = "order1";
+    order_update_state.last_node_id = "node5";
+    order_update_state.last_node_sequence_id = 5;
+    order_update_state.order_update_id = 1;
+
+  }
+
+  /// \brief Helper function to create a vector of node states
+  std::vector<vda5050_core::types::NodeState> create_node_states(std::vector<vda5050_core::node::Node>& nodes)
+  {
+    std::vector<vda5050_core::types::NodeState> node_states_vector;
+    for (vda5050_core::node::Node n : nodes)
+    {
+      vda5050_core::types::NodeState node_state{};
+      node_state.node_id = n.node_id();
+      node_state.sequence_id = n.sequence_id();
+      node_state.released = n.released();
+
+      node_states_vector.push_back(node_state);
+    }
+
+    return node_states_vector;
+  }
+
+  /// \brief Helper function to create a vector of edge states
+  std::vector<vda5050_core::types::EdgeState> create_edge_states(std::vector<vda5050_core::edge::Edge>& edges)
+  {
+    std::vector<vda5050_core::types::EdgeState> edge_states_vector;
+
+    for (vda5050_core::edge::Edge e : edges)
+    {
+      vda5050_core::types::EdgeState edge_state{};
+      edge_state.edge_id = e.edge_id();
+      edge_state.sequence_id = e.sequence_id();
+      edge_state.released = e.released();
+
+      edge_states_vector.push_back(edge_state);
+    }
+
+    return edge_states_vector;
+  }
+  
 };
 
 /// \brief Test if OrderManager successfully parses a new, valid order while no current order exists on the vehicle. Assumes that vehicle is ready to receive a new order.
 TEST_F(OrderManagerTest, NewOrderNoCurrentOrder)
 {
-  // {
-  //   InSequence seq;
-  //   EXPECT_CALL(stateManager, cleanup_previous_order()).Times(AtLeast(1));
-  //   EXPECT_CALL(stateManager, set_new_order(_));
-  // }
+  bool is_new_order_accepted { orderManager.make_new_order(fully_released_order, init_state)};
 
-  EXPECT_NO_THROW(orderManager.make_new_order(fully_released_order));
+  EXPECT_EQ(is_new_order_accepted, true);
 }
 
 /// \brief Test if OrderManager successfully parses a new, valid order while a current order exists on the vehicle. Assumes that vehicle is ready to receive a new order.
 TEST_F(OrderManagerTest, NewOrderWithCurrentOrder)
 {
-  orderManager.make_new_order(fully_released_order);
+  bool is_first_order_accepted { orderManager.make_new_order(fully_released_order, init_state) };
 
-  // @TODO: do this test as integration
-  // EXPECT_NO_THROW(orderManager.make_new_order(order2));
-  EXPECT_TRUE(true);
+  EXPECT_EQ(is_first_order_accepted, true);
+
+  bool is_second_order_accepted { orderManager.make_new_order(order2, fully_released_state) };
+
+  EXPECT_EQ(is_second_order_accepted, true);
 }
 
-/// \brief Test if OrderManager rejects order and throws an error if vehicle is still executing an order
+/// \brief Test if OrderManager rejects an order if vehicle is still executing an order
 TEST_F(OrderManagerTest, NewOrderNodeStatesNotEmpty)
 {
-  orderManager.make_new_order(fully_released_order);
-  EXPECT_THROW(orderManager.make_new_order(order2), std::runtime_error);
+  bool is_first_order_accepted { orderManager.make_new_order(fully_released_order, init_state) };
+
+  EXPECT_EQ(is_first_order_accepted, true);
+
+  /// create State with non-empty NodeStates
+  std::vector<vda5050_core::node::Node> unexecuted_nodes {n3, n5};
+  std::vector<vda5050_core::edge::Edge> unexecuted_edges {e4};
+  std::vector<vda5050_core::types::NodeState> fully_released_node_states {create_node_states(unexecuted_nodes)};
+  std::vector<vda5050_core::types::EdgeState> fully_released_edge_states {create_edge_states(unexecuted_edges)};
+  fully_released_state.node_states = fully_released_node_states;
+  fully_released_state.edge_states = fully_released_edge_states;
+
+  ::testing::internal::CaptureStderr();
+
+  bool is_second_order_accepted { orderManager.make_new_order(order2, fully_released_state) };
+
+  std::string err = ::testing::internal::GetCapturedStderr();
+
+  EXPECT_THAT(err, HasSubstr("OrderManager error: Vehicle is not ready to accept a new order. Vehicle is either still executing or waiting for an order update."));
+
+  EXPECT_EQ(is_second_order_accepted, false);
 }
 
 /// \brief Test if OrderManager rejects order and throws an error if vehicle still has a horizon and is waiting on an update
 TEST_F(OrderManagerTest, NewOrderVehicleWaitingForUpdate)
 {
-  orderManager.make_new_order(fully_released_order);
+  bool is_first_order_accepted { orderManager.make_new_order(partially_released_order, init_state) };
 
-  EXPECT_THROW(orderManager.make_new_order(order2), std::runtime_error);
+  EXPECT_EQ(is_first_order_accepted, true);
+
+  ::testing::internal::CaptureStderr();
+
+  bool is_second_order_accepted { orderManager.make_new_order(order2, partially_released_state)};
+
+  std::string err = ::testing::internal::GetCapturedStderr();
+
+  EXPECT_THAT(err, HasSubstr("OrderManager error: Vehicle is not ready to accept a new order and received order's start node is not trivially reachable."));
+
+  EXPECT_EQ(is_second_order_accepted, false);
 }
 
 /// \brief Test if OrderManager rejects order and throws an error if the new order's first node is not trivially reachable by the vehicle
 TEST_F(OrderManagerTest, NewOrderNodeNotTriviallyReachable)
 {
-  /// parse a valid order first
-  orderManager.make_new_order(fully_released_order);
+  bool is_first_order_accepted { orderManager.make_new_order(partially_released_order, init_state) };
+
+  EXPECT_EQ(is_first_order_accepted, true);
 
   /// create an order with a non-trivially reachable node
   vda5050_core::node::Node n7{7, true, "node7"};
@@ -131,76 +223,110 @@ TEST_F(OrderManagerTest, NewOrderNodeNotTriviallyReachable)
 
   std::vector<vda5050_core::node::Node> unreachableOrderNodes{n7, n9};
   std::vector<vda5050_core::edge::Edge> unreachableOrderEdges{e8};
-
   vda5050_core::order::Order unreachableOrder{
     "unreachableOrder", 0, unreachableOrderNodes, unreachableOrderEdges};
 
-  EXPECT_THROW(
-    orderManager.make_new_order(unreachableOrder), std::runtime_error);
+  ::testing::internal::CaptureStderr();
+
+  bool is_unreachable_order_accepted { orderManager.make_new_order(unreachableOrder, fully_released_state) };
+
+  std::string err = ::testing::internal::GetCapturedStderr();
+
+  EXPECT_THAT(err, HasSubstr("OrderManager error: Vehicle is not ready to accept a new order and received order's start node is not trivially reachable."));
+
+  EXPECT_EQ(is_unreachable_order_accepted, false);
 }
 
 /// \brief Test if OrderManager successfully parses a valid order update when the vehicle is ready for one
-TEST_F(OrderManagerTest, NewOrderReadyForOrderUpdate)
+TEST_F(OrderManagerTest, BasicOrderUpdate)
 {
-  orderManager.make_new_order(partially_released_order);
+  bool is_first_order_accepted = orderManager.make_new_order(partially_released_order, init_state);
 
-  EXPECT_NO_THROW(orderManager.update_current_order(order_update));
+  EXPECT_EQ(is_first_order_accepted, true);
+
+  bool is_order_update_accepted = orderManager.update_current_order(order_update, partially_released_state);
+
+  EXPECT_EQ(is_order_update_accepted, true);
 }
 
 /// \brief Test if OrderManager rejects order and throws an error if the order update is deprecated
 TEST_F(OrderManagerTest, OrderUpdateDeprecated)
 {
-  orderManager.make_new_order(partially_released_order);
+  bool is_first_order_accepted = orderManager.make_new_order(partially_released_order, init_state);
 
-  orderManager.update_current_order(order_update);
+  EXPECT_EQ(is_first_order_accepted, true);
+
+  bool is_order_update_accepted = orderManager.update_current_order(order_update, partially_released_state);
+
+  EXPECT_EQ(is_order_update_accepted, true);
 
   std::vector<vda5050_core::node::Node> deprecated_update_nodes{n3, n5, n7};
   std::vector<vda5050_core::edge::Edge> deprecated_update_edges{e4, e6};
-
   vda5050_core::order::Order deprecated_update_order{
     "order1", 0, deprecated_update_nodes, deprecated_update_edges};
 
-  EXPECT_THROW(
-    orderManager.update_current_order(deprecated_update_order),
-    std::runtime_error);
+  ::testing::internal::CaptureStderr();
+
+  bool is_deprecated_update_accepted = orderManager.update_current_order(deprecated_update_order, order_update_state);
+
+  std::string err = ::testing::internal::GetCapturedStderr();
+
+  EXPECT_THAT(err, HasSubstr("OrderManager error: Order update is deprecated."));
+
+  EXPECT_EQ(is_deprecated_update_accepted, false);
 }
 
 /// \brief Test if OrderManager discards the order update if it is already on the vehicle
 TEST_F(OrderManagerTest, OrderUpdateOnVehicle)
 {
-  orderManager.make_new_order(partially_released_order);
+  bool is_first_order_accepted = orderManager.make_new_order(partially_released_order, init_state);
 
-  orderManager.update_current_order(order_update);
+  EXPECT_EQ(is_first_order_accepted, true);
+
+  bool is_order_update_accepted = orderManager.update_current_order(order_update, partially_released_state);
+
+  EXPECT_EQ(is_order_update_accepted, true);
 
   ::testing::internal::CaptureStderr();
 
-  orderManager.update_current_order(order_update);
+  bool is_duplicate_order_update_accepted = orderManager.update_current_order(order_update, order_update_state);
 
   std::string err = ::testing::internal::GetCapturedStderr();
+
   EXPECT_THAT(
     err, HasSubstr("OrderManager warning: Received duplicate order update"));
+
+  EXPECT_EQ(is_duplicate_order_update_accepted, false);
 }
 
 /// \brief Test if OrderManager rejects order and throws an error if the update order is not a valid continuation of a previous order
 TEST_F(OrderManagerTest, OrderUpdateInvalidContinuationOfCurrentOrder)
 {
-  orderManager.make_new_order(partially_released_order);
+  bool is_first_order_accepted = orderManager.make_new_order(partially_released_order, init_state);
 
+  EXPECT_EQ(is_first_order_accepted, true);
+
+  /// Create an orderUpdate that is not a valid continuation from partially_released_order
   std::vector<vda5050_core::node::Node> invalid_continuation_nodes{n5, n7};
   std::vector<vda5050_core::edge::Edge> invalid_continuation_edges{e6};
-
   vda5050_core::order::Order invalid_continuation{
     "order1", 1, invalid_continuation_nodes, invalid_continuation_edges};
 
-  EXPECT_THROW(
-    orderManager.update_current_order(invalid_continuation),
-    std::runtime_error);
+  ::testing::internal::CaptureStderr();
+
+  bool is_invalid_order_update_accepted = orderManager.update_current_order(invalid_continuation, partially_released_state);
+
+  std::string err = ::testing::internal::GetCapturedStderr();
+
+  EXPECT_THAT(err, HasSubstr("OrderManager error: Order update rejected as it is not a valid continuation of the previously completed order."));
+
+  EXPECT_EQ(is_invalid_order_update_accepted, false);
 }
 
 /// \brief Test if OrderManager returns the graph elements from the base of an order correctly
 TEST_F(OrderManagerTest, GetNextGraphElement)
 {
-  orderManager.make_new_order(partially_released_order);
+  orderManager.make_new_order(partially_released_order, init_state);
 
   std::optional<vda5050_core::order_graph_element::OrderGraphElement> ge1 =
     orderManager.next_graph_element();
