@@ -21,8 +21,6 @@
 
 #include <string>
 
-#include "vda5050_types/action_parameter_value.hpp"
-
 namespace vda5050_types {
 
 /// \brief An object for the indicated action
