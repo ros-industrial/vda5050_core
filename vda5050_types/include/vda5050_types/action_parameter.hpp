@@ -33,7 +33,7 @@ struct ActionParameter
   std::string key;
 
   /// \brief The value of the parameter that belongs to the key
-  ActionParameterValue value;
+  std::string value;
 
   /// \brief Equality operator
   ///
