@@ -20,12 +20,15 @@
 
 #include <rosidl_runtime_cpp/traits.hpp>
 
+#include <vda5050_msgs/msg/action.hpp>
+#include <vda5050_msgs/msg/action_parameter.hpp>
 #include <vda5050_msgs/msg/action_state.hpp>
 #include <vda5050_msgs/msg/agv_position.hpp>
 #include <vda5050_msgs/msg/battery_state.hpp>
 #include <vda5050_msgs/msg/bounding_box_reference.hpp>
 #include <vda5050_msgs/msg/connection.hpp>
 #include <vda5050_msgs/msg/control_point.hpp>
+#include <vda5050_msgs/msg/edge.hpp>
 #include <vda5050_msgs/msg/edge_state.hpp>
 #include <vda5050_msgs/msg/error.hpp>
 #include <vda5050_msgs/msg/error_reference.hpp>
@@ -34,8 +37,10 @@
 #include <vda5050_msgs/msg/info_reference.hpp>
 #include <vda5050_msgs/msg/load.hpp>
 #include <vda5050_msgs/msg/load_dimensions.hpp>
+#include <vda5050_msgs/msg/node.hpp>
 #include <vda5050_msgs/msg/node_position.hpp>
 #include <vda5050_msgs/msg/node_state.hpp>
+#include <vda5050_msgs/msg/order.hpp>
 #include <vda5050_msgs/msg/safety_state.hpp>
 #include <vda5050_msgs/msg/state.hpp>
 #include <vda5050_msgs/msg/trajectory.hpp>
@@ -45,12 +50,15 @@
 
 #include "generator/generator_ros2.hpp"
 
+using vda5050_msgs::msg::Action;
+using vda5050_msgs::msg::ActionParameter;
 using vda5050_msgs::msg::ActionState;
 using vda5050_msgs::msg::AGVPosition;
 using vda5050_msgs::msg::BatteryState;
 using vda5050_msgs::msg::BoundingBoxReference;
 using vda5050_msgs::msg::Connection;
 using vda5050_msgs::msg::ControlPoint;
+using vda5050_msgs::msg::Edge;
 using vda5050_msgs::msg::EdgeState;
 using vda5050_msgs::msg::Error;
 using vda5050_msgs::msg::ErrorReference;
@@ -59,8 +67,10 @@ using vda5050_msgs::msg::Info;
 using vda5050_msgs::msg::InfoReference;
 using vda5050_msgs::msg::Load;
 using vda5050_msgs::msg::LoadDimensions;
+using vda5050_msgs::msg::Node;
 using vda5050_msgs::msg::NodePosition;
 using vda5050_msgs::msg::NodeState;
+using vda5050_msgs::msg::Order;
 using vda5050_msgs::msg::SafetyState;
 using vda5050_msgs::msg::State;
 using vda5050_msgs::msg::Trajectory;
@@ -68,10 +78,10 @@ using vda5050_msgs::msg::Velocity;
 
 // List of types to be tested for serialization round-trip
 using SerializableTypesROS2 = ::testing::Types<
-  ActionState, AGVPosition, BatteryState, BoundingBoxReference, Connection,
-  ControlPoint, EdgeState, Error, ErrorReference, Header, Info, InfoReference,
-  Load, LoadDimensions, NodePosition, NodeState, SafetyState, State, Trajectory,
-  Velocity>;
+  Action, ActionParameter, ActionState, AGVPosition, BatteryState,
+  BoundingBoxReference, Connection, ControlPoint, Edge, EdgeState, Error,
+  ErrorReference, Header, Info, InfoReference, Load, LoadDimensions, Node,
+  NodePosition, NodeState, Order, SafetyState, State, Trajectory, Velocity>;
 
 template <typename T>
 class SerializationTestROS2 : public ::testing::Test

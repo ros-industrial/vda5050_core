@@ -25,15 +25,19 @@
 #include <string>
 #include <vector>
 
+#include <vda5050_types/action.hpp>
+#include <vda5050_types/action_parameter.hpp>
 #include <vda5050_types/action_state.hpp>
 #include <vda5050_types/action_status.hpp>
 #include <vda5050_types/agv_position.hpp>
 #include <vda5050_types/battery_state.hpp>
+#include <vda5050_types/blocking_type.hpp>
 #include <vda5050_types/bounding_box_reference.hpp>
 #include <vda5050_types/connection.hpp>
 #include <vda5050_types/connection_state.hpp>
 #include <vda5050_types/control_point.hpp>
 #include <vda5050_types/e_stop.hpp>
+#include <vda5050_types/edge.hpp>
 #include <vda5050_types/edge_state.hpp>
 #include <vda5050_types/error.hpp>
 #include <vda5050_types/error_level.hpp>
@@ -44,22 +48,29 @@
 #include <vda5050_types/info_reference.hpp>
 #include <vda5050_types/load.hpp>
 #include <vda5050_types/load_dimensions.hpp>
+#include <vda5050_types/node.hpp>
 #include <vda5050_types/node_position.hpp>
 #include <vda5050_types/node_state.hpp>
 #include <vda5050_types/operating_mode.hpp>
+#include <vda5050_types/order.hpp>
+#include <vda5050_types/orientation_type.hpp>
 #include <vda5050_types/safety_state.hpp>
 #include <vda5050_types/state.hpp>
 #include <vda5050_types/trajectory.hpp>
 #include <vda5050_types/velocity.hpp>
 
+using vda5050_types::Action;
+using vda5050_types::ActionParameter;
 using vda5050_types::ActionState;
 using vda5050_types::ActionStatus;
 using vda5050_types::AGVPosition;
 using vda5050_types::BatteryState;
+using vda5050_types::BlockingType;
 using vda5050_types::BoundingBoxReference;
 using vda5050_types::Connection;
 using vda5050_types::ConnectionState;
 using vda5050_types::ControlPoint;
+using vda5050_types::Edge;
 using vda5050_types::EdgeState;
 using vda5050_types::Error;
 using vda5050_types::ErrorLevel;
@@ -71,9 +82,12 @@ using vda5050_types::InfoLevel;
 using vda5050_types::InfoReference;
 using vda5050_types::Load;
 using vda5050_types::LoadDimensions;
+using vda5050_types::Node;
 using vda5050_types::NodePosition;
 using vda5050_types::NodeState;
 using vda5050_types::OperatingMode;
+using vda5050_types::Order;
+using vda5050_types::OrientationType;
 using vda5050_types::SafetyState;
 using vda5050_types::State;
 using vda5050_types::Trajectory;
@@ -237,6 +251,24 @@ public:
     return levels[level_idx];
   }
 
+  /// \brief Generate a random orientation type value
+  OrientationType generate_random_orientation_type()
+  {
+    std::vector<OrientationType> types = {
+      OrientationType::TANGENTIAL, OrientationType::GLOBAL};
+    auto type_idx = generate_random_index(types.size());
+    return types[type_idx];
+  }
+
+  /// \brief Generte a random blocking type value
+  BlockingType generate_random_blocking_type()
+  {
+    std::vector<BlockingType> types = {
+      BlockingType::NONE, BlockingType::SOFT, BlockingType::HARD};
+    auto type_idx = generate_random_index(types.size());
+    return types[type_idx];
+  }
+
   /// \brief Generate a random vector of type float64
   std::vector<double> generate_random_float_vector(const uint8_t size)
   {
@@ -265,7 +297,21 @@ public:
   T generate()
   {
     T msg;
-    if constexpr (std::is_same_v<T, ActionState>)
+    if constexpr (std::is_same_v<T, Action>)
+    {
+      msg.action_type = generate_random_string();
+      msg.action_id = generate_random_string();
+      msg.blocking_type = generate_random_blocking_type();
+      msg.action_description = generate_random_string();
+      msg.action_parameters =
+        generate_random_vector<ActionParameter>(generate_random_size());
+    }
+    else if constexpr (std::is_same_v<T, ActionParameter>)
+    {
+      msg.key = generate_random_string();
+      msg.value = generate_random_string();
+    }
+    else if constexpr (std::is_same_v<T, ActionState>)
     {
       msg.action_id = generate_random_string();
       msg.action_type = generate_random_string();
@@ -310,6 +356,26 @@ public:
       msg.y = generate_random_float();
       msg.weight = 1.0;
     }
+    else if constexpr (std::is_same_v<T, Edge>)
+    {
+      msg.edge_id = generate_random_string();
+      msg.sequence_id = generate_random_uint();
+      msg.start_node_id = generate_random_string();
+      msg.end_node_id = generate_random_string();
+      msg.released = generate_random_bool();
+      msg.actions = generate_random_vector<Action>(generate_random_size());
+      msg.edge_description = generate_random_string();
+      msg.max_speed = generate_random_float();
+      msg.max_height = generate_random_float();
+      msg.min_height = generate_random_float();
+      msg.orientation = generate_random_float();
+      msg.orientation_type = generate_random_orientation_type();
+      msg.direction = generate_random_string();
+      msg.rotation_allowed = generate_random_bool();
+      msg.max_rotation_speed = generate_random_float();
+      msg.trajectory = generate<Trajectory>();
+      msg.length = generate_random_float();
+    }
     else if constexpr (std::is_same_v<T, EdgeState>)
     {
       msg.edge_id = generate_random_string();
@@ -321,7 +387,8 @@ public:
     else if constexpr (std::is_same_v<T, Error>)
     {
       msg.error_type = generate_random_string();
-      msg.error_references = generate_random_vector<ErrorReference>(10);
+      msg.error_references =
+        generate_random_vector<ErrorReference>(generate_random_size());
       msg.error_description = generate_random_string();
       msg.error_level = generate_random_error_level();
     }
@@ -365,6 +432,15 @@ public:
       msg.width = generate_random_float();
       msg.height = generate_random_float();
     }
+    else if constexpr (std::is_same_v<T, Node>)
+    {
+      msg.node_id = generate_random_string();
+      msg.sequence_id = generate_random_uint();
+      msg.released = generate_random_bool();
+      msg.actions = generate_random_vector<Action>(generate_random_size());
+      msg.node_position = generate<NodePosition>();
+      msg.node_description = generate_random_string();
+    }
     else if constexpr (std::is_same_v<T, NodePosition>)
     {
       msg.x = generate_random_float();
@@ -382,6 +458,15 @@ public:
       msg.node_description = generate_random_string();
       msg.node_position = generate<NodePosition>();
       msg.released = generate_random_bool();
+    }
+    else if constexpr (std::is_same_v<T, Order>)
+    {
+      msg.header = generate<Header>();
+      msg.order_id = generate_random_string();
+      msg.order_update_id = generate_random_uint();
+      msg.nodes = generate_random_vector<Node>(generate_random_size());
+      msg.edges = generate_random_vector<Edge>(generate_random_size());
+      msg.zone_set_id = generate_random_string();
     }
     else if constexpr (std::is_same_v<T, SafetyState>)
     {

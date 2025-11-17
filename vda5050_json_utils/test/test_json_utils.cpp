@@ -18,12 +18,15 @@
 
 #include <gtest/gtest.h>
 
+#include <vda5050_types/action.hpp>
+#include <vda5050_types/action_parameter.hpp>
 #include <vda5050_types/action_state.hpp>
 #include <vda5050_types/agv_position.hpp>
 #include <vda5050_types/battery_state.hpp>
 #include <vda5050_types/bounding_box_reference.hpp>
 #include <vda5050_types/connection.hpp>
 #include <vda5050_types/control_point.hpp>
+#include <vda5050_types/edge.hpp>
 #include <vda5050_types/edge_state.hpp>
 #include <vda5050_types/error.hpp>
 #include <vda5050_types/error_reference.hpp>
@@ -32,8 +35,10 @@
 #include <vda5050_types/info_reference.hpp>
 #include <vda5050_types/load.hpp>
 #include <vda5050_types/load_dimensions.hpp>
+#include <vda5050_types/node.hpp>
 #include <vda5050_types/node_position.hpp>
 #include <vda5050_types/node_state.hpp>
+#include <vda5050_types/order.hpp>
 #include <vda5050_types/safety_state.hpp>
 #include <vda5050_types/state.hpp>
 #include <vda5050_types/trajectory.hpp>
@@ -43,12 +48,15 @@
 
 #include "generator/generator.hpp"
 
+using vda5050_types::Action;
+using vda5050_types::ActionParameter;
 using vda5050_types::ActionState;
 using vda5050_types::AGVPosition;
 using vda5050_types::BatteryState;
 using vda5050_types::BoundingBoxReference;
 using vda5050_types::Connection;
 using vda5050_types::ControlPoint;
+using vda5050_types::Edge;
 using vda5050_types::EdgeState;
 using vda5050_types::Error;
 using vda5050_types::ErrorReference;
@@ -57,8 +65,10 @@ using vda5050_types::Info;
 using vda5050_types::InfoReference;
 using vda5050_types::Load;
 using vda5050_types::LoadDimensions;
+using vda5050_types::Node;
 using vda5050_types::NodePosition;
 using vda5050_types::NodeState;
+using vda5050_types::Order;
 using vda5050_types::SafetyState;
 using vda5050_types::State;
 using vda5050_types::Trajectory;
@@ -66,10 +76,10 @@ using vda5050_types::Velocity;
 
 // List of types to be tested for serialization round-trip
 using SerializableTypes = ::testing::Types<
-  ActionState, AGVPosition, BatteryState, BoundingBoxReference, Connection,
-  ControlPoint, EdgeState, Error, ErrorReference, Header, Info, InfoReference,
-  Load, LoadDimensions, NodePosition, NodeState, SafetyState, State, Trajectory,
-  Velocity>;
+  Action, ActionParameter, ActionState, AGVPosition, BatteryState,
+  BoundingBoxReference, Connection, ControlPoint, Edge, EdgeState, Error,
+  ErrorReference, Header, Info, InfoReference, Load, LoadDimensions, Node,
+  NodePosition, NodeState, Order, SafetyState, State, Trajectory, Velocity>;
 
 template <typename T>
 class SerializationTest : public ::testing::Test
