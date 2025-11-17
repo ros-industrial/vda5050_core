@@ -19,17 +19,21 @@
 #ifndef VDA5050_JSON_UTILS__SERIALIZATION_HPP_
 #define VDA5050_JSON_UTILS__SERIALIZATION_HPP_
 
+#include <iostream>
 #include <string>
 #include <vector>
 
 #include <nlohmann/json.hpp>
 
+#include <vda5050_types/action.hpp>
+#include <vda5050_types/action_parameter.hpp>
 #include <vda5050_types/action_state.hpp>
 #include <vda5050_types/agv_position.hpp>
 #include <vda5050_types/battery_state.hpp>
 #include <vda5050_types/bounding_box_reference.hpp>
 #include <vda5050_types/connection.hpp>
 #include <vda5050_types/control_point.hpp>
+#include <vda5050_types/edge.hpp>
 #include <vda5050_types/edge_state.hpp>
 #include <vda5050_types/error.hpp>
 #include <vda5050_types/error_reference.hpp>
@@ -37,8 +41,10 @@
 #include <vda5050_types/info.hpp>
 #include <vda5050_types/info_reference.hpp>
 #include <vda5050_types/load.hpp>
+#include <vda5050_types/node.hpp>
 #include <vda5050_types/node_position.hpp>
 #include <vda5050_types/node_state.hpp>
+#include <vda5050_types/order.hpp>
 #include <vda5050_types/safety_state.hpp>
 #include <vda5050_types/state.hpp>
 #include <vda5050_types/trajectory.hpp>
@@ -59,6 +65,7 @@
 #include <vda5050_msgs/msg/load.hpp>
 #include <vda5050_msgs/msg/node_position.hpp>
 #include <vda5050_msgs/msg/node_state.hpp>
+#include <vda5050_msgs/msg/order.hpp>
 #include <vda5050_msgs/msg/safety_state.hpp>
 #include <vda5050_msgs/msg/state.hpp>
 #include <vda5050_msgs/msg/trajectory.hpp>
@@ -1193,6 +1200,386 @@ void from_json(const nlohmann::json& j, StateT& msg)
 
 }  // namespace state_detail
 
+namespace action_parameter_detail {
+
+//=============================================================================
+template <typename ActionParameterT>
+void to_json(nlohmann::json& j, const ActionParameterT& msg)
+{
+  j["key"] = msg.key;
+  j["value"] = msg.value;
+}
+
+//=============================================================================
+template <typename ActionParameterT>
+void from_json(const nlohmann::json& j, ActionParameterT& msg)
+{
+  msg.key = j.at("key").get<std::string>();
+  msg.value = j.at("value").get<std::string>();
+}
+
+}  // namespace action_parameter_detail
+
+namespace action_detail {
+
+//=============================================================================
+template <typename ActionT>
+void to_json(nlohmann::json& j, const ActionT& msg)
+{
+  using vda5050_json_utils::blocking_type_traits;
+  using vda5050_json_utils::optional_field_traits;
+
+  using action_description_trait =
+    optional_field_traits<decltype(msg.action_description)>;
+  using action_parameters_trait =
+    optional_field_traits<decltype(msg.action_parameters)>;
+
+  j["actionType"] = msg.action_type;
+  j["actionId"] = msg.action_id;
+
+  j["blockingType"] =
+    blocking_type_traits<decltype(msg.blocking_type)>::to_string(
+      msg.blocking_type);
+
+  if (action_description_trait::has_value(msg.action_description))
+  {
+    j["actionDescription"] =
+      action_description_trait::get(msg.action_description);
+  }
+
+  if (action_parameters_trait::has_value(msg.action_parameters))
+  {
+    j["actionParameters"] = action_parameters_trait::get(msg.action_parameters);
+  }
+}
+
+//=============================================================================
+template <typename ActionT>
+void from_json(const nlohmann::json& j, ActionT& msg)
+{
+  using vda5050_json_utils::blocking_type_traits;
+  using vda5050_json_utils::optional_field_traits;
+
+  using action_description_trait =
+    optional_field_traits<decltype(msg.action_description)>;
+  using action_parameters_trait =
+    optional_field_traits<decltype(msg.action_parameters)>;
+
+  msg.action_type = j.at("actionType").get<std::string>();
+  msg.action_id = j.at("actionId").get<std::string>();
+  msg.blocking_type =
+    blocking_type_traits<decltype(msg.blocking_type)>::from_string(
+      j.at("blockingType").get<std::string>());
+
+  if (j.contains("actionDescription"))
+  {
+    action_description_trait::set(
+      msg.action_description, j.at("actionDescription").get<std::string>());
+  }
+
+  if (j.contains("actionParameters"))
+  {
+    action_parameters_trait::set(
+      msg.action_parameters, j.at("actionParameters"));
+  }
+}
+
+}  // namespace action_detail
+
+namespace node_detail {
+
+//=============================================================================
+template <typename NodeT>
+void to_json(nlohmann::json& j, const NodeT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using node_position_trait =
+    optional_field_traits<decltype(msg.node_position)>;
+  using node_description_trait =
+    optional_field_traits<decltype(msg.node_description)>;
+
+  j["nodeId"] = msg.node_id;
+  j["sequenceId"] = msg.sequence_id;
+  j["released"] = msg.released;
+  j["actions"] = msg.actions;
+
+  if (node_position_trait::has_value(msg.node_position))
+  {
+    j["nodePosition"] = node_position_trait::get(msg.node_position);
+  }
+
+  if (node_description_trait::has_value(msg.node_description))
+  {
+    j["nodeDescription"] = node_description_trait::get(msg.node_description);
+  }
+}
+
+//=============================================================================
+template <typename NodeT>
+void from_json(const nlohmann::json& j, NodeT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using node_position_trait =
+    optional_field_traits<decltype(msg.node_position)>;
+  using node_description_trait =
+    optional_field_traits<decltype(msg.node_description)>;
+
+  msg.node_id = j.at("nodeId").get<std::string>();
+  msg.sequence_id = j.at("sequenceId").get<uint32_t>();
+  msg.released = j.at("released").get<bool>();
+  msg.actions = j.at("actions");
+
+  if (j.contains("nodePosition"))
+  {
+    node_position_trait::set(msg.node_position, j.at("nodePosition"));
+  }
+
+  if (j.contains("nodeDescription"))
+  {
+    node_description_trait::set(
+      msg.node_description, j.at("nodeDescription").get<std::string>());
+  }
+}
+
+}  // namespace node_detail
+
+namespace edge_detail {
+
+//=============================================================================
+template <typename EdgeT>
+void to_json(nlohmann::json& j, const EdgeT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+  using vda5050_json_utils::orientation_type_traits;
+
+  using edge_description_trait =
+    optional_field_traits<decltype(msg.edge_description)>;
+  using max_speed_trait = optional_field_traits<decltype(msg.max_speed)>;
+  using max_height_trait = optional_field_traits<decltype(msg.max_height)>;
+  using min_height_trait = optional_field_traits<decltype(msg.min_height)>;
+  using orientation_trait = optional_field_traits<decltype(msg.orientation)>;
+  using orientation_type_trait =
+    optional_field_traits<decltype(msg.orientation_type)>;
+  using direction_trait = optional_field_traits<decltype(msg.direction)>;
+  using rotation_allowed_trait =
+    optional_field_traits<decltype(msg.rotation_allowed)>;
+  using max_rotation_speed_trait =
+    optional_field_traits<decltype(msg.max_rotation_speed)>;
+  using trajectory_trait = optional_field_traits<decltype(msg.trajectory)>;
+  using length_trait = optional_field_traits<decltype(msg.length)>;
+
+  j["edgeId"] = msg.edge_id;
+  j["sequenceId"] = msg.sequence_id;
+  j["startNodeId"] = msg.start_node_id;
+  j["endNodeId"] = msg.end_node_id;
+  j["released"] = msg.released;
+  j["actions"] = msg.actions;
+
+  if (edge_description_trait::has_value(msg.edge_description))
+  {
+    j["edgeDescription"] = edge_description_trait::get(msg.edge_description);
+  }
+
+  if (max_speed_trait::has_value(msg.max_speed))
+  {
+    j["maxSpeed"] = max_speed_trait::get(msg.max_speed);
+  }
+
+  if (max_height_trait::has_value(msg.max_height))
+  {
+    j["maxHeight"] = max_height_trait::get(msg.max_height);
+  }
+
+  if (min_height_trait::has_value(msg.min_height))
+  {
+    j["minHeight"] = min_height_trait::get(msg.min_height);
+  }
+
+  if (orientation_trait::has_value(msg.orientation))
+  {
+    j["orientation"] = orientation_trait::get(msg.orientation);
+  }
+
+  if (orientation_type_trait::has_value(msg.orientation_type))
+  {
+    using inner_t = typename orientation_type_trait::value_type;
+
+    inner_t value = orientation_type_trait::get(msg.orientation_type);
+    j["orientationType"] =
+      orientation_type_traits<decltype(value)>::to_string(value);
+  }
+
+  if (direction_trait::has_value(msg.direction))
+  {
+    j["direction"] = direction_trait::get(msg.direction);
+  }
+
+  if (rotation_allowed_trait::has_value(msg.rotation_allowed))
+  {
+    j["rotationAllowed"] = rotation_allowed_trait::get(msg.rotation_allowed);
+  }
+
+  if (max_rotation_speed_trait::has_value(msg.max_rotation_speed))
+  {
+    j["maxRotationSpeed"] =
+      max_rotation_speed_trait::get(msg.max_rotation_speed);
+  }
+
+  if (trajectory_trait::has_value(msg.trajectory))
+  {
+    j["trajectory"] = trajectory_trait::get(msg.trajectory);
+  }
+
+  if (length_trait::has_value(msg.length))
+  {
+    j["length"] = length_trait::get(msg.length);
+  }
+}
+
+//=============================================================================
+template <typename EdgeT>
+void from_json(const nlohmann::json& j, EdgeT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+  using vda5050_json_utils::orientation_type_traits;
+
+  using edge_description_trait =
+    optional_field_traits<decltype(msg.edge_description)>;
+  using max_speed_trait = optional_field_traits<decltype(msg.max_speed)>;
+  using max_height_trait = optional_field_traits<decltype(msg.max_height)>;
+  using min_height_trait = optional_field_traits<decltype(msg.min_height)>;
+  using orientation_trait = optional_field_traits<decltype(msg.orientation)>;
+  using orientation_type_trait =
+    optional_field_traits<decltype(msg.orientation_type)>;
+  using direction_trait = optional_field_traits<decltype(msg.direction)>;
+  using rotation_allowed_trait =
+    optional_field_traits<decltype(msg.rotation_allowed)>;
+  using max_rotation_speed_trait =
+    optional_field_traits<decltype(msg.max_rotation_speed)>;
+  using trajectory_trait = optional_field_traits<decltype(msg.trajectory)>;
+  using length_trait = optional_field_traits<decltype(msg.length)>;
+
+  msg.edge_id = j.at("edgeId").get<std::string>();
+  msg.sequence_id = j.at("sequenceId").get<int32_t>();
+  msg.start_node_id = j.at("startNodeId").get<std::string>();
+  msg.end_node_id = j.at("endNodeId").get<std::string>();
+  msg.released = j.at("released").get<bool>();
+  msg.actions = j.at("actions");
+
+  if (j.contains("edgeDescription"))
+  {
+    edge_description_trait::set(
+      msg.edge_description, j.at("edgeDescription").get<std::string>());
+  }
+
+  if (j.contains("maxSpeed"))
+  {
+    max_speed_trait::set(msg.max_speed, j.at("maxSpeed").get<double>());
+  }
+
+  if (j.contains("maxHeight"))
+  {
+    max_height_trait::set(msg.max_height, j.at("maxHeight").get<double>());
+  }
+
+  if (j.contains("minHeight"))
+  {
+    min_height_trait::set(msg.min_height, j.at("minHeight").get<double>());
+  }
+
+  if (j.contains("orientation"))
+  {
+    orientation_trait::set(msg.orientation, j.at("orientation").get<double>());
+  }
+
+  if (j.contains("orientationType"))
+  {
+    using inner_t = typename orientation_type_trait::value_type;
+
+    inner_t value = orientation_type_traits<inner_t>::from_string(
+      j.at("orientationType").get<std::string>());
+    orientation_type_trait::set(msg.orientation_type, value);
+  }
+
+  if (j.contains("direction"))
+  {
+    direction_trait::set(msg.direction, j.at("direction").get<std::string>());
+  }
+
+  if (j.contains("rotationAllowed"))
+  {
+    rotation_allowed_trait::set(
+      msg.rotation_allowed, j.at("rotationAllowed").get<bool>());
+  }
+
+  if (j.contains("maxRotationSpeed"))
+  {
+    max_rotation_speed_trait::set(
+      msg.max_rotation_speed, j.at("maxRotationSpeed").get<double>());
+  }
+
+  if (j.contains("trajectory"))
+  {
+    trajectory_trait::set(msg.trajectory, j.at("trajectory"));
+  }
+
+  if (j.contains("length"))
+  {
+    length_trait::set(msg.length, j.at("length").get<double>());
+  }
+}
+
+}  // namespace edge_detail
+
+namespace order_detail {
+
+//=============================================================================
+template <typename OrderT>
+void to_json(nlohmann::json& j, const OrderT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using zone_set_id_trait = optional_field_traits<decltype(msg.zone_set_id)>;
+
+  to_json(j, msg.header);
+
+  j["orderId"] = msg.order_id;
+  j["orderUpdateId"] = msg.order_update_id;
+  j["nodes"] = msg.nodes;
+  j["edges"] = msg.edges;
+
+  if (zone_set_id_trait::has_value(msg.zone_set_id))
+  {
+    j["zoneSetId"] = zone_set_id_trait::get(msg.zone_set_id);
+  }
+}
+
+//=============================================================================
+template <typename OrderT>
+void from_json(const nlohmann::json& j, OrderT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using zone_set_id_trait = optional_field_traits<decltype(msg.zone_set_id)>;
+
+  from_json(j, msg.header);
+
+  msg.order_id = j.at("orderId").get<std::string>();
+  msg.order_update_id = j.at("orderUpdateId").get<uint32_t>();
+  msg.nodes = j.at("nodes");
+  msg.edges = j.at("edges");
+
+  if (j.contains("zoneSetId"))
+  {
+    zone_set_id_trait::set(
+      msg.zone_set_id, j.at("zoneSetId").get<std::string>());
+  }
+}
+
+}  // namespace order_detail
+
 }  // namespace vda5050_types
 
 //=============================================================================
@@ -1396,6 +1783,56 @@ inline void to_json(nlohmann::json& j, const State& msg)
 inline void from_json(const nlohmann::json& j, State& msg)
 {
   vda5050_types::state_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const ActionParameter& msg)
+{
+  vda5050_types::action_parameter_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, ActionParameter& msg)
+{
+  vda5050_types::action_parameter_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Action& msg)
+{
+  vda5050_types::action_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Action& msg)
+{
+  vda5050_types::action_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Node& msg)
+{
+  vda5050_types::node_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Node& msg)
+{
+  vda5050_types::node_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Edge& msg)
+{
+  vda5050_types::edge_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Edge& msg)
+{
+  vda5050_types::edge_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Order& msg)
+{
+  vda5050_types::order_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Order& msg)
+{
+  vda5050_types::order_detail::from_json(j, msg);
 }
 
 }  // namespace vda5050_types
@@ -1604,6 +2041,56 @@ inline void to_json(nlohmann::json& j, const State& msg)
 inline void from_json(const nlohmann::json& j, State& msg)
 {
   vda5050_types::state_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const ActionParameter& msg)
+{
+  vda5050_types::action_parameter_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, ActionParameter& msg)
+{
+  vda5050_types::action_parameter_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Action& msg)
+{
+  vda5050_types::action_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Action& msg)
+{
+  vda5050_types::action_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Node& msg)
+{
+  vda5050_types::node_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Node& msg)
+{
+  vda5050_types::node_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Edge& msg)
+{
+  vda5050_types::edge_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Edge& msg)
+{
+  vda5050_types::edge_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Order& msg)
+{
+  vda5050_types::order_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Order& msg)
+{
+  vda5050_types::order_detail::from_json(j, msg);
 }
 
 }  // namespace msg

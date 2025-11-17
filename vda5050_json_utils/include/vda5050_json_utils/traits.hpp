@@ -30,6 +30,7 @@
 #include <utility>
 
 #include <vda5050_types/action_status.hpp>
+#include <vda5050_types/blocking_type.hpp>
 #include <vda5050_types/connection.hpp>
 #include <vda5050_types/connection_state.hpp>
 #include <vda5050_types/e_stop.hpp>
@@ -37,11 +38,14 @@
 #include <vda5050_types/header.hpp>
 #include <vda5050_types/info_level.hpp>
 #include <vda5050_types/operating_mode.hpp>
+#include <vda5050_types/orientation_type.hpp>
 
 #ifdef ENABLE_ROS2
 #include <rosidl_runtime_cpp/bounded_vector.hpp>
+#include <vda5050_msgs/msg/action.hpp>
 #include <vda5050_msgs/msg/action_state.hpp>
 #include <vda5050_msgs/msg/connection.hpp>
+#include <vda5050_msgs/msg/edge.hpp>
 #include <vda5050_msgs/msg/error.hpp>
 #include <vda5050_msgs/msg/info.hpp>
 #include <vda5050_msgs/msg/safety_state.hpp>
@@ -58,6 +62,8 @@ struct optional_field_traits;
 template <typename T>
 struct optional_field_traits<std::optional<T>>
 {
+  using value_type = T;
+
   static bool has_value(const std::optional<T>& opt)
   {
     return opt.has_value();
@@ -68,9 +74,10 @@ struct optional_field_traits<std::optional<T>>
     return opt.value();
   }
 
-  static void set(std::optional<T>& opt, T&& val)
+  template <typename U>
+  static void set(std::optional<T>& opt, U&& val)
   {
-    opt = std::move(val);
+    opt = std::forward<U>(val);
   }
 };
 
@@ -79,6 +86,8 @@ struct optional_field_traits<std::optional<T>>
 template <typename T, typename Alloc>
 struct optional_field_traits<rosidl_runtime_cpp::BoundedVector<T, 1, Alloc>>
 {
+  using value_type = T;
+
   static bool has_value(
     const rosidl_runtime_cpp::BoundedVector<T, 1, Alloc>& opt)
   {
@@ -90,16 +99,19 @@ struct optional_field_traits<rosidl_runtime_cpp::BoundedVector<T, 1, Alloc>>
     return opt.front();
   }
 
-  static void set(rosidl_runtime_cpp::BoundedVector<T, 1, Alloc>& opt, T&& val)
+  template <typename U>
+  static void set(rosidl_runtime_cpp::BoundedVector<T, 1, Alloc>& opt, U&& val)
   {
     opt.clear();
-    opt.push_back(std::move(val));
+    opt.push_back(std::forward<U>(val));
   }
 };
 
 template <typename T, std::size_t Max, typename Alloc>
 struct optional_field_traits<rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>>
 {
+  using value_type = T;
+
   static bool has_value(
     const rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>& opt)
   {
@@ -112,11 +124,11 @@ struct optional_field_traits<rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>>
     return opt;
   }
 
+  template <typename U>
   static void set(
-    rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>& opt,
-    rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>&& val)
+    rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>& opt, U&& val)
   {
-    opt = std::move(val);
+    opt = std::forward<U>(val);
   }
 };
 #endif  // ENABLE_ROS2
@@ -667,6 +679,141 @@ struct info_level_traits<std::string>
       return level;
     }
     throw std::runtime_error("Invalid infoLevel string");
+  }
+};
+#endif  // ENABLE_ROS2
+
+//=============================================================================
+template <typename T>
+struct blocking_type_traits;
+
+//=============================================================================
+template <>
+struct blocking_type_traits<vda5050_types::BlockingType>
+{
+  static std::string to_string(const vda5050_types::BlockingType& type)
+  {
+    using vda5050_types::BlockingType;
+
+    switch (type)
+    {
+      case BlockingType::NONE:
+        return "NONE";
+      case BlockingType::SOFT:
+        return "SOFT";
+      case BlockingType::HARD:
+        return "HARD";
+      default:
+        throw std::runtime_error("Invalid BlockingType enum value");
+    }
+  }
+
+  static vda5050_types::BlockingType from_string(const std::string& type)
+  {
+    using vda5050_types::BlockingType;
+
+    if (type == "NONE") return BlockingType::NONE;
+    if (type == "SOFT") return BlockingType::SOFT;
+    if (type == "HARD") return BlockingType::HARD;
+    throw std::runtime_error("Invalid blockingType string");
+  }
+};
+
+//=============================================================================
+#ifdef ENABLE_ROS2
+template <>
+struct blocking_type_traits<std::string>
+{
+  static std::string to_string(const std::string& type)
+  {
+    using vda5050_msgs::msg::Action;
+
+    if (
+      type == Action::BLOCKING_TYPE_NONE ||
+      type == Action::BLOCKING_TYPE_SOFT || type == Action::BLOCKING_TYPE_HARD)
+    {
+      return type;
+    }
+    throw std::runtime_error("Invalid blocking_type value");
+  }
+
+  static std::string from_string(const std::string& type)
+  {
+    using vda5050_msgs::msg::Action;
+
+    if (
+      type == Action::BLOCKING_TYPE_NONE ||
+      type == Action::BLOCKING_TYPE_SOFT || type == Action::BLOCKING_TYPE_HARD)
+    {
+      return type;
+    }
+    throw std::runtime_error("Invalid blockingType string");
+  }
+};
+#endif  // ENABLE_ROS2
+
+//=============================================================================
+template <typename T>
+struct orientation_type_traits;
+
+//=============================================================================
+template <>
+struct orientation_type_traits<vda5050_types::OrientationType>
+{
+  static std::string to_string(const vda5050_types::OrientationType& type)
+  {
+    using vda5050_types::OrientationType;
+
+    switch (type)
+    {
+      case OrientationType::GLOBAL:
+        return "GLOBAL";
+      case OrientationType::TANGENTIAL:
+        return "TANGENTIAL";
+      default:
+        throw std::runtime_error("Invalid OrientationType enum value");
+    }
+  }
+
+  static vda5050_types::OrientationType from_string(const std::string& type)
+  {
+    using vda5050_types::OrientationType;
+
+    if (type == "GLOBAL") return OrientationType::GLOBAL;
+    if (type == "TANGENTIAL") return OrientationType::TANGENTIAL;
+    throw std::runtime_error("Invalid orientationType string");
+  }
+};
+
+//=============================================================================
+#ifdef ENABLE_ROS2
+template <>
+struct orientation_type_traits<std::string>
+{
+  static std::string to_string(const std::string& type)
+  {
+    using vda5050_msgs::msg::Edge;
+
+    if (
+      type == Edge::ORIENTATION_TYPE_TANGENTIAL ||
+      type == Edge::ORIENTATION_TYPE_GLOBAL)
+    {
+      return type;
+    }
+    throw std::runtime_error("Invalid orientation_type value");
+  }
+
+  static std::string from_string(const std::string& type)
+  {
+    using vda5050_msgs::msg::Edge;
+
+    if (
+      type == Edge::ORIENTATION_TYPE_TANGENTIAL ||
+      type == Edge::ORIENTATION_TYPE_GLOBAL)
+    {
+      return type;
+    }
+    throw std::runtime_error("Invalid orientationType string");
   }
 };
 #endif  // ENABLE_ROS2
