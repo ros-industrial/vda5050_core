@@ -25,7 +25,7 @@
 #include <memory>
 
 #include "vda5050_core/order_execution/order.hpp"
-#include "vda5050_core/types/state.hpp"
+#include "vda5050_types/state.hpp"
 
 namespace vda5050_core {
 
@@ -47,7 +47,7 @@ public:
   /// \param state A snapshot of the vehicle's current state 
   ///
   /// \return True if order update has been accepted by the order manager, false otherwise.
-  bool update_current_order(order::Order order, const vda5050_core::types::State& state);
+  bool update_current_order(order::Order order, const vda5050_types::State& state);
 
   /// \brief Puts a new order on the vehicle
   ///
@@ -55,7 +55,7 @@ public:
   /// \param state A snapshot of the vehicle's current state
   ///
   /// \return True if the new order has been accepted by the order manager, false otherwise
-  bool make_new_order(order::Order order, const vda5050_core::types::State& state);
+  bool make_new_order(order::Order order, const vda5050_types::State& state);
 
   /// \brief Returns the next graph element of the current order that is to be executed.
   ///
@@ -79,7 +79,7 @@ private:
   /// \param state A snapshot of the vehicle's current state
   ///
   /// \return True if vehicle is not executing an order
-  bool is_vehicle_still_executing(const vda5050_core::types::State& state);
+  bool is_vehicle_still_executing(const vda5050_types::State& state);
 
   /// \brief Checks that vehicle is not waiting for an update to its current order (i.e: the vehicle's current order has no horizon)
   ///

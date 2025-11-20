@@ -25,9 +25,9 @@
 #include "vda5050_core/order_execution/node.hpp"
 #include "vda5050_core/order_execution/order.hpp"
 #include "vda5050_core/order_execution/order_manager.hpp"
-#include "vda5050_core/types/state.hpp"
-#include "vda5050_core/types/header.hpp"
-#include "vda5050_core/types/node_state.hpp"
+#include "vda5050_types/state.hpp"
+#include "vda5050_types/header.hpp"
+#include "vda5050_types/node_state.hpp"
 
 using ::testing::_;
 using ::testing::AtLeast;
@@ -76,16 +76,16 @@ protected:
   vda5050_core::order_manager::OrderManager orderManager{};
 
   /// Snapshot of the AGV's state if it has no existing order 
-  vda5050_core::types::State init_state{};
+  vda5050_types::State init_state{};
 
   /// Snapshot of the AGV's state after accepting and completing fully_released_order
-  vda5050_core::types::State fully_released_state{};
+  vda5050_types::State fully_released_state{};
 
   /// Snapshot of the AGV's state after accepting and completing partially_released_order
-  vda5050_core::types::State partially_released_state{};
+  vda5050_types::State partially_released_state{};
 
   /// Snapshot of the AGV's state after accepting and completing order_update
-  vda5050_core::types::State order_update_state{};
+  vda5050_types::State order_update_state{};
 
   /// Setup function that runs before each test
   void SetUp() override
@@ -109,12 +109,12 @@ protected:
   }
 
   /// \brief Helper function to create a vector of node states
-  std::vector<vda5050_core::types::NodeState> create_node_states(std::vector<vda5050_core::node::Node>& nodes)
+  std::vector<vda5050_types::NodeState> create_node_states(std::vector<vda5050_core::node::Node>& nodes)
   {
-    std::vector<vda5050_core::types::NodeState> node_states_vector;
+    std::vector<vda5050_types::NodeState> node_states_vector;
     for (vda5050_core::node::Node n : nodes)
     {
-      vda5050_core::types::NodeState node_state{};
+      vda5050_types::NodeState node_state{};
       node_state.node_id = n.node_id();
       node_state.sequence_id = n.sequence_id();
       node_state.released = n.released();
@@ -126,13 +126,13 @@ protected:
   }
 
   /// \brief Helper function to create a vector of edge states
-  std::vector<vda5050_core::types::EdgeState> create_edge_states(std::vector<vda5050_core::edge::Edge>& edges)
+  std::vector<vda5050_types::EdgeState> create_edge_states(std::vector<vda5050_core::edge::Edge>& edges)
   {
-    std::vector<vda5050_core::types::EdgeState> edge_states_vector;
+    std::vector<vda5050_types::EdgeState> edge_states_vector;
 
     for (vda5050_core::edge::Edge e : edges)
     {
-      vda5050_core::types::EdgeState edge_state{};
+      vda5050_types::EdgeState edge_state{};
       edge_state.edge_id = e.edge_id();
       edge_state.sequence_id = e.sequence_id();
       edge_state.released = e.released();
@@ -175,8 +175,8 @@ TEST_F(OrderManagerTest, NewOrderNodeStatesNotEmpty)
   /// create State with non-empty NodeStates
   std::vector<vda5050_core::node::Node> unexecuted_nodes {n3, n5};
   std::vector<vda5050_core::edge::Edge> unexecuted_edges {e4};
-  std::vector<vda5050_core::types::NodeState> fully_released_node_states {create_node_states(unexecuted_nodes)};
-  std::vector<vda5050_core::types::EdgeState> fully_released_edge_states {create_edge_states(unexecuted_edges)};
+  std::vector<vda5050_types::NodeState> fully_released_node_states {create_node_states(unexecuted_nodes)};
+  std::vector<vda5050_types::EdgeState> fully_released_edge_states {create_edge_states(unexecuted_edges)};
   fully_released_state.node_states = fully_released_node_states;
   fully_released_state.edge_states = fully_released_edge_states;
 

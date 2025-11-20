@@ -21,8 +21,8 @@
 #include <memory>
 
 #include "vda5050_core/order_execution/order_manager.hpp"
-#include "vda5050_core/types/state.hpp"
-#include "vda5050_core/types/action_status.hpp"
+#include "vda5050_types/state.hpp"
+#include "vda5050_types/action_status.hpp"
 
 namespace vda5050_core {
 namespace order_manager {
@@ -30,7 +30,7 @@ namespace order_manager {
 OrderManager::OrderManager()
 : current_graph_element_index_{0} {};
 
-bool OrderManager::update_current_order(order::Order received_order, const vda5050_core::types::State& state)
+bool OrderManager::update_current_order(order::Order received_order, const vda5050_types::State& state)
 {
   /// Check that this is actually an update order
   if (
@@ -105,7 +105,7 @@ bool OrderManager::update_current_order(order::Order received_order, const vda50
   }
 }
 
-bool OrderManager::make_new_order(order::Order received_order, const vda5050_core::types::State& state)
+bool OrderManager::make_new_order(order::Order received_order, const vda5050_types::State& state)
 {
   if (
     !current_order_.has_value() ||
@@ -179,7 +179,7 @@ OrderManager::next_graph_element()
   return graph_element;
 }
 
-bool OrderManager::is_vehicle_still_executing(const vda5050_core::types::State& state)
+bool OrderManager::is_vehicle_still_executing(const vda5050_types::State& state)
 {
   bool node_states_empty = state.node_states.empty();
   bool action_states_executing { false };
@@ -188,7 +188,7 @@ bool OrderManager::is_vehicle_still_executing(const vda5050_core::types::State& 
   {
     for (const auto& action_state : state.action_states)
     {
-      if (action_state.action_status != vda5050_core::types::ActionStatus::FINISHED && action_state.action_status != vda5050_core::types::ActionStatus::FAILED)
+      if (action_state.action_status != vda5050_types::ActionStatus::FINISHED && action_state.action_status != vda5050_types::ActionStatus::FAILED)
       {
         action_states_executing = true;
         break;
