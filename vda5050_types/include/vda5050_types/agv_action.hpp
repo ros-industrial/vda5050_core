@@ -41,7 +41,7 @@ struct AGVAction
   std::vector<ActionScope> action_scopes;
 
   /// \brief Array of parameters an action has. If not defined, the action has no parameters.
-  std::vector<ActionParameterFactsheet> action_parameters;
+  std::optional<std::vector<ActionParameterFactsheet>> action_parameters;
 
   /// \brief Free-form text: description of the result.
   std::optional<std::string> result_description;
