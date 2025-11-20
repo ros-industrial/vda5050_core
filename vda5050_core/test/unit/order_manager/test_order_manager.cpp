@@ -27,7 +27,6 @@
 #include "vda5050_core/types/state.hpp"
 #include "vda5050_core/types/header.hpp"
 #include "vda5050_core/types/node_state.hpp"
-#include "vda5050_core/state_manager/state_manager.hpp"
 
 using ::testing::_;
 using ::testing::AtLeast;
