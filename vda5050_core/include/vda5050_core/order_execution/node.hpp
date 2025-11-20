@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <string>
+#include <memory>
 
 #include "vda5050_core/order_execution/order_graph_element.hpp"
 
@@ -40,6 +41,8 @@ public:
   /// \param released Boolean indicating true if this node is part of the base, false if it is part of the horizon
   /// \param node_id String that uniquely identifies this node.
   Node(uint32_t sequence_id, bool released, std::string node_id);
+
+  using Ptr = std::shared_ptr<Node>;
 
   std::string node_id() const
   {

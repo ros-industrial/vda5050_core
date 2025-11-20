@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <string>
+#include <memory>
 
 #include "vda5050_core/order_execution/order_graph_element.hpp"
 
@@ -42,6 +43,8 @@ public:
   Edge(
     uint32_t sequence_id, bool released, std::string edge_id,
     std::string start_node_id, std::string end_node_id);
+
+  using Ptr = std::shared_ptr<Edge>;
 
   std::string edge_id() const
   {

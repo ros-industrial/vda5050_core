@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <string>
+#include <memory>
 
 namespace vda5050_core {
 
@@ -35,6 +36,10 @@ public:
   /// \param sequence_id uint32 indicating the sequence number of this graph element in an order.
   /// \param released Boolean indicating true if this graph element is part of the base, false if it is part of the horizon.
   OrderGraphElement(uint32_t sequence_id, bool released);
+
+  using Ptr = std::shared_ptr<OrderGraphElement>;
+
+  virtual ~OrderGraphElement() = default;
 
   uint32_t sequence_id() const
   {

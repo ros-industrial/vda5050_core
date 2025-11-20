@@ -42,8 +42,9 @@ Order::Order(
   decision_point_{set_decision_point(nodes)}
 {
   populate_graph();
-  populate_base();
-  populate_horizon();
+  // populate_base();
+  // populate_horizon();
+  populate_base_and_horizon();
   set_decision_point(nodes);
 };
 
@@ -82,8 +83,9 @@ void Order::stitch_order(order::Order order)
   graph_.insert(graph_.end(), order.graph().begin(), order.graph().end());
 
   /// update the base and horizon of the current order
-  populate_base();
-  populate_horizon();
+  // populate_base();
+  // populate_horizon();
+  populate_base_and_horizon();
 }
 
 void Order::set_order_update_id(uint32_t new_order_update_id)
@@ -95,49 +97,68 @@ void Order::populate_graph()
 {
   for (node::Node& n : nodes_)
   {
-    graph_.push_back(n);
+    graph_.push_back(std::make_shared<node::Node>(n));
   }
 
   for (edge::Edge& e : edges_)
   {
-    graph_.push_back(e);
+    graph_.push_back(std::make_shared<edge::Edge>(e));
   }
 
-  std::sort(graph_.begin(), graph_.end());
+  /// custom comparator to compare based on sequence_id
+  std::sort(graph_.begin(), graph_.end(), [](const std::shared_ptr<order_graph_element::OrderGraphElement>& a, const std::shared_ptr<order_graph_element::OrderGraphElement>& b) {return a->sequence_id() < b->sequence_id();});
 }
 
-void Order::populate_base()
+// void Order::populate_base()
+// {
+//   std::vector<std::shared_ptr<order_graph_element::OrderGraphElement>> base_temp{};
+
+//   for (std::shared_ptr<order_graph_element::OrderGraphElement> graph_element : graph_)
+//   {
+//     if (!graph_element->released())
+//     {
+//       break;
+//     }
+
+//     base_temp.push_back(graph_element);
+//   }
+
+//   base_ = base_temp;
+// }
+
+// void Order::populate_horizon()
+// {
+//   std::vector<order_graph_element::OrderGraphElement> horizon_temp{};
+//   /// assuming that we're more likely to have fewer unreleased nodes than released nodes, but i may be overthinking this
+//   for (auto it = graph_.rbegin(); it != graph_.rend(); ++it)
+//   {
+//     if (it->released())
+//     {
+//       break;
+//     }
+
+//     horizon_temp.insert(horizon_temp.begin(), *it);
+//   }
+
+//   horizon_ = horizon_temp;
+// }
+
+void Order::populate_base_and_horizon()
 {
-  std::vector<order_graph_element::OrderGraphElement> base_temp{};
-
-  for (order_graph_element::OrderGraphElement graph_element : graph_)
+  // std::cout << "populating base and horizon" << "\n";
+  for (std::shared_ptr<order_graph_element::OrderGraphElement>& graph_element : graph_)
   {
-    if (!graph_element.released())
+    // std::cout << graph_element->sequence_id() << "\n";
+
+    if (graph_element->released())
     {
-      break;
+      base_.push_back(graph_element);
     }
-
-    base_temp.push_back(graph_element);
-  }
-
-  base_ = base_temp;
-}
-
-void Order::populate_horizon()
-{
-  std::vector<order_graph_element::OrderGraphElement> horizon_temp{};
-  /// assuming that we're more likely to have fewer unreleased nodes than released nodes, but i may be overthinking this
-  for (auto it = graph_.rbegin(); it != graph_.rend(); ++it)
-  {
-    if (it->released())
+    else
     {
-      break;
+      horizon_.push_back(graph_element);
     }
-
-    horizon_temp.insert(horizon_temp.begin(), *it);
   }
-
-  horizon_ = horizon_temp;
 }
 
 node::Node Order::set_decision_point(std::vector<node::Node> nodes)
