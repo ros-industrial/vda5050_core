@@ -46,7 +46,7 @@ struct Node
 
   /// \brief Array of actions to be executed at this node.
   /// Empty array if no actions are required.
-  std::optional<std::vector<Action>> actions;
+  std::vector<Action> actions;
 
   /// \brief Node position, required only for vehicle-types that need node positions.
   /// (e.g., not required for line-guided vehicles)
