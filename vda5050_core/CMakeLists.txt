@@ -23,13 +23,8 @@ target_include_directories(logger
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-add_library(state_manager src/vda5050_core/state_manager/state_manager.cpp)
-target_include_directories(state_manager
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-
 add_library(vda5050_core INTERFACE)
-target_link_libraries(vda5050_core INTERFACE mqtt_client logger state_manager)
+target_link_libraries(vda5050_core INTERFACE mqtt_client logger)
 target_include_directories(vda5050_core
   INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
@@ -77,7 +72,6 @@ install(DIRECTORY include/vda5050_core DESTINATION include)
 install(TARGETS
   mqtt_client
   logger
-  state_manager
   order_graph_element
   edge
   node
@@ -113,9 +107,8 @@ if(BUILD_TESTING)
     test/unit/mqtt_client/test_mqtt_client_interface.cpp
     test/unit/logger/test_logger.cpp
     test/unit/logger/test_default_logger.cpp
-    test/unit/state_manager/test_state_manager.cpp
     test/integration/mqtt_client/test_paho_mqtt_client.cpp)
-  target_link_libraries(test_mqtt_client mqtt_client logger state_manager)
+  target_link_libraries(test_mqtt_client mqtt_client logger)
 
   find_package(ament_cmake_gtest REQUIRED)
   ament_add_gtest(${PROJECT_NAME}_order_graph_validator_test
@@ -123,8 +116,7 @@ if(BUILD_TESTING)
     src/vda5050_core/order_execution/edge.cpp
     src/vda5050_core/order_execution/node.cpp
     src/vda5050_core/order_execution/order_graph_validator.cpp
-    src/vda5050_core/order_execution/order_graph_element.cpp
-    src/vda5050_core/state_manager/state_manager.cpp)
+    src/vda5050_core/order_execution/order_graph_element.cpp)
   target_include_directories(${PROJECT_NAME}_order_graph_validator_test
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
@@ -135,7 +127,7 @@ if(BUILD_TESTING)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
   target_link_libraries(${PROJECT_NAME}_test_OrderManager
-    order_graph_validator edge node order_graph_element order_manager state_manager)
+    order_graph_validator edge node order_graph_element order_manager)
 endif()
 
 ament_package()
