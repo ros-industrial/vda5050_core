@@ -25,7 +25,6 @@
 #include <memory>
 
 #include "vda5050_core/order_execution/order.hpp"
-#include "vda5050_core/order_execution/order_graph_validator.hpp"
 #include "vda5050_core/types/state.hpp"
 
 namespace vda5050_core {
@@ -74,9 +73,6 @@ private:
   /// \brief Reference to the JSON validator
   bool
     json_validator_;  /// TODO: (shawnkchan) I assume this needs to be modular, but using this as a placeholder for now
-
-  /// \brief Variable storing a graph validator to check the Order's graph
-  order_graph_validator::OrderGraphValidator graph_validator_;
 
   /// \brief Checks that vehicle is no longer executing an order
   ///
