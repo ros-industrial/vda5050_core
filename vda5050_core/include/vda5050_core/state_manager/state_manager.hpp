@@ -25,21 +25,21 @@
 #include <shared_mutex>
 #include <string>
 
-#include "vda5050_core/types/agv_position.hpp"
-#include "vda5050_core/types/battery_state.hpp"
-#include "vda5050_core/types/error.hpp"
-#include "vda5050_core/types/info.hpp"
-#include "vda5050_core/types/load.hpp"
-#include "vda5050_core/types/operating_mode.hpp"
-#include "vda5050_core/types/order.hpp"
-#include "vda5050_core/types/safety_state.hpp"
-#include "vda5050_core/types/state.hpp"
+#include "vda5050_types/agv_position.hpp"
+#include "vda5050_types/battery_state.hpp"
+#include "vda5050_types/error.hpp"
+#include "vda5050_types/info.hpp"
+#include "vda5050_types/load.hpp"
+#include "vda5050_types/operating_mode.hpp"
+#include "vda5050_types/order.hpp"
+#include "vda5050_types/safety_state.hpp"
+#include "vda5050_types/state.hpp"
 
 namespace vda5050_core {
 
 namespace state_manager {
 
-using namespace vda5050_core::types;
+using namespace vda5050_types;
 
 class StateManager
 {
@@ -73,11 +73,11 @@ public:
 
   /// \brief Set the current AGV position
   /// \param agv_position the agv position
-  void set_agv_position(const std::optional<AgvPosition>& agv_position);
+  void set_agv_position(const std::optional<AGVPosition>& agv_position);
 
   /// \brief Get the current AGV position (if set)
   /// \return std::optional<AGVPosition> the current AGV position of std::nullopt
-  std::optional<AgvPosition> get_agv_position() const;
+  std::optional<AGVPosition> get_agv_position() const;
 
   /// \brief Set the current velocity
   /// \param velocity the velocity
@@ -177,7 +177,6 @@ public:
   /// \brief Set a new order on the vehicle (after clearing any existing order).
   /// \param order The new order to accept and store.
   void set_new_order(const Order& order);
-
 
   /// \brief Clear the horizon nodes/edges from the current nodeStates and edgeStates.
   void clear_horizon();

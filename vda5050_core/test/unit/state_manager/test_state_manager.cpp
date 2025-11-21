@@ -20,7 +20,7 @@
 #include "vda5050_core/state_manager/state_manager.hpp"
 
 using namespace vda5050_core::state_manager;
-using namespace vda5050_core::types;
+using namespace vda5050_types;
 
 class StateManagerTest : public ::testing::Test
 {
@@ -28,9 +28,9 @@ protected:
   StateManager sm;
 };
 
-TEST_F(StateManagerTest, SetAndGetAgvPosition)
+TEST_F(StateManagerTest, SetAndGetAGVPosition)
 {
-  AgvPosition pos;
+  AGVPosition pos;
   pos.x = 1.23;
   pos.y = 4.56;
   pos.theta = 1.57;
@@ -151,7 +151,7 @@ TEST_F(StateManagerTest, RequestNewBase)
 
 TEST_F(StateManagerTest, DumpState)
 {
-  AgvPosition pos;
+  AGVPosition pos;
   pos.x = 1.0;
   pos.y = 2.0;
   pos.theta = 3.14;

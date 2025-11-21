@@ -25,6 +25,8 @@ namespace vda5050_core {
 
 namespace state_manager {
 
+using namespace vda5050_types;
+
 //=============================================================================
 std::optional<std::string> StateManager::get_order_id() const
 {
@@ -54,14 +56,14 @@ std::optional<std::string> StateManager::get_zone_set_id() const
 
 //=============================================================================
 void StateManager::set_agv_position(
-  const std::optional<AgvPosition>& agv_position)
+  const std::optional<AGVPosition>& agv_position)
 {
   std::unique_lock lock(this->mutex_);
   this->robot_state_.agv_position = agv_position;
 }
 
 //=============================================================================
-std::optional<AgvPosition> StateManager::get_agv_position() const
+std::optional<AGVPosition> StateManager::get_agv_position() const
 {
   std::shared_lock lock(this->mutex_);
   return this->robot_state_.agv_position;

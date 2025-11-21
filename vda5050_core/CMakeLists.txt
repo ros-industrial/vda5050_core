@@ -8,6 +8,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(PahoMqttCpp REQUIRED)
 find_package(fmt REQUIRED)
+find_package(vda5050_types REQUIRED)
 
 include(GNUInstallDirs)
 
@@ -24,6 +25,7 @@ target_include_directories(logger
          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 add_library(state_manager src/vda5050_core/state_manager/state_manager.cpp)
+target_link_libraries(state_manager vda5050_types::vda5050_types)
 target_include_directories(state_manager
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
@@ -72,6 +74,16 @@ if(BUILD_TESTING)
     test/unit/state_manager/test_state_manager.cpp
     test/integration/mqtt_client/test_paho_mqtt_client.cpp)
   target_link_libraries(test_mqtt_client mqtt_client logger state_manager)
+
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(test_state_manager
+    test/unit/state_manager/test_state_manager.cpp
+    src/vda5050_core/state_manager/state_manager.cpp)
+  target_link_libraries(test_state_manager vda5050_types::vda5050_types)
+  target_include_directories(test_state_manager
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+           $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+
 endif()
 
 ament_package()
