@@ -370,41 +370,6 @@ void StateManager::set_new_order(const Order& order)
 }
 
 //=============================================================================
-void StateManager::set_new_order(const vda5050_core::order::Order& order)
-{
-  std::unique_lock lock(this->mutex_);
-
-  std::string last_node_id = this->robot_state_.last_node_id;
-  this->robot_state_ = State();
-  this->robot_state_.last_node_id = last_node_id;
-
-  this->robot_state_.order_id = order.order_id();
-  this->robot_state_.order_update_id = order.order_update_id();
-  // TODO @(johnaa) missing zone_id getter
-  const std::vector<node::Node>& v_nodes = order.nodes();
-
-  for (const auto& node : v_nodes)
-  {
-    NodeState node_state;
-    node_state.node_id = node.node_id();
-    node_state.sequence_id = node.sequence_id();
-    node_state.released = node.released();
-    this->robot_state_.node_states.push_back(node_state);
-  }
-
-  const std::vector<edge::Edge>& v_edges = order.edges();
-
-  for (const auto& edge : v_edges)
-  {
-    EdgeState edge_state;
-    edge_state.edge_id = edge.edge_id();
-    edge_state.sequence_id = edge.sequence_id();
-    edge_state.released = edge.released();
-    this->robot_state_.edge_states.push_back(edge_state);
-  }
-}
-
-//=============================================================================
 void StateManager::clear_horizon()
 {
   std::unique_lock lock(this->mutex_);
@@ -425,65 +390,6 @@ void StateManager::append_states_for_update(Order& order_update)
   this->set_new_order(order_update);
 }
 
-//=============================================================================
-void StateManager::append_states_for_update(
-  vda5050_core::order::Order& order_update)
-{
-  const auto& nodes = order_update.nodes();
-  this->robot_state_.node_states.reserve(
-    this->robot_state_.node_states.size() + nodes.size());
-
-  for (const auto& node : nodes)
-  {
-    const auto nid = node.node_id();
-
-    bool exists = false;
-    for (const auto& ns : this->robot_state_.node_states)
-    {
-      if (ns.node_id == nid)
-      {
-        exists = true;
-        break;
-      }
-    }
-    if (!exists)
-    {
-      NodeState ns{};
-      ns.node_id = nid;
-      ns.sequence_id = node.sequence_id();
-      ns.released = node.released();
-      this->robot_state_.node_states.emplace_back(ns);
-    }
-  }
-
-  // Append edges (only new ones)
-  const auto& edges = order_update.edges();
-  this->robot_state_.edge_states.reserve(
-    this->robot_state_.edge_states.size() + edges.size());
-
-  for (const auto& edge : edges)
-  {
-    const auto eid = edge.edge_id();
-
-    bool exists = false;
-    for (const auto& es : this->robot_state_.edge_states)
-    {
-      if (es.edge_id == eid)
-      {
-        exists = true;
-        break;
-      }
-    }
-    if (!exists)
-    {
-      EdgeState es{};
-      es.edge_id = eid;
-      es.sequence_id = edge.sequence_id();
-      es.released = edge.released();
-      this->robot_state_.edge_states.emplace_back(es);
-    }
-  }
-}
 const State& StateManager::get_state()
 {
   std::shared_lock lock(this->mutex_);
