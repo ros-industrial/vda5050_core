@@ -96,7 +96,7 @@ install(EXPORT export_vda5050_core
   NAMESPACE vda5050_core::)
 
 ament_export_targets(export_vda5050_core HAS_LIBRARY_TARGET)
-ament_export_dependencies(PahoMqttCpp)
+ament_export_dependencies(PahoMqttCpp fmt)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_cppcheck REQUIRED)
