@@ -8,6 +8,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(PahoMqttCpp REQUIRED)
 find_package(fmt REQUIRED)
+find_package(vda5050_types REQUIRED)
 
 include(GNUInstallDirs)
 
@@ -56,7 +57,7 @@ add_library(order_manager src/vda5050_core/order_execution/order_manager.cpp)
 target_include_directories(order_manager
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-target_link_libraries(order_manager order)
+target_link_libraries(order_manager order vda5050_types::vda5050_types)
 
 target_link_libraries(vda5050_core
   INTERFACE order_graph_element edge node order order_manager)
