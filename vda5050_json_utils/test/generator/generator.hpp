@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_JSON_UTILS__TEST__GENERATOR__GENERATOR_HPP_
-#define VDA5050_JSON_UTILS__TEST__GENERATOR__GENERATOR_HPP_
+#ifndef GENERATOR__GENERATOR_HPP_
+#define GENERATOR__GENERATOR_HPP_
 
 #include <limits>
 #include <random>
@@ -548,4 +548,4 @@ private:
   std::uniform_real_distribution<double> percentage_dist_;
 };
 
-#endif  // VDA5050_JSON_UTILS__TEST__GENERATOR__GENERATOR_HPP_
+#endif  // GENERATOR__GENERATOR_HPP_

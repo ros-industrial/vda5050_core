@@ -80,13 +80,9 @@ if(BUILD_TESTING)
   set(cpplint_filters
     "-whitespace/newline"
   )
-  set(cpplint_root_paths
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/"
-  )
 
   ament_cpplint(
     FILTERS "${cpplint_filters}"
-    ROOT "${cpplint_root_paths}"
   )
 
   find_package(ament_cmake_clang_format REQUIRED)
