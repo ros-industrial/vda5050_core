@@ -1,0 +1,37 @@
+name: Build and test the VDA5050 library
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  industrial_ci:
+    name: Build and test
+    strategy:
+      fail-fast: false
+      matrix:
+        env:
+          - ICI_JOB_NAME: gcc
+            ROS_DISTRO: jazzy
+          - ICI_JOB_NAME: clang
+            ROS_DISTRO: jazzy
+            ADDITIONAL_DEBS: clang lld
+            CC: "clang"
+            CXX: "clang++"
+    env:
+      ISOLATION: "shell"
+    runs-on: ubuntu-latest
+    container:
+      image: ros:jazzy-ros-core
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          apt-get update -qq -y
+          apt-get install libpaho-mqtt-dev libpaho-mqttpp-dev libfmt-dev -qq -y
+      - uses: 'ros-industrial/industrial_ci@master'
+        env: ${{ matrix.env }}
