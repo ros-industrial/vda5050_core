@@ -18,11 +18,14 @@ jobs:
           - ICI_JOB_NAME: gcc
             ROS_DISTRO: jazzy
             UPSTREAM_WORKSPACE: 'github:ros-industrial/vda5050_interfaces#throwaway/remove-serde'
+            TARGET_CMAKE_ARGS: '-DENABLE_ROS2=ON'
           - ICI_JOB_NAME: clang
             ROS_DISTRO: jazzy
+            UPSTREAM_WORKSPACE: 'github:ros-industrial/vda5050_interfaces#throwaway/remove-serde'
             ADDITIONAL_DEBS: clang lld
             CC: "clang"
             CXX: "clang++"
+            TARGET_CMAKE_ARGS: '-DENABLE_ROS2=ON'
     env:
       ISOLATION: "shell"
     runs-on: ubuntu-latest
