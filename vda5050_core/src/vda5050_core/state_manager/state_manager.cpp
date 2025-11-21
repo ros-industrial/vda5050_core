@@ -25,8 +25,6 @@ namespace vda5050_core {
 
 namespace state_manager {
 
-using namespace vda5050_types;
-
 //=============================================================================
 std::optional<std::string> StateManager::get_order_id() const
 {
@@ -121,9 +119,7 @@ bool StateManager::add_load(const Load& load)
   if (!this->robot_state_.loads.has_value())
   {
     this->robot_state_.loads = {load};
-  }
-  else
-  {
+  } else {
     this->robot_state_.loads->push_back(load);
   }
 
@@ -161,15 +157,13 @@ const std::vector<Load>& StateManager::get_loads()
   std::shared_lock lock(
     this->mutex_);  // Ensure that loads is not being altered at the moment
 
-  const static std::vector<Load> empty;
+  static const std::vector<Load> empty;
 
   // value_or turns empty into a stack object, so this if block is required
   if (this->robot_state_.loads.has_value())
   {
     return *this->robot_state_.loads;
-  }
-  else
-  {
+  } else {
     return empty;
   }
 }

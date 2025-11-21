@@ -16,14 +16,15 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATUS_MANAGER__STATUS_MANAGER_HPP_
-#define VDA5050_CORE__STATUS_MANAGER__STATUS_MANAGER_HPP_
+#ifndef VDA5050_CORE__STATE_MANAGER__STATE_MANAGER_HPP_
+#define VDA5050_CORE__STATE_MANAGER__STATE_MANAGER_HPP_
 
 #include <cstdint>
 #include <mutex>
 #include <optional>
 #include <shared_mutex>
 #include <string>
+#include <vector>
 
 #include "vda5050_types/agv_position.hpp"
 #include "vda5050_types/battery_state.hpp"
@@ -39,7 +40,19 @@ namespace vda5050_core {
 
 namespace state_manager {
 
-using namespace vda5050_types;
+using vda5050_types::ActionStatus;
+using vda5050_types::AGVPosition;
+using vda5050_types::BatteryState;
+using vda5050_types::EdgeState;
+using vda5050_types::Error;
+using vda5050_types::Info;
+using vda5050_types::Load;
+using vda5050_types::NodeState;
+using vda5050_types::OperatingMode;
+using vda5050_types::Order;
+using vda5050_types::SafetyState;
+using vda5050_types::State;
+using vda5050_types::Velocity;
 
 class StateManager
 {
@@ -193,4 +206,4 @@ public:
 }  // namespace state_manager
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATUS_MANAGER__STATUS_MANAGER_HPP_
+#endif  // VDA5050_CORE__STATE_MANAGER__STATE_MANAGER_HPP_

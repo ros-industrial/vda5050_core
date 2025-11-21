@@ -19,13 +19,27 @@
 #include <gtest/gtest.h>
 #include "vda5050_core/state_manager/state_manager.hpp"
 
-using namespace vda5050_core::state_manager;
-using namespace vda5050_types;
+using vda5050_types::AGVPosition;
+using vda5050_types::ActionStatus;
+using vda5050_types::BatteryState;
+using vda5050_types::Edge;
+using vda5050_types::EdgeState;
+using vda5050_types::Error;
+using vda5050_types::EStop;
+using vda5050_types::Info;
+using vda5050_types::Load;
+using vda5050_types::Node;
+using vda5050_types::NodeState;
+using vda5050_types::OperatingMode;
+using vda5050_types::Order;
+using vda5050_types::SafetyState;
+using vda5050_types::State;
+using vda5050_types::Velocity;
 
 class StateManagerTest : public ::testing::Test
 {
 protected:
-  StateManager sm;
+  vda5050_core::state_manager::StateManager sm;
 };
 
 TEST_F(StateManagerTest, SetAndGetAGVPosition)
