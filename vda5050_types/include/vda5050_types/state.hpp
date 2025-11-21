@@ -179,4 +179,4 @@ struct State
 
 }  // namespace vda5050_types
 
-#endif  // VDA5050_TYPES__STATE_HPP
+#endif  // VDA5050_TYPES__STATE_HPP_

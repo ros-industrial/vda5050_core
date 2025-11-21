@@ -34,16 +34,19 @@ namespace vda5050_types {
 /// as required by the VDA5050 specification.
 struct Factsheet
 {
-  /// \brief Message header that contains the common fields required across all messages
+  /// \brief Message header that contains the common fields required across all
+  /// messages
   Header header;
 
-  /// \brief Parameters that generally specify the class and the capabilities of the AGV
+  /// \brief Parameters that generally specify the class and the capabilities
+  /// of the AGV
   TypeSpecification type_specification;
 
   /// \brief Parameters that specify the basic physical properties of the AGV
   PhysicalParameters physical_parameters;
 
-  /// \brief Limits for length of identifiers, arrays, strings, and similar in MQTT communication
+  /// \brief Limits for length of identifiers, arrays, strings, and similar in
+  /// MQTT communication
   ProtocolLimits protocol_limits;
 
   /// \brief Supported features of VDA5050 protocol

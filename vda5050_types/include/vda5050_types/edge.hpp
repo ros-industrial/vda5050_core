@@ -36,9 +36,9 @@ struct Edge
   /// \brief Unique edge identification.
   std::string edge_id;
 
-  /// \brief Number to track the sequence of nodes and edges in an order, simplifying updates.
-  /// Distinguishes between nodes/edges that may be revisited in the same order.
-  /// Resets when a new orderId is issued.
+  /// \brief Number to track the sequence of nodes and edges in an order,
+  /// simplifying updates. Distinguishes between nodes/edges that may be
+  /// revisited in the same order. Resets when a new orderId is issued.
   uint32_t sequence_id;
 
   /// \brief The nodeId of the start node for this edge.
@@ -54,9 +54,9 @@ struct Edge
 
   /// \brief Array of actionIds to be executed on the edge.
   /// Array is empty if no actions are required.
-  /// An action triggered by an edge will only be active for the time that the AGV is
-  /// traversing it. When the AGV leaves the edge, the action will stop and the state
-  /// before entering the edge will be restored.
+  /// An action triggered by an edge will only be active for the time that
+  /// the AGV is traversing it. When the AGV leaves the edge, the action will
+  /// stop and the state before entering the edge will be restored.
   std::vector<Action> actions;
 
   /// \brief Additional information about the edge.
@@ -66,26 +66,28 @@ struct Edge
   /// Speed is defined by the fastest measurement of the vehicle.
   std::optional<double> max_speed;
 
-  /// \brief Permitted maximum height [m] of the vehicle including load on the edge.
+  /// \brief Permitted maximum height [m] of the vehicle including load
+  /// on the edge.
   std::optional<double> max_height;
 
-  /// \brief Permitted minimal height [m] of the load handling device on the edge.
+  /// \brief Permitted minimal height [m] of the load handling device
+  /// on the edge.
   std::optional<double> min_height;
 
   /// \brief Orientation of the AGV on the edge [rad].
-  /// If the AGV starts in a different orientation, rotate the vehicle on the edge to
-  /// the desired orientation if rotationAllowed is true.
+  /// If the AGV starts in a different orientation, rotate the vehicle on
+  /// the edge to the desired orientation if rotationAllowed is true.
   /// If rotationAllowed is false, rotate before entering the edge.
   std::optional<double> orientation;
 
-  /// \brief Defines if the orientation field is interpreted relative to the global
-  /// project specific map coordinate system or tangential to the edge.
+  /// \brief Defines if the orientation field is interpreted relative to the
+  /// global project specific map coordinate system or tangential to the edge.
   /// If tangential to the edge, 0.0 = forwards, Pi = backwards.
   /// Default value: TANGENTIAL
   std::optional<OrientationType> orientation_type;
 
-  /// \brief Sets direction at junctions for line-guided or wire-guided vehicles.
-  /// To be defined initially (vehicle-individual).
+  /// \brief Sets direction at junctions for line-guided or wire-guided
+  /// vehicles. To be defined initially (vehicle-individual).
   /// Eg: straight, left, right.
   std::optional<std::string> direction;
 
@@ -98,14 +100,16 @@ struct Edge
   /// No limit, if not set.
   std::optional<double> max_rotation_speed;
 
-  /// \brief The Trajectory object for this edge as a Non-Uniform Rational B-Spline (NURBS).
-  /// Defines the path that the AGV should move between the start node and end node
-  /// of the edge. This field can be omitted if the AGV cannot process trajectories
-  /// or if the AGV plans its own trajectory.
+  /// \brief The Trajectory object for this edge as a Non-Uniform Rational
+  /// B-Spline (NURBS). Defines the path that the AGV should move between
+  /// the start node and end node of the edge. This field can be omitted if
+  /// the AGV cannot process trajectories or if the AGV plans its own
+  /// trajectory.
   std::optional<Trajectory> trajectory;
 
   /// \brief Length of the path from the start node to the end node [m].
-  /// Used by line-guided AGVs to decrease their speed before reaching a stop position.
+  /// Used by line-guided AGVs to decrease their speed before reaching a stop
+  /// position.
   std::optional<double> length;
 
   /// \brief Equality operator

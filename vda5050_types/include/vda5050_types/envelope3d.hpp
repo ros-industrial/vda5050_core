@@ -33,10 +33,12 @@ struct Envelope3d
   /// \brief Format of the data, eg: DXF.
   std::string format;
 
-  /// \brief 3D-envelope curve data as a string. Format of this data is specified in the 'format' field, and should be handled accordingly.
+  /// \brief 3D-envelope curve data as a string. Format of this data is
+  /// specified in the 'format' field, and should be handled accordingly.
   std::optional<std::string> data;
 
-  /// \brief Protocol and URL definition for downloading the 3D-envelope curve data. eg: ftp://xxx.yyy.com/ac4dgvhoif5tghji
+  /// \brief Protocol and URL definition for downloading the 3D-envelope
+  /// curve data. eg: ftp://xxx.yyy.com/ac4dgvhoif5tghji
   std::optional<std::string> url;
 
   /// \brief Free-form text: description of envelope curve set.

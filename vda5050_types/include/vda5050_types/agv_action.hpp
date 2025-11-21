@@ -30,8 +30,8 @@
 namespace vda5050_types {
 
 /// \brief Actions with parameters supported by the AGV.
-/// This includes standard actions specified in VDA5050 and manufacturer-specific
-/// actions.
+/// This includes standard actions specified in VDA5050 and
+/// manufacturer-specific actions.
 struct AGVAction
 {
   /// \brief Unique type of action corresponding to action.actionType
@@ -40,7 +40,8 @@ struct AGVAction
   /// \brief Array of allowed scopes for using this action type.
   std::vector<ActionScope> action_scopes;
 
-  /// \brief Array of parameters an action has. If not defined, the action has no parameters.
+  /// \brief Array of parameters an action has. If not defined, the
+  /// action has no parameters.
   std::optional<std::vector<ActionParameterFactsheet>> action_parameters;
 
   /// \brief Free-form text: description of the result.

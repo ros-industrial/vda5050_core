@@ -48,10 +48,12 @@ struct WheelDefinition
   /// \brief Nominal width of the wheel [m].
   double width;
 
-  /// \brief Nominal displacement of the wheel's center to the rotation points. This field is necessary for caster wheels.
+  /// \brief Nominal displacement of the wheel's center to the rotation points.
+  /// This field is necessary for caster wheels.
   double center_displacement = 0.0;
 
-  /// \brief Free-form text: can be used by the manufacturer to define constraints.
+  /// \brief Free-form text: can be used by the manufacturer to define
+  /// constraints.
   std::optional<std::string> constraints;
 
   /// \brief Equality operator

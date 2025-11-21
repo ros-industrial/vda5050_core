@@ -36,15 +36,17 @@ struct LoadSet
   /// \brief Type of load (e.g., EPAL, XLT1200, etc.)
   std::string load_type;
 
-  /// \brief Array of load positions between load handling devices that this load set is valid for.
-  /// If this parameter does not exist or is empty, this load set is valid for all load
-  /// handling devices on this AGV.
+  /// \brief Array of load positions between load handling devices that this
+  /// load set is valid for. If this parameter does not exist or is empty, this
+  /// load set is valid for all load handling devices on this AGV.
   std::optional<std::vector<std::string>> load_positions;
 
-  /// \brief Bounding box reference as defined in parameter loads[] in the state message.
+  /// \brief Bounding box reference as defined in parameter loads[] in the state
+  /// message.
   std::optional<BoundingBoxReference> bounding_box_reference;
 
-  /// \brief Load dimensions as defined in parameter loads[] in the state message.
+  /// \brief Load dimensions as defined in parameter loads[] in the state
+  /// message.
   std::optional<LoadDimensions> load_dimensions;
 
   /// \brief Maximum weight of this load type [kg].

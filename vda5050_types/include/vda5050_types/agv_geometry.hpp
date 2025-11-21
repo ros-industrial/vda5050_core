@@ -28,16 +28,18 @@
 
 namespace vda5050_types {
 
-/// @brief Message defining the geometry properties of the AGV. eg: outlines and wheel positions.
+/// \brief Message defining the geometry properties of the AGV. eg: outlines and wheel positions.
 struct AGVGeometry
 {
-  /// @brief Array of wheels, containing wheel arrangement and geometry.
+  /// \brief Array of wheels, containing wheel arrangement and geometry.
   std::optional<std::vector<WheelDefinition>> wheel_definitions;
 
-  /// @brief Array of AGV envelope curves in 2D. eg: the mechanical envelopes for unloaded and loaded state, the safety fields for different speed cases.
+  /// \brief Array of AGV envelope curves in 2D. eg: the mechanical envelopes
+  /// for unloaded and loaded state, the safety fields for different speed
+  /// cases.
   std::optional<std::vector<Envelope2d>> envelopes_2d;
 
-  /// @brief Array of AGV envelope curves in 3D.
+  /// \brief Array of AGV envelope curves in 3D.
   std::optional<std::vector<Envelope3d>> envelopes_3d;
 
   /// \brief Equality operator

@@ -23,8 +23,8 @@
 
 namespace vda5050_types {
 
-/// \brief This message defines the maximum lengths of arrays processable by the AGV
-/// according to the VDA5050 specification.
+/// \brief This message defines the maximum lengths of arrays processable
+/// by the AGV according to the VDA5050 specification.
 struct MaxArrayLens
 {
   /// \brief Maximum number of nodes per order processable by the AGV.
@@ -42,13 +42,15 @@ struct MaxArrayLens
   /// \brief Maximum number of parameters per action processable by the AGV.
   uint32_t actions_actions_parameters;
 
-  /// \brief Maximum number of instant actions per message processable by the AGV.
+  /// \brief Maximum number of instant actions per message processable by
+  /// the AGV.
   uint32_t instant_actions;
 
   /// \brief Maximum number of knots per trajectory processable by the AGV.
   uint32_t trajectory_knot_vector;
 
-  /// \brief Maximum number of control points per trajectory processable by the AGV.
+  /// \brief Maximum number of control points per trajectory processable by
+  /// the AGV.
   uint32_t trajectory_control_points;
 
   /// \brief Maximum number of nodeStates sent by the AGV,
@@ -68,13 +70,15 @@ struct MaxArrayLens
   /// \brief Maximum number of errors sent by the AGV in one state message.
   uint32_t state_errors;
 
-  /// \brief Maximum number of information objects sent by the AGV in one state message.
+  /// \brief Maximum number of information objects sent by the AGV in one
+  /// state message.
   uint32_t state_information;
 
   /// \brief Maximum number of error references sent by the AGV for each error.
   uint32_t error_error_references;
 
-  /// \brief Maximum number of info references sent by the AGV for each information.
+  /// \brief Maximum number of info references sent by the AGV for each
+  /// information.
   uint32_t information_info_references;
 
   /// \brief Equality operator

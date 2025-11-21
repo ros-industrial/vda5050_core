@@ -26,7 +26,8 @@ enum class BlockingType
   /// \brief action can happen in parallel with others, including movement
   NONE,
 
-  /// \brief action can happen simultaneously with other actions, but not while moving
+  /// \brief action can happen simultaneously with other actions,
+  /// but not while moving
   SOFT,
 
   /// \brief no other action can be performed while this action is running

@@ -17,7 +17,7 @@
  */
 
 #ifndef VDA5050_TYPES__ACTION_PARAMETER_FACTSHEET_HPP_
-#define VDA5050_TYPES__ACTION_PARAMETER_FACTHSEET_HPP_
+#define VDA5050_TYPES__ACTION_PARAMETER_FACTSHEET_HPP_
 
 #include <optional>
 #include <string>
@@ -26,7 +26,8 @@
 
 namespace vda5050_types {
 
-/// \brief NOTE: This message is different from ActionParameter.msg used in Order.msg.
+/// \brief NOTE: This message is different from ActionParameter.msg used
+/// in Order.msg.
 /// For more details, refer to page 54 of VDA5050 Recommendation v2.0.0.
 /// ActionParameter message specifically used in Factsheet.msg.
 /// Describes the array of parameters that an action has.

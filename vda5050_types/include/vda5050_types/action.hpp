@@ -30,19 +30,23 @@ namespace vda5050_types {
 
 struct Action
 {
-  /// \brief Name of action as described in the first column of Actions and Parameters. Identifies the function of the action
+  /// \brief Name of action as described in the first column of Actions and
+  /// Parameters. Identifies the function of the action
   std::string action_type;
 
-  /// \brief Unique ID to identify the action and map it to the actionState in the State message
+  /// \brief Unique ID to identify the action and map it to the actionState in
+  /// the State message
   std::string action_id;
 
-  /// \brief  Regulates if the action is allowed to be executed during movement and/or parallel to other actions.
+  /// \brief  Regulates if the action is allowed to be executed during movement
+  /// and/or parallel to other actions.
   BlockingType blocking_type;
 
   /// \brief Additional information on the action
   std::optional<std::string> action_description;
 
-  /// \brief Array of actionParameter objects for the indicated action. If not defined, the action has no parameters
+  /// \brief Array of actionParameter objects for the indicated action. If not
+  /// defined, the action has no parameters
   /// eg: deviceId, loadId, external Triggers
   std::optional<std::vector<ActionParameter>> action_parameters;
 

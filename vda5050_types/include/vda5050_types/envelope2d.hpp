@@ -33,7 +33,8 @@ struct Envelope2d
   /// \brief Name of the envelope curve set.
   std::string set;
 
-  /// \brief Envelope curve as an x/y-polygon. Polygon is assumed as closed and shall be non-self-intersecting.
+  /// \brief Envelope curve as an x/y-polygon. Polygon is assumed as closed
+  /// and shall be non-self-intersecting.
   std::vector<PolygonPoint> polygon_points;
 
   /// \brief Free-form text: description of envelope curve set.

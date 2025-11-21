@@ -34,14 +34,17 @@ struct Network
   /// \brief Array of Network Time Protocol (NTP) servers used by the vehicle.
   std::optional<std::vector<std::string>> ntp_servers;
 
-  /// \brief A priori assigned IP address used to communicate with the MQTT broker.
+  /// \brief A priori assigned IP address used to communicate with
+  /// the MQTT broker.
   /// Note: This IP address should not be modified/changed during operations.
   std::optional<std::string> local_ip_address;
 
-  /// \brief The subnet mask used in the network configuration corresponding to the local IP address.
+  /// \brief The subnet mask used in the network configuration corresponding to
+  /// the local IP address.
   std::optional<std::string> netmask;
 
-  /// \brief The default gateway used by the vehicle, corresponding to the local IP address.
+  /// \brief The default gateway used by the vehicle, corresponding to the
+  /// local IP address.
   std::optional<std::string> default_gateway;
 
   /// \brief Equality operator

@@ -24,8 +24,8 @@
 
 namespace vda5050_types {
 
-/// \brief This message defines the maximum lengths of strings used in MQTT communication
-/// and other identifiers within the VDA5050 specification.
+/// \brief This message defines the maximum lengths of strings used in
+/// MQTT communication and other identifiers within the VDA5050 specification.
 struct MaxStringLens
 {
   /// \brief Maximum MQTT message length.

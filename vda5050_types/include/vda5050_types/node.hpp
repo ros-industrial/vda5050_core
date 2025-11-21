@@ -35,9 +35,10 @@ struct Node
   /// \brief Unique node identification
   std::string node_id;
 
-  /// \brief Number to track the sequence of nodes and edges in an order and to simplify order updates.
-  /// Distinguishes between nodes that may be passed more than once in the same order.
-  /// Runs across all nodes/edges of the same order and resets when a new orderId is issued.
+  /// \brief Number to track the sequence of nodes and edges in an order and to
+  /// simplify order updates. Distinguishes between nodes that may be passed
+  /// more than once in the same order. Runs across all nodes/edges of the same
+  /// order and resets when a new orderId is issued.
   uint32_t sequence_id;
 
   /// \brief "true" indicates that the node is part of the base
@@ -48,8 +49,8 @@ struct Node
   /// Empty array if no actions are required.
   std::vector<Action> actions;
 
-  /// \brief Node position, required only for vehicle-types that need node positions.
-  /// (e.g., not required for line-guided vehicles)
+  /// \brief Node position, required only for vehicle-types that need
+  /// node positions. (e.g., not required for line-guided vehicles)
   std::optional<NodePosition> node_position;
 
   /// \brief Additional information about the node
