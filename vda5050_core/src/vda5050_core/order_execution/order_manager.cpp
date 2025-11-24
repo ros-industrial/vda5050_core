@@ -19,10 +19,14 @@
 #include <iostream>
 #include <stdexcept>
 #include <memory>
+#include <variant>
+#include <algorithm>
 
 #include "vda5050_core/order_execution/order_manager.hpp"
 #include "vda5050_types/state.hpp"
 #include "vda5050_types/action_status.hpp"
+#include "vda5050_types/order.hpp"
+#include "vda5050_types/node.hpp"
 
 namespace vda5050_core {
 namespace order_manager {
@@ -30,15 +34,17 @@ namespace order_manager {
 OrderManager::OrderManager()
 : current_graph_element_index_{0} {};
 
-bool OrderManager::update_current_order(order::Order received_order, const vda5050_types::State& state)
+bool OrderManager::update_current_order(vda5050_types::Order& order, const vda5050_types::State& state)
 {
+  Order received_order{ order };
+
   /// Check that this is actually an update order
   if (
     current_order_.has_value() &&
-    received_order.order_id() == current_order_->order_id())
+    received_order.order_id == current_order_->order_id)
   {
     /// check if received order is deprecated
-    if (received_order.order_update_id() < current_order_->order_update_id())
+    if (received_order.order_update_id < current_order_->order_update_id)
     {
       reject_order();
       
@@ -49,12 +55,12 @@ bool OrderManager::update_current_order(order::Order received_order, const vda50
 
     /// check if order update is currently on the vehicle
     else if (
-      received_order.order_update_id() == current_order_->order_update_id())
+      received_order.order_update_id == current_order_->order_update_id)
     {
       /// discard message as vehicle already has this update
       std::cerr << "OrderManager warning: Received duplicate order update (orderUpdateId="
-                << received_order.order_update_id() << ") for order "
-                << received_order.order_id() << ". Discarding message." << '\n';
+                << received_order.order_update_id << ") for order "
+                << received_order.order_id << ". Discarding message." << '\n';
       
       /// TODO: KIV to change this once the return struct has been decided
       return false;
@@ -63,8 +69,8 @@ bool OrderManager::update_current_order(order::Order received_order, const vda50
     else if (is_vehicle_still_executing(state) && is_vehicle_waiting_for_update())
     {
       if (
-        received_order.nodes().front().node_id() !=
-        current_order_->decision_point().node_id())
+        received_order.nodes.front().node_id !=
+        current_order_->decision_point().node_id)
       {
         std::cerr << "OrderManager error: Order update rejected as nodeIds of the stitching nodes do not match." << "\n";
         reject_order();
@@ -81,7 +87,7 @@ bool OrderManager::update_current_order(order::Order received_order, const vda50
     }
     else
     {
-      if (received_order.nodes().front().sequence_id() != state.last_node_sequence_id && received_order.nodes().front().node_id() != state.last_node_id)
+      if (received_order.nodes.front().sequence_id != state.last_node_sequence_id && received_order.nodes.front().node_id != state.last_node_id)
       {
         std::cerr << "OrderManager error: Order update rejected as it is not a valid continuation of the previously completed order." << "\n";
         reject_order();
@@ -105,12 +111,14 @@ bool OrderManager::update_current_order(order::Order received_order, const vda50
   }
 }
 
-bool OrderManager::make_new_order(order::Order received_order, const vda5050_types::State& state)
+bool OrderManager::make_new_order(vda5050_types::Order& order, const vda5050_types::State& state)
 {
+  Order received_order { order };
+
   if (
     !current_order_.has_value() ||
     (current_order_.has_value() &&
-     received_order.order_id() != current_order_->order_id()))
+     received_order.order_id != current_order_->order_id))
   {
     /// if no current order exists, the vehicle can accept a new order
     if (
@@ -124,12 +132,11 @@ bool OrderManager::make_new_order(order::Order received_order, const vda5050_typ
     bool vehicle_ready_for_new_order = !is_vehicle_still_executing(state) && !is_vehicle_waiting_for_update();
 
     /// TODO: This assumes that StateManager sets lastNodeId once the vehicle is within deviation range
-    bool node_is_trivially_reachable = received_order.nodes().front().node_id() == state.last_node_id;
+    bool node_is_trivially_reachable = received_order.nodes.front().node_id == state.last_node_id;
 
     if (vehicle_ready_for_new_order && node_is_trivially_reachable)
     {
       accept_new_order(received_order);
-
       return true;
     }
     else
@@ -164,18 +171,16 @@ bool OrderManager::make_new_order(order::Order received_order, const vda5050_typ
   }
 }
 
-std::optional<std::shared_ptr<order_graph_element::OrderGraphElement>>
-OrderManager::next_graph_element()
+const std::optional<std::variant<vda5050_types::Node, vda5050_types::Edge>> OrderManager::next_graph_element()
 {
   if (current_graph_element_index_ >= current_order_->base().size())
   {
     return std::nullopt;
   }
-  std::shared_ptr<order_graph_element::OrderGraphElement> graph_element =
-    current_order_->base().at(current_graph_element_index_);
+  std::variant<vda5050_types::Node, vda5050_types::Edge> graph_element = current_order_->base().at(current_graph_element_index_);
 
   current_graph_element_index_++;
-
+  
   return graph_element;
 }
 
@@ -208,7 +213,7 @@ bool OrderManager::is_vehicle_waiting_for_update()
   return false;
 }
 
-void OrderManager::accept_new_order(order::Order order)
+void OrderManager::accept_new_order(vda5050_types::Order order)
 {
   /// set the state of the current order to the newly accepted order. order_id_ and order_update_id will be updated.
   current_order_ = order;
@@ -222,6 +227,129 @@ void OrderManager::reject_order()
   /// TODO: this will eventually return some sort of struct that BTree will use 
   return;
 }
+
+OrderManager::Order::Order(vda5050_types::Order& order)
+: vda5050_types::Order(order)
+{
+  populate_graph();
+  populate_base_and_horizon();
+  set_decision_point();
+}
+
+void OrderManager::Order::stitch_and_set_order_update_id(Order order)
+{
+  try
+  {
+    stitch_order(order);
+  }
+  catch (const std::exception& e)
+  {
+    std::cerr << e.what() << '\n';
+  }
+
+  set_order_update_id(order.order_update_id);
+}
+
+void OrderManager::Order::populate_graph()
+{
+  auto getSequenceId
+  {
+    [](auto const& graph_element)
+    {
+      return graph_element.sequence_id;
+    }
+  };
+
+  auto sequenceIdComparison
+  {
+    [&getSequenceId](auto const& a, auto const& b)
+    {
+      return std::visit(getSequenceId, a) < std::visit(getSequenceId, b);
+    }
+  };
+
+  for (vda5050_types::Node& n : nodes)
+  {
+    graph_.push_back(n);
+  }
+
+  for (vda5050_types::Edge& e : edges)
+  {
+    graph_.push_back(e);
+  }
+
+  std::sort(graph_.begin(), graph_.end(), sequenceIdComparison);
+}
+
+void OrderManager::Order::populate_base_and_horizon()
+{
+  auto isReleased
+  {
+    [](auto&& graph_element) -> bool
+    {
+      return graph_element.released;
+    }
+  };
+
+  for (const auto& graph_element : graph_)
+  {
+    bool is_released = std::visit(isReleased, graph_element);
+
+    if (is_released)
+    {
+      base_.push_back(graph_element);
+    }
+    else
+    {
+      horizon_.push_back(graph_element);
+    }
+  }
+}
+
+void OrderManager::Order::set_decision_point()
+{
+  if (base_.empty())
+  {
+    throw std::runtime_error("OrderManager error: Base of the given order is empty.");
+  }
+
+  if (const vda5050_types::Node* pNode = std::get_if<vda5050_types::Node>(&base_.back()))
+  {
+    decision_point_ = *pNode;
+  }
+  else
+  {
+    throw std::runtime_error("OrderManager error: Last graph element in the given order is not of type vda50505_types::Node.");
+  }
+}
+
+/// stitch this order with another order. stitching node could be horizon or base node.
+void OrderManager::Order::stitch_order(Order order)
+{
+  /// check that decision point of this order matches with the first node of the incoming order and if the first node of the incoming order is released
+  vda5050_types::Node stitching_node{ order.nodes.front() };
+  if (
+    decision_point_.node_id != stitching_node.node_id ||
+    !stitching_node.released)
+  {
+    throw std::runtime_error(
+      "Order error: Stitching node of the incoming order does not match the "
+      "current order's decision point.");
+  }
+
+  /// concatenate the current and incoming graphs
+  graph_.pop_back();  /// pop the last node from the current graph
+  graph_.insert(graph_.end(), order.graph().begin(), order.graph().end());
+
+  /// update the base and horizon of the current order
+  populate_base_and_horizon();
+}
+
+void OrderManager::Order::set_order_update_id(uint32_t new_order_update_id)
+{
+  order_update_id = new_order_update_id;
+}
+
 
 }  // namespace order_manager
 }  // namespace vda5050_core

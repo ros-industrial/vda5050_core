@@ -133,13 +133,7 @@ private:
   /// \brief Populate the graph_ member variable.
   void populate_graph();
 
-  /// \brief Idempotent function to populate the base_ member variable with all released nodes and edges.
-  void populate_base();
-
-  /// \brief Idempotent function to populate the horizon_ member variable with all unreleased nodes and edges.
-  void populate_horizon();
-
-  ///
+  /// \brief Populate the base_ and horizon_ member variables
   void populate_base_and_horizon();
 
   /// \brief Stitch this order with another order.

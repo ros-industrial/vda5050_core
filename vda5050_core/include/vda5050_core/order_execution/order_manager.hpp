@@ -23,9 +23,11 @@
 #include <vector>
 #include <cstdint>
 #include <memory>
+#include <variant>
 
 #include "vda5050_core/order_execution/order.hpp"
 #include "vda5050_types/state.hpp"
+#include "vda5050_types/order.hpp"
 
 namespace vda5050_core {
 
@@ -47,7 +49,7 @@ public:
   /// \param state A snapshot of the vehicle's current state 
   ///
   /// \return True if order update has been accepted by the order manager, false otherwise.
-  bool update_current_order(order::Order order, const vda5050_types::State& state);
+  bool update_current_order(vda5050_types::Order& order, const vda5050_types::State& state);
 
   /// \brief Puts a new order on the vehicle
   ///
@@ -55,16 +57,67 @@ public:
   /// \param state A snapshot of the vehicle's current state
   ///
   /// \return True if the new order has been accepted by the order manager, false otherwise
-  bool make_new_order(order::Order order, const vda5050_types::State& state);
+  bool make_new_order(vda5050_types::Order& order, const vda5050_types::State& state);
 
   /// \brief Returns the next graph element of the current order that is to be executed.
   ///
   /// \return The graph element that is to be executed next.
-  std::optional<std::shared_ptr<order_graph_element::OrderGraphElement>> next_graph_element();
+  const std::optional<std::variant<vda5050_types::Node, vda5050_types::Edge>> next_graph_element();
 
 private:
+  class Order : public vda5050_types::Order
+  {
+    public:
+      Order(vda5050_types::Order& order);
+
+      const vda5050_types::Node& decision_point() const
+      {
+        return decision_point_;
+      }
+
+      const std::vector<std::variant<vda5050_types::Node, vda5050_types::Edge>>& graph() const
+      {
+        return graph_;
+      }
+
+      const std::vector<std::variant<vda5050_types::Node, vda5050_types::Edge>>& base() const
+      {
+        return base_;
+      }
+
+      const std::vector<std::variant<vda5050_types::Node, vda5050_types::Edge>>& horizon() const
+      {
+        return horizon_;
+      }
+
+      void stitch_and_set_order_update_id(Order order);
+    
+    private:
+      /// \brief The graph created by the nodes and edges of this order.
+      std::vector<std::variant<vda5050_types::Node, vda5050_types::Edge>> graph_;
+
+      /// \brief The base of this order. Contains the released nodes and edges sorted in ascending sequenceId
+      std::vector<std::variant<vda5050_types::Node, vda5050_types::Edge>> base_;
+
+      /// \brief The horizion of this order. Contains the unreleased nodes and edges sorted in ascending sequenceId
+      std::vector<std::variant<vda5050_types::Node, vda5050_types::Edge>> horizon_;
+
+      /// \brief The last node in this order's base, or the last released node according to sequenceId
+      vda5050_types::Node decision_point_;
+
+      void populate_graph();
+
+      void populate_base_and_horizon();
+
+      void set_decision_point();
+
+      void stitch_order(Order order);
+
+      void set_order_update_id(uint32_t new_order_update_id); 
+  };
+
   /// \brief The order that is currently on the vehicle
-  std::optional<order::Order> current_order_;
+  std::optional<Order> current_order_;
 
   /// \brief The index of current order's graph element that is to be dispatched next
   size_t current_graph_element_index_;
@@ -91,12 +144,12 @@ private:
   /// \param order_update The incoming order update
   ///
   /// \return True if order_update is a valid continuation
-  bool is_update_order_valid_continuation(order::Order& order_update);
+  bool is_update_order_valid_continuation(vda5050_types::Order& order_update);
 
   /// \brief Accept a validated order and set it to the vehicle's current_order_
   ///
   /// \param valid_order The validated order
-  void accept_new_order(order::Order order);
+  void accept_new_order(vda5050_types::Order order);
 
   /// \brief Reject an order
   /// TODO This is currently incomplete. To find out what logic needs to be handled during order rejection
