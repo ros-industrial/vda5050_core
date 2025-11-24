@@ -8,6 +8,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(PahoMqttCpp REQUIRED)
 find_package(fmt REQUIRED)
+find_package(vda5050_types REQUIRED)
 
 include(GNUInstallDirs)
 
@@ -33,11 +34,23 @@ target_include_directories(logger
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+add_library(order_manager src/vda5050_core/order_execution/order_manager.cpp)
+target_link_libraries(order_manager
+  PRIVATE
+    vda5050_types::vda5050_types
+)
+target_include_directories(order_manager
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
 add_library(vda5050_core INTERFACE)
 target_link_libraries(vda5050_core
   INTERFACE
     mqtt_client
     logger
+    order_manager
 )
 target_include_directories(vda5050_core
   INTERFACE
@@ -54,6 +67,7 @@ install(
   TARGETS
     mqtt_client
     logger
+    order_manager
     vda5050_core
   EXPORT export_vda5050_core
   LIBRARY DESTINATION lib
@@ -94,6 +108,14 @@ if(BUILD_TESTING)
     test/integration/mqtt_client/test_paho_mqtt_client.cpp
   )
   target_link_libraries(test_mqtt_client mqtt_client logger)
+
+  ament_add_gmock(test_OrderManager
+    test/unit/order_manager/test_order_manager.cpp)
+  target_include_directories(test_OrderManager
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+           $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  target_link_libraries(test_OrderManager
+    order_manager vda5050_types)
 endif()
 
 ament_package()
