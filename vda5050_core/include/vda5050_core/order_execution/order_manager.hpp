@@ -90,6 +90,9 @@ private:
         return horizon_;
       }
 
+      /// \brief Stitch this order with another order and update the order_update_id if stitching is successful.
+      ///
+      /// \param order The incoming order to stitch to this order.
       void stitch_and_set_order_update_id(Order order);
     
     private:
@@ -105,14 +108,19 @@ private:
       /// \brief The last node in this order's base, or the last released node according to sequenceId
       vda5050_types::Node decision_point_;
 
+      /// \brief Populate the graph_ member variable.
       void populate_graph();
 
+      /// \brief Populate the base_ and horizon_ member variables
       void populate_base_and_horizon();
 
+      /// \brief Set decision_point_ to the last released node in the order.
       void set_decision_point();
 
+      /// \brief Stitch this order with another order.
       void stitch_order(Order order);
 
+      /// \brief Set a new order_update_id.
       void set_order_update_id(uint32_t new_order_update_id); 
   };
 
