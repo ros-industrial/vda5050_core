@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 #include <memory>
+#include <optional>
 
 #include "vda5050_core/order_execution/edge.hpp"
 #include "vda5050_core/order_execution/node.hpp"
@@ -43,11 +44,11 @@ class OrderManagerTest : public testing::Test
 {
 protected:
   /// Basic set of nodes and edges to construct a fully released order
-  vda5050_types::Node n1{"node1", 1, true};
-  vda5050_types::Edge e2{"edge2", 2, "node1", "node5", true};
-  vda5050_types::Node n3{"node3", 3, true};
-  vda5050_types::Edge e4{"edge4", 4, "node1", "node5", true};
-  vda5050_types::Node n5{"node5", 5, true};
+  vda5050_types::Node n1{"node1", 1, true, {}, std::nullopt, std::nullopt};
+  vda5050_types::Edge e2{"edge2", 2, "node1", "node5", true, {}, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt};
+  vda5050_types::Node n3{"node3", 3, true, {}, std::nullopt, std::nullopt};
+  vda5050_types::Edge e4{"edge4", 4, "node1", "node5", true, {}, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt};
+  vda5050_types::Node n5{"node5", 5, true, {}, std::nullopt, std::nullopt};
 
   std::vector<vda5050_types::Node> fully_released_nodes = {n1, n3, n5};
   std::vector<vda5050_types::Edge> fully_released_edges = {e2, e4};
@@ -55,15 +56,15 @@ protected:
   
 
   /// create a valid new order that the vehicle can reach from the fully_released_order
-  vda5050_types::Edge e6{"edge6", 6, "node5", "node7", true};
-  vda5050_types::Node n7{"node7", 7, true};
+  vda5050_types::Edge e6{"edge6", 6, "node5", "node7", true, {}, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt};
+  vda5050_types::Node n7{"node7", 7, true, {}, std::nullopt, std::nullopt};
   std::vector<vda5050_types::Node> order2Nodes{n5, n7};
   std::vector<vda5050_types::Edge> order2Edges{e6};
   vda5050_types::Order order2{};
 
   /// Create a partially released order
-  vda5050_types::Edge unreleased_e4{"edge4", 4, "node1", "node5", false};
-  vda5050_types::Node unreleased_n5{"node5", 5, false};
+  vda5050_types::Edge unreleased_e4{"edge4", 4, "node1", "node5", false, {}, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt};
+  vda5050_types::Node unreleased_n5{"node5", 5, false, {}, std::nullopt, std::nullopt};
   std::vector<vda5050_types::Node> partially_released_nodes = {
     n1, n3, unreleased_n5};
   std::vector<vda5050_types::Edge> partially_released_edges = {
@@ -239,9 +240,9 @@ TEST_F(OrderManagerTest, NewOrderNodeNotTriviallyReachable)
   EXPECT_EQ(is_first_order_accepted, true);
 
   /// create an order with a non-trivially reachable node
-  vda5050_types::Node n7{"node7", 7, true};
-  vda5050_types::Edge e8{"edge8", 8, "node7", "node9", true};
-  vda5050_types::Node n9{"node9", 9, true};
+  vda5050_types::Node n7{"node7", 7, true, {}, std::nullopt, std::nullopt};
+  vda5050_types::Edge e8{"edge8", 8, "node7", "node9", true, {}, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt};
+  vda5050_types::Node n9{"node9", 9, true, {}, std::nullopt, std::nullopt};
 
   std::vector<vda5050_types::Node> unreachableOrderNodes{n7, n9};
   std::vector<vda5050_types::Edge> unreachableOrderEdges{e8};
@@ -357,9 +358,6 @@ TEST_F(OrderManagerTest, OrderUpdateInvalidContinuationOfCurrentOrder)
 /// \brief Test if OrderManager returns the graph elements from the base of an order correctly
 TEST_F(OrderManagerTest, GetNextGraphElement)
 {
-
-
-
   bool is_first_order_accepted = orderManager.make_new_order(partially_released_order, init_state);
 
   EXPECT_EQ(is_first_order_accepted, true);
