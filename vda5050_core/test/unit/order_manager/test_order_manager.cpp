@@ -25,6 +25,10 @@
 #include "vda5050_core/order_execution/node.hpp"
 #include "vda5050_core/order_execution/order.hpp"
 #include "vda5050_core/order_execution/order_manager.hpp"
+#include "vda5050_types/action.hpp"
+#include "vda5050_types/node.hpp"
+#include "vda5050_types/edge.hpp"
+#include "vda5050_types/order.hpp"
 #include "vda5050_types/state.hpp"
 #include "vda5050_types/header.hpp"
 #include "vda5050_types/node_state.hpp"
@@ -39,38 +43,37 @@ class OrderManagerTest : public testing::Test
 {
 protected:
   /// Basic set of nodes and edges to construct a fully released order
-  vda5050_core::node::Node n1{1, true, "node1"};
-  vda5050_core::edge::Edge e2{2, true, "edge2", "node1", "node5"};
-  vda5050_core::node::Node n3{3, true, "node3"};
-  vda5050_core::edge::Edge e4{4, true, "edge4", "node1", "node5"};
-  vda5050_core::node::Node n5{5, true, "node5"};
+  vda5050_types::Node n1{"node1", 1, true};
+  vda5050_types::Edge e2{"edge2", 2, "node1", "node5", true};
+  vda5050_types::Node n3{"node3", 3, true};
+  vda5050_types::Edge e4{"edge4", 4, "node1", "node5", true};
+  vda5050_types::Node n5{"node5", 5, true};
 
-  std::vector<vda5050_core::node::Node> fully_released_nodes = {n1, n3, n5};
-  std::vector<vda5050_core::edge::Edge> fully_released_edges = {e2, e4};
-  vda5050_core::order::Order fully_released_order{"order1", 0, fully_released_nodes, fully_released_edges};
+  std::vector<vda5050_types::Node> fully_released_nodes = {n1, n3, n5};
+  std::vector<vda5050_types::Edge> fully_released_edges = {e2, e4};
+  vda5050_types::Order fully_released_order{};
+  
 
   /// create a valid new order that the vehicle can reach from the fully_released_order
-  vda5050_core::edge::Edge e6{6, true, "edge6", "node5", "node7"};
-  vda5050_core::node::Node n7{7, true, "node7"};
-  std::vector<vda5050_core::node::Node> order2Nodes{n5, n7};
-  std::vector<vda5050_core::edge::Edge> order2Edges{e6};
-  vda5050_core::order::Order order2{"order2", 0, order2Nodes, order2Edges};
+  vda5050_types::Edge e6{"edge6", 6, "node5", "node7", true};
+  vda5050_types::Node n7{"node7", 7, true};
+  std::vector<vda5050_types::Node> order2Nodes{n5, n7};
+  std::vector<vda5050_types::Edge> order2Edges{e6};
+  vda5050_types::Order order2{};
 
   /// Create a partially released order
-  vda5050_core::edge::Edge unreleased_e4{4, false, "edge4", "node1", "node5"};
-  vda5050_core::node::Node unreleased_n5{5, false, "node5"};
-  std::vector<vda5050_core::node::Node> partially_released_nodes = {
+  vda5050_types::Edge unreleased_e4{"edge4", 4, "node1", "node5", false};
+  vda5050_types::Node unreleased_n5{"node5", 5, false};
+  std::vector<vda5050_types::Node> partially_released_nodes = {
     n1, n3, unreleased_n5};
-  std::vector<vda5050_core::edge::Edge> partially_released_edges = {
+  std::vector<vda5050_types::Edge> partially_released_edges = {
     e2, unreleased_e4};
-  vda5050_core::order::Order partially_released_order{
-    "order1", 0, partially_released_nodes, partially_released_edges};
+  vda5050_types::Order partially_released_order{};
 
   /// Update the partially released order
-  std::vector<vda5050_core::node::Node> order_update_nodes = {n3, n5};
-  std::vector<vda5050_core::edge::Edge> order_update_edges = {e4};
-  vda5050_core::order::Order order_update{
-    "order1", 1, order_update_nodes, order_update_edges};
+  std::vector<vda5050_types::Node> order_update_nodes = {n3, n5};
+  std::vector<vda5050_types::Edge> order_update_edges = {e4};
+  vda5050_types::Order order_update{};
 
   /// Instance of an OrderManager
   vda5050_core::order_manager::OrderManager orderManager{};
@@ -90,6 +93,26 @@ protected:
   /// Setup function that runs before each test
   void SetUp() override
   {
+    fully_released_order.order_id = "order1";
+    fully_released_order.order_update_id = 0;
+    fully_released_order.nodes = fully_released_nodes;
+    fully_released_order.edges = fully_released_edges;
+
+    order2.order_id = "order2";
+    order2.order_update_id = 0;
+    order2.nodes = order2Nodes;
+    order2.edges = order2Edges;
+
+    partially_released_order.order_id = "order1";
+    partially_released_order.order_update_id = 0;
+    partially_released_order.nodes = partially_released_nodes;
+    partially_released_order.edges = partially_released_edges;
+
+    order_update.order_id = "order1";
+    order_update.order_update_id = 1;
+    order_update.nodes = order_update_nodes;
+    order_update.edges = order_update_edges;
+
     /// NOTE: fully_released_state is AFTER the vehicle has completed the order, so node and edge states should be empty!    
     fully_released_state.order_id = "order1";
     fully_released_state.last_node_id = "node5";
@@ -105,19 +128,18 @@ protected:
     order_update_state.last_node_id = "node5";
     order_update_state.last_node_sequence_id = 5;
     order_update_state.order_update_id = 1;
-
   }
 
   /// \brief Helper function to create a vector of node states
-  std::vector<vda5050_types::NodeState> create_node_states(std::vector<vda5050_core::node::Node>& nodes)
+  std::vector<vda5050_types::NodeState> create_node_states(std::vector<vda5050_types::Node>& nodes)
   {
     std::vector<vda5050_types::NodeState> node_states_vector;
-    for (vda5050_core::node::Node n : nodes)
+    for (vda5050_types::Node n : nodes)
     {
       vda5050_types::NodeState node_state{};
-      node_state.node_id = n.node_id();
-      node_state.sequence_id = n.sequence_id();
-      node_state.released = n.released();
+      node_state.node_id = n.node_id;
+      node_state.sequence_id = n.sequence_id;
+      node_state.released = n.released;
 
       node_states_vector.push_back(node_state);
     }
@@ -126,16 +148,16 @@ protected:
   }
 
   /// \brief Helper function to create a vector of edge states
-  std::vector<vda5050_types::EdgeState> create_edge_states(std::vector<vda5050_core::edge::Edge>& edges)
+  std::vector<vda5050_types::EdgeState> create_edge_states(std::vector<vda5050_types::Edge>& edges)
   {
     std::vector<vda5050_types::EdgeState> edge_states_vector;
 
-    for (vda5050_core::edge::Edge e : edges)
+    for (vda5050_types::Edge e : edges)
     {
       vda5050_types::EdgeState edge_state{};
-      edge_state.edge_id = e.edge_id();
-      edge_state.sequence_id = e.sequence_id();
-      edge_state.released = e.released();
+      edge_state.edge_id = e.edge_id;
+      edge_state.sequence_id = e.sequence_id;
+      edge_state.released = e.released;
 
       edge_states_vector.push_back(edge_state);
     }
@@ -173,8 +195,8 @@ TEST_F(OrderManagerTest, NewOrderNodeStatesNotEmpty)
   EXPECT_EQ(is_first_order_accepted, true);
 
   /// create State with non-empty NodeStates
-  std::vector<vda5050_core::node::Node> unexecuted_nodes {n3, n5};
-  std::vector<vda5050_core::edge::Edge> unexecuted_edges {e4};
+  std::vector<vda5050_types::Node> unexecuted_nodes {n3, n5};
+  std::vector<vda5050_types::Edge> unexecuted_edges {e4};
   std::vector<vda5050_types::NodeState> fully_released_node_states {create_node_states(unexecuted_nodes)};
   std::vector<vda5050_types::EdgeState> fully_released_edge_states {create_edge_states(unexecuted_edges)};
   fully_released_state.node_states = fully_released_node_states;
@@ -217,14 +239,17 @@ TEST_F(OrderManagerTest, NewOrderNodeNotTriviallyReachable)
   EXPECT_EQ(is_first_order_accepted, true);
 
   /// create an order with a non-trivially reachable node
-  vda5050_core::node::Node n7{7, true, "node7"};
-  vda5050_core::edge::Edge e8{8, true, "edge8", "node7", "node9"};
-  vda5050_core::node::Node n9{9, true, "node9"};
+  vda5050_types::Node n7{"node7", 7, true};
+  vda5050_types::Edge e8{"edge8", 8, "node7", "node9", true};
+  vda5050_types::Node n9{"node9", 9, true};
 
-  std::vector<vda5050_core::node::Node> unreachableOrderNodes{n7, n9};
-  std::vector<vda5050_core::edge::Edge> unreachableOrderEdges{e8};
-  vda5050_core::order::Order unreachableOrder{
-    "unreachableOrder", 0, unreachableOrderNodes, unreachableOrderEdges};
+  std::vector<vda5050_types::Node> unreachableOrderNodes{n7, n9};
+  std::vector<vda5050_types::Edge> unreachableOrderEdges{e8};
+  vda5050_types::Order unreachableOrder{};
+  unreachableOrder.order_id = "unreachableOrder";
+  unreachableOrder.order_update_id = 0;
+  unreachableOrder.nodes = unreachableOrderNodes;
+  unreachableOrder.edges = unreachableOrderEdges;
 
   ::testing::internal::CaptureStderr();
 
@@ -260,10 +285,13 @@ TEST_F(OrderManagerTest, OrderUpdateDeprecated)
 
   EXPECT_EQ(is_order_update_accepted, true);
 
-  std::vector<vda5050_core::node::Node> deprecated_update_nodes{n3, n5, n7};
-  std::vector<vda5050_core::edge::Edge> deprecated_update_edges{e4, e6};
-  vda5050_core::order::Order deprecated_update_order{
-    "order1", 0, deprecated_update_nodes, deprecated_update_edges};
+  std::vector<vda5050_types::Node> deprecated_update_nodes{n3, n5, n7};
+  std::vector<vda5050_types::Edge> deprecated_update_edges{e4, e6};
+  vda5050_types::Order deprecated_update_order{};
+  deprecated_update_order.order_id = "order1";
+  deprecated_update_order.order_update_id = 0;
+  deprecated_update_order.nodes = deprecated_update_nodes;
+  deprecated_update_order.edges = deprecated_update_edges;
 
   ::testing::internal::CaptureStderr();
 
@@ -307,10 +335,13 @@ TEST_F(OrderManagerTest, OrderUpdateInvalidContinuationOfCurrentOrder)
   EXPECT_EQ(is_first_order_accepted, true);
 
   /// Create an orderUpdate that is not a valid continuation from partially_released_order
-  std::vector<vda5050_core::node::Node> invalid_continuation_nodes{n5, n7};
-  std::vector<vda5050_core::edge::Edge> invalid_continuation_edges{e6};
-  vda5050_core::order::Order invalid_continuation{
-    "order1", 1, invalid_continuation_nodes, invalid_continuation_edges};
+  std::vector<vda5050_types::Node> invalid_continuation_nodes{n5, n7};
+  std::vector<vda5050_types::Edge> invalid_continuation_edges{e6};
+  vda5050_types::Order invalid_continuation{};
+  invalid_continuation.order_id = "order1";
+  invalid_continuation.order_update_id = 1;
+  invalid_continuation.nodes = invalid_continuation_nodes;
+  invalid_continuation.edges = invalid_continuation_edges;
 
   ::testing::internal::CaptureStderr();
 
@@ -326,35 +357,32 @@ TEST_F(OrderManagerTest, OrderUpdateInvalidContinuationOfCurrentOrder)
 /// \brief Test if OrderManager returns the graph elements from the base of an order correctly
 TEST_F(OrderManagerTest, GetNextGraphElement)
 {
+
+
+
   bool is_first_order_accepted = orderManager.make_new_order(partially_released_order, init_state);
 
   EXPECT_EQ(is_first_order_accepted, true);
 
-  if (auto graph_element_ref = orderManager.next_graph_element())
+  if (std::optional<std::variant<vda5050_types::Node, vda5050_types::Edge>> graph_element_ref = orderManager.next_graph_element())
   {
-    auto graph_element = graph_element_ref.value();
-    if(auto node = std::dynamic_pointer_cast<vda5050_core::node::Node>(graph_element))
-    {
-      EXPECT_EQ(node->node_id(), n1.node_id());
-    }
+    std::variant<vda5050_types::Node, vda5050_types::Edge> graph_element = graph_element_ref.value();
+    vda5050_types::Node graph_element_1 = std::get<vda5050_types::Node>(graph_element);
+    EXPECT_EQ(graph_element_1.node_id, n1.node_id);
   }
 
   if (auto graph_element_ref = orderManager.next_graph_element())
   {
     auto graph_element = graph_element_ref.value();
-    if(auto edge = std::dynamic_pointer_cast<vda5050_core::edge::Edge>(graph_element))
-    {
-      EXPECT_EQ(edge->edge_id(), e2.edge_id());
-    }
+    vda5050_types::Edge graph_element_2 = std::get<vda5050_types::Edge>(graph_element);
+    EXPECT_EQ(graph_element_2.edge_id, e2.edge_id);
   }
 
   if (auto graph_element_ref = orderManager.next_graph_element())
   {
     auto graph_element = graph_element_ref.value();
-    if(auto node = std::dynamic_pointer_cast<vda5050_core::node::Node>(graph_element))
-    {
-      EXPECT_EQ(node->node_id(), n3.node_id());
-    }
+    vda5050_types::Node graph_element_3 = std::get<vda5050_types::Node>(graph_element);
+    EXPECT_EQ(graph_element_3.node_id, n3.node_id);
   }
 
   auto final_element = orderManager.next_graph_element();
