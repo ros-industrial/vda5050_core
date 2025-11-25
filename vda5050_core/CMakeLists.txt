@@ -8,6 +8,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(PahoMqttCpp REQUIRED)
 find_package(fmt REQUIRED)
+find_package(vda5050_types REQUIRED)
 
 include(GNUInstallDirs)
 
@@ -33,11 +34,19 @@ target_include_directories(logger
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+add_library(state_manager src/vda5050_core/state_manager/state_manager.cpp)
+target_link_libraries(state_manager
+  vda5050_types::vda5050_types)
+target_include_directories(state_manager
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+
 add_library(vda5050_core INTERFACE)
 target_link_libraries(vda5050_core
   INTERFACE
     mqtt_client
     logger
+    state_manager
 )
 target_include_directories(vda5050_core
   INTERFACE
@@ -54,6 +63,7 @@ install(
   TARGETS
     mqtt_client
     logger
+    state_manager
     vda5050_core
   EXPORT export_vda5050_core
   LIBRARY DESTINATION lib
@@ -91,9 +101,10 @@ if(BUILD_TESTING)
     test/unit/mqtt_client/test_mqtt_client_interface.cpp
     test/unit/logger/test_logger.cpp
     test/unit/logger/test_default_logger.cpp
+    test/unit/state_manager/test_state_manager.cpp
     test/integration/mqtt_client/test_paho_mqtt_client.cpp
   )
-  target_link_libraries(test_mqtt_client mqtt_client logger)
+  target_link_libraries(test_mqtt_client mqtt_client logger state_manager)
 endif()
 
 ament_package()
