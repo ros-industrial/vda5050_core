@@ -341,7 +341,6 @@ void StateManager::set_new_order(const Order& order)
   std::string last_node_id = this->robot_state_.last_node_id;
   this->robot_state_ = State();
   this->robot_state_.last_node_id = last_node_id;
-
   this->robot_state_.order_id = order.order_id;
   this->robot_state_.order_update_id = order.order_update_id;
   this->robot_state_.zone_set_id = order.zone_set_id;
