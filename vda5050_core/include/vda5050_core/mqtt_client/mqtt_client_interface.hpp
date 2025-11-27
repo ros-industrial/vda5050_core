@@ -39,6 +39,9 @@ public:
   /// \brief Disconnect from the the MQTT broker
   virtual void disconnect() = 0;
 
+  /// \brief Check MQTT connection
+  virtual bool connected() = 0;
+
   /// \brief Publish a message to the MQTT broker
   ///
   /// \param topic Topic for publish
@@ -62,6 +65,14 @@ public:
   ///
   /// \param topic Topic to unsubscribe from
   virtual void unsubscribe(const std::string& topic) = 0;
+
+  /// \brief Set a will message for when the client disconnects abruptly
+  ///
+  /// \param topic Topic to publish will message
+  /// \param message Raw message string
+  /// \param Quality of service setting for the publish
+  virtual void set_will(
+    const std::string& topic, const std::string& message, int qos) = 0;
 };
 
 /// \brief Create a default MQTT client interface

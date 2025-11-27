@@ -109,15 +109,7 @@ void PahoMqttClient::connect()
 
   try
   {
-    mqtt::connect_options conn_options;
-    conn_options.set_mqtt_version(4);
-    conn_options.set_clean_session(false);
-    conn_options.set_user_name("");
-    conn_options.set_password("");
-    conn_options.set_automatic_reconnect(true);
-    conn_options.set_automatic_reconnect(2, 32);
-
-    client_->connect(conn_options, nullptr, action_listener_)->wait();
+    client_->connect(conn_options_, nullptr, action_listener_)->wait();
   }
   catch (const mqtt::exception& e)
   {
@@ -142,6 +134,12 @@ void PahoMqttClient::disconnect()
       VDA5050_ERROR_STREAM("MQTT disconnection failed: " << e.get_message());
     }
   }
+}
+
+//=============================================================================
+bool PahoMqttClient::connected()
+{
+  return client_->is_connected();
 }
 
 //=============================================================================
@@ -195,6 +193,19 @@ void PahoMqttClient::unsubscribe(const std::string& topic)
 }
 
 //=============================================================================
+void PahoMqttClient::set_will(
+  const std::string& topic, const std::string& message, int qos)
+{
+  mqtt::will_options will;
+  will.set_topic(topic);
+  will.set_retained(true);
+  will.set_qos(qos);
+  will.set_payload(message);
+
+  conn_options_.set_will(will);
+}
+
+//=============================================================================
 PahoMqttClient::PahoMqttClient(
   const std::string& broker_address, const std::string& client_id)
 : client_(std::make_unique<mqtt::async_client>(broker_address, client_id)),
@@ -202,6 +213,13 @@ PahoMqttClient::PahoMqttClient(
   callback_(MqttCallback(*this))
 {
   client_->set_callback(callback_);
+
+  conn_options_.set_mqtt_version(4);
+  conn_options_.set_clean_session(false);
+  conn_options_.set_user_name("");
+  conn_options_.set_password("");
+  conn_options_.set_automatic_reconnect(true);
+  conn_options_.set_automatic_reconnect(2, 32);
 }
 
 }  // namespace mqtt_client
