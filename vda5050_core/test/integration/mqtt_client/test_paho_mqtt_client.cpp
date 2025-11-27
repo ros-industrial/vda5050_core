@@ -35,6 +35,7 @@ TEST(PahoMqttClientTest, PublishSubscribe)
   auto listener =
     vda5050_core::mqtt_client::create_default_client(broker, "listener");
   ASSERT_NO_THROW(listener->connect());
+  ASSERT_TRUE(listener->connected());
   ASSERT_NO_THROW(listener->subscribe(
     topic,
     [&](const std::string& topic_, const std::string& payload_) {
