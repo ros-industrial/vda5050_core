@@ -114,13 +114,16 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_mqtt_client mqtt_client logger)
 
+  find_package(ament_cmake_gtest REQUIRED)
   ament_add_gtest(test_OrderManager
     test/unit/order_manager/test_order_manager.cpp)
+  target_link_libraries(test_OrderManager
+  client 
+  vda5050_types::vda5050_types
+  )
   target_include_directories(test_OrderManager
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-  target_link_libraries(test_OrderManager
-    client vda5050_types)
 endif()
 
 ament_package()
