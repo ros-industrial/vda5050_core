@@ -22,7 +22,7 @@
 #include <variant>
 #include <algorithm>
 
-#include "vda5050_core/order_execution/order_manager.hpp"
+#include "vda5050_core/client/order/order_manager.hpp"
 #include "vda5050_types/state.hpp"
 #include "vda5050_types/action_status.hpp"
 #include "vda5050_types/order.hpp"

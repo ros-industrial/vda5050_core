@@ -22,7 +22,7 @@
 #include <memory>
 #include <optional>
 
-#include "vda5050_core/order_execution/order_manager.hpp"
+#include "vda5050_core/client/order/order_manager.hpp"
 #include "vda5050_types/action.hpp"
 #include "vda5050_types/node.hpp"
 #include "vda5050_types/edge.hpp"
