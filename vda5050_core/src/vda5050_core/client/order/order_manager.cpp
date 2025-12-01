@@ -42,6 +42,8 @@ OrderManager::OrderManager() : current_graph_element_index_{0} {};
 ValidationResult OrderManager::update_current_order(
   vda5050_types::Order& order, const vda5050_types::State& state)
 {
+  /// TODO: Check for graph validation
+
   Order received_order{order};
   ValidationResult res{true, {}};
 
@@ -216,6 +218,8 @@ ValidationResult OrderManager::update_current_order(
 ValidationResult OrderManager::make_new_order(
   vda5050_types::Order& order, const vda5050_types::State& state)
 {
+  /// TODO: Check for graph validation
+  
   Order received_order{order};
   ValidationResult res{true, {}};
 
