@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <memory>
 #include <optional>
@@ -30,8 +29,6 @@
 #include "vda5050_types/node_state.hpp"
 #include "vda5050_types/order.hpp"
 #include "vda5050_types/state.hpp"
-
-using ::testing::HasSubstr;
 
 class OrderManagerTest : public testing::Test
 {
@@ -251,12 +248,6 @@ TEST_F(OrderManagerTest, NewOrderNodeStatesNotEmpty)
 
   std::string err = ::testing::internal::GetCapturedStderr();
 
-  // EXPECT_THAT(
-  //   err,
-  //   HasSubstr(
-  //     "OrderManager error: Vehicle is not ready to accept a new order. Vehicle "
-  //     "is either still executing or waiting for an order update."));
-
   EXPECT_EQ(is_second_order_accepted, false);
 }
 
@@ -275,11 +266,6 @@ TEST_F(OrderManagerTest, NewOrderVehicleWaitingForUpdate)
     orderManager.make_new_order(order2, partially_released_state).valid};
 
   std::string err = ::testing::internal::GetCapturedStderr();
-
-  // EXPECT_THAT(
-  //   err,
-  //   HasSubstr("OrderManager error: Vehicle is not ready to accept a new order "
-  //             "and received order's start node is not trivially reachable."));
 
   EXPECT_EQ(is_second_order_accepted, false);
 }
@@ -320,11 +306,6 @@ TEST_F(OrderManagerTest, NewOrderNodeNotTriviallyReachable)
     orderManager.make_new_order(unreachableOrder, fully_released_state).valid};
 
   std::string err = ::testing::internal::GetCapturedStderr();
-
-  // EXPECT_THAT(
-  //   err,
-  //   HasSubstr("OrderManager error: Vehicle is not ready to accept a new order "
-  //             "and received order's start node is not trivially reachable."));
 
   EXPECT_EQ(is_unreachable_order_accepted, false);
 }
@@ -377,9 +358,6 @@ TEST_F(OrderManagerTest, OrderUpdateDeprecated)
 
   std::string err = ::testing::internal::GetCapturedStderr();
 
-  // EXPECT_THAT(
-  //   err, HasSubstr("OrderManager error: Order update is deprecated."));
-
   EXPECT_EQ(is_deprecated_update_accepted, false);
 }
 
@@ -404,9 +382,6 @@ TEST_F(OrderManagerTest, OrderUpdateOnVehicle)
     orderManager.update_current_order(order_update, order_update_state).valid;
 
   std::string err = ::testing::internal::GetCapturedStderr();
-
-  // EXPECT_THAT(
-  //   err, HasSubstr("OrderManager warning: Received duplicate order update"));
 
   EXPECT_EQ(is_duplicate_order_update_accepted, false);
 }
@@ -438,10 +413,6 @@ TEST_F(OrderManagerTest, OrderUpdateInvalidContinuationOfCurrentOrder)
       .valid;
 
   std::string err = ::testing::internal::GetCapturedStderr();
-
-  // EXPECT_THAT(
-  //   err, HasSubstr("OrderManager error: Order update rejected as it is not a "
-  //                  "valid continuation of the previously completed order."));
 
   EXPECT_EQ(is_invalid_order_update_accepted, false);
 }
