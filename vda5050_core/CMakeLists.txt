@@ -34,12 +34,12 @@ target_include_directories(logger
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-add_library(order_manager src/vda5050_core/order_execution/order_manager.cpp)
-target_link_libraries(order_manager
+add_library(client src/vda5050_core/client/order/order_manager.cpp)
+target_link_libraries(client
   PRIVATE
     vda5050_types::vda5050_types
 )
-target_include_directories(order_manager
+target_include_directories(client
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -50,7 +50,7 @@ target_link_libraries(vda5050_core
   INTERFACE
     mqtt_client
     logger
-    order_manager
+    client
 )
 target_include_directories(vda5050_core
   INTERFACE
@@ -67,7 +67,7 @@ install(
   TARGETS
     mqtt_client
     logger
-    order_manager
+    client
     vda5050_core
   EXPORT export_vda5050_core
   LIBRARY DESTINATION lib
@@ -90,7 +90,12 @@ if(BUILD_TESTING)
   ament_cppcheck()
 
   find_package(ament_cmake_cpplint REQUIRED)
-  ament_cpplint()
+  set(cpplint_filters
+    "-whitespace/newline"
+  )
+  ament_cpplint(
+    FILTERS "${cpplint_filters}"
+  )
 
   find_package(ament_cmake_clang_format REQUIRED)
   ament_clang_format(
@@ -109,13 +114,13 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_mqtt_client mqtt_client logger)
 
-  ament_add_gmock(test_OrderManager
+  ament_add_gtest(test_OrderManager
     test/unit/order_manager/test_order_manager.cpp)
   target_include_directories(test_OrderManager
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
   target_link_libraries(test_OrderManager
-    order_manager vda5050_types)
+    client vda5050_types)
 endif()
 
 ament_package()
