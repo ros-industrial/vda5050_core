@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__ORDER_EXECUTION__ORDER_MANAGER_HPP_
-#define VDA5050_CORE__ORDER_EXECUTION__ORDER_MANAGER_HPP_
+#ifndef VDA5050_CORE__CLIENT__ORDER__ORDER_MANAGER_HPP_
+#define VDA5050_CORE__CLIENT__ORDER__ORDER_MANAGER_HPP_
 
 #include <optional>
 #include <vector>
@@ -25,12 +25,14 @@
 #include <memory>
 #include <variant>
 
+#include "vda5050_core/client/order/validation_result.hpp"
+#include "vda5050_core/logger/logger.hpp"
 #include "vda5050_types/state.hpp"
 #include "vda5050_types/order.hpp"
 
 namespace vda5050_core {
-
-namespace order_manager {
+namespace client {
+namespace order {
 
 /// \brief Class that handles incoming orders on a vehicle.
 class OrderManager
@@ -48,7 +50,7 @@ public:
   /// \param state A snapshot of the vehicle's current state 
   ///
   /// \return True if order update has been accepted by the order manager, false otherwise.
-  bool update_current_order(vda5050_types::Order& order, const vda5050_types::State& state);
+  ValidationResult update_current_order(vda5050_types::Order& order, const vda5050_types::State& state);
 
   /// \brief Puts a new order on the vehicle
   ///
@@ -56,7 +58,7 @@ public:
   /// \param state A snapshot of the vehicle's current state
   ///
   /// \return True if the new order has been accepted by the order manager, false otherwise
-  bool make_new_order(vda5050_types::Order& order, const vda5050_types::State& state);
+  ValidationResult make_new_order(vda5050_types::Order& order, const vda5050_types::State& state);
 
   /// \brief Returns the next graph element of the current order that is to be executed.
   ///
@@ -163,6 +165,8 @@ private:
   void reject_order();
 };
 
-}  // namespace order_manager
+}  // namespace order
+}  // namespace client
 }  // namespace vda5050_core
-#endif  // VDA5050_CORE__ORDER_EXECUTION__ORDER_MANAGER_HPP_
+
+#endif  // VDA5050_CORE__CLIENT__ORDER__ORDER_MANAGER_HPP_

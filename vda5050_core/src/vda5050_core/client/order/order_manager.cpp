@@ -23,13 +23,16 @@
 #include <algorithm>
 
 #include "vda5050_core/client/order/order_manager.hpp"
-#include "vda5050_types/state.hpp"
+#include "vda5050_core/client/order/validation_result.hpp"
+#include "vda5050_core/logger/logger.hpp"
 #include "vda5050_types/action_status.hpp"
+#include "vda5050_types/state.hpp"
 #include "vda5050_types/order.hpp"
 #include "vda5050_types/node.hpp"
 
 namespace vda5050_core {
-namespace order_manager {
+namespace client {
+namespace order {
 
 OrderManager::OrderManager()
 : current_graph_element_index_{0} {};
@@ -351,5 +354,6 @@ void OrderManager::Order::set_order_update_id(uint32_t new_order_update_id)
 }
 
 
-}  // namespace order_manager
+}  // namespace order
+}  // namespace client
 }  // namespace vda5050_core
