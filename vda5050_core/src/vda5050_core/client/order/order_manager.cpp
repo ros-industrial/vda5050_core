@@ -55,6 +55,8 @@ ValidationResult OrderManager::update_current_order(vda5050_types::Order& order,
     {
       reject_order();
 
+      VDA5050_ERROR("Order Manager Error: Received order's order_update_id is less than the vehicle's current order order_update_id.");
+
       /// create error struct
       vda5050_types::Error order_update_deprecated_error {};
       order_update_deprecated_error.error_type = "Order Manager Error";
@@ -77,15 +79,12 @@ ValidationResult OrderManager::update_current_order(vda5050_types::Order& order,
     else if (
       received_order.order_update_id == current_order_->order_update_id)
     {
-      /// discard message as vehicle already has this update
-      std::cerr << "OrderManager warning: Received duplicate order update (orderUpdateId="
-                << received_order.order_update_id << ") for order "
-                << received_order.order_id << ". Discarding message." << '\n';
+      VDA5050_ERROR("Order Manager Warning: Received a duplicate order update");
       
       /// create error struct
       vda5050_types::Error duplicate_order_update_error {};
       duplicate_order_update_error.error_type = "Order Manager Error";
-      duplicate_order_update_error.error_description = "orderUpdateId of the incoming order is equal to the order_update_id of the order currently on the vehicle.";
+      duplicate_order_update_error.error_description = "order_update_id of the incoming order is equal to the order_update_id of the order currently on the vehicle.";
       duplicate_order_update_error.error_level = vda5050_types::ErrorLevel::WARNING;
 
       /// create error references for this error
@@ -106,14 +105,13 @@ ValidationResult OrderManager::update_current_order(vda5050_types::Order& order,
         received_order.nodes.front().node_id !=
         current_order_->decision_point().node_id)
       {
-        /// TODO: use VDA5050 logger
-        std::cerr << "OrderManager error: Order update rejected as nodeIds of the stitching nodes do not match." << "\n";
+        VDA5050_ERROR("Order Manager Error: Order update has been rejected as nodeIds of the stitching nodes do not match.");
 
         reject_order();
 
         vda5050_types::Error mismatched_stitching_node_error {};
         mismatched_stitching_node_error.error_type = "Order Manager Error";
-        mismatched_stitching_node_error.error_description = "nodeId of the received order's first node does not match the nodeId of the vehicle's current decision point. Order update is unable to be stitched with the current order on the vehicle.";
+        mismatched_stitching_node_error.error_description = "node_id of the received order's first node does not match the node_id of the vehicle's current decision point. Order update is unable to be stitched with the current order on the vehicle.";
         mismatched_stitching_node_error.error_level = vda5050_types::ErrorLevel::WARNING;
 
         vda5050_types::ErrorReference received_order_node_id_error_reference {"nodeId", received_order.nodes.front().node_id};
@@ -137,7 +135,8 @@ ValidationResult OrderManager::update_current_order(vda5050_types::Order& order,
     {
       if (received_order.nodes.front().sequence_id != state.last_node_sequence_id && received_order.nodes.front().node_id != state.last_node_id)
       {
-        std::cerr << "OrderManager error: Order update rejected as it is not a valid continuation of the previously completed order." << "\n";
+        VDA5050_ERROR("Order Manager Error: Order update has been rejected as it is not a valid continuation of the previously completed order.");
+        
         reject_order();
 
         res.valid = false;
@@ -155,7 +154,8 @@ ValidationResult OrderManager::update_current_order(vda5050_types::Order& order,
   }
   else
   {
-    /// update order is rejected as a new order was given instead of an update order
+    VDA5050_ERROR("Order Manager Error: Update order has been rejected as its order_id does not match the order_id of the order currently on the vehicle.");
+
     reject_order();
 
     vda5050_types::Error not_an_update_order_error {};
@@ -183,8 +183,7 @@ ValidationResult OrderManager::make_new_order(vda5050_types::Order& order, const
      received_order.order_id != current_order_->order_id))
   {
     /// if no current order exists, the vehicle can accept a new order
-    if (
-      !current_order_)
+    if (!current_order_)
     {
       accept_new_order(received_order);
       return res;
@@ -207,7 +206,7 @@ ValidationResult OrderManager::make_new_order(vda5050_types::Order& order, const
 
       if (!vehicle_ready_for_new_order)
       {
-        std::cerr << "OrderManager error: Vehicle is not ready to accept a new order. Vehicle is either still executing or waiting for an order update." << "\n";
+        VDA5050_ERROR("Order Manager Error: Vehicle is not ready to accept a new order. Vehicle is either still executing or waiting for an order update.");
 
         vda5050_types::Error not_ready_for_new_order_error {};
         not_ready_for_new_order_error.error_type = "Order Manager Error";
@@ -219,15 +218,15 @@ ValidationResult OrderManager::make_new_order(vda5050_types::Order& order, const
 
       if (!node_is_trivially_reachable)
       {
-        std::cerr << "OrderManager error: Received order's start node is not trivially reachable." << "\n";
+        VDA5050_ERROR("Order Manager Error: Received order's start node is not trivially reachable.");
 
         vda5050_types::Error not_trivially_reachable_error {};
         not_trivially_reachable_error.error_type = "Order Manager Error";
         not_trivially_reachable_error.error_level = vda5050_types::ErrorLevel::WARNING;
         not_trivially_reachable_error.error_description = "Vehicle cannot reach the new order's first node from the vehicle's last reached node";
 
-        vda5050_types::ErrorReference first_node_id_error_reference {"new order first node nodeId", received_order.nodes.front().node_id};
-        vda5050_types::ErrorReference last_node_id_error_reference {"vehicle's state.last_node_id", state.last_node_id};
+        vda5050_types::ErrorReference first_node_id_error_reference {"nodeId", received_order.nodes.front().node_id};
+        vda5050_types::ErrorReference last_node_id_error_reference {"nodeId", state.last_node_id};
 
         not_trivially_reachable_error.error_references = {first_node_id_error_reference, last_node_id_error_reference};
         
@@ -241,17 +240,16 @@ ValidationResult OrderManager::make_new_order(vda5050_types::Order& order, const
   else
   {
     reject_order();
-    throw std::runtime_error(
-      "OrderManager error: Expected a new order but was given an order the "
-      "same orderId.");
+
+    VDA5050_ERROR("Order Manager Error: Expected a new order but was given an order with the same order_id");
 
     vda5050_types::Error duplicate_order_error {};
     duplicate_order_error.error_type = "Order Manager Error";
     duplicate_order_error.error_level = vda5050_types::ErrorLevel::WARNING;
     duplicate_order_error.error_description = "OrderManager::make_new_order() was given an order with the same orderId as the order currently on the vehicle.";
 
-    vda5050_types::ErrorReference new_order_id_error_reference {"New order orderId", received_order.order_id};
-    vda5050_types::ErrorReference current_order_id_error_reference {"Current order orderId", current_order_->order_id};
+    vda5050_types::ErrorReference new_order_id_error_reference {"orderId", received_order.order_id};
+    vda5050_types::ErrorReference current_order_id_error_reference {"orderId", current_order_->order_id};
 
     duplicate_order_error.error_references = {new_order_id_error_reference, current_order_id_error_reference};
 
@@ -441,7 +439,8 @@ void OrderManager::Order::set_decision_point()
 {
   if (base_.empty())
   {
-    throw std::runtime_error("OrderManager error: Base of the given order is empty.");
+    VDA5050_FATAL("Order Manager Error: Base of the given order is empty.");
+    return;
   }
 
   if (const vda5050_types::Node* pNode = std::get_if<vda5050_types::Node>(&base_.back()))
@@ -450,7 +449,7 @@ void OrderManager::Order::set_decision_point()
   }
   else
   {
-    throw std::runtime_error("OrderManager error: Last graph element in the given order is not of type vda50505_types::Node.");
+    VDA5050_FATAL("Order Manager Error: Last graph element in the given order is not of type vda50505_types::Node.");
   }
 }
 
@@ -463,9 +462,8 @@ void OrderManager::Order::stitch_order(Order order)
     decision_point_.node_id != stitching_node.node_id ||
     !stitching_node.released)
   {
-    throw std::runtime_error(
-      "Order error: Stitching node of the incoming order does not match the "
-      "current order's decision point.");
+    VDA5050_FATAL("Order Manager Error: Stitching node of the incoming order does not match the current order's decision point.");
+    return;
   }
 
   /// concatenate the current and incoming graphs
