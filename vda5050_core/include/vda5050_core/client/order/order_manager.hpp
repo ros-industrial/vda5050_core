@@ -164,7 +164,7 @@ private:
   /// TODO This is currently incomplete. To find out what logic needs to be handled during order rejection
   void reject_order();
 
-  /// \brief Helper function to return a vector of errors for an invalid continuation error 
+  /// \brief Helper function to return a vector of errors for an invalid continuation error during an order update.
   ///
   /// \param order_start_node_sequence_id sequenceId of the first node in the incoming order
   /// \param state_last_node_sequence_id lastNodeSequenceId of the vehicle's state 
@@ -172,7 +172,7 @@ private:
   /// \param state_last_node_id nodeId of the vehicle's state
   /// 
   /// \return Vector of Error structs for each error that occurred.
-  std::vector<vda5050_types::Error> invalid_continuation_errors(const uint32_t order_start_node_sequence_id, const uint32_t state_last_node_sequence_id, const std::string order_start_node_node_id, const std::string state_last_node_id);
+  std::vector<vda5050_types::Error> invalid_continuation_errors(const Order& received_order, const vda5050_types::State& state);
 };
 
 }  // namespace order

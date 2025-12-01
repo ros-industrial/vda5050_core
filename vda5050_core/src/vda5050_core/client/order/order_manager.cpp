@@ -55,11 +55,11 @@ ValidationResult OrderManager::update_current_order(vda5050_types::Order& order,
     {
       reject_order();
 
-      VDA5050_ERROR("Order Manager Error: Received order's order_update_id is less than the vehicle's current order order_update_id.");
+      VDA5050_ERROR("Order Manager Error: orderUpdateError. Received order's order_update_id is less than the vehicle's current order order_update_id.");
 
       /// create error struct
       vda5050_types::Error order_update_deprecated_error {};
-      order_update_deprecated_error.error_type = "Order Manager Error";
+      order_update_deprecated_error.error_type = "Order Manager Error: orderUpdateError";
       order_update_deprecated_error.error_description = "order_update_id of the incoming order is less than the order_update_id of the order currently on the vehicle";
       order_update_deprecated_error.error_level = vda5050_types::ErrorLevel::WARNING;
 
@@ -79,7 +79,7 @@ ValidationResult OrderManager::update_current_order(vda5050_types::Order& order,
     else if (
       received_order.order_update_id == current_order_->order_update_id)
     {
-      VDA5050_ERROR("Order Manager Warning: Received a duplicate order update");
+      VDA5050_WARN("Order Manager Warning: Received a duplicate order update. Discarding Order message.");
       
       /// create error struct
       vda5050_types::Error duplicate_order_update_error {};
@@ -105,19 +105,19 @@ ValidationResult OrderManager::update_current_order(vda5050_types::Order& order,
         received_order.nodes.front().node_id !=
         current_order_->decision_point().node_id)
       {
-        VDA5050_ERROR("Order Manager Error: Order update has been rejected as nodeIds of the stitching nodes do not match.");
+        VDA5050_ERROR("Order Manager Error: orderUpdateError. Order update has been rejected as nodeIds of the stitching nodes do not match.");
 
         reject_order();
 
         vda5050_types::Error mismatched_stitching_node_error {};
-        mismatched_stitching_node_error.error_type = "Order Manager Error";
+        mismatched_stitching_node_error.error_type = "Order Manager Error: orderUpdateError";
         mismatched_stitching_node_error.error_description = "node_id of the received order's first node does not match the node_id of the vehicle's current decision point. Order update is unable to be stitched with the current order on the vehicle.";
         mismatched_stitching_node_error.error_level = vda5050_types::ErrorLevel::WARNING;
 
-        vda5050_types::ErrorReference received_order_node_id_error_reference {"nodeId", received_order.nodes.front().node_id};
-        vda5050_types::ErrorReference decision_point_node_id_error_referene {"nodeId", current_order_->decision_point().node_id};
+        vda5050_types::ErrorReference order_id_error_reference {"orderId", received_order.order_id};
+        vda5050_types::ErrorReference order_update_id_error_reference {"orderUpdateId", std::to_string(received_order.order_update_id)};
         
-        mismatched_stitching_node_error.error_references = {received_order_node_id_error_reference, decision_point_node_id_error_referene};
+        mismatched_stitching_node_error.error_references = {order_id_error_reference, order_update_id_error_reference};
 
         res.valid = false;
         res.errors.push_back(mismatched_stitching_node_error);
@@ -135,12 +135,12 @@ ValidationResult OrderManager::update_current_order(vda5050_types::Order& order,
     {
       if (received_order.nodes.front().sequence_id != state.last_node_sequence_id && received_order.nodes.front().node_id != state.last_node_id)
       {
-        VDA5050_ERROR("Order Manager Error: Order update has been rejected as it is not a valid continuation of the previously completed order.");
+        VDA5050_ERROR("Order Manager Error: orderUpdateError. Order update has been rejected as it is not a valid continuation of the previously completed order.");
         
         reject_order();
 
         res.valid = false;
-        res.errors = invalid_continuation_errors(received_order.nodes.front().sequence_id, state.last_node_sequence_id, received_order.nodes.front().node_id, state.last_node_id);
+        res.errors = invalid_continuation_errors(received_order, state);
         return res;
       }
       else
@@ -218,17 +218,16 @@ ValidationResult OrderManager::make_new_order(vda5050_types::Order& order, const
 
       if (!node_is_trivially_reachable)
       {
-        VDA5050_ERROR("Order Manager Error: Received order's start node is not trivially reachable.");
+        VDA5050_ERROR("Order Manager Error: noRouteErrror. Received order's start node is not trivially reachable.");
 
         vda5050_types::Error not_trivially_reachable_error {};
-        not_trivially_reachable_error.error_type = "Order Manager Error";
+        not_trivially_reachable_error.error_type = "Order Manager Error: noRouteError";
         not_trivially_reachable_error.error_level = vda5050_types::ErrorLevel::WARNING;
         not_trivially_reachable_error.error_description = "Vehicle cannot reach the new order's first node from the vehicle's last reached node";
 
         vda5050_types::ErrorReference first_node_id_error_reference {"nodeId", received_order.nodes.front().node_id};
-        vda5050_types::ErrorReference last_node_id_error_reference {"nodeId", state.last_node_id};
 
-        not_trivially_reachable_error.error_references = {first_node_id_error_reference, last_node_id_error_reference};
+        not_trivially_reachable_error.error_references = {first_node_id_error_reference};
         
         res.errors.push_back(not_trivially_reachable_error);
       }
@@ -316,40 +315,39 @@ void OrderManager::reject_order()
   return;
 }
 
-std::vector<vda5050_types::Error> OrderManager::invalid_continuation_errors(const uint32_t order_start_node_sequence_id, const uint32_t state_last_node_sequence_id, const std::string order_start_node_node_id, const std::string state_last_node_id)
+std::vector<vda5050_types::Error> OrderManager::invalid_continuation_errors(const Order& received_order, const vda5050_types::State& state)
 {
+  uint32_t order_start_node_sequence_id {received_order.nodes.front().sequence_id};
+  uint32_t state_last_node_sequence_id {state.last_node_sequence_id};
+  std::string order_start_node_node_id {received_order.nodes.front().node_id};
+
+  /// vector to hold all errors generated from an invalid continuation
   std::vector<vda5050_types::Error> errors;
 
-  vda5050_types::Error mismatched_sequence_id_error {};
+  /// error references for the received order
+  vda5050_types::ErrorReference order_id_error_reference {"orderId", received_order.order_id};
+  vda5050_types::ErrorReference order_update_id_error_reference {"orderUpdateId", std::to_string(received_order.order_update_id)};
 
+  /// append Error struct to errors array if the sequence_ids are not equal
+  vda5050_types::Error mismatched_sequence_id_error {};
   if (order_start_node_sequence_id != state_last_node_sequence_id)
   {
-    mismatched_sequence_id_error.error_type = "Order Manager Error";
+    mismatched_sequence_id_error.error_type = "Order Manager Error: orderUpdateError";
     mismatched_sequence_id_error.error_description = "sequence_id of the incoming order's first node does not match the vehicle state's last_node_sequence_id.";
     mismatched_sequence_id_error.error_level = vda5050_types::ErrorLevel::WARNING;
-
-    vda5050_types::ErrorReference start_node_error_reference {"nodeId", order_start_node_node_id};
-    vda5050_types::ErrorReference start_node_sequence_id_error_reference {"sequenceId", std::to_string(order_start_node_sequence_id)};
-    vda5050_types::ErrorReference state_last_node_error_reference {"nodeId", state_last_node_id};
-    vda5050_types::ErrorReference state_last_node_sequence_id_error_reference {"sequenceId", std::to_string(state_last_node_sequence_id)};
-
-    mismatched_sequence_id_error.error_references = {start_node_error_reference, start_node_sequence_id_error_reference, state_last_node_error_reference, state_last_node_sequence_id_error_reference};
-
+    mismatched_sequence_id_error.error_references = {order_id_error_reference, order_update_id_error_reference};
+    
     errors.push_back(mismatched_sequence_id_error);
   }
   
+  /// append Error struct to errors array if node_ids are not equal
   vda5050_types::Error mismatched_node_id_error {};
-
-  if (order_start_node_node_id != state_last_node_id)
+  if (order_start_node_node_id != state.last_node_id)
   {
-    mismatched_node_id_error.error_type = "Order Manager Error";
+    mismatched_node_id_error.error_type = "Order Manager Error: orderUpdateError";
     mismatched_node_id_error.error_description = "node_id of the incoming order's first node does not match the vehicle state's last_node_id.";
     mismatched_node_id_error.error_level = vda5050_types::ErrorLevel::WARNING;
-
-    vda5050_types::ErrorReference start_node_error_reference {"nodeId", order_start_node_node_id};
-    vda5050_types::ErrorReference state_last_node_error_reference {"nodeId", state_last_node_id};
-
-    mismatched_node_id_error.error_references = {start_node_error_reference, state_last_node_error_reference};
+    mismatched_node_id_error.error_references = {order_id_error_reference, order_update_id_error_reference};
 
     errors.push_back(mismatched_node_id_error);
   }
