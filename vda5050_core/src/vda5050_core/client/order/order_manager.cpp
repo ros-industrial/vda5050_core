@@ -26,9 +26,12 @@
 #include "vda5050_core/client/order/validation_result.hpp"
 #include "vda5050_core/logger/logger.hpp"
 #include "vda5050_types/action_status.hpp"
-#include "vda5050_types/state.hpp"
-#include "vda5050_types/order.hpp"
+#include "vda5050_types/error.hpp"
+#include "vda5050_types/error_reference.hpp"
+#include "vda5050_types/error_level.hpp"
 #include "vda5050_types/node.hpp"
+#include "vda5050_types/order.hpp"
+#include "vda5050_types/state.hpp"
 
 namespace vda5050_core {
 namespace client {
@@ -37,9 +40,10 @@ namespace order {
 OrderManager::OrderManager()
 : current_graph_element_index_{0} {};
 
-bool OrderManager::update_current_order(vda5050_types::Order& order, const vda5050_types::State& state)
+ValidationResult OrderManager::update_current_order(vda5050_types::Order& order, const vda5050_types::State& state)
 {
-  Order received_order{ order };
+  Order received_order{order};
+  ValidationResult res {true, {}};
 
   /// Check that this is actually an update order
   if (
@@ -50,10 +54,23 @@ bool OrderManager::update_current_order(vda5050_types::Order& order, const vda50
     if (received_order.order_update_id < current_order_->order_update_id)
     {
       reject_order();
-      
-      std::cerr << "OrderManager error: Order update is deprecated." << "\n";
 
-      return false;
+      /// create error struct
+      vda5050_types::Error order_update_deprecated_error {};
+      order_update_deprecated_error.error_type = "Order Manager Error";
+      order_update_deprecated_error.error_description = "order_update_id of the incoming order is less than the order_update_id of the order currently on the vehicle";
+      order_update_deprecated_error.error_level = vda5050_types::ErrorLevel::WARNING;
+
+      /// create error references for this error
+      vda5050_types::ErrorReference order_id_error_reference {"orderId", received_order.order_id};
+      vda5050_types::ErrorReference order_update_id_error_reference {"orderUpdateId", std::to_string(received_order.order_update_id)};
+      
+      /// add error references to this error
+      order_update_deprecated_error.error_references = {order_id_error_reference, order_update_id_error_reference};
+
+      res.valid = false;
+      res.errors.push_back(order_update_deprecated_error);
+      return res;
     }
 
     /// check if order update is currently on the vehicle
@@ -65,8 +82,22 @@ bool OrderManager::update_current_order(vda5050_types::Order& order, const vda50
                 << received_order.order_update_id << ") for order "
                 << received_order.order_id << ". Discarding message." << '\n';
       
-      /// TODO: KIV to change this once the return struct has been decided
-      return false;
+      /// create error struct
+      vda5050_types::Error duplicate_order_update_error {};
+      duplicate_order_update_error.error_type = "Order Manager Error";
+      duplicate_order_update_error.error_description = "orderUpdateId of the incoming order is equal to the order_update_id of the order currently on the vehicle.";
+      duplicate_order_update_error.error_level = vda5050_types::ErrorLevel::WARNING;
+
+      /// create error references for this error
+      vda5050_types::ErrorReference order_id_error_reference {"orderId", received_order.order_id};
+      vda5050_types::ErrorReference order_update_id_error_reference {"orderUpdateId", std::to_string(received_order.order_update_id)};
+
+      /// add error references to this error
+      duplicate_order_update_error.error_references = {order_id_error_reference, order_update_id_error_reference};
+      
+      res.valid = false;
+      res.errors.push_back(duplicate_order_update_error);
+      return res;
     }
 
     else if (is_vehicle_still_executing(state) && is_vehicle_waiting_for_update())
@@ -75,17 +106,31 @@ bool OrderManager::update_current_order(vda5050_types::Order& order, const vda50
         received_order.nodes.front().node_id !=
         current_order_->decision_point().node_id)
       {
+        /// TODO: use VDA5050 logger
         std::cerr << "OrderManager error: Order update rejected as nodeIds of the stitching nodes do not match." << "\n";
+
         reject_order();
-        return false;
+
+        vda5050_types::Error mismatched_stitching_node_error {};
+        mismatched_stitching_node_error.error_type = "Order Manager Error";
+        mismatched_stitching_node_error.error_description = "nodeId of the received order's first node does not match the nodeId of the vehicle's current decision point. Order update is unable to be stitched with the current order on the vehicle.";
+        mismatched_stitching_node_error.error_level = vda5050_types::ErrorLevel::WARNING;
+
+        vda5050_types::ErrorReference received_order_node_id_error_reference {"nodeId", received_order.nodes.front().node_id};
+        vda5050_types::ErrorReference decision_point_node_id_error_referene {"nodeId", current_order_->decision_point().node_id};
+        
+        mismatched_stitching_node_error.error_references = {received_order_node_id_error_reference, decision_point_node_id_error_referene};
+
+        res.valid = false;
+        res.errors.push_back(mismatched_stitching_node_error);
+        return res;
       }
 
       else
       {
         /// order update can be accepted as it is a continuation of the currently running order
-        /// TODO: Update internal state
         current_order_->stitch_and_set_order_update_id(received_order);
-        return true;
+        return res;
       }
     }
     else
@@ -94,29 +139,43 @@ bool OrderManager::update_current_order(vda5050_types::Order& order, const vda50
       {
         std::cerr << "OrderManager error: Order update rejected as it is not a valid continuation of the previously completed order." << "\n";
         reject_order();
-        return false;
+
+        res.valid = false;
+        res.errors = invalid_continuation_errors(received_order.nodes.front().sequence_id, state.last_node_sequence_id, received_order.nodes.front().node_id, state.last_node_id);
+        return res;
       }
       else
       {
         /// order update can be accepted as it is a continuation of the previously executed order
         /// TODO: Update internal state
         current_order_->stitch_and_set_order_update_id(received_order);
-        return true;
+        return res;
       }
     }
   }
   else
   {
-    /// TODO Check if it is okay to be throwing an error and rejecting the order, as this will only occur due to how we are implementing this in a BTree
     /// update order is rejected as a new order was given instead of an update order
     reject_order();
-    return false;
+
+    vda5050_types::Error not_an_update_order_error {};
+    not_an_update_order_error.error_type = "Order Manager Error";
+    not_an_update_order_error.error_description = "order_id of the received order does not match the order_id of the order currently on the vehicle.";
+
+    vda5050_types::ErrorReference order_id_error_reference {"orderId", received_order.order_id};
+
+    not_an_update_order_error.error_references = {order_id_error_reference};
+
+    res.valid = false;
+    res.errors.push_back(not_an_update_order_error);
+    return res;
   }
 }
 
-bool OrderManager::make_new_order(vda5050_types::Order& order, const vda5050_types::State& state)
+ValidationResult OrderManager::make_new_order(vda5050_types::Order& order, const vda5050_types::State& state)
 {
   Order received_order { order };
+  ValidationResult res {true, {}};
 
   if (
     !current_order_.has_value() ||
@@ -128,8 +187,7 @@ bool OrderManager::make_new_order(vda5050_types::Order& order, const vda5050_typ
       !current_order_)
     {
       accept_new_order(received_order);
-
-      return true;
+      return res;
     }
     /// if the vehicle is not carrying out an action and if the vehicle has no horizon, it can accept a new order
     bool vehicle_ready_for_new_order = !is_vehicle_still_executing(state) && !is_vehicle_waiting_for_update();
@@ -140,27 +198,44 @@ bool OrderManager::make_new_order(vda5050_types::Order& order, const vda5050_typ
     if (vehicle_ready_for_new_order && node_is_trivially_reachable)
     {
       accept_new_order(received_order);
-      return true;
+      return res;
     }
     else
     {
       /// reject order and throw error
       reject_order();
 
-      if (!vehicle_ready_for_new_order && !node_is_trivially_reachable)
-      {
-        std::cerr << "OrderManager error: Vehicle is not ready to accept a new order and received order's start node is not trivially reachable." << "\n";
-      }
-      else if (!vehicle_ready_for_new_order)
+      if (!vehicle_ready_for_new_order)
       {
         std::cerr << "OrderManager error: Vehicle is not ready to accept a new order. Vehicle is either still executing or waiting for an order update." << "\n";
-      }
-      else if (!node_is_trivially_reachable)
-      {
-        std::cerr << "OrderManager error: Received order's start node is not trivially reachable." << "\n";
+
+        vda5050_types::Error not_ready_for_new_order_error {};
+        not_ready_for_new_order_error.error_type = "Order Manager Error";
+        not_ready_for_new_order_error.error_level = vda5050_types::ErrorLevel::WARNING;
+        not_ready_for_new_order_error.error_description = "Vehicle is not ready for a new order as it is still executing its current order or still has a horizon and hence requires and order update first.";
+
+        res.errors.push_back(not_ready_for_new_order_error);
       }
 
-      return false;
+      if (!node_is_trivially_reachable)
+      {
+        std::cerr << "OrderManager error: Received order's start node is not trivially reachable." << "\n";
+
+        vda5050_types::Error not_trivially_reachable_error {};
+        not_trivially_reachable_error.error_type = "Order Manager Error";
+        not_trivially_reachable_error.error_level = vda5050_types::ErrorLevel::WARNING;
+        not_trivially_reachable_error.error_description = "Vehicle cannot reach the new order's first node from the vehicle's last reached node";
+
+        vda5050_types::ErrorReference first_node_id_error_reference {"new order first node nodeId", received_order.nodes.front().node_id};
+        vda5050_types::ErrorReference last_node_id_error_reference {"vehicle's state.last_node_id", state.last_node_id};
+
+        not_trivially_reachable_error.error_references = {first_node_id_error_reference, last_node_id_error_reference};
+        
+        res.errors.push_back(not_trivially_reachable_error);
+      }
+
+      res.valid = false;
+      return res;
     }
   }
   else
@@ -170,7 +245,19 @@ bool OrderManager::make_new_order(vda5050_types::Order& order, const vda5050_typ
       "OrderManager error: Expected a new order but was given an order the "
       "same orderId.");
 
-    return false;
+    vda5050_types::Error duplicate_order_error {};
+    duplicate_order_error.error_type = "Order Manager Error";
+    duplicate_order_error.error_level = vda5050_types::ErrorLevel::WARNING;
+    duplicate_order_error.error_description = "OrderManager::make_new_order() was given an order with the same orderId as the order currently on the vehicle.";
+
+    vda5050_types::ErrorReference new_order_id_error_reference {"New order orderId", received_order.order_id};
+    vda5050_types::ErrorReference current_order_id_error_reference {"Current order orderId", current_order_->order_id};
+
+    duplicate_order_error.error_references = {new_order_id_error_reference, current_order_id_error_reference};
+
+    res.valid = false;
+    res.errors.push_back(duplicate_order_error);
+    return res;
   }
 }
 
@@ -229,6 +316,47 @@ void OrderManager::reject_order()
 {
   /// TODO: this will eventually return some sort of struct that BTree will use 
   return;
+}
+
+std::vector<vda5050_types::Error> OrderManager::invalid_continuation_errors(const uint32_t order_start_node_sequence_id, const uint32_t state_last_node_sequence_id, const std::string order_start_node_node_id, const std::string state_last_node_id)
+{
+  std::vector<vda5050_types::Error> errors;
+
+  vda5050_types::Error mismatched_sequence_id_error {};
+
+  if (order_start_node_sequence_id != state_last_node_sequence_id)
+  {
+    mismatched_sequence_id_error.error_type = "Order Manager Error";
+    mismatched_sequence_id_error.error_description = "sequence_id of the incoming order's first node does not match the vehicle state's last_node_sequence_id.";
+    mismatched_sequence_id_error.error_level = vda5050_types::ErrorLevel::WARNING;
+
+    vda5050_types::ErrorReference start_node_error_reference {"nodeId", order_start_node_node_id};
+    vda5050_types::ErrorReference start_node_sequence_id_error_reference {"sequenceId", std::to_string(order_start_node_sequence_id)};
+    vda5050_types::ErrorReference state_last_node_error_reference {"nodeId", state_last_node_id};
+    vda5050_types::ErrorReference state_last_node_sequence_id_error_reference {"sequenceId", std::to_string(state_last_node_sequence_id)};
+
+    mismatched_sequence_id_error.error_references = {start_node_error_reference, start_node_sequence_id_error_reference, state_last_node_error_reference, state_last_node_sequence_id_error_reference};
+
+    errors.push_back(mismatched_sequence_id_error);
+  }
+  
+  vda5050_types::Error mismatched_node_id_error {};
+
+  if (order_start_node_node_id != state_last_node_id)
+  {
+    mismatched_node_id_error.error_type = "Order Manager Error";
+    mismatched_node_id_error.error_description = "node_id of the incoming order's first node does not match the vehicle state's last_node_id.";
+    mismatched_node_id_error.error_level = vda5050_types::ErrorLevel::WARNING;
+
+    vda5050_types::ErrorReference start_node_error_reference {"nodeId", order_start_node_node_id};
+    vda5050_types::ErrorReference state_last_node_error_reference {"nodeId", state_last_node_id};
+
+    mismatched_node_id_error.error_references = {start_node_error_reference, state_last_node_error_reference};
+
+    errors.push_back(mismatched_node_id_error);
+  }
+
+  return errors;
 }
 
 OrderManager::Order::Order(vda5050_types::Order& order)
@@ -352,7 +480,6 @@ void OrderManager::Order::set_order_update_id(uint32_t new_order_update_id)
 {
   order_update_id = new_order_update_id;
 }
-
 
 }  // namespace order
 }  // namespace client
