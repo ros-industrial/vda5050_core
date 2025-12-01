@@ -118,7 +118,8 @@ if(BUILD_TESTING)
   ament_add_gtest(test_OrderManager
     test/unit/order_manager/test_order_manager.cpp)
   target_link_libraries(test_OrderManager
-  client 
+  client
+  logger
   vda5050_types::vda5050_types
   )
   target_include_directories(test_OrderManager
