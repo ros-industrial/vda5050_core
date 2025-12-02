@@ -130,7 +130,8 @@ public:
     std::string agv_id = agv_info.get_agv_id();
 
     // Check if already registered
-    if (agv_registry_.find(agv_id) != agv_registry_.end()) {
+    if (agv_registry_.find(agv_id) != agv_registry_.end())
+    {
       VDA5050_WARN("[VDA5050Manager] AGV already registered: " + agv_id);
       return;
     }
@@ -243,17 +244,20 @@ private:
   void handle_connection_message(
     const std::string& agv_id, const std::string& payload)
   {
-    try {
+    try
+    {
       auto json_msg = nlohmann::json::parse(payload);
       vda5050_msgs::msg::Connection msg;
       vda5050_msgs::msg::from_json(json_msg, msg);
 
       std::lock_guard<std::mutex> lock(callbacks_mutex_);
-      if (vda5050_callbacks_.on_connection) {
+      if (vda5050_callbacks_.on_connection)
+      {
         vda5050_callbacks_.on_connection(agv_id, msg);
       }
     }
-    catch (const std::exception& e) {
+    catch (const std::exception& e)
+    {
       VDA5050_WARN(
         "[VDA5050Manager] Failed to parse connection message from " + agv_id +
         ": " + std::string(e.what()));
@@ -263,17 +267,20 @@ private:
   void handle_state_message(
     const std::string& agv_id, const std::string& payload)
   {
-    try {
+    try
+    {
       auto json_msg = nlohmann::json::parse(payload);
       vda5050_msgs::msg::State msg;
       vda5050_msgs::msg::from_json(json_msg, msg);
 
       std::lock_guard<std::mutex> lock(callbacks_mutex_);
-      if (vda5050_callbacks_.on_state) {
+      if (vda5050_callbacks_.on_state)
+      {
         vda5050_callbacks_.on_state(agv_id, msg);
       }
     }
-    catch (const std::exception& e) {
+    catch (const std::exception& e)
+    {
       VDA5050_WARN(
         "[VDA5050Manager] Failed to parse state message from " + agv_id + ": " +
         std::string(e.what()));
@@ -283,17 +290,20 @@ private:
   void handle_factsheet_message(
     const std::string& agv_id, const std::string& payload)
   {
-    try {
+    try
+    {
       auto json_msg = nlohmann::json::parse(payload);
       vda5050_msgs::msg::Factsheet msg;
       vda5050_msgs::msg::from_json(json_msg, msg);
 
       std::lock_guard<std::mutex> lock(callbacks_mutex_);
-      if (vda5050_callbacks_.on_factsheet) {
+      if (vda5050_callbacks_.on_factsheet)
+      {
         vda5050_callbacks_.on_factsheet(agv_id, msg);
       }
     }
-    catch (const std::exception& e) {
+    catch (const std::exception& e)
+    {
       VDA5050_WARN(
         "[VDA5050Manager] Failed to parse factsheet message from " + agv_id +
         ": " + std::string(e.what()));
@@ -303,17 +313,20 @@ private:
   void handle_visualization_message(
     const std::string& agv_id, const std::string& payload)
   {
-    try {
+    try
+    {
       auto json_msg = nlohmann::json::parse(payload);
       vda5050_msgs::msg::Visualization msg;
       vda5050_msgs::msg::from_json(json_msg, msg);
 
       std::lock_guard<std::mutex> lock(callbacks_mutex_);
-      if (vda5050_callbacks_.on_visualization) {
+      if (vda5050_callbacks_.on_visualization)
+      {
         vda5050_callbacks_.on_visualization(agv_id, msg);
       }
     }
-    catch (const std::exception& e) {
+    catch (const std::exception& e)
+    {
       VDA5050_WARN(
         "[VDA5050Manager] Failed to parse visualization message from " +
         agv_id + ": " + std::string(e.what()));

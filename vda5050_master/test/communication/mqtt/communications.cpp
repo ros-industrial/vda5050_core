@@ -143,7 +143,8 @@ TEST_F(MqttCommunicationTestFixture, MultipleMessagesTest)
   ASSERT_NO_THROW(talker->connect());
 
   // Publish all messages
-  for (const auto& payload : payloads) {
+  for (const auto& payload : payloads)
+  {
     ASSERT_NO_THROW(talker->publish(topic, payload, qos_));
   }
 

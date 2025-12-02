@@ -42,7 +42,12 @@ if(BUILD_TESTING)
   ament_cppcheck()
 
   find_package(ament_cmake_cpplint REQUIRED)
-  ament_cpplint()
+  set(cpplint_filters
+    "-whitespace/newline"
+  )
+  ament_cpplint(
+    FILTERS "${cpplint_filters}"
+  )
 
   find_package(ament_cmake_clang_format REQUIRED)
   ament_clang_format(

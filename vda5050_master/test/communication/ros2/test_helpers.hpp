@@ -40,7 +40,8 @@ inline void publish_messages(
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher,
   const std::vector<std::string>& payloads)
 {
-  for (const auto& payload : payloads) {
+  for (const auto& payload : payloads)
+  {
     auto msg = std_msgs::msg::String();
     msg.data = payload;
     publisher->publish(msg);
@@ -58,7 +59,8 @@ bool wait_for_condition_with_spin(
   std::chrono::milliseconds spin_interval = constants::ROS2_POLL_INTERVAL)
 {
   auto start = std::chrono::steady_clock::now();
-  while (!condition() && (std::chrono::steady_clock::now() - start) < timeout) {
+  while (!condition() && (std::chrono::steady_clock::now() - start) < timeout)
+  {
     executor.spin_some(spin_interval);
   }
   return condition();

@@ -78,7 +78,8 @@ public:
     const std::string& topic, const std::string& message,
     const int qos = 0) override
   {
-    if (!connected_) {
+    if (!connected_)
+    {
       VDA5050_WARN("[ROS2] Cannot send message - not connected");
       return;
     }
@@ -99,7 +100,8 @@ public:
   {
     // Check if publisher already exists
     auto it = publishers_.find(topic);
-    if (it != publishers_.end()) {
+    if (it != publishers_.end())
+    {
       return it->second;
     }
 
@@ -119,7 +121,8 @@ private:
     // 0 = At most once (Best effort)
     // 1 = At least once (Reliable)
     // 2 = Exactly once (Reliable + Transient local)
-    switch (vda5050_qos) {
+    switch (vda5050_qos)
+    {
       case 0:
         return rclcpp::QoS(10).best_effort().durability_volatile();
       case 1:

@@ -59,7 +59,8 @@ bool wait_for_condition(
   std::chrono::milliseconds timeout = constants::DEFAULT_TIMEOUT)
 {
   auto start = std::chrono::steady_clock::now();
-  while (!condition() && (std::chrono::steady_clock::now() - start) < timeout) {
+  while (!condition() && (std::chrono::steady_clock::now() - start) < timeout)
+  {
     std::this_thread::sleep_for(poll_interval);
   }
   return condition();
@@ -78,10 +79,12 @@ void verify_messages_in_order(
   CheckSizeFunc check_size_func)
 {
   size_t expected_count = expected_payloads.size();
-  for (size_t i = 0; i < expected_payloads.size(); ++i) {
+  for (size_t i = 0; i < expected_payloads.size(); ++i)
+  {
     check_size_func(expected_count);
     auto received = get_message_func();
-    if (received != expected_payloads[i]) {
+    if (received != expected_payloads[i])
+    {
       throw std::runtime_error(
         "Message " + std::to_string(i) +
         " mismatch. Expected: " + expected_payloads[i] + ", Got: " + received);
@@ -106,7 +109,8 @@ inline std::vector<std::string> make_numbered_payloads(size_t count)
 {
   std::vector<std::string> payloads;
   payloads.reserve(count);
-  for (size_t i = 1; i <= count; ++i) {
+  for (size_t i = 1; i <= count; ++i)
+  {
     nlohmann::json j;
     j["id"] = i;
     payloads.push_back(j.dump());

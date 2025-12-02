@@ -41,7 +41,8 @@ constexpr auto MQTT_POLL_INTERVAL = std::chrono::milliseconds(50);
 inline std::string get_mqtt_broker()
 {
   const char* env_broker = std::getenv("VDA5050_TEST_MQTT_BROKER");
-  if (env_broker != nullptr) {
+  if (env_broker != nullptr)
+  {
     return std::string(env_broker);
   }
   return "tcp://localhost:1883";

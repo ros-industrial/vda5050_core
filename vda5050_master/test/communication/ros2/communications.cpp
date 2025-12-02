@@ -51,7 +51,8 @@ class Ros2CommunicationTest : public ::testing::Test
 protected:
   void SetUp() override
   {
-    if (!rclcpp::ok()) {
+    if (!rclcpp::ok())
+    {
       rclcpp::init(0, nullptr);
     }
     qos_ = 0;
