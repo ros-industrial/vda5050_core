@@ -79,8 +79,9 @@ class VDA5050CommunicationManager
 {
 public:
   VDA5050CommunicationManager(
-    std::unique_ptr<ICommunicationStrategy> communication)
-  : communication_(std::move(communication))
+    std::unique_ptr<ICommunicationStrategy> communication,
+    const VDA5050Callbacks& callbacks)
+  : communication_(std::move(communication)), vda5050_callbacks_(callbacks)
   {
   }
 
@@ -108,12 +109,12 @@ public:
    * as a parameter to distinguish which AGV sent the message.
    * Must be called before register_agv().
    */
-  void set_vda5050_callbacks(const VDA5050Callbacks& callbacks)
-  {
-    std::lock_guard<std::mutex> lock(callbacks_mutex_);
-    vda5050_callbacks_ = callbacks;
-    VDA5050_INFO("[VDA5050Manager] VDA5050 callbacks configured");
-  }
+  // void set_vda5050_callbacks(const VDA5050Callbacks& callbacks)
+  // {
+  //   std::lock_guard<std::mutex> lock(callbacks_mutex_);
+  //   vda5050_callbacks_ = callbacks;
+  //   VDA5050_INFO("[VDA5050Manager] VDA5050 callbacks configured");
+  // }
 
   /**
    * @brief Register an AGV for VDA5050 communication
@@ -250,10 +251,18 @@ private:
       vda5050_msgs::msg::Connection msg;
       vda5050_msgs::msg::from_json(json_msg, msg);
 
-      std::lock_guard<std::mutex> lock(callbacks_mutex_);
-      if (vda5050_callbacks_.on_connection)
+      // Copy callback under lock
+      std::function<void(
+        const std::string&, const vda5050_msgs::msg::Connection&)>
+        connection_callback;
       {
-        vda5050_callbacks_.on_connection(agv_id, msg);
+        std::lock_guard<std::mutex> lock(callbacks_mutex_);
+        connection_callback = vda5050_callbacks_.on_connection;
+      }  // Lock released here
+
+      if (connection_callback)
+      {
+        connection_callback(agv_id, msg);
       }
     }
     catch (const std::exception& e)
@@ -273,10 +282,17 @@ private:
       vda5050_msgs::msg::State msg;
       vda5050_msgs::msg::from_json(json_msg, msg);
 
-      std::lock_guard<std::mutex> lock(callbacks_mutex_);
-      if (vda5050_callbacks_.on_state)
+      // Copy callback under lock
+      std::function<void(const std::string&, const vda5050_msgs::msg::State&)>
+        state_callback;
       {
-        vda5050_callbacks_.on_state(agv_id, msg);
+        std::lock_guard<std::mutex> lock(callbacks_mutex_);
+        state_callback = vda5050_callbacks_.on_state;
+      }  // Lock released here
+
+      if (state_callback)
+      {
+        state_callback(agv_id, msg);
       }
     }
     catch (const std::exception& e)
@@ -296,10 +312,18 @@ private:
       vda5050_msgs::msg::Factsheet msg;
       vda5050_msgs::msg::from_json(json_msg, msg);
 
-      std::lock_guard<std::mutex> lock(callbacks_mutex_);
-      if (vda5050_callbacks_.on_factsheet)
+      // Copy callback under lock
+      std::function<void(
+        const std::string&, const vda5050_msgs::msg::Factsheet&)>
+        factsheet_callback;
       {
-        vda5050_callbacks_.on_factsheet(agv_id, msg);
+        std::lock_guard<std::mutex> lock(callbacks_mutex_);
+        factsheet_callback = vda5050_callbacks_.on_factsheet;
+      }  // Lock released here
+
+      if (factsheet_callback)
+      {
+        factsheet_callback(agv_id, msg);
       }
     }
     catch (const std::exception& e)
@@ -319,10 +343,18 @@ private:
       vda5050_msgs::msg::Visualization msg;
       vda5050_msgs::msg::from_json(json_msg, msg);
 
-      std::lock_guard<std::mutex> lock(callbacks_mutex_);
-      if (vda5050_callbacks_.on_visualization)
+      // Copy callback under lock
+      std::function<void(
+        const std::string&, const vda5050_msgs::msg::Visualization&)>
+        visualization_callback;
       {
-        vda5050_callbacks_.on_visualization(agv_id, msg);
+        std::lock_guard<std::mutex> lock(callbacks_mutex_);
+        visualization_callback = vda5050_callbacks_.on_visualization;
+      }  // Lock released here
+
+      if (visualization_callback)
+      {
+        visualization_callback(agv_id, msg);
       }
     }
     catch (const std::exception& e)
