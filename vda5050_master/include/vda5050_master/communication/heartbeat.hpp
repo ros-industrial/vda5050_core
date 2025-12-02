@@ -60,7 +60,8 @@ public:
 
   void received_connection()
   {
-    if (!connection_thread_.joinable()) {
+    if (!connection_thread_.joinable())
+    {
       VDA5050_INFO("Connection heartbeat not started yet, ignored...");
       return;
     }
@@ -90,9 +91,12 @@ public:
   void stop_connection_heartbeat()
   {
     VDA5050_INFO("Stopping Connection heartbeat listener");
-    if (connection_thread_.joinable()) {
+    if (connection_thread_.joinable())
+    {
       connection_thread_.join();
-    } else {
+    }
+    else
+    {
       VDA5050_INFO("Connection thread not joinable");
     }
     VDA5050_INFO("Stopped Connection heartbeat listener");
@@ -137,7 +141,8 @@ private:
     VDA5050_INFO(
       "time_since_last_connection_report" +
       std::to_string(time_since_last_connection_report));
-    if (std::abs(time_since_last_connection_report) > heartbeat_interval_) {
+    if (std::abs(time_since_last_connection_report) > heartbeat_interval_)
+    {
       VDA5050_INFO(
         "Connection heartbeat lost after waiting for the maximum of " +
         std::to_string(heartbeat_interval_) + " seconds");
@@ -154,16 +159,19 @@ private:
 
   void listen()
   {
-    while (is_running()) {
+    while (is_running())
+    {
       VDA5050_INFO("Start Listen");
       std::unique_lock<std::mutex> lock(check_lock_);
       message_received_.wait_for(
         lock, std::chrono::seconds(get_check_interval()));
-      if (is_timeout()) {
+      if (is_timeout())
+      {
         VDA5050_INFO("Timeout reached");
         callback_thread_ = std::thread([&]() { disconnection_callback_(); });
         VDA5050_INFO("[" + id_ + "] Waiting for callback thread to finish");
-        if (callback_thread_.joinable()) {
+        if (callback_thread_.joinable())
+        {
           callback_thread_.join();
         }
         VDA5050_INFO("Stopping hearbeat checks");

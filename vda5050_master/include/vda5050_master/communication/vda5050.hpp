@@ -54,11 +54,13 @@ public:
       config_->connection_topic,
       [this](const std::string& topic, const std::string& payload) {
         // Parse JSON and call the connection callback
-        try {
+        try
+        {
           auto json_msg = nlohmann::json::parse(payload);
           this->connection_success_callback(json_msg);
         }
-        catch (const std::exception& e) {
+        catch (const std::exception& e)
+        {
           // TODO(tanjpg): Add proper error handling/logging
           // For now, silently fail to maintain backwards compatibility
         }
@@ -82,26 +84,31 @@ public:
     communication_client_->subscribe(
       config_->state_topic,
       [this](const std::string& topic, const std::string& payload) {
-        try {
+        try
+        {
           auto json_msg = nlohmann::json::parse(payload);
           this->state_callback(json_msg);
         }
-        catch (const std::exception& e) {
+        catch (const std::exception& e)
+        {
           // TODO(tanjpg): Error handling
         }
       },
       vda5050_master::StateQos);
 
     // Subscribe to factsheet topic with callback
-    if (!config_->factsheet_topic.value().empty()) {
+    if (!config_->factsheet_topic.value().empty())
+    {
       communication_client_->subscribe(
         config_->factsheet_topic.value(),
         [this](const std::string& topic, const std::string& payload) {
-          try {
+          try
+          {
             auto json_msg = nlohmann::json::parse(payload);
             this->factsheet_callback(json_msg);
           }
-          catch (const std::exception& e) {
+          catch (const std::exception& e)
+          {
             // TODO(tanjpg): Error handling
           }
         },
@@ -109,15 +116,18 @@ public:
     }
 
     // Subscribe to visualization topic with callback
-    if (!config_->visualization_topic.value().empty()) {
+    if (!config_->visualization_topic.value().empty())
+    {
       communication_client_->subscribe(
         config_->visualization_topic.value(),
         [this](const std::string& topic, const std::string& payload) {
-          try {
+          try
+          {
             auto json_msg = nlohmann::json::parse(payload);
             this->visualization_callback(json_msg);
           }
-          catch (const std::exception& e) {
+          catch (const std::exception& e)
+          {
             // TODO(tanjpg): Error handling
           }
         },
@@ -132,7 +142,8 @@ public:
     vda5050_msgs::msg::from_json(state_json, state_msg);
 
     // Store in container (optional - for history/debugging)
-    if (config_->state_container) {
+    if (config_->state_container)
+    {
       config_->state_container->push_back(state_msg);
     }
 
@@ -146,7 +157,8 @@ public:
     vda5050_msgs::msg::Factsheet factsheet_msg;
     vda5050_msgs::msg::from_json(factsheet_json, factsheet_msg);
 
-    if (config_->factsheet_container) {
+    if (config_->factsheet_container)
+    {
       config_->factsheet_container->push_back(factsheet_msg);
     }
 
@@ -159,7 +171,8 @@ public:
     vda5050_msgs::msg::Visualization viz_msg;
     vda5050_msgs::msg::from_json(visualization_json, viz_msg);
 
-    if (config_->visualization_container) {
+    if (config_->visualization_container)
+    {
       config_->visualization_container->push_back(viz_msg);
     }
 
@@ -172,7 +185,8 @@ public:
    */
   void publish_order(const nlohmann::json& order_json)
   {
-    if (!config_->order_topic.has_value() || config_->order_topic->empty()) {
+    if (!config_->order_topic.has_value() || config_->order_topic->empty())
+    {
       throw std::runtime_error("Order topic not configured");
     }
 
@@ -189,7 +203,8 @@ public:
   {
     if (
       !config_->instant_actions_topic.has_value() ||
-      config_->instant_actions_topic->empty()) {
+      config_->instant_actions_topic->empty())
+    {
       throw std::runtime_error("Instant actions topic not configured");
     }
 

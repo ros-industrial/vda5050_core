@@ -76,49 +76,61 @@ struct VDA5050Config
   void validate() const
   {
     // Check required topics are not empty
-    if (connection_topic.empty()) {
+    if (connection_topic.empty())
+    {
       throw std::runtime_error("Connection topic is required but empty");
     }
-    if (state_topic.empty()) {
+    if (state_topic.empty())
+    {
       throw std::runtime_error("State topic is required but empty");
     }
 
     // Check required containers are not null
-    if (!connection_container) {
+    if (!connection_container)
+    {
       throw std::runtime_error("Connection container is required but null");
     }
-    if (!state_container) {
+    if (!state_container)
+    {
       throw std::runtime_error("State container is required but null");
     }
 
     // If optional topics are provided, check their containers are valid
-    if (factsheet_topic.has_value() && factsheet_topic->empty()) {
+    if (factsheet_topic.has_value() && factsheet_topic->empty())
+    {
       throw std::runtime_error("Factsheet topic provided but empty");
     }
-    if (factsheet_topic.has_value() && !factsheet_container) {
+    if (factsheet_topic.has_value() && !factsheet_container)
+    {
       throw std::runtime_error(
         "Factsheet topic provided but container is null");
     }
 
-    if (order_topic.has_value() && order_topic->empty()) {
+    if (order_topic.has_value() && order_topic->empty())
+    {
       throw std::runtime_error("Order topic provided but empty");
     }
-    if (order_topic.has_value() && !order_container) {
+    if (order_topic.has_value() && !order_container)
+    {
       throw std::runtime_error("Order topic provided but container is null");
     }
 
-    if (instant_actions_topic.has_value() && instant_actions_topic->empty()) {
+    if (instant_actions_topic.has_value() && instant_actions_topic->empty())
+    {
       throw std::runtime_error("Instant actions topic provided but empty");
     }
-    if (instant_actions_topic.has_value() && !instant_actions_container) {
+    if (instant_actions_topic.has_value() && !instant_actions_container)
+    {
       throw std::runtime_error(
         "Instant actions topic provided but container is null");
     }
 
-    if (visualization_topic.has_value() && visualization_topic->empty()) {
+    if (visualization_topic.has_value() && visualization_topic->empty())
+    {
       throw std::runtime_error("Visualization topic provided but empty");
     }
-    if (visualization_topic.has_value() && !visualization_container) {
+    if (visualization_topic.has_value() && !visualization_container)
+    {
       throw std::runtime_error(
         "Visualization topic provided but container is null");
     }
