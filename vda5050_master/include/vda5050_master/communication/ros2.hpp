@@ -20,6 +20,7 @@
 #define VDA5050_MASTER__COMMUNICATION__ROS2_HPP_
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 
@@ -53,6 +54,7 @@ public:
         callback(topic, msg->data);
       });
 
+    std::lock_guard<std::mutex> lock(subscriber_mutex_);
     // Store the subscription to keep it alive
     subscriptions_[topic] = subscription;
     VDA5050_INFO("[ROS2] Subscribed to topic: " + topic);
@@ -68,8 +70,14 @@ public:
   void disconnect() override
   {
     // Clear all subscriptions and publishers
-    subscriptions_.clear();
-    publishers_.clear();
+    {
+      std::lock_guard<std::mutex> lock(subscriber_mutex_);
+      subscriptions_.clear();
+    }
+    {
+      std::lock_guard<std::mutex> lock(publisher_mutex_);
+      publishers_.clear();
+    }
     connected_ = false;
     VDA5050_INFO("[ROS2] Disconnecting from ROS2 communication");
   }
@@ -99,6 +107,7 @@ public:
   get_or_create_publisher(const std::string& topic, int qos)
   {
     // Check if publisher already exists
+    std::lock_guard<std::mutex> lock(publisher_mutex_);
     auto it = publishers_.find(topic);
     if (it != publishers_.end())
     {
@@ -148,6 +157,8 @@ private:
   std::unordered_map<
     std::string, rclcpp::Publisher<std_msgs::msg::String>::SharedPtr>
     publishers_;
+  std::mutex publisher_mutex_;
+  std::mutex subscriber_mutex_;
 };
 
 #endif  // VDA5050_MASTER__COMMUNICATION__ROS2_HPP_
