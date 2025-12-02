@@ -79,6 +79,11 @@ public:
   ~ConnectionHeartbeatListener()
   {
     stop_connection_heartbeat();
+    // Also join callback thread if running
+    if (callback_thread_.joinable())
+    {
+      callback_thread_.join();
+    }
     VDA5050_INFO("[" + id_ + "] Deconstructing ConnectionHeartbeatListener");
   }
 
@@ -168,7 +173,9 @@ private:
       if (is_timeout())
       {
         VDA5050_INFO("Timeout reached");
-        callback_thread_ = std::thread([&]() { disconnection_callback_(); });
+        // Copy callback by value in case object is destroyed
+        auto callback_copy = disconnection_callback_;
+        callback_thread_ = std::thread([callback_copy]() { callback_copy(); });
         VDA5050_INFO("[" + id_ + "] Waiting for callback thread to finish");
         if (callback_thread_.joinable())
         {
