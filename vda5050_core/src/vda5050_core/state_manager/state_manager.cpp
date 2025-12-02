@@ -26,6 +26,27 @@ namespace vda5050_core {
 namespace state_manager {
 
 //=============================================================================
+void StateManager::set_header(const Header& header)
+{
+  std::unique_lock lock(this->mutex_);
+  this->robot_state_.header = header;
+}
+
+//=============================================================================
+Header StateManager::get_header() const
+{
+  std::unique_lock lock(this->mutex_);
+  return this->robot_state_.header;
+}
+
+//=============================================================================
+void StateManager::set_order_id(const std::string& order_id)
+{
+  std::unique_lock lock(this->mutex_);
+  this->robot_state_.order_id = order_id;
+}
+
+//=============================================================================
 std::optional<std::string> StateManager::get_order_id() const
 {
   std::shared_lock lock(this->mutex_);
@@ -35,12 +56,25 @@ std::optional<std::string> StateManager::get_order_id() const
 }
 
 //=============================================================================
+void StateManager::set_order_update_id(uint32_t order_update_id)
+{
+  std::unique_lock lock(this->mutex_);
+  this->robot_state_.order_update_id = order_update_id;
+}
+//=============================================================================
 std::optional<uint32_t> StateManager::get_order_update_id() const
 {
   std::shared_lock lock(this->mutex_);
   if (this->robot_state_.order_id.empty()) return std::nullopt;
 
   return this->robot_state_.order_update_id;
+}
+
+//=============================================================================
+void StateManager::set_zone_set_id(const std::string& zone_set_id)
+{
+  std::unique_lock lock(this->mutex_);
+  this->robot_state_.zone_set_id = zone_set_id;
 }
 
 //=============================================================================
@@ -53,8 +87,35 @@ std::optional<std::string> StateManager::get_zone_set_id() const
 }
 
 //=============================================================================
-void StateManager::set_agv_position(
-  const std::optional<AGVPosition>& agv_position)
+void StateManager::set_last_node_id(const std::string& last_node_id)
+{
+  std::unique_lock lock(this->mutex_);
+  this->robot_state_.last_node_id = last_node_id;
+}
+
+//=============================================================================
+std::string StateManager::get_last_node_id() const
+{
+  std::shared_lock lock(this->mutex_);
+  return this->robot_state_.last_node_id;
+}
+
+//=============================================================================
+void StateManager::set_last_node_sequence_id(uint32_t last_node_sequence_id)
+{
+  std::unique_lock lock(this->mutex_);
+  this->robot_state_.last_node_sequence_id = last_node_sequence_id;
+}
+
+//=============================================================================
+uint32_t StateManager::get_last_node_sequence_id() const
+{
+  std::shared_lock lock(this->mutex_);
+  return this->robot_state_.last_node_sequence_id;
+}
+
+//=============================================================================
+void StateManager::set_agv_position(const AGVPosition& agv_position)
 {
   std::unique_lock lock(this->mutex_);
   this->robot_state_.agv_position = agv_position;
@@ -68,7 +129,7 @@ std::optional<AGVPosition> StateManager::get_agv_position() const
 }
 
 //=============================================================================
-void StateManager::set_velocity(const std::optional<Velocity>& velocity)
+void StateManager::set_velocity(const Velocity& velocity)
 {
   std::unique_lock lock(this->mutex_);
   this->robot_state_.velocity = velocity;
@@ -82,12 +143,17 @@ std::optional<Velocity> StateManager::get_velocity() const
 }
 
 //=============================================================================
-bool StateManager::set_driving(bool driving)
+void StateManager::set_driving_status(bool driving)
 {
   std::unique_lock lock(this->mutex_);
-  bool changed = this->robot_state_.driving != driving;
   this->robot_state_.driving = driving;
-  return changed;
+}
+
+//=============================================================================
+bool StateManager::get_driving_status() const
+{
+  std::unique_lock lock(this->mutex_);
+  return this->robot_state_.driving;
 }
 
 //=============================================================================
@@ -112,7 +178,7 @@ std::optional<double> StateManager::get_distance_since_last_node() const
 }
 
 //=============================================================================
-bool StateManager::add_load(const Load& load)
+void StateManager::add_load(const Load& load)
 {
   std::unique_lock lock(this->mutex_);
 
@@ -124,8 +190,13 @@ bool StateManager::add_load(const Load& load)
   {
     this->robot_state_.loads->push_back(load);
   }
+}
 
-  return true;
+//=============================================================================
+void StateManager::set_load(const std::vector<Load>& loads)
+{
+  std::unique_lock lock(this->mutex_);
+  this->robot_state_.loads = loads;
 }
 
 //=============================================================================
@@ -154,31 +225,17 @@ bool StateManager::remove_load(std::string_view load_id)
 }
 
 //=============================================================================
-const std::vector<Load>& StateManager::get_loads()
+const std::optional<std::vector<Load>>& StateManager::get_loads() const
 {
-  std::shared_lock lock(
-    this->mutex_);  // Ensure that loads is not being altered at the moment
-
-  static const std::vector<Load> empty;
-
-  // value_or turns empty into a stack object, so this if block is required
-  if (this->robot_state_.loads.has_value())
-  {
-    return *this->robot_state_.loads;
-  }
-  else
-  {
-    return empty;
-  }
+  std::shared_lock lock(this->mutex_);
+  return this->robot_state_.loads;
 }
 
 //=============================================================================
-bool StateManager::set_operating_mode(OperatingMode operating_mode)
+void StateManager::set_operating_mode(OperatingMode operating_mode)
 {
   std::unique_lock lock(this->mutex_);
-  bool changed = this->robot_state_.operating_mode != operating_mode;
   this->robot_state_.operating_mode = operating_mode;
-  return changed;
 }
 
 //=============================================================================
@@ -199,40 +256,35 @@ void StateManager::set_battery_state(const BatteryState& battery_state)
 //=============================================================================
 const BatteryState& StateManager::get_battery_state() const
 {
-  std::shared_lock lock(
-    this->mutex_);  // Ensure that battery is not being altered at the moment
+  std::shared_lock lock(this->mutex_);
   return this->robot_state_.battery_state;
 }
 
 //=============================================================================
-bool StateManager::set_safety_state(const SafetyState& safety_state)
+void StateManager::set_safety_state(const SafetyState& safety_state)
 {
   std::unique_lock lock(this->mutex_);
-  auto before = this->robot_state_.safety_state;
   this->robot_state_.safety_state = safety_state;
-  return before != (safety_state);
 }
 
 //=============================================================================
 const SafetyState& StateManager::get_safety_state() const
 {
-  std::shared_lock lock(
-    this->mutex_);  // Ensure that safety is not being altered at the moment
+  std::shared_lock lock(this->mutex_);
   return this->robot_state_.safety_state;
 }
 
-void StateManager::request_new_base()
+void StateManager::set_request_new_base(bool request_new_base)
 {
   std::unique_lock lock(this->mutex_);
-  this->robot_state_.new_base_request = true;
+  this->robot_state_.new_base_request = request_new_base;
 }
 
 //=============================================================================
-bool StateManager::add_error(const Error& error)
+void StateManager::add_error(const Error& error)
 {
   std::unique_lock lock(this->mutex_);
   this->robot_state_.errors.push_back(error);
-  return true;
 }
 
 //=============================================================================
@@ -240,6 +292,13 @@ std::vector<Error> StateManager::get_errors() const
 {
   std::shared_lock lock(this->mutex_);
   return this->robot_state_.errors;
+}
+
+//=============================================================================
+void StateManager::clear_errors()
+{
+  std::unique_lock lock(this->mutex_);
+  this->robot_state_.errors.clear();
 }
 
 //=============================================================================
@@ -253,6 +312,34 @@ void StateManager::add_info(const Info& info)
   }
 
   this->robot_state_.information->push_back(info);
+}
+
+//=============================================================================
+std::optional<std::vector<Info>> StateManager::get_info() const
+{
+  std::shared_lock lock(this->mutex_);
+  return this->robot_state_.information;
+}
+
+//=============================================================================
+void StateManager::clear_info()
+{
+  std::unique_lock lock(this->mutex_);
+  this->robot_state_.information.reset();
+}
+
+//=============================================================================
+void StateManager::set_action_states(std::vector<ActionState> action_states)
+{
+  std::unique_lock lock(this->mutex_);
+  this->robot_state_.action_states = action_states;
+}
+
+//=============================================================================
+std::vector<ActionState> StateManager::get_action_states() const
+{
+  std::unique_lock lock(this->mutex_);
+  return this->robot_state_.action_states;
 }
 
 //=============================================================================
@@ -284,20 +371,6 @@ void StateManager::dump_to(State& state)
 }
 
 //=============================================================================
-std::string StateManager::get_last_node_id() const
-{
-  std::shared_lock lock(this->mutex_);
-  return this->robot_state_.last_node_id;
-}
-
-//=============================================================================
-uint32_t StateManager::get_last_node_sequence_id() const
-{
-  std::shared_lock lock(this->mutex_);
-  return this->robot_state_.last_node_sequence_id;
-}
-
-//=============================================================================
 bool StateManager::is_node_states_empty() const
 {
   std::shared_lock lock(this->mutex_);
@@ -309,7 +382,7 @@ bool StateManager::are_action_states_still_executing() const
 {
   std::shared_lock lock(this->mutex_);
 
-  if (this->robot_state_.action_states.empty()) return true;
+  if (this->robot_state_.action_states.empty()) return false;
 
   for (const auto& action_state : this->robot_state_.action_states)
   {
@@ -320,15 +393,17 @@ bool StateManager::are_action_states_still_executing() const
       return true;
     }
   }
-  return false;
+  return true;
 }
 
 //=============================================================================
 void StateManager::cleanup_previous_order()
 {
   std::unique_lock lock(this->mutex_);
+  Header header_id = this->robot_state_.header;
   std::string last_node_id = this->robot_state_.last_node_id;
   this->robot_state_ = State();
+  this->robot_state_.header = header_id;
   this->robot_state_.last_node_id = last_node_id;
 }
 
@@ -337,10 +412,11 @@ void StateManager::set_new_order(const Order& order)
 {
   std::unique_lock lock(this->mutex_);
 
-  // Temp fix to avoid deadlock if cleanup_previous_order is called
+  // Temp fix to avoid deadlock
   std::string last_node_id = this->robot_state_.last_node_id;
   this->robot_state_ = State();
   this->robot_state_.last_node_id = last_node_id;
+
   this->robot_state_.order_id = order.order_id;
   this->robot_state_.order_update_id = order.order_update_id;
   this->robot_state_.zone_set_id = order.zone_set_id;
@@ -382,11 +458,6 @@ void StateManager::clear_horizon()
     std::remove_if(nodes.begin(), nodes.end(), node_predicate), nodes.end());
   edges.erase(
     std::remove_if(edges.begin(), edges.end(), edge_predicate), edges.end());
-}
-
-void StateManager::append_states_for_update(Order& order_update)
-{
-  this->set_new_order(order_update);
 }
 
 const State& StateManager::get_state()

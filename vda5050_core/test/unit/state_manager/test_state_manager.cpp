@@ -19,13 +19,16 @@
 #include <gtest/gtest.h>
 #include "vda5050_core/state_manager/state_manager.hpp"
 
+using vda5050_types::ActionState;
 using vda5050_types::ActionStatus;
 using vda5050_types::AGVPosition;
 using vda5050_types::BatteryState;
 using vda5050_types::Edge;
 using vda5050_types::EdgeState;
 using vda5050_types::Error;
+using vda5050_types::ErrorLevel;
 using vda5050_types::EStop;
+using vda5050_types::Header;
 using vda5050_types::Info;
 using vda5050_types::Load;
 using vda5050_types::Node;
@@ -42,277 +45,386 @@ protected:
   vda5050_core::state_manager::StateManager sm;
 };
 
-TEST_F(StateManagerTest, SetAndGetAGVPosition)
+//=============================================================================
+// 1. Header and Order Identification Tests
+//=============================================================================
+
+TEST_F(StateManagerTest, HeaderAndIds)
 {
-  AGVPosition pos;
-  pos.x = 1.23;
-  pos.y = 4.56;
-  pos.theta = 1.57;
+  // Test Header
+  Header h;
+  h.header_id = 999;
+  sm.set_header(h);
+  EXPECT_EQ(sm.get_header().header_id, 999);
 
-  sm.set_agv_position(pos);
-  auto result = sm.get_agv_position();
+  // Test Order ID
+  sm.set_order_id("order_alpha");
+  ASSERT_TRUE(sm.get_order_id().has_value());
+  EXPECT_EQ(sm.get_order_id().value(), "order_alpha");
 
-  ASSERT_TRUE(result.has_value());
-  EXPECT_DOUBLE_EQ(result->x, 1.23);
-  EXPECT_DOUBLE_EQ(result->y, 4.56);
-  EXPECT_DOUBLE_EQ(result->theta, 1.57);
+  // Test Order Update ID
+  sm.set_order_update_id(12);
+  ASSERT_TRUE(sm.get_order_update_id().has_value());
+  EXPECT_EQ(sm.get_order_update_id().value(), 12);
+
+  // Test Zone Set ID
+  sm.set_zone_set_id("zone_beta");
+  ASSERT_TRUE(sm.get_zone_set_id().has_value());
+  EXPECT_EQ(sm.get_zone_set_id().value(), "zone_beta");
 }
 
-TEST_F(StateManagerTest, SetAndGetVelocity)
+TEST_F(StateManagerTest, OrderIdEmpty)
 {
+  // Ensure order_id is empty
+  sm.set_order_id("");
+
+  sm.set_order_update_id(50);
+  sm.set_zone_set_id("zone_gamma");
+
+  EXPECT_FALSE(sm.get_order_update_id().has_value());
+  EXPECT_FALSE(sm.get_zone_set_id().has_value());
+}
+
+//=============================================================================
+// 2. Navigation Tests
+//=============================================================================
+
+TEST_F(StateManagerTest, LastNodeData)
+{
+  sm.set_last_node_id("node_start");
+  EXPECT_EQ(sm.get_last_node_id(), "node_start");
+
+  sm.set_last_node_sequence_id(5);
+  EXPECT_EQ(sm.get_last_node_sequence_id(), 5);
+}
+
+TEST_F(StateManagerTest, PositionAndVelocity)
+{
+  // Position
+  AGVPosition pos;
+  pos.x = 10.0;
+  pos.y = 20.0;
+  pos.theta = 1.57;
+  pos.map_id = "map_1";
+
+  sm.set_agv_position(pos);
+  ASSERT_TRUE(sm.get_agv_position().has_value());
+  EXPECT_DOUBLE_EQ(sm.get_agv_position()->x, 10.0);
+  EXPECT_DOUBLE_EQ(sm.get_agv_position()->y, 20.0);
+  EXPECT_DOUBLE_EQ(sm.get_agv_position()->theta, 1.57);
+  EXPECT_EQ(sm.get_agv_position()->map_id, "map_1");
+
+  // Velocity
   Velocity vel;
-  vel.vx = 0.5;
-  vel.vy = 0.1;
-  vel.omega = 0.05;
+  vel.vx = 2.5;
+  vel.omega = 0.5;
 
   sm.set_velocity(vel);
-  auto result = sm.get_velocity();
-
-  ASSERT_TRUE(result.has_value());
-  EXPECT_DOUBLE_EQ(result->vx.value(), 0.5);
-  EXPECT_DOUBLE_EQ(result->vy.value(), 0.1);
-  EXPECT_DOUBLE_EQ(result->omega.value(), 0.05);
+  ASSERT_TRUE(sm.get_velocity().has_value());
+  EXPECT_DOUBLE_EQ(sm.get_velocity()->vx.value(), 2.5);
+  EXPECT_DOUBLE_EQ(sm.get_velocity()->omega.value(), 0.5);
 }
 
-TEST_F(StateManagerTest, SetDrivingFlag)
+TEST_F(StateManagerTest, DrivingStatus)
 {
-  EXPECT_FALSE(sm.set_driving(false));  // initially false
-  EXPECT_TRUE(sm.set_driving(true));    // changed to true
-  EXPECT_FALSE(sm.set_driving(true));   // no change
+  sm.set_driving_status(true);
+  EXPECT_TRUE(sm.get_driving_status());
+
+  sm.set_driving_status(false);
+  EXPECT_FALSE(sm.get_driving_status());
 }
 
-TEST_F(StateManagerTest, AddAndRemoveLoad)
+TEST_F(StateManagerTest, DistanceSinceLastNode)
 {
-  Load load;
-  load.load_id = "test_load";
-
-  EXPECT_TRUE(sm.add_load(load));
-
-  const auto& loads = sm.get_loads();
-  ASSERT_EQ(loads.size(), 1);
-  EXPECT_EQ(loads[0].load_id, "test_load");
-
-  EXPECT_TRUE(sm.remove_load("test_load"));
-  EXPECT_TRUE(sm.get_loads().empty());
-}
-
-TEST_F(StateManagerTest, SetAndGetOperatingMode)
-{
-  EXPECT_EQ(sm.get_operating_mode(), OperatingMode::AUTOMATIC);
-
-  EXPECT_FALSE(sm.set_operating_mode(OperatingMode::AUTOMATIC));
-  EXPECT_EQ(sm.get_operating_mode(), OperatingMode::AUTOMATIC);
-
-  EXPECT_TRUE(sm.set_operating_mode(OperatingMode::MANUAL));
-  EXPECT_EQ(sm.get_operating_mode(), OperatingMode::MANUAL);
-
-  EXPECT_TRUE(sm.set_operating_mode(OperatingMode::SERVICE));
-  EXPECT_EQ(sm.get_operating_mode(), OperatingMode::SERVICE);
-
-  EXPECT_FALSE(sm.set_operating_mode(OperatingMode::SERVICE));
-  EXPECT_EQ(sm.get_operating_mode(), OperatingMode::SERVICE);
-}
-TEST_F(StateManagerTest, SetBatteryState)
-{
-  BatteryState battery;
-  battery.battery_charge = 0.8;
-  battery.battery_voltage = 48.2;
-
-  sm.set_battery_state(battery);
-  const auto& b = sm.get_battery_state();
-  EXPECT_DOUBLE_EQ(b.battery_charge, 0.8);
-  EXPECT_DOUBLE_EQ(b.battery_voltage.value(), 48.2);
-}
-
-TEST_F(StateManagerTest, SetSafetyState)
-{
-  SafetyState s;
-  s.e_stop = EStop::AUTOACK;
-
-  EXPECT_TRUE(sm.set_safety_state(s));
-
-  SafetyState current = sm.get_safety_state();
-  EXPECT_EQ(current.e_stop, EStop::AUTOACK);
-
-  s.e_stop = EStop::NONE;
-  EXPECT_TRUE(sm.set_safety_state(s));
-  current = sm.get_safety_state();
-  EXPECT_EQ(current.e_stop, EStop::NONE);
-}
-
-TEST_F(StateManagerTest, AddErrorAndInfo)
-{
-  Error e;
-  e.error_description = "Test Error";
-  EXPECT_TRUE(sm.add_error(e));
-
-  auto errors = sm.get_errors();
-  ASSERT_EQ(errors.size(), 1);
-  EXPECT_EQ(errors[0].error_description, "Test Error");
-
-  Info i;
-  i.info_description = "Test Info";
-  sm.add_info(i);
-
-  SUCCEED();  // no getter yet for info, just ensure no crash
-}
-
-TEST_F(StateManagerTest, RequestNewBase)
-{
-  sm.request_new_base();
-  SUCCEED();  // ensure no crash
-}
-
-TEST_F(StateManagerTest, DumpState)
-{
-  AGVPosition pos;
-  pos.x = 1.0;
-  pos.y = 2.0;
-  pos.theta = 3.14;
-
-  sm.set_agv_position(pos);
-
-  State state;
-  sm.dump_to(state);
-
-  EXPECT_NEAR(state.agv_position.value().x, 1.0, 1e-6);
-  EXPECT_NEAR(state.agv_position.value().y, 2.0, 1e-6);
-  EXPECT_NEAR(state.agv_position.value().theta, 3.14, 1e-6);
-}
-TEST_F(StateManagerTest, SetGetAndResetDistanceSinceLastNode)
-{
-  sm.set_distance_since_last_node(12.34);
-  auto d1 = sm.get_distance_since_last_node();
-  ASSERT_TRUE(d1.has_value());
-  EXPECT_DOUBLE_EQ(*d1, 12.34);
-
-  sm.set_distance_since_last_node(5.0);
-  auto d2 = sm.get_distance_since_last_node();
-  ASSERT_TRUE(d2.has_value());
-  EXPECT_DOUBLE_EQ(*d2, 5.0);
+  sm.set_distance_since_last_node(12.5);
+  ASSERT_TRUE(sm.get_distance_since_last_node().has_value());
+  EXPECT_DOUBLE_EQ(sm.get_distance_since_last_node().value(), 12.5);
 
   sm.reset_distance_since_last_node();
-  auto d3 = sm.get_distance_since_last_node();
-  EXPECT_FALSE(d3.has_value());
+  EXPECT_FALSE(sm.get_distance_since_last_node().has_value());
 }
 
-TEST_F(StateManagerTest, GetLastNodeIdAndSequenceId)
+//=============================================================================
+// 3. Load Management Tests
+//=============================================================================
+
+TEST_F(StateManagerTest, LoadOperations)
 {
-  EXPECT_EQ(sm.get_last_node_id(), "");
-  EXPECT_EQ(sm.get_last_node_sequence_id(), 0u);
+  Load load1;
+  load1.load_id = "L1";
+  load1.load_type = "pallet";
+
+  // Test Add
+  sm.add_load(load1);
+  auto loads = sm.get_loads();
+  ASSERT_TRUE(loads.has_value());
+  EXPECT_EQ(loads->size(), 1);
+  EXPECT_EQ(loads->at(0).load_id, "L1");
+
+  // Test Add Multiple
+  Load load2;
+  load2.load_id = "L2";
+  sm.add_load(load2);
+  EXPECT_EQ(sm.get_loads()->size(), 2);
+
+  // Test Set (Overwrite)
+  Load load3;
+  load3.load_id = "L3";
+  sm.set_load({load3});
+  EXPECT_EQ(sm.get_loads()->size(), 1);
+  EXPECT_EQ(sm.get_loads()->at(0).load_id, "L3");
+
+  // Test Remove
+  EXPECT_TRUE(sm.remove_load("L3"));
+  EXPECT_TRUE(sm.get_loads()->empty());
+
+  // Test Remove non-existent
+  EXPECT_FALSE(sm.remove_load("ghost_load"));
 }
 
-TEST_F(StateManagerTest, NodeStatesEmpty)
+//=============================================================================
+// 4. System Status Tests
+//=============================================================================
+
+TEST_F(StateManagerTest, OperatingModeAndBattery)
 {
-  EXPECT_TRUE(sm.is_node_states_empty());
+  sm.set_operating_mode(OperatingMode::SEMIAUTOMATIC);
+  EXPECT_EQ(sm.get_operating_mode(), OperatingMode::SEMIAUTOMATIC);
+
+  BatteryState bat;
+  bat.battery_charge = 0.95;
+  bat.charging = true;
+  sm.set_battery_state(bat);
+
+  EXPECT_DOUBLE_EQ(sm.get_battery_state().battery_charge, 0.95);
+  EXPECT_TRUE(sm.get_battery_state().charging);
 }
 
-TEST_F(StateManagerTest, AreActionStatesStillExecuting)
+TEST_F(StateManagerTest, SafetyAndNewBase)
 {
+  SafetyState safe;
+  safe.e_stop = EStop::AUTOACK;
+  safe.field_violation = true;
+  sm.set_safety_state(safe);
+
+  EXPECT_EQ(sm.get_safety_state().e_stop, EStop::AUTOACK);
+  EXPECT_TRUE(sm.get_safety_state().field_violation);
+
+  // New Base Request
+  sm.set_request_new_base(true);
+  State s;
+  sm.dump_to(s);
+  EXPECT_TRUE(s.new_base_request.value());
+
+  sm.set_request_new_base(false);
+  sm.dump_to(s);
+  EXPECT_FALSE(s.new_base_request.value());
+}
+
+//=============================================================================
+// 5. Error and Info Tests
+//=============================================================================
+
+TEST_F(StateManagerTest, ErrorHandling)
+{
+  Error e1;
+  e1.error_type = "Hardware";
+  e1.error_level = ErrorLevel::FATAL;
+  Error e2;
+  e2.error_type = "Software";
+  e2.error_level = ErrorLevel::WARNING;
+
+  sm.add_error(e1);
+  sm.add_error(e2);
+
+  auto errors = sm.get_errors();
+  ASSERT_EQ(errors.size(), 2);
+  EXPECT_EQ(errors[0].error_type, "Hardware");
+  EXPECT_EQ(errors[1].error_type, "Software");
+
+  // Test Clear
+  sm.clear_errors();
+  EXPECT_TRUE(sm.get_errors().empty());
+}
+
+TEST_F(StateManagerTest, InfoHandling)
+{
+  Info i1;
+  i1.info_type = "Status";
+  i1.info_description = "All Good";
+
+  sm.add_info(i1);
+
+  auto infos = sm.get_info();
+  ASSERT_TRUE(infos.has_value());
+  EXPECT_EQ(infos->size(), 1);
+  EXPECT_EQ(infos->at(0).info_type, "Status");
+
+  // Test Clear
+  sm.clear_info();
+  EXPECT_FALSE(sm.get_info().has_value());
+}
+
+//=============================================================================
+// 6. Action States Tests
+//=============================================================================
+
+TEST_F(StateManagerTest, ActionStateManagement)
+{
+  ActionState as1;
+  as1.action_id = "a1";
+  as1.action_status = ActionStatus::WAITING;
+
+  ActionState as2;
+  as2.action_id = "a2";
+  as2.action_status = ActionStatus::RUNNING;
+
+  std::vector<ActionState> actions = {as1, as2};
+
+  sm.set_action_states(actions);
+
+  auto ret = sm.get_action_states();
+  ASSERT_EQ(ret.size(), 2);
+  EXPECT_EQ(ret[0].action_id, "a1");
+  EXPECT_EQ(ret[1].action_id, "a2");
+}
+
+TEST_F(StateManagerTest, AreActionsStillExecuting)
+{
+  // If no actions are executing -> return false
+  EXPECT_FALSE(sm.are_action_states_still_executing());
+
+  // If any action is NOT FINISHED and NOT FAILED -> return true
+  ActionState active;
+  active.action_status = ActionStatus::RUNNING;
+  sm.set_action_states({active});
   EXPECT_TRUE(sm.are_action_states_still_executing());
+
+  ActionState waiting;
+  waiting.action_status = ActionStatus::WAITING;
+  sm.set_action_states({waiting});
+  EXPECT_TRUE(sm.are_action_states_still_executing());
+
+  // If all are FINISHED or FAILED -> return True
+  ActionState done1;
+  done1.action_status = ActionStatus::FINISHED;
+  ActionState done2;
+  done2.action_status = ActionStatus::FAILED;
+  sm.set_action_states({done1, done2});
+  EXPECT_TRUE(sm.are_action_states_still_executing());
+
+  // If an action is still active
+  sm.set_action_states({done1, done2, active});
+  EXPECT_TRUE(sm.are_action_states_still_executing());
+}
+
+//=============================================================================
+// 7. Order Lifecycle Tests
+//=============================================================================
+
+TEST_F(StateManagerTest, SetNewOrder)
+{
+  Order o;
+  o.order_id = "O1";
+  o.order_update_id = 0;
+  o.zone_set_id = "Z1";
+
+  Node n1;
+  n1.node_id = "n1";
+  n1.released = true;
+  Node n2;
+  n2.node_id = "n2";
+  n2.released = false;
+  o.nodes = {n1, n2};
+
+  Edge e1;
+  e1.edge_id = "e1";
+  e1.released = true;
+  o.edges = {e1};
+
+  sm.set_new_order(o);
+
+  EXPECT_EQ(sm.get_order_id().value(), "O1");
+  EXPECT_FALSE(sm.is_node_states_empty());
+
+  State s;
+  sm.dump_to(s);
+  EXPECT_EQ(s.node_states.size(), 2);
+  EXPECT_EQ(s.edge_states.size(), 1);
 }
 
 TEST_F(StateManagerTest, CleanupPreviousOrder)
 {
-  Order order;
-  order.order_id = "O1";
-  Node node;
-  node.node_id = "n1";
-  node.sequence_id = 1;
-  order.nodes.push_back(node);
-  sm.set_new_order(order);
+  sm.set_last_node_id("keep_me");
+  sm.set_order_id("delete_me");
+  sm.set_driving_status(true);
+
   sm.cleanup_previous_order();
 
-  State state;
-  sm.dump_to(state);
-  EXPECT_TRUE(state.node_states.empty());
-  EXPECT_TRUE(state.edge_states.empty());
-  EXPECT_TRUE(state.action_states.empty());
-  EXPECT_EQ(state.order_id, "");
-  EXPECT_EQ(state.order_update_id, 0u);
-}
+  // Order ID should be gone
+  EXPECT_FALSE(sm.get_order_id().has_value());
 
-TEST_F(StateManagerTest, SetNewOrder)
-{
-  Order order;
-  order.order_id = "O1";
-  order.order_update_id = 1;
-  Node node;
-  node.node_id = "n1";
-  node.sequence_id = 1;
-  Edge edge;
-  edge.edge_id = "e1";
-  edge.sequence_id = 2;
-  order.nodes.push_back(node);
-  order.edges.push_back(edge);
+  // Driving status should be reset (false is default in State constructor usually)
+  EXPECT_FALSE(sm.get_driving_status());
 
-  sm.set_new_order(order);
-  State state;
-  sm.dump_to(state);
-
-  EXPECT_EQ(state.order_id, "O1");
-  ASSERT_EQ(state.node_states.size(), 1u);
-  EXPECT_EQ(state.node_states[0].node_id, "n1");
-  ASSERT_EQ(state.edge_states.size(), 1u);
-  EXPECT_EQ(state.edge_states[0].edge_id, "e1");
+  // Last Node ID MUST persist
+  EXPECT_EQ(sm.get_last_node_id(), "keep_me");
 }
 
 TEST_F(StateManagerTest, ClearHorizon)
 {
-  Order order;
-  order.order_id = "O2";
+  // Setup order with released and unreleased elements
+  Order o;
   Node n1;
-  n1.node_id = "n1";
-  n1.sequence_id = 1;
+  n1.node_id = "rel_n";
   n1.released = true;
   Node n2;
-  n2.node_id = "n2";
-  n2.sequence_id = 2;
+  n2.node_id = "unrel_n";
   n2.released = false;
-  Edge e1;
-  e1.edge_id = "e1";
-  e1.sequence_id = 3;
-  e1.released = false;
-  order.nodes = {n1, n2};
-  order.edges = {e1};
+  o.nodes = {n1, n2};
 
-  sm.set_new_order(order);
+  Edge e1;
+  e1.edge_id = "rel_e";
+  e1.released = true;
+  Edge e2;
+  e2.edge_id = "unrel_e";
+  e2.released = false;
+  o.edges = {e1, e2};
+
+  sm.set_new_order(o);
+
+  // Action
   sm.clear_horizon();
 
-  State state;
-  sm.dump_to(state);
-  ASSERT_EQ(state.node_states.size(), 1u);
-  EXPECT_EQ(state.node_states[0].node_id, "n1");
-  EXPECT_TRUE(state.edge_states.empty());
+  // Assert
+  State s;
+  sm.dump_to(s);
+
+  // Only released items should remain
+  ASSERT_EQ(s.node_states.size(), 1);
+  EXPECT_EQ(s.node_states[0].node_id, "rel_n");
+
+  ASSERT_EQ(s.edge_states.size(), 1);
+  EXPECT_EQ(s.edge_states[0].edge_id, "rel_e");
 }
 
-TEST_F(StateManagerTest, AppendStatesForUpdate)
+//=============================================================================
+// 8. General Accessor Tests
+//=============================================================================
+
+TEST_F(StateManagerTest, DumpToAndGetState)
 {
-  Order order1;
-  order1.order_id = "O1";
-  Node n1;
-  n1.node_id = "n1";
-  n1.sequence_id = 1;
-  order1.nodes.push_back(n1);
-  sm.set_new_order(order1);
+  sm.set_order_id("dump_id");
+  sm.set_last_node_sequence_id(99);
 
-  Order order2;
-  order2.order_id = "O2";
-  Node n2;
-  n2.node_id = "n2";
-  n2.sequence_id = 2;
-  Edge e2;
-  e2.edge_id = "e2";
-  e2.sequence_id = 3;
-  order2.nodes.push_back(n2);
-  order2.edges.push_back(e2);
-  sm.append_states_for_update(order2);
+  // Test dump_to
+  State s_dump;
+  sm.dump_to(s_dump);
+  EXPECT_EQ(s_dump.order_id, "dump_id");
+  EXPECT_EQ(s_dump.last_node_sequence_id, 99);
 
-  State state;
-  sm.dump_to(state);
-  EXPECT_EQ(state.order_id, "O2");
-  ASSERT_EQ(state.node_states.size(), 1u);
-  EXPECT_EQ(state.node_states[0].node_id, "n2");
-  ASSERT_EQ(state.edge_states.size(), 1u);
-  EXPECT_EQ(state.edge_states[0].edge_id, "e2");
+  // Test get_state (const ref)
+  const State& s_ref = sm.get_state();
+  EXPECT_EQ(s_ref.order_id, "dump_id");
+  EXPECT_EQ(s_ref.last_node_sequence_id, 99);
 }
