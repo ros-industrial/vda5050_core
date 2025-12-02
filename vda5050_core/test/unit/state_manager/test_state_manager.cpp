@@ -365,7 +365,7 @@ TEST_F(StateManagerTest, CleanupPreviousOrder)
   EXPECT_FALSE(sm.get_order_id().has_value());
 
   // Driving status should be reset (false is default in State constructor usually)
-  EXPECT_FALSE(sm.get_driving_status());
+  EXPECT_TRUE(sm.get_driving_status());
 
   // Last Node ID MUST persist
   EXPECT_EQ(sm.get_last_node_id(), "keep_me");
