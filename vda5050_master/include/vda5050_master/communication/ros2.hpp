@@ -26,148 +26,33 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "vda5050_core/logger/logger.hpp"
 #include "vda5050_master/communication/communication.hpp"
 
 class Ros2Communication : public ICommunicationStrategy
 {
 public:
   Ros2Communication(
-    std::shared_ptr<rclcpp::Node> node, const std::string& node_name)
-  : ICommunicationStrategy(), node_(node), node_name_(node_name)
-  {
-    VDA5050_INFO(
-      "[ROS2] Initializing ROS2 communication for node: " + node_name_);
-  }
+    std::shared_ptr<rclcpp::Node> node, const std::string& node_name);
 
   void subscribe(
     const std::string& topic, MessageCallback callback,
-    const int qos = 0) override
-  {
-    // Convert VDA5050 QoS to ROS2 QoS
-    auto ros2_qos = convert_qos(qos);
+    const int qos = 0) override;
 
-    // Create a subscriber for this topic
-    auto subscription = node_->create_subscription<std_msgs::msg::String>(
-      topic, ros2_qos,
-      [this, topic, callback](const std_msgs::msg::String::SharedPtr msg) {
-        callback(topic, msg->data);
-      });
+  void connect() override;
 
-    std::lock_guard<std::mutex> lock(subscriber_mutex_);
-    // Store the subscription to keep it alive
-    subscriptions_[topic] = subscription;
-    VDA5050_INFO("[ROS2] Subscribed to topic: " + topic);
-  }
-
-  void connect() override
-  {
-    // ROS2 nodes are connected when created, but we can initialize publishers here
-    {
-      std::lock_guard<std::mutex> lock(state_mutex_);
-      state_ = ConnectionState::CONNECTED;
-    }
-    VDA5050_INFO("[ROS2] Node connected and ready");
-  }
-
-  void disconnect() override
-  {
-    VDA5050_INFO("[ROS2] Disconnecting from ROS2 communication");
-
-    // Signal disconnecting state
-    {
-      std::lock_guard<std::mutex> lock(state_mutex_);
-      state_ = ConnectionState::DISCONNECTING;
-    }
-
-    // Clear all subscriptions and publishers
-    {
-      std::lock_guard<std::mutex> lock(subscriber_mutex_);
-      subscriptions_.clear();
-    }
-    {
-      std::lock_guard<std::mutex> lock(publisher_mutex_);
-      publishers_.clear();
-    }
-
-    // Mark as fully disconnected
-    {
-      std::lock_guard<std::mutex> lock(state_mutex_);
-      state_ = ConnectionState::DISCONNECTED;
-    }
-
-    VDA5050_INFO("[ROS2] Disconnected from ROS2 communication");
-  }
+  void disconnect() override;
 
   void send_message(
     const std::string& topic, const std::string& message,
-    const int qos = 0) override
-  {
-    if (get_state() != ConnectionState::CONNECTED)
-    {
-      VDA5050_WARN("[ROS2] Cannot send message - not connected");
-      return;
-    }
+    const int qos = 0) override;
 
-    // Get or create publisher for this topic
-    auto publisher = get_or_create_publisher(topic, qos);
-
-    // Create and publish the message
-    auto ros_msg = std_msgs::msg::String();
-    ros_msg.data = message;
-    publisher->publish(ros_msg);
-
-    VDA5050_INFO("[ROS2] Published message to topic: " + topic);
-  }
-
-  std::shared_ptr<rclcpp::Publisher<std_msgs::msg::String>>
-  get_or_create_publisher(const std::string& topic, int qos)
-  {
-    // Check if publisher already exists
-    std::lock_guard<std::mutex> lock(publisher_mutex_);
-    auto it = publishers_.find(topic);
-    if (it != publishers_.end())
-    {
-      return it->second;
-    }
-
-    // Create new publisher
-    auto ros2_qos = convert_qos(qos);
-    auto publisher =
-      node_->create_publisher<std_msgs::msg::String>(topic, ros2_qos);
-    publishers_[topic] = publisher;
-
-    VDA5050_INFO("[ROS2] Created publisher for topic: " + topic);
-    return publisher;
-  }
-
-  ConnectionState get_state() const override
-  {
-    std::lock_guard<std::mutex> lock(state_mutex_);
-    return state_;
-  }
+  ConnectionState get_state() const override;
 
 private:
-  rclcpp::QoS convert_qos(int vda5050_qos)
-  {
-    // 0 = At most once (Best effort)
-    // 1 = At least once (Reliable)
-    // 2 = Exactly once (Reliable + Transient local)
-    switch (vda5050_qos)
-    {
-      case 0:
-        return rclcpp::QoS(10).best_effort().durability_volatile();
-      case 1:
-        return rclcpp::QoS(10).reliable().durability_volatile();
-      case 2:
-        return rclcpp::QoS(10).reliable().transient_local();
-      default:
-        VDA5050_WARN(
-          "[ROS2] Unknown QoS level " + std::to_string(vda5050_qos) +
-          ", using default");
-        return rclcpp::QoS(10);
-    }
-  }
+  std::shared_ptr<rclcpp::Publisher<std_msgs::msg::String>>
+  get_or_create_publisher(const std::string& topic, int qos);
+
+  rclcpp::QoS convert_qos(int vda5050_qos);
 
   std::shared_ptr<rclcpp::Node> node_;
   std::string node_name_;

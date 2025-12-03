@@ -23,85 +23,34 @@
 #include <mutex>
 #include <string>
 
-#include "vda5050_core/logger/logger.hpp"
 #include "vda5050_core/mqtt_client/mqtt_client_interface.hpp"
 #include "vda5050_master/communication/communication.hpp"
-
-using vda5050_core::mqtt_client::MqttClientInterface;
 
 class MqttCommunication : public ICommunicationStrategy
 {
 public:
-  MqttCommunication(const std::string& endpoint, const std::string& id)
-  : ICommunicationStrategy(), endpoint_(endpoint), id_(id)
-  {
-    mqtt_client_ =
-      vda5050_core::mqtt_client::create_default_client(endpoint_, id_);
-  }
+  MqttCommunication(const std::string& endpoint, const std::string& id);
 
   void subscribe(
     const std::string& topic, MessageCallback callback,
-    const int qos = 0) override
-  {
-    mqtt_client_->subscribe(
-      topic,
-      [callback](const std::string& topic_, const std::string& payload_) {
-        callback(topic_, payload_);
-      },
-      qos);
-    VDA5050_INFO("[MQTT] Subscribing to topic at " + topic);
-  }
+    const int qos = 0) override;
 
-  void connect() override
-  {
-    mqtt_client_->connect();
-    {
-      std::lock_guard<std::mutex> lock(state_mutex_);
-      state_ = ConnectionState::CONNECTED;
-    }
-    VDA5050_INFO("[MQTT] Connecting to broker at " + endpoint_);
-  }
+  void connect() override;
 
-  void disconnect() override
-  {
-    VDA5050_INFO("[MQTT] Disconnecting from MQTT broker");
+  void disconnect() override;
 
-    // Signal disconnecting state
-    {
-      std::lock_guard<std::mutex> lock(state_mutex_);
-      state_ = ConnectionState::DISCONNECTING;
-    }
-
-    mqtt_client_->disconnect();
-
-    // Mark as fully disconnected
-    {
-      std::lock_guard<std::mutex> lock(state_mutex_);
-      state_ = ConnectionState::DISCONNECTED;
-    }
-
-    VDA5050_INFO("[MQTT] Disconnected from MQTT broker");
-  }
-
-  ConnectionState get_state() const override
-  {
-    std::lock_guard<std::mutex> lock(state_mutex_);
-    return state_;
-  }
+  ConnectionState get_state() const override;
 
   void send_message(
     const std::string& topic, const std::string& message,
-    const int qos = 0) override
-  {
-    mqtt_client_->publish(topic, message, qos);
-    VDA5050_INFO("[MQTT] Publishing message: {}", message);
-  }
+    const int qos = 0) override;
 
 private:
-  std::shared_ptr<MqttClientInterface> mqtt_client_;
+  std::shared_ptr<vda5050_core::mqtt_client::MqttClientInterface> mqtt_client_;
   std::string endpoint_;
   std::string id_;
   ConnectionState state_{ConnectionState::DISCONNECTED};
   mutable std::mutex state_mutex_;
 };
+
 #endif  // VDA5050_MASTER__COMMUNICATION__MQTT_HPP_
