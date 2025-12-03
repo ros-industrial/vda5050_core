@@ -24,54 +24,78 @@
 
 #include "../mqtt/test_helpers.hpp"
 #include "vda5050_master/communication/mqtt.hpp"
-#include "vda5050_master/communication/vda5050.hpp"
+#include "vda5050_master/vda5050_master/master.hpp"
 
 using vda5050_master::test::mqtt::constants::MQTT_BROKER;
 
-class VDA5050MqttCommunicationTest : public ::testing::Test
+/**
+ * @brief Test implementation of VDA5050Master for unit testing
+ *
+ * This class provides a concrete implementation of the abstract VDA5050Master
+ * that stores received messages for test verification.
+ */
+class TestVDA5050Master : public VDA5050Master
+{
+public:
+  explicit TestVDA5050Master(
+    std::unique_ptr<ICommunicationStrategy> communication)
+  : VDA5050Master(std::move(communication))
+  {
+  }
+
+  // Thread-safe storage for received messages
+  std::mutex mutex_;
+  std::vector<std::pair<std::string, vda5050_msgs::msg::Connection>>
+    received_connections_;
+  std::vector<std::pair<std::string, vda5050_msgs::msg::State>>
+    received_states_;
+  std::vector<std::pair<std::string, vda5050_msgs::msg::Factsheet>>
+    received_factsheets_;
+  std::vector<std::pair<std::string, vda5050_msgs::msg::Visualization>>
+    received_visualizations_;
+  std::atomic<int> connection_count_{0};
+  std::atomic<int> state_count_{0};
+
+protected:
+  void on_connection(
+    const std::string& agv_id,
+    const vda5050_msgs::msg::Connection& msg) override
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    received_connections_.push_back({agv_id, msg});
+    connection_count_++;
+  }
+
+  void on_state(
+    const std::string& agv_id, const vda5050_msgs::msg::State& msg) override
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    received_states_.push_back({agv_id, msg});
+    state_count_++;
+  }
+
+  void on_factsheet(
+    const std::string& agv_id, const vda5050_msgs::msg::Factsheet& msg) override
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    received_factsheets_.push_back({agv_id, msg});
+  }
+
+  void on_visualization(
+    const std::string& agv_id,
+    const vda5050_msgs::msg::Visualization& msg) override
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    received_visualizations_.push_back({agv_id, msg});
+  }
+};
+
+class VDA5050MasterTest : public ::testing::Test
 {
 protected:
   void SetUp() override
   {
     broker_endpoint_ = MQTT_BROKER;
-    setup_config();
-    setup_handlers();
-  }
-
-  void setup_config()
-  {
-    config_.connection_topic = "test/connection";
-    config_.state_topic = "test/state";
-    config_.factsheet_topic = "test/factsheet";
-    config_.visualization_topic = "test/visualization";
-    config_.order_topic = "test/order";
-    config_.instant_actions_topic = "test/instant_actions";
-  }
-
-  void setup_handlers()
-  {
-    handlers_.on_connection = [this](const vda5050_msgs::msg::Connection& msg) {
-      std::lock_guard<std::mutex> lock(mutex_);
-      received_connections_.push_back(msg);
-      connection_count_++;
-    };
-
-    handlers_.on_state = [this](const vda5050_msgs::msg::State& msg) {
-      std::lock_guard<std::mutex> lock(mutex_);
-      received_states_.push_back(msg);
-      state_count_++;
-    };
-
-    handlers_.on_factsheet = [this](const vda5050_msgs::msg::Factsheet& msg) {
-      std::lock_guard<std::mutex> lock(mutex_);
-      received_factsheets_.push_back(msg);
-    };
-
-    handlers_.on_visualization =
-      [this](const vda5050_msgs::msg::Visualization& msg) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        received_visualizations_.push_back(msg);
-      };
   }
 
   void TearDown() override
@@ -80,20 +104,9 @@ protected:
   }
 
   std::string broker_endpoint_;
-  VDA5050TopicConfig config_;
-  VDA5050Handlers handlers_;
-
-  // Thread-safe storage controlled by test
-  std::mutex mutex_;
-  std::vector<vda5050_msgs::msg::Connection> received_connections_;
-  std::vector<vda5050_msgs::msg::State> received_states_;
-  std::vector<vda5050_msgs::msg::Factsheet> received_factsheets_;
-  std::vector<vda5050_msgs::msg::Visualization> received_visualizations_;
-  std::atomic<int> connection_count_{0};
-  std::atomic<int> state_count_{0};
 };
 
-TEST_F(VDA5050MqttCommunicationTest, TopicConfigValidation)
+TEST_F(VDA5050MasterTest, TopicConfigValidation)
 {
   VDA5050TopicConfig config;
   config.connection_topic = "test/connection";
@@ -110,7 +123,7 @@ TEST_F(VDA5050MqttCommunicationTest, TopicConfigValidation)
   ASSERT_TRUE(config.has_visualization());
 }
 
-TEST_F(VDA5050MqttCommunicationTest, TopicConfigValidationFailsOnEmptyRequired)
+TEST_F(VDA5050MasterTest, TopicConfigValidationFailsOnEmptyRequired)
 {
   VDA5050TopicConfig config;
   config.connection_topic = "";  // Empty - should fail
@@ -119,61 +132,43 @@ TEST_F(VDA5050MqttCommunicationTest, TopicConfigValidationFailsOnEmptyRequired)
   ASSERT_THROW(config.validate(), std::runtime_error);
 }
 
-TEST_F(VDA5050MqttCommunicationTest, HandlersValidation)
+TEST_F(VDA5050MasterTest, Setup)
 {
-  VDA5050Handlers handlers;
-  handlers.on_connection = [](const vda5050_msgs::msg::Connection&) {};
-  handlers.on_state = [](const vda5050_msgs::msg::State&) {};
-  // on_factsheet and on_visualization have defaults, no need to set
+  auto master = std::make_unique<TestVDA5050Master>(
+    std::make_unique<MqttCommunication>(broker_endpoint_, "test_id"));
 
-  ASSERT_NO_THROW(handlers.validate());
+  ASSERT_NO_THROW(master->connect());
+
+  AGVInfo agv_info{"test_manufacturer", "test_serial"};
+  ASSERT_NO_THROW(master->register_agv(agv_info));
+  ASSERT_TRUE(
+    master->is_agv_registered(agv_info.manufacturer, agv_info.serial_number));
+
+  ASSERT_NO_THROW(master->disconnect());
 }
 
-TEST_F(VDA5050MqttCommunicationTest, HandlersValidationFailsOnMissingRequired)
+TEST_F(VDA5050MasterTest, AGVRegistrationAndUnregistration)
 {
-  VDA5050Handlers handlers;
-  handlers.on_connection = [](const vda5050_msgs::msg::Connection&) {};
-  // on_state not set - should fail
+  auto master = std::make_unique<TestVDA5050Master>(
+    std::make_unique<MqttCommunication>(broker_endpoint_, "test_id"));
 
-  ASSERT_THROW(handlers.validate(), std::runtime_error);
-}
+  master->connect();
 
-TEST_F(VDA5050MqttCommunicationTest, HandlersHaveDefaultsForOptional)
-{
-  VDA5050Handlers handlers;
-  handlers.on_connection = [](const vda5050_msgs::msg::Connection&) {};
-  handlers.on_state = [](const vda5050_msgs::msg::State&) {};
+  AGVInfo agv1{"manufacturer1", "serial1"};
+  AGVInfo agv2{"manufacturer2", "serial2"};
 
-  // Defaults should be set
-  ASSERT_TRUE(handlers.on_factsheet != nullptr);
-  ASSERT_TRUE(handlers.on_visualization != nullptr);
-  ASSERT_NO_THROW(handlers.validate());
-}
+  // Register AGVs
+  master->register_agv(agv1);
+  master->register_agv(agv2);
 
-TEST_F(VDA5050MqttCommunicationTest, HandlersCanOverrideDefaults)
-{
-  VDA5050Handlers handlers;
-  handlers.on_connection = [](const vda5050_msgs::msg::Connection&) {};
-  handlers.on_state = [](const vda5050_msgs::msg::State&) {};
+  ASSERT_TRUE(master->is_agv_registered("manufacturer1", "serial1"));
+  ASSERT_TRUE(master->is_agv_registered("manufacturer2", "serial2"));
+  ASSERT_FALSE(master->is_agv_registered("unknown", "unknown"));
 
-  bool custom_factsheet_called = false;
-  handlers.on_factsheet =
-    [&custom_factsheet_called](const vda5050_msgs::msg::Factsheet&) {
-      custom_factsheet_called = true;
-    };
+  // Unregister one AGV
+  master->unregister_agv("manufacturer1", "serial1");
+  ASSERT_FALSE(master->is_agv_registered("manufacturer1", "serial1"));
+  ASSERT_TRUE(master->is_agv_registered("manufacturer2", "serial2"));
 
-  // Call the handler to verify override works
-  vda5050_msgs::msg::Factsheet msg;
-  handlers.on_factsheet(msg);
-  ASSERT_TRUE(custom_factsheet_called);
-}
-
-TEST_F(VDA5050MqttCommunicationTest, Setup)
-{
-  auto vda_comms = std::make_unique<Vda5050Communication>(
-    std::make_unique<MqttCommunication>(broker_endpoint_, "test_id"), config_,
-    handlers_);
-
-  ASSERT_NO_THROW(vda_comms->start_communication());
-  ASSERT_NO_THROW(vda_comms->stop_communication());
+  master->disconnect();
 }
