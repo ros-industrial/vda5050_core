@@ -20,9 +20,9 @@
 #define VDA5050_MASTER__COMMUNICATION__VDA5050_HANDLERS_HPP_
 
 #include <functional>
-#include <iostream>
 #include <stdexcept>
 
+#include "vda5050_core/logger/logger.hpp"
 #include "vda5050_master/vda5050_interfaces.hpp"
 
 /**
@@ -79,17 +79,18 @@ struct VDA5050Handlers
   // ========== DEFAULT HANDLER IMPLEMENTATIONS ==========
   static void default_factsheet_handler(const vda5050_msgs::msg::Factsheet& msg)
   {
-    std::cerr << "[VDA5050][WARNING] on_factsheet handler not overridden. "
-              << "Received factsheet from: " << msg.header.manufacturer << "/"
-              << msg.header.serial_number << std::endl;
+    VDA5050_WARN(
+      "on_factsheet handler not overridden. Received factsheet from: {}/{}",
+      msg.header.manufacturer, msg.header.serial_number);
   }
 
   static void default_visualization_handler(
     const vda5050_msgs::msg::Visualization& msg)
   {
-    std::cerr << "[VDA5050][WARNING] on_visualization handler not overridden. "
-              << "Received visualization from: " << msg.header.manufacturer
-              << "/" << msg.header.serial_number << std::endl;
+    VDA5050_WARN(
+      "on_visualization handler not overridden. Received visualization from: "
+      "{}/{}",
+      msg.header.manufacturer, msg.header.serial_number);
   }
 };
 

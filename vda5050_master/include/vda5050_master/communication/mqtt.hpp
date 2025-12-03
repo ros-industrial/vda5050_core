@@ -19,7 +19,6 @@
 #ifndef VDA5050_MASTER__COMMUNICATION__MQTT_HPP_
 #define VDA5050_MASTER__COMMUNICATION__MQTT_HPP_
 
-#include <iostream>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -95,7 +94,7 @@ public:
     const int qos = 0) override
   {
     mqtt_client_->publish(topic, message, qos);
-    std::cout << "[MQTT] Publishing message: " << message << std::endl;
+    VDA5050_INFO("[MQTT] Publishing message: {}", message);
   }
 
 private:
