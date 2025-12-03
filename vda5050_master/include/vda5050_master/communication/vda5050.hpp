@@ -52,90 +52,32 @@ public:
    */
   Vda5050Communication(
     std::unique_ptr<ICommunicationStrategy> comm_client,
-    VDA5050TopicConfig config, VDA5050Handlers handlers)
-  : comm_client_(std::move(comm_client)),
-    config_(std::move(config)),
-    handlers_(std::move(handlers))
-  {
-    config_.validate();
-    handlers_.validate();
-  }
+    VDA5050TopicConfig config, VDA5050Handlers handlers);
 
   /**
    * @brief Start communication and subscribe to topics
    */
-  void start_communication()
-  {
-    comm_client_->connect();
-
-    // Subscribe to required topics
-    subscribe_to_topic<vda5050_msgs::msg::Connection>(
-      config_.connection_topic, handlers_.on_connection,
-      vda5050_master::ConnectionQos);
-
-    subscribe_to_topic<vda5050_msgs::msg::State>(
-      config_.state_topic, handlers_.on_state, vda5050_master::StateQos);
-
-    // Subscribe to optional topics if configured (handlers always exist)
-    if (config_.has_factsheet())
-    {
-      subscribe_to_topic<vda5050_msgs::msg::Factsheet>(
-        config_.factsheet_topic.value(), handlers_.on_factsheet,
-        vda5050_master::FactsheetQos);
-    }
-
-    if (config_.has_visualization())
-    {
-      subscribe_to_topic<vda5050_msgs::msg::Visualization>(
-        config_.visualization_topic.value(), handlers_.on_visualization,
-        vda5050_master::VisualizationQos);
-    }
-  }
+  void start_communication();
 
   /**
    * @brief Stop communication and disconnect
    */
-  void stop_communication()
-  {
-    comm_client_->disconnect();
-  }
+  void stop_communication();
 
   /**
    * @brief Publish an order to the AGV
    * @param order The order message
    * @throws std::runtime_error if order topic not configured
    */
-  void publish_order(const vda5050_msgs::msg::Order& order)
-  {
-    if (!config_.has_order())
-    {
-      throw std::runtime_error("Order topic not configured");
-    }
-
-    nlohmann::json j;
-    vda5050_msgs::msg::to_json(j, order);
-    comm_client_->send_message(
-      config_.order_topic.value(), j.dump(), vda5050_master::OrderQos);
-  }
+  void publish_order(const vda5050_msgs::msg::Order& order);
 
   /**
    * @brief Publish instant actions to the AGV
    * @param actions The instant actions message
    * @throws std::runtime_error if instant actions topic not configured
    */
-  void publish_instant_actions(const vda5050_msgs::msg::InstantActions& actions)
-  {
-    if (!config_.has_instant_actions())
-    {
-      throw std::runtime_error("Instant actions topic not configured");
-    }
-
-    nlohmann::json j;
-    vda5050_msgs::msg::to_json(j, actions);
-    comm_client_->send_message(
-      config_.instant_actions_topic.value(), j.dump(),
-      vda5050_master::InstantActionsQos);
-  }
+  void publish_instant_actions(
+    const vda5050_msgs::msg::InstantActions& actions);
 
 private:
   /**

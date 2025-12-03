@@ -17,8 +17,12 @@ find_package(vda5050_core REQUIRED)
 find_package(vda5050_msgs REQUIRED)
 find_package(fmt REQUIRED)
 
-add_library(vda5050_master 
-src/vda5050_master/master.cpp)
+add_library(vda5050_master
+  src/vda5050_master/master.cpp
+  src/vda5050_master/communication/mqtt.cpp
+  src/vda5050_master/communication/ros2.cpp
+  src/vda5050_master/communication/vda5050.cpp
+)
 
 ament_target_dependencies(vda5050_master
   vda5050_core
