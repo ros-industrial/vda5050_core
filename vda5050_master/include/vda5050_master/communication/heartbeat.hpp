@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#include <atomic>
 #include <condition_variable>
 #include <functional>
 #include <memory>
@@ -32,6 +31,21 @@
 namespace vda5050_master {
 namespace communication {
 
+/**
+ * @brief Heartbeat listener lifecycle states
+ *
+ * State transitions:
+ *   STOPPED -> RUNNING (via start_connection_heartbeat())
+ *   RUNNING -> STOPPING (via stop_connection_heartbeat())
+ *   STOPPING -> STOPPED (when cleanup completes)
+ */
+enum class HeartbeatState
+{
+  STOPPED,  // Not running, safe to destroy or restart
+  RUNNING,  // Actively monitoring heartbeats
+  STOPPING  // Stop in progress, cleanup ongoing
+};
+
 class ConnectionHeartbeatListener
 {
 public:
@@ -40,7 +54,7 @@ public:
     std::function<void()> disconnection_callback)
   : id_(id),
     heartbeat_interval_(heartbeat_interval),
-    running_(false),
+    state_(HeartbeatState::STOPPED),
     last_connection_report_(std::chrono::steady_clock::now()),
     disconnection_callback_(disconnection_callback)
   {
@@ -50,9 +64,9 @@ public:
   void start_connection_heartbeat()
   {
     {
-      std::lock_guard<std::mutex> lock(running_lock_);
+      std::lock_guard<std::mutex> lock(state_mutex_);
       VDA5050_INFO("Starting Connection heartbeat listener");
-      running_ = true;
+      state_ = HeartbeatState::RUNNING;
     }
     connection_thread_ =
       std::thread(&ConnectionHeartbeatListener::listen, this);
@@ -73,29 +87,38 @@ public:
 
   std::chrono::steady_clock::time_point get_last_connection_report()
   {
+    std::lock_guard<std::mutex> lock(last_connection_report_mutex_);
     return last_connection_report_;
   }
 
   ~ConnectionHeartbeatListener()
   {
     stop_connection_heartbeat();
-    // Also join callback thread if running
-    if (callback_thread_.joinable())
-    {
-      callback_thread_.join();
-    }
     VDA5050_INFO("[" + id_ + "] Deconstructing ConnectionHeartbeatListener");
   }
 
-  bool is_running()
+  /**
+   * @brief Get the current heartbeat listener state
+   * @return HeartbeatState enum value
+   */
+  HeartbeatState get_state()
   {
-    return running_;
+    std::lock_guard<std::mutex> lock(state_mutex_);
+    return state_;
   }
 
   // Stop the listener
   void stop_connection_heartbeat()
   {
     VDA5050_INFO("Stopping Connection heartbeat listener");
+
+    {
+      std::lock_guard<std::mutex> lock(state_mutex_);
+      state_ = HeartbeatState::STOPPING;
+    }
+
+    message_received_.notify_all();
+
     if (connection_thread_.joinable())
     {
       connection_thread_.join();
@@ -104,12 +127,18 @@ public:
     {
       VDA5050_INFO("Connection thread not joinable");
     }
-    VDA5050_INFO("Stopped Connection heartbeat listener");
+
+    if (callback_thread_.joinable())
+    {
+      callback_thread_.join();
+    }
 
     {
-      std::lock_guard<std::mutex> lock(running_lock_);
-      running_ = false;
+      std::lock_guard<std::mutex> lock(state_mutex_);
+      state_ = HeartbeatState::STOPPED;
     }
+
+    VDA5050_INFO("Stopped Connection heartbeat listener");
   }
 
   virtual std::chrono::steady_clock::time_point get_current_time()
@@ -128,6 +157,12 @@ protected:
   std::condition_variable message_received_;
 
 private:
+  bool is_stop_requested()
+  {
+    std::lock_guard<std::mutex> lock(state_mutex_);
+    return state_ == HeartbeatState::STOPPING;
+  }
+
   bool is_timeout()
   {
     VDA5050_INFO("Check Timeout");
@@ -138,7 +173,7 @@ private:
       std::lock_guard<std::mutex> lock(last_connection_report_mutex_);
       time_since_last_connection_report =
         std::chrono::duration_cast<std::chrono::seconds>(
-          current_time - get_last_connection_report())
+          current_time - last_connection_report_)
           .count();
       VDA5050_INFO("aft lock TTimeout");
     }
@@ -164,12 +199,20 @@ private:
 
   void listen()
   {
-    while (is_running())
+    while (!is_stop_requested())
     {
       VDA5050_INFO("Start Listen");
       std::unique_lock<std::mutex> lock(check_lock_);
       message_received_.wait_for(
         lock, std::chrono::seconds(get_check_interval()));
+
+      // Check if shutdown was requested while waiting
+      if (is_stop_requested())
+      {
+        VDA5050_INFO("Shutdown requested, exiting listen loop");
+        return;
+      }
+
       if (is_timeout())
       {
         VDA5050_INFO("Timeout reached");
@@ -181,7 +224,7 @@ private:
         {
           callback_thread_.join();
         }
-        VDA5050_INFO("Stopping hearbeat checks");
+        VDA5050_INFO("Stopping heartbeat checks");
         return;
       }
     }
@@ -195,19 +238,18 @@ private:
 
   int heartbeat_interval_;
 
-  std::atomic<bool> running_;
+  // Lifecycle state protected by state_mutex_
+  HeartbeatState state_;
 
   std::chrono::steady_clock::time_point last_connection_report_;
 
-  std::thread connection_listener_;
+  // Mutex for state variable
+  mutable std::mutex state_mutex_;
 
-  std::mutex mutex_;  // Mutex to protect access to shared state
+  // Mutex to protect access to last_connection_report_
+  mutable std::mutex last_connection_report_mutex_;
 
-  std::mutex
-    last_connection_report_mutex_;  // Mutex to protect access to last_connection_report_
-
-  std::mutex running_lock_;
-
+  // Mutex for condition variable wait
   std::mutex check_lock_;
 
   std::function<void()> disconnection_callback_;

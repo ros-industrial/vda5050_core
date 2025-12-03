@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <string>
 
 #include "vda5050_core/logger/logger.hpp"
@@ -55,13 +56,38 @@ public:
   void connect() override
   {
     mqtt_client_->connect();
+    {
+      std::lock_guard<std::mutex> lock(state_mutex_);
+      state_ = ConnectionState::CONNECTED;
+    }
     VDA5050_INFO("[MQTT] Connecting to broker at " + endpoint_);
   }
 
   void disconnect() override
   {
+    VDA5050_INFO("[MQTT] Disconnecting from MQTT broker");
+
+    // Signal disconnecting state
+    {
+      std::lock_guard<std::mutex> lock(state_mutex_);
+      state_ = ConnectionState::DISCONNECTING;
+    }
+
     mqtt_client_->disconnect();
-    VDA5050_WARN("Disconnecting from MQTT broker");
+
+    // Mark as fully disconnected
+    {
+      std::lock_guard<std::mutex> lock(state_mutex_);
+      state_ = ConnectionState::DISCONNECTED;
+    }
+
+    VDA5050_INFO("[MQTT] Disconnected from MQTT broker");
+  }
+
+  ConnectionState get_state() const override
+  {
+    std::lock_guard<std::mutex> lock(state_mutex_);
+    return state_;
   }
 
   void send_message(
@@ -76,5 +102,7 @@ private:
   std::shared_ptr<MqttClientInterface> mqtt_client_;
   std::string endpoint_;
   std::string id_;
+  ConnectionState state_{ConnectionState::DISCONNECTED};
+  mutable std::mutex state_mutex_;
 };
 #endif  // VDA5050_MASTER__COMMUNICATION__MQTT_HPP_

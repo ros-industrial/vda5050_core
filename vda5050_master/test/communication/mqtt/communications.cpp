@@ -162,3 +162,87 @@ TEST_F(MqttCommunicationTestFixture, MultipleMessagesTest)
 
   ASSERT_NO_THROW(mqtt_comms.disconnect());
 }
+
+// =============================================================================
+// Lifecycle State Tests
+// =============================================================================
+
+TEST_F(MqttCommunicationTestFixture, InitialStateIsDisconnected)
+{
+  // Before connect() is called, should be in DISCONNECTED state
+  auto mqtt_comms = MqttCommunication(broker_endpoint_, "test_initial_state");
+
+  ASSERT_EQ(mqtt_comms.get_state(), ConnectionState::DISCONNECTED)
+    << "Initial state should be DISCONNECTED";
+}
+
+TEST_F(MqttCommunicationTestFixture, ConnectedStateAfterConnect)
+{
+  // After connect() is called, should be in CONNECTED state
+  auto mqtt_comms = MqttCommunication(broker_endpoint_, "test_connected_state");
+
+  ASSERT_NO_THROW(mqtt_comms.connect());
+
+  ASSERT_EQ(mqtt_comms.get_state(), ConnectionState::CONNECTED)
+    << "State should be CONNECTED after connect()";
+
+  ASSERT_NO_THROW(mqtt_comms.disconnect());
+}
+
+TEST_F(MqttCommunicationTestFixture, DisconnectedStateAfterDisconnect)
+{
+  // After disconnect() completes, should be in DISCONNECTED state
+  auto mqtt_comms =
+    MqttCommunication(broker_endpoint_, "test_disconnected_state");
+
+  ASSERT_NO_THROW(mqtt_comms.connect());
+  ASSERT_EQ(mqtt_comms.get_state(), ConnectionState::CONNECTED);
+
+  ASSERT_NO_THROW(mqtt_comms.disconnect());
+
+  ASSERT_EQ(mqtt_comms.get_state(), ConnectionState::DISCONNECTED)
+    << "State should be DISCONNECTED after disconnect()";
+}
+
+TEST_F(MqttCommunicationTestFixture, ReconnectAfterDisconnect)
+{
+  // Verify state transitions work correctly on reconnect
+  auto mqtt_comms = MqttCommunication(broker_endpoint_, "test_reconnect");
+
+  // First connection cycle
+  ASSERT_NO_THROW(mqtt_comms.connect());
+  ASSERT_EQ(mqtt_comms.get_state(), ConnectionState::CONNECTED);
+
+  ASSERT_NO_THROW(mqtt_comms.disconnect());
+  ASSERT_EQ(mqtt_comms.get_state(), ConnectionState::DISCONNECTED);
+
+  // Second connection cycle - should work the same
+  ASSERT_NO_THROW(mqtt_comms.connect());
+  ASSERT_EQ(mqtt_comms.get_state(), ConnectionState::CONNECTED)
+    << "State should be CONNECTED after reconnect";
+
+  ASSERT_NO_THROW(mqtt_comms.disconnect());
+  ASSERT_EQ(mqtt_comms.get_state(), ConnectionState::DISCONNECTED);
+}
+
+TEST_F(MqttCommunicationTestFixture, MultipleDisconnectCallsSafe)
+{
+  // Verify multiple disconnect() calls don't cause issues
+  auto mqtt_comms =
+    MqttCommunication(broker_endpoint_, "test_multi_disconnect");
+
+  ASSERT_NO_THROW(mqtt_comms.connect());
+  ASSERT_EQ(mqtt_comms.get_state(), ConnectionState::CONNECTED);
+
+  // First disconnect
+  ASSERT_NO_THROW(mqtt_comms.disconnect());
+  ASSERT_EQ(mqtt_comms.get_state(), ConnectionState::DISCONNECTED);
+
+  // Second disconnect - should not throw or change state
+  ASSERT_NO_THROW(mqtt_comms.disconnect());
+  ASSERT_EQ(mqtt_comms.get_state(), ConnectionState::DISCONNECTED);
+
+  // Third disconnect - still safe
+  ASSERT_NO_THROW(mqtt_comms.disconnect());
+  ASSERT_EQ(mqtt_comms.get_state(), ConnectionState::DISCONNECTED);
+}
