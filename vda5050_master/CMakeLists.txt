@@ -21,7 +21,6 @@ add_library(vda5050_master
   src/vda5050_master/master.cpp
   src/vda5050_master/communication/mqtt.cpp
   src/vda5050_master/communication/ros2.cpp
-  src/vda5050_master/communication/vda5050.cpp
 )
 
 ament_target_dependencies(vda5050_master
