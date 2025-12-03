@@ -19,260 +19,164 @@
 #ifndef VDA5050_MASTER__COMMUNICATION__VDA5050_HPP_
 #define VDA5050_MASTER__COMMUNICATION__VDA5050_HPP_
 
-#include <iostream>
-#include <map>
 #include <memory>
-#include <mutex>
 #include <string>
-#include <unordered_map>
 #include <utility>
-#include <vector>
 
 #include "nlohmann/json.hpp"
-#include "vda5050_master/communication/vda5050_config.hpp"
+#include "vda5050_master/communication/communication.hpp"
+#include "vda5050_master/communication/vda5050_handlers.hpp"
+#include "vda5050_master/communication/vda5050_topic_config.hpp"
 #include "vda5050_master/standard_names.hpp"
 #include "vda5050_master/vda5050_interfaces.hpp"
 
+/**
+ * @brief VDA5050 communication manager using callback injection
+ *
+ * This class handles VDA5050 protocol communication in a protocol-agnostic way.
+ * It accepts an ICommunicationStrategy (MQTT, ROS2, etc.) and invokes user-provided
+ * callbacks when messages are received.
+ *
+ * Thread safety: Callbacks are invoked on the communication thread. Users are
+ * responsible for thread synchronization in their callback implementations.
+ */
 class Vda5050Communication
 {
 public:
+  /**
+   * @brief Construct a VDA5050 communication manager
+   * @param comm_client The communication strategy (MQTT, ROS2, etc.)
+   * @param config Topic configuration
+   * @param handlers Message callbacks
+   * @throws std::runtime_error if config or handlers validation fails
+   */
   Vda5050Communication(
-    std::unique_ptr<ICommunicationStrategy> connection_client,
-    std::unique_ptr<VDA5050Config> config)
-  : communication_client_(std::move(connection_client)),
-    config_(std::move(config))
+    std::unique_ptr<ICommunicationStrategy> comm_client,
+    VDA5050TopicConfig config, VDA5050Handlers handlers)
+  : comm_client_(std::move(comm_client)),
+    config_(std::move(config)),
+    handlers_(std::move(handlers))
   {
+    config_.validate();
+    handlers_.validate();
   }
 
+  /**
+   * @brief Start communication and subscribe to topics
+   */
   void start_communication()
   {
-    communication_client_->connect();
+    comm_client_->connect();
 
-    // Subscribe to connection topic with callback
-    // Lambda captures 'this' to call the member function
-    communication_client_->subscribe(
-      config_->connection_topic,
-      [this](const std::string& topic, const std::string& payload) {
-        // Parse JSON and call the connection callback
-        try
-        {
-          auto json_msg = nlohmann::json::parse(payload);
-          this->connection_success_callback(json_msg);
-        }
-        catch (const std::exception& e)
-        {
-          // TODO(tanjpg): Add proper error handling/logging
-          // For now, silently fail to maintain backwards compatibility
-        }
-      },
+    // Subscribe to required topics
+    subscribe_to_topic<vda5050_msgs::msg::Connection>(
+      config_.connection_topic, handlers_.on_connection,
       vda5050_master::ConnectionQos);
-  }
 
-  void stop_communication()
-  {
-    communication_client_->disconnect();
-  }
+    subscribe_to_topic<vda5050_msgs::msg::State>(
+      config_.state_topic, handlers_.on_state, vda5050_master::StateQos);
 
-  void connection_success_callback(const nlohmann::json& connection_json)
-  {
-    // TODO(tanjpg): Store connection message if needed
-    // vda5050_msgs::msg::Connection conn_msg;
-    // vda5050_msgs::msg::from_json(connection_json, conn_msg);
-    // connection_container_->push_back(conn_msg);
-
-    // Subscribe to state topic with callback
-    communication_client_->subscribe(
-      config_->state_topic,
-      [this](const std::string& topic, const std::string& payload) {
-        try
-        {
-          auto json_msg = nlohmann::json::parse(payload);
-          this->state_callback(json_msg);
-        }
-        catch (const std::exception& e)
-        {
-          // TODO(tanjpg): Error handling
-        }
-      },
-      vda5050_master::StateQos);
-
-    // Subscribe to factsheet topic with callback
-    if (!config_->factsheet_topic.value().empty())
+    // Subscribe to optional topics if configured (handlers always exist)
+    if (config_.has_factsheet())
     {
-      communication_client_->subscribe(
-        config_->factsheet_topic.value(),
-        [this](const std::string& topic, const std::string& payload) {
-          try
-          {
-            auto json_msg = nlohmann::json::parse(payload);
-            this->factsheet_callback(json_msg);
-          }
-          catch (const std::exception& e)
-          {
-            // TODO(tanjpg): Error handling
-          }
-        },
+      subscribe_to_topic<vda5050_msgs::msg::Factsheet>(
+        config_.factsheet_topic.value(), handlers_.on_factsheet,
         vda5050_master::FactsheetQos);
     }
 
-    // Subscribe to visualization topic with callback
-    if (!config_->visualization_topic.value().empty())
+    if (config_.has_visualization())
     {
-      communication_client_->subscribe(
-        config_->visualization_topic.value(),
-        [this](const std::string& topic, const std::string& payload) {
-          try
-          {
-            auto json_msg = nlohmann::json::parse(payload);
-            this->visualization_callback(json_msg);
-          }
-          catch (const std::exception& e)
-          {
-            // TODO(tanjpg): Error handling
-          }
-        },
+      subscribe_to_topic<vda5050_msgs::msg::Visualization>(
+        config_.visualization_topic.value(), handlers_.on_visualization,
         vda5050_master::VisualizationQos);
     }
   }
 
-  void state_callback(const nlohmann::json& state_json)
+  /**
+   * @brief Stop communication and disconnect
+   */
+  void stop_communication()
   {
-    // Deserialize JSON to typed message
-    vda5050_msgs::msg::State state_msg;
-    vda5050_msgs::msg::from_json(state_json, state_msg);
-
-    // Store in container (optional - for history/debugging)
-    if (config_->state_container)
-    {
-      config_->state_container->push_back(state_msg);
-    }
-
-    // TODO(tanjpg): Execute user-defined business logic here
-    // e.g., update AGV state in a state manager, trigger workflows, etc.
-  }
-
-  void factsheet_callback(const nlohmann::json& factsheet_json)
-  {
-    // Deserialize and store
-    vda5050_msgs::msg::Factsheet factsheet_msg;
-    vda5050_msgs::msg::from_json(factsheet_json, factsheet_msg);
-
-    if (config_->factsheet_container)
-    {
-      config_->factsheet_container->push_back(factsheet_msg);
-    }
-
-    // TODO(tanjpg): Process factsheet
-  }
-
-  void visualization_callback(const nlohmann::json& visualization_json)
-  {
-    // Deserialize and store
-    vda5050_msgs::msg::Visualization viz_msg;
-    vda5050_msgs::msg::from_json(visualization_json, viz_msg);
-
-    if (config_->visualization_container)
-    {
-      config_->visualization_container->push_back(viz_msg);
-    }
-
-    // TODO(tanjpg): Process visualization
+    comm_client_->disconnect();
   }
 
   /**
    * @brief Publish an order to the AGV
-   * @param order_json The order message as JSON
+   * @param order The order message
+   * @throws std::runtime_error if order topic not configured
    */
-  void publish_order(const nlohmann::json& order_json)
+  void publish_order(const vda5050_msgs::msg::Order& order)
   {
-    if (!config_->order_topic.has_value() || config_->order_topic->empty())
+    if (!config_.has_order())
     {
       throw std::runtime_error("Order topic not configured");
     }
 
-    communication_client_->send_message(
-      config_->order_topic.value(), order_json.dump(),
-      vda5050_master::OrderQos);
+    nlohmann::json j;
+    vda5050_msgs::msg::to_json(j, order);
+    comm_client_->send_message(
+      config_.order_topic.value(), j.dump(), vda5050_master::OrderQos);
   }
 
   /**
    * @brief Publish instant actions to the AGV
-   * @param instant_actions_json The instant actions message as JSON
+   * @param actions The instant actions message
+   * @throws std::runtime_error if instant actions topic not configured
    */
-  void publish_instant_actions(const nlohmann::json& instant_actions_json)
+  void publish_instant_actions(const vda5050_msgs::msg::InstantActions& actions)
   {
-    if (
-      !config_->instant_actions_topic.has_value() ||
-      config_->instant_actions_topic->empty())
+    if (!config_.has_instant_actions())
     {
       throw std::runtime_error("Instant actions topic not configured");
     }
 
-    communication_client_->send_message(
-      config_->instant_actions_topic.value(), instant_actions_json.dump(),
+    nlohmann::json j;
+    vda5050_msgs::msg::to_json(j, actions);
+    comm_client_->send_message(
+      config_.instant_actions_topic.value(), j.dump(),
       vda5050_master::InstantActionsQos);
   }
 
 private:
-  std::unique_ptr<ICommunicationStrategy> communication_client_;
-  std::unique_ptr<VDA5050Config> config_;
-};
-
-// ###########################
-// IMPLEMENTATION EXAMPLE: How MQTT adapts to the common callback signature
-// ###########################
-/*
-class MqttCommunication : public ICommunicationStrategy
-{
-public:
-  void subscribe(const std::string& topic, MessageCallback callback,
-                 const int qos = 0) override
+  /**
+   * @brief Subscribe to a topic with JSON deserialization and typed callback
+   * @tparam MsgType The VDA5050 message type
+   * @tparam Handler The callback type
+   * @param topic The topic to subscribe to
+   * @param handler The callback to invoke on message receipt
+   * @param qos The QoS level for the subscription
+   */
+  template <typename MsgType, typename Handler>
+  void subscribe_to_topic(
+    const std::string& topic, const Handler& handler, int qos)
   {
-    // MQTT native callback already matches our signature!
-    // Paho MQTT callback: void(const string& topic, const string& payload)
+    comm_client_->subscribe(
+      topic,
+      [handler](const std::string& /*topic*/, const std::string& payload) {
+        if (!handler)
+        {
+          return;
+        }
 
-    mqtt_client_->subscribe(topic, qos,
-      [callback](const std::string& mqtt_topic, const std::string& mqtt_payload) {
-        // Direct pass-through - no adaptation needed
-        callback(mqtt_topic, mqtt_payload);
-      });
+        try
+        {
+          auto json_msg = nlohmann::json::parse(payload);
+          MsgType msg;
+          vda5050_msgs::msg::from_json(json_msg, msg);
+          handler(msg);
+        }
+        catch (const std::exception& e)
+        {
+          // TODO(tanjpg): Add proper error handling/logging
+          // Consider adding an error callback to VDA5050Handlers
+        }
+      },
+      qos);
   }
+
+  std::unique_ptr<ICommunicationStrategy> comm_client_;
+  VDA5050TopicConfig config_;
+  VDA5050Handlers handlers_;
 };
-*/
-// ###########################
-
-// ###########################
-// IMPLEMENTATION EXAMPLE: How ROS2 adapts to the common callback signature
-// ###########################
-/*
-class Ros2Communication : public ICommunicationStrategy
-{
-public:
-  void subscribe(const std::string& topic, MessageCallback callback,
-                 const int qos = 0) override
-  {
-    // ROS2 native callback: void(const MessageType::SharedPtr msg)
-    // We need to adapt: structured message → JSON string → common callback
-
-    auto ros2_callback = [topic, callback](const std_msgs::msg::String::SharedPtr msg) {
-      // Adapter layer: Convert ROS2 message to JSON string
-      std::string json_payload = msg->data;  // Assuming data is already JSON
-
-      // Or if you need to serialize a structured message:
-      // nlohmann::json j;
-      // j["data"] = msg->data;
-      // std::string json_payload = j.dump();
-
-      // Now call the common callback
-      callback(topic, json_payload);
-    };
-
-    // Create ROS2 subscription with our adapter callback
-    ros2_subscription_ = node_->create_subscription<std_msgs::msg::String>(
-      topic, qos, ros2_callback);
-  }
-};
-*/
-// ###########################
 
 #endif  // VDA5050_MASTER__COMMUNICATION__VDA5050_HPP_

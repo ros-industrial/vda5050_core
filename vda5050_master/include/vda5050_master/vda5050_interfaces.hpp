@@ -23,6 +23,7 @@
 #include "vda5050_msgs/json_utils/connection.hpp"
 #include "vda5050_msgs/json_utils/factsheet.hpp"
 #include "vda5050_msgs/json_utils/instant_actions.hpp"
+#include "vda5050_msgs/json_utils/order.hpp"
 #include "vda5050_msgs/json_utils/state.hpp"
 #include "vda5050_msgs/json_utils/visualization.hpp"
 #include "vda5050_msgs/msg/action.hpp"
