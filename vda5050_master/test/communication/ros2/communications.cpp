@@ -195,6 +195,108 @@ TEST_F(Ros2CommunicationTest, MultipleMessagesTest)
   ASSERT_NO_THROW(ros2_comms.disconnect());
 }
 
+// =============================================================================
+// Lifecycle State Tests
+// =============================================================================
+
+TEST_F(Ros2CommunicationTest, InitialStateIsDisconnected)
+{
+  // Before connect() is called, should be in DISCONNECTED state
+  auto test_node = std::make_shared<rclcpp::Node>("test_initial_state");
+  auto ros2_comms = Ros2Communication(test_node, "test_id");
+
+  ASSERT_EQ(ros2_comms.get_state(), ConnectionState::DISCONNECTED)
+    << "Initial state should be DISCONNECTED";
+}
+
+TEST_F(Ros2CommunicationTest, ConnectedStateAfterConnect)
+{
+  // After connect() is called, should be in CONNECTED state
+  auto test_node = std::make_shared<rclcpp::Node>("test_connected_state");
+  auto ros2_comms = Ros2Communication(test_node, "test_id");
+
+  ASSERT_NO_THROW(ros2_comms.connect());
+
+  ASSERT_EQ(ros2_comms.get_state(), ConnectionState::CONNECTED)
+    << "State should be CONNECTED after connect()";
+
+  ASSERT_NO_THROW(ros2_comms.disconnect());
+}
+
+TEST_F(Ros2CommunicationTest, DisconnectedStateAfterDisconnect)
+{
+  // After disconnect() completes, should be in DISCONNECTED state
+  auto test_node = std::make_shared<rclcpp::Node>("test_disconnected_state");
+  auto ros2_comms = Ros2Communication(test_node, "test_id");
+
+  ASSERT_NO_THROW(ros2_comms.connect());
+  ASSERT_EQ(ros2_comms.get_state(), ConnectionState::CONNECTED);
+
+  ASSERT_NO_THROW(ros2_comms.disconnect());
+
+  ASSERT_EQ(ros2_comms.get_state(), ConnectionState::DISCONNECTED)
+    << "State should be DISCONNECTED after disconnect()";
+}
+
+TEST_F(Ros2CommunicationTest, ReconnectAfterDisconnect)
+{
+  // Verify state transitions work correctly on reconnect
+  auto test_node = std::make_shared<rclcpp::Node>("test_reconnect");
+  auto ros2_comms = Ros2Communication(test_node, "test_id");
+
+  // First connection cycle
+  ASSERT_NO_THROW(ros2_comms.connect());
+  ASSERT_EQ(ros2_comms.get_state(), ConnectionState::CONNECTED);
+
+  ASSERT_NO_THROW(ros2_comms.disconnect());
+  ASSERT_EQ(ros2_comms.get_state(), ConnectionState::DISCONNECTED);
+
+  // Second connection cycle - should work the same
+  ASSERT_NO_THROW(ros2_comms.connect());
+  ASSERT_EQ(ros2_comms.get_state(), ConnectionState::CONNECTED)
+    << "State should be CONNECTED after reconnect";
+
+  ASSERT_NO_THROW(ros2_comms.disconnect());
+  ASSERT_EQ(ros2_comms.get_state(), ConnectionState::DISCONNECTED);
+}
+
+TEST_F(Ros2CommunicationTest, SendMessageFailsWhenNotConnected)
+{
+  // Verify send_message doesn't crash when not connected
+  auto test_node = std::make_shared<rclcpp::Node>("test_send_not_connected");
+  auto ros2_comms = Ros2Communication(test_node, "test_id");
+
+  // Should not throw, just log warning
+  ASSERT_NO_THROW(ros2_comms.send_message("/test/topic", "test_payload", 0));
+
+  // Also test after disconnect
+  ASSERT_NO_THROW(ros2_comms.connect());
+  ASSERT_NO_THROW(ros2_comms.disconnect());
+  ASSERT_NO_THROW(ros2_comms.send_message("/test/topic", "test_payload", 0));
+}
+
+TEST_F(Ros2CommunicationTest, MultipleDisconnectCallsSafe)
+{
+  // Verify multiple disconnect() calls don't cause issues
+  auto test_node = std::make_shared<rclcpp::Node>("test_multi_disconnect");
+  auto ros2_comms = Ros2Communication(test_node, "test_id");
+
+  ASSERT_NO_THROW(ros2_comms.connect());
+  ASSERT_EQ(ros2_comms.get_state(), ConnectionState::CONNECTED);
+
+  // First disconnect
+  ASSERT_NO_THROW(ros2_comms.disconnect());
+  ASSERT_EQ(ros2_comms.get_state(), ConnectionState::DISCONNECTED);
+
+  // Second disconnect - should not throw or change state
+  ASSERT_NO_THROW(ros2_comms.disconnect());
+  ASSERT_EQ(ros2_comms.get_state(), ConnectionState::DISCONNECTED);
+
+  // Third disconnect - still safe
+  ASSERT_NO_THROW(ros2_comms.disconnect());
+  ASSERT_EQ(ros2_comms.get_state(), ConnectionState::DISCONNECTED);
+}
+
 // TEST_F(Ros2CommunicationTest, QoSReliableTest)
 // {
 //   std::string topic = "/test/ros2/qos_reliable";

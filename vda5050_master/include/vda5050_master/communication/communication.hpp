@@ -34,6 +34,21 @@
 using MessageCallback =
   std::function<void(const std::string& topic, const std::string& payload)>;
 
+/**
+ * @brief Connection lifecycle states
+ *
+ * State transitions:
+ *   DISCONNECTED -> CONNECTED (via connect())
+ *   CONNECTED -> DISCONNECTING (via disconnect())
+ *   DISCONNECTING -> DISCONNECTED (when cleanup completes)
+ */
+enum class ConnectionState
+{
+  DISCONNECTED,  // Not connected, safe to destroy or reconnect
+  CONNECTED,     // Actively connected, can send/receive messages
+  DISCONNECTING  // Disconnect in progress, cleanup ongoing
+};
+
 class ICommunicationStrategy
 {
 public:
@@ -57,5 +72,11 @@ public:
   virtual void send_message(
     const std::string& topic, const std::string& message,
     const int qos = 0) = 0;
+
+  /**
+   * @brief Get the current connection state
+   * @return ConnectionState enum value
+   */
+  virtual ConnectionState get_state() const = 0;
 };
 #endif  // VDA5050_MASTER__COMMUNICATION__COMMUNICATION_HPP_

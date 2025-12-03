@@ -63,12 +63,23 @@ public:
   void connect() override
   {
     // ROS2 nodes are connected when created, but we can initialize publishers here
-    connected_ = true;
+    {
+      std::lock_guard<std::mutex> lock(state_mutex_);
+      state_ = ConnectionState::CONNECTED;
+    }
     VDA5050_INFO("[ROS2] Node connected and ready");
   }
 
   void disconnect() override
   {
+    VDA5050_INFO("[ROS2] Disconnecting from ROS2 communication");
+
+    // Signal disconnecting state
+    {
+      std::lock_guard<std::mutex> lock(state_mutex_);
+      state_ = ConnectionState::DISCONNECTING;
+    }
+
     // Clear all subscriptions and publishers
     {
       std::lock_guard<std::mutex> lock(subscriber_mutex_);
@@ -78,15 +89,21 @@ public:
       std::lock_guard<std::mutex> lock(publisher_mutex_);
       publishers_.clear();
     }
-    connected_ = false;
-    VDA5050_INFO("[ROS2] Disconnecting from ROS2 communication");
+
+    // Mark as fully disconnected
+    {
+      std::lock_guard<std::mutex> lock(state_mutex_);
+      state_ = ConnectionState::DISCONNECTED;
+    }
+
+    VDA5050_INFO("[ROS2] Disconnected from ROS2 communication");
   }
 
   void send_message(
     const std::string& topic, const std::string& message,
     const int qos = 0) override
   {
-    if (!connected_)
+    if (get_state() != ConnectionState::CONNECTED)
     {
       VDA5050_WARN("[ROS2] Cannot send message - not connected");
       return;
@@ -124,6 +141,12 @@ public:
     return publisher;
   }
 
+  ConnectionState get_state() const override
+  {
+    std::lock_guard<std::mutex> lock(state_mutex_);
+    return state_;
+  }
+
 private:
   rclcpp::QoS convert_qos(int vda5050_qos)
   {
@@ -148,7 +171,8 @@ private:
 
   std::shared_ptr<rclcpp::Node> node_;
   std::string node_name_;
-  bool connected_{false};
+  ConnectionState state_{ConnectionState::DISCONNECTED};
+  mutable std::mutex state_mutex_;
 
   // Store subscriptions and publishers to keep them alive
   std::unordered_map<

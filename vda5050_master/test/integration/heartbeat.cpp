@@ -25,6 +25,8 @@
 
 #include "vda5050_master/standard_names.hpp"
 
+using vda5050_master::communication::HeartbeatState;
+
 class MockConnectionHeartbeatListener
 : public vda5050_master::communication::ConnectionHeartbeatListener
 {
@@ -104,9 +106,9 @@ TEST(ConnectionHeartbeatListenerTest, HeartbeatListenerInit)
     },
     vda5050_master::ConnectionHeartbeatInterval - 1);
 
-  ASSERT_TRUE(hb_listener.is_running());
+  ASSERT_EQ(hb_listener.get_state(), HeartbeatState::RUNNING);
   ASSERT_NO_THROW(hb_listener.stop_connection_heartbeat());
-  ASSERT_FALSE(hb_listener.is_running());
+  ASSERT_EQ(hb_listener.get_state(), HeartbeatState::STOPPED);
 }
 
 TEST(ConnectionHeartbeatListenerTest, HeartbeatReceivedNoTimeout)
@@ -119,7 +121,7 @@ TEST(ConnectionHeartbeatListenerTest, HeartbeatReceivedNoTimeout)
     },
     vda5050_master::ConnectionHeartbeatInterval - 1);
 
-  ASSERT_TRUE(hb_listener.is_running());
+  ASSERT_EQ(hb_listener.get_state(), HeartbeatState::RUNNING);
   // std::this_thread::sleep_for(std::chrono::seconds(1));
   hb_listener.received_connection();
 
@@ -177,6 +179,143 @@ TEST(ConnectionHeartbeatListenerTest, HeartbeatReceivedTimeout)
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
   ASSERT_NO_THROW(hb_listener.~MockConnectionHeartbeatListener());
   ASSERT_TRUE(heartbeat_failed.load());
+}
+
+TEST(ConnectionHeartbeatListenerTest, GracefulShutdownDoesNotBlock)
+{
+  std::atomic<bool> callback_called{false};
+
+  // Use a short interval but time_to_skip that won't cause immediate timeout
+  auto hb_listener = std::make_unique<MockConnectionHeartbeatListener>(
+    "test_listener", vda5050_master::ConnectionHeartbeatInterval,
+    [&callback_called]() { callback_called.store(true); },
+    0);  // time_to_skip = 0, so no immediate timeout
+
+  ASSERT_EQ(hb_listener->get_state(), HeartbeatState::RUNNING);
+
+  // This should complete quickly, not block forever
+  auto start = std::chrono::steady_clock::now();
+  hb_listener->stop_connection_heartbeat();
+  auto elapsed = std::chrono::steady_clock::now() - start;
+
+  // Should complete within 2 seconds (1 second check interval + margin)
+  ASSERT_LT(
+    std::chrono::duration_cast<std::chrono::seconds>(elapsed).count(), 2)
+    << "stop_connection_heartbeat() blocked too long";
+
+  ASSERT_EQ(hb_listener->get_state(), HeartbeatState::STOPPED);
+  ASSERT_FALSE(callback_called.load())
+    << "Callback should NOT be called during graceful shutdown";
+}
+
+TEST(ConnectionHeartbeatListenerTest, StateIsRunningWhileCallbackExecutes)
+{
+  std::atomic<bool> callback_started{false};
+  std::atomic<bool> callback_finished{false};
+  std::atomic<bool> was_running_during_callback{false};
+
+  // We need a raw pointer to check get_state() from within callback
+  MockConnectionHeartbeatListener* listener_ptr = nullptr;
+
+  auto hb_listener = std::make_unique<MockConnectionHeartbeatListener>(
+    "test_listener", vda5050_master::ConnectionHeartbeatInterval,
+    [&callback_started, &callback_finished, &was_running_during_callback,
+     &listener_ptr]() {
+      callback_started.store(true);
+
+      // Check get_state() during callback execution
+      if (listener_ptr)
+      {
+        was_running_during_callback.store(
+          listener_ptr->get_state() == HeartbeatState::RUNNING);
+      }
+
+      // Simulate work
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+      callback_finished.store(true);
+    },
+    vda5050_master::ConnectionHeartbeatInterval +
+      1);  // Causes immediate timeout
+
+  listener_ptr = hb_listener.get();
+
+  // Trigger the timeout
+  hb_listener->trigger_timeout();
+
+  // Wait for callback to finish
+  while (!callback_finished.load())
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+
+  // Now stop - should be quick since callback already finished
+  hb_listener->stop_connection_heartbeat();
+
+  ASSERT_TRUE(callback_started.load()) << "Callback should have started";
+  ASSERT_TRUE(callback_finished.load()) << "Callback should have finished";
+  ASSERT_TRUE(was_running_during_callback.load())
+    << "get_state() should return RUNNING while callback is executing";
+  ASSERT_EQ(hb_listener->get_state(), HeartbeatState::STOPPED)
+    << "get_state() should return STOPPED after stop completes";
+}
+
+TEST(ConnectionHeartbeatListenerTest, StateIsStoppedOnlyAfterFullStop)
+{
+  std::atomic<bool> stop_initiated{false};
+  std::atomic<bool> stop_completed{false};
+  std::atomic<HeartbeatState> state_during_stop{HeartbeatState::RUNNING};
+
+  auto hb_listener = std::make_unique<MockConnectionHeartbeatListener>(
+    "test_listener", vda5050_master::ConnectionHeartbeatInterval,
+    []() { /* No-op callback */ },
+    0);  // No immediate timeout
+
+  ASSERT_EQ(hb_listener->get_state(), HeartbeatState::RUNNING);
+
+  // Start stop in a separate thread so we can observe state
+  std::thread stop_thread([&]() {
+    stop_initiated.store(true);
+    hb_listener->stop_connection_heartbeat();
+    stop_completed.store(true);
+  });
+
+  // Wait for stop to be initiated
+  while (!stop_initiated.load())
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+
+  // Give time for stop to progress
+  std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+  if (!stop_completed.load())
+  {
+    state_during_stop.store(hb_listener->get_state());
+  }
+
+  stop_thread.join();
+
+  // After stop completes, must be STOPPED
+  ASSERT_EQ(hb_listener->get_state(), HeartbeatState::STOPPED)
+    << "get_state() must be STOPPED after stop_connection_heartbeat() returns";
+}
+
+TEST(ConnectionHeartbeatListenerTest, MultipleStopCallsSafe)
+{
+  auto hb_listener = std::make_unique<MockConnectionHeartbeatListener>(
+    "test_listener", vda5050_master::ConnectionHeartbeatInterval,
+    []() { /* No-op */ }, 0);
+
+  ASSERT_EQ(hb_listener->get_state(), HeartbeatState::RUNNING);
+
+  ASSERT_NO_THROW(hb_listener->stop_connection_heartbeat());
+  ASSERT_EQ(hb_listener->get_state(), HeartbeatState::STOPPED);
+
+  ASSERT_NO_THROW(hb_listener->stop_connection_heartbeat());
+  ASSERT_EQ(hb_listener->get_state(), HeartbeatState::STOPPED);
+
+  ASSERT_NO_THROW(hb_listener.reset());
 }
 
 // TEST(ConnectionHeartbeatListenerTest, HeartbeatReceivedNoTimeout)
