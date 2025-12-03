@@ -38,6 +38,8 @@ public:
     const std::string& topic, MessageCallback callback,
     const int qos = 0) override;
 
+  void unsubscribe(const std::string& topic) override;
+
   void connect() override;
 
   void disconnect() override;

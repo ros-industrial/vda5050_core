@@ -67,6 +67,14 @@ public:
   virtual void subscribe(
     const std::string& topic, MessageCallback callback, const int qos = 0) = 0;
 
+  /**
+   * @brief Unsubscribe from a topic
+   * @param topic Topic to unsubscribe from
+   *
+   * Removes the subscription and associated callback for the given topic.
+   */
+  virtual void unsubscribe(const std::string& topic) = 0;
+
   virtual void connect() = 0;
   virtual void disconnect() = 0;
   virtual void send_message(
