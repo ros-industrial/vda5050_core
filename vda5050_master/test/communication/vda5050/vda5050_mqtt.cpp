@@ -37,9 +37,8 @@ using vda5050_master::test::mqtt::constants::MQTT_BROKER;
 class TestVDA5050Master : public VDA5050Master
 {
 public:
-  explicit TestVDA5050Master(
-    std::unique_ptr<ICommunicationStrategy> communication)
-  : VDA5050Master(std::move(communication))
+  explicit TestVDA5050Master(CommunicationFactory factory)
+  : VDA5050Master(std::move(factory))
   {
   }
 
@@ -96,6 +95,10 @@ protected:
   void SetUp() override
   {
     broker_endpoint_ = MQTT_BROKER;
+    // Create a factory that creates MqttCommunication instances
+    mqtt_factory_ = [this](const std::string& agv_id) {
+      return std::make_unique<MqttCommunication>(broker_endpoint_, agv_id);
+    };
   }
 
   void TearDown() override
@@ -104,62 +107,28 @@ protected:
   }
 
   std::string broker_endpoint_;
+  CommunicationFactory mqtt_factory_;
 };
-
-TEST_F(VDA5050MasterTest, TopicConfigValidation)
-{
-  VDA5050TopicConfig config;
-  config.connection_topic = "test/connection";
-  config.state_topic = "test/state";
-  config.factsheet_topic = "test/factsheet";
-  config.visualization_topic = "test/visualization";
-  config.order_topic = "test/order";
-  config.instant_actions_topic = "test/instant_actions";
-
-  ASSERT_NO_THROW(config.validate());
-  ASSERT_TRUE(config.has_factsheet());
-  ASSERT_TRUE(config.has_order());
-  ASSERT_TRUE(config.has_instant_actions());
-  ASSERT_TRUE(config.has_visualization());
-}
-
-TEST_F(VDA5050MasterTest, TopicConfigValidationFailsOnEmptyRequired)
-{
-  VDA5050TopicConfig config;
-  config.connection_topic = "";  // Empty - should fail
-  config.state_topic = "test/state";
-
-  ASSERT_THROW(config.validate(), std::runtime_error);
-}
 
 TEST_F(VDA5050MasterTest, Setup)
 {
-  auto master = std::make_unique<TestVDA5050Master>(
-    std::make_unique<MqttCommunication>(broker_endpoint_, "test_id"));
+  auto master = std::make_unique<TestVDA5050Master>(mqtt_factory_);
 
-  ASSERT_NO_THROW(master->connect());
+  // Register an AGV (this creates and connects the communication)
+  ASSERT_NO_THROW(master->register_agv("test_manufacturer", "test_serial"));
+  ASSERT_TRUE(master->is_agv_registered("test_manufacturer", "test_serial"));
 
-  AGVInfo agv_info{"test_manufacturer", "test_serial"};
-  ASSERT_NO_THROW(master->register_agv(agv_info));
-  ASSERT_TRUE(
-    master->is_agv_registered(agv_info.manufacturer, agv_info.serial_number));
-
-  ASSERT_NO_THROW(master->disconnect());
+  // Unregister to clean up (disconnects the AGV's communication)
+  ASSERT_NO_THROW(master->unregister_agv("test_manufacturer", "test_serial"));
 }
 
 TEST_F(VDA5050MasterTest, AGVRegistrationAndUnregistration)
 {
-  auto master = std::make_unique<TestVDA5050Master>(
-    std::make_unique<MqttCommunication>(broker_endpoint_, "test_id"));
+  auto master = std::make_unique<TestVDA5050Master>(mqtt_factory_);
 
-  master->connect();
-
-  AGVInfo agv1{"manufacturer1", "serial1"};
-  AGVInfo agv2{"manufacturer2", "serial2"};
-
-  // Register AGVs
-  master->register_agv(agv1);
-  master->register_agv(agv2);
+  // Register AGVs (each creates and connects its own communication)
+  master->register_agv("manufacturer1", "serial1");
+  master->register_agv("manufacturer2", "serial2");
 
   ASSERT_TRUE(master->is_agv_registered("manufacturer1", "serial1"));
   ASSERT_TRUE(master->is_agv_registered("manufacturer2", "serial2"));
@@ -170,5 +139,6 @@ TEST_F(VDA5050MasterTest, AGVRegistrationAndUnregistration)
   ASSERT_FALSE(master->is_agv_registered("manufacturer1", "serial1"));
   ASSERT_TRUE(master->is_agv_registered("manufacturer2", "serial2"));
 
-  master->disconnect();
+  // Cleanup
+  master->unregister_agv("manufacturer2", "serial2");
 }

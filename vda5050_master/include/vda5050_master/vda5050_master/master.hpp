@@ -19,39 +19,38 @@
 #ifndef VDA5050_MASTER__VDA5050_MASTER__MASTER_HPP_
 #define VDA5050_MASTER__VDA5050_MASTER__MASTER_HPP_
 
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
 
+#include "vda5050_master/agv/agv.hpp"
 #include "vda5050_master/communication/communication.hpp"
-#include "vda5050_master/communication/vda5050_topic_config.hpp"
 #include "vda5050_master/vda5050_interfaces.hpp"
 
 /**
- * @brief AGV registration info
- * AGV ID is derived as "manufacturer/serial_number" per VDA5050 standard
+ * @brief Factory function type for creating communication strategies
+ *
+ * The factory takes an AGV identifier (used for client naming) and returns
+ * a new ICommunicationStrategy instance. Each ICommunicationStrategy
+ * implementation handles its own configuration internally.
  */
-struct AGVInfo
-{
-  std::string manufacturer;
-  std::string serial_number;
-
-  std::string get_agv_id() const
-  {
-    return manufacturer + "/" + serial_number;
-  }
-};
+using CommunicationFactory =
+  std::function<std::unique_ptr<ICommunicationStrategy>(
+    const std::string& agv_id)>;
 
 /**
  * @brief VDA5050 Master for multi-AGV fleet management
  *
  * This abstract base class manages VDA5050 communication for multiple AGVs.
- * Users should inherit from this class and override the virtual callback
- * methods to handle incoming VDA5050 messages.
+ * Each registered AGV gets its own communication instance. Users should
+ * inherit from this class and override the virtual callback methods to
+ * handle incoming VDA5050 messages.
  *
  * Features:
- * - AGV registration and topic auto-construction per VDA5050 spec
+ * - AGV registration with automatic communication setup
+ * - Per-AGV communication isolation
  * - Message routing with AGV identification
  * - Order and instant action publishing to specific AGVs
  *
@@ -66,10 +65,29 @@ class VDA5050Master
 {
 public:
   /**
-   * @brief Construct a VDA5050 master
-   * @param communication The communication strategy (MQTT, ROS2, etc.)
+   * @brief Construct a VDA5050 master with a communication factory
+   * @param factory Factory function that creates ICommunicationStrategy instances
+   *
+   * The factory is called for each AGV when register_agv() is invoked.
+   * Each ICommunicationStrategy implementation handles its own configuration.
+   *
+   * Example usage with MQTT:
+   * @code
+   * auto factory = [broker](const std::string& agv_id) {
+   *   return std::make_unique<MqttCommunication>(broker, agv_id);
+   * };
+   * MyMaster master(factory);
+   * @endcode
+   *
+   * Example usage with ROS2:
+   * @code
+   * auto factory = [node](const std::string& agv_id) {
+   *   return std::make_unique<Ros2Communication>(node, agv_id);
+   * };
+   * MyMaster master(factory);
+   * @endcode
    */
-  explicit VDA5050Master(std::unique_ptr<ICommunicationStrategy> communication);
+  explicit VDA5050Master(CommunicationFactory factory);
 
   /**
    * @brief Virtual destructor for inheritance
@@ -77,28 +95,22 @@ public:
   virtual ~VDA5050Master() = default;
 
   /**
-   * @brief Connect to the communication endpoint
-   */
-  void connect();
-
-  /**
-   * @brief Disconnect from the communication endpoint
-   */
-  void disconnect();
-
-  /**
    * @brief Register an AGV for VDA5050 communication
-   * @param agv_info AGV identification (manufacturer, serial_number)
+   * @param manufacturer Manufacturer name
+   * @param serial_number Serial number
    *
-   * Subscribes to all VDA5050 topics for this AGV with auto-constructed
-   * topic paths per VDA5050 specification.
+   * Creates a dedicated communication instance for this AGV and subscribes
+   * to all VDA5050 topics with auto-constructed topic paths per VDA5050 spec.
    */
-  void register_agv(const AGVInfo& agv_info);
+  void register_agv(
+    const std::string& manufacturer, const std::string& serial_number);
 
   /**
    * @brief Unregister an AGV
    * @param manufacturer Manufacturer name
    * @param serial_number Serial number
+   *
+   * Disconnects and removes the AGV's communication instance.
    */
   void unregister_agv(
     const std::string& manufacturer, const std::string& serial_number);
@@ -181,31 +193,18 @@ protected:
 
 private:
   /**
-   * @brief Build VDA5050 topic configuration for an AGV
+   * @brief Internal AGV lookup (must be called with agv_mutex_ held)
+   * @param agv_id The AGV identifier (manufacturer/serial_number)
+   * @return Shared pointer to AGV, or nullptr if not found
    */
-  VDA5050TopicConfig build_topic_config(const AGVInfo& agv_info) const;
+  std::shared_ptr<AGV> get_agv(const std::string& agv_id) const;
 
-  /**
-   * @brief Build a single VDA5050 topic path
-   */
-  std::string build_topic(
-    const std::string& manufacturer, const std::string& serial_number,
-    const std::string& topic_name) const;
+  // Factory for creating communication strategies
+  CommunicationFactory communication_factory_;
 
-  // Internal message handlers that parse JSON and invoke virtual callbacks
-  void handle_connection_message(
-    const std::string& agv_id, const std::string& payload);
-  void handle_state_message(
-    const std::string& agv_id, const std::string& payload);
-  void handle_factsheet_message(
-    const std::string& agv_id, const std::string& payload);
-  void handle_visualization_message(
-    const std::string& agv_id, const std::string& payload);
-
-  std::unique_ptr<ICommunicationStrategy> communication_;
-
-  mutable std::mutex agv_registry_mutex_;
-  std::unordered_map<std::string, AGVInfo> agv_registry_;
+  // Registered AGVs (shared_ptr allows safe access from get_agv())
+  mutable std::mutex agv_mutex_;
+  std::unordered_map<std::string, std::shared_ptr<AGV>> agvs_;
 };
 
 #endif  // VDA5050_MASTER__VDA5050_MASTER__MASTER_HPP_

@@ -18,6 +18,7 @@ find_package(vda5050_msgs REQUIRED)
 find_package(fmt REQUIRED)
 
 add_library(vda5050_master
+  src/agv/agv.cpp
   src/vda5050_master/master.cpp
   src/vda5050_master/communication/mqtt.cpp
   src/vda5050_master/communication/ros2.cpp
