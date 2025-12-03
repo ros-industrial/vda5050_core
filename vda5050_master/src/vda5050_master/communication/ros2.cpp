@@ -47,6 +47,22 @@ void Ros2Communication::subscribe(
   VDA5050_INFO("[ROS2] Subscribed to topic: {}", topic);
 }
 
+void Ros2Communication::unsubscribe(const std::string& topic)
+{
+  std::lock_guard<std::mutex> lock(subscriber_mutex_);
+  auto it = subscriptions_.find(topic);
+  if (it != subscriptions_.end())
+  {
+    subscriptions_.erase(it);
+    VDA5050_INFO("[ROS2] Unsubscribed from topic: {}", topic);
+  }
+  else
+  {
+    VDA5050_WARN(
+      "[ROS2] Cannot unsubscribe: no subscription for topic: {}", topic);
+  }
+}
+
 void Ros2Communication::connect()
 {
   // ROS2 nodes are connected when created, but we can initialize publishers here

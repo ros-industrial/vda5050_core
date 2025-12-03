@@ -40,6 +40,12 @@ void MqttCommunication::subscribe(
   VDA5050_INFO("[MQTT] Subscribing to topic at {}", topic);
 }
 
+void MqttCommunication::unsubscribe(const std::string& topic)
+{
+  mqtt_client_->unsubscribe(topic);
+  VDA5050_INFO("[MQTT] Unsubscribed from topic: {}", topic);
+}
+
 void MqttCommunication::connect()
 {
   mqtt_client_->connect();
