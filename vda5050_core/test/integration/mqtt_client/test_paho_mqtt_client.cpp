@@ -56,3 +56,46 @@ TEST(PahoMqttClientTest, PublishSubscribe)
   ASSERT_NO_THROW(talker->disconnect());
   ASSERT_NO_THROW(listener->disconnect());
 }
+
+TEST(PahoMqttClientTest, UnsubscribeStopsMessages)
+{
+  std::string broker = "tcp://test.mosquitto.org:1883";
+  std::string topic = "/test/integration/unsubscribe";
+  std::string payload = "hello";
+  int qos = 0;
+
+  std::atomic_int message_count{0};
+
+  auto listener =
+    vda5050_core::mqtt_client::create_default_client(broker, "unsub_listener");
+  ASSERT_NO_THROW(listener->connect());
+  ASSERT_NO_THROW(listener->subscribe(
+    topic,
+    [&](const std::string& /*topic_*/, const std::string& /*payload_*/) {
+      message_count++;
+    },
+    qos));
+
+  auto talker =
+    vda5050_core::mqtt_client::create_default_client(broker, "unsub_talker");
+  ASSERT_NO_THROW(talker->connect());
+
+  // Publish first message and verify it is received
+  ASSERT_NO_THROW(talker->publish(topic, payload, qos));
+  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+  ASSERT_EQ(message_count.load(), 1);
+
+  // Unsubscribe from the topic
+  ASSERT_NO_THROW(listener->unsubscribe(topic));
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+  // Publish second message after unsubscribe
+  ASSERT_NO_THROW(talker->publish(topic, payload, qos));
+  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+  // Message count should still be 1 (no new messages received)
+  ASSERT_EQ(message_count.load(), 1);
+
+  ASSERT_NO_THROW(talker->disconnect());
+  ASSERT_NO_THROW(listener->disconnect());
+}
