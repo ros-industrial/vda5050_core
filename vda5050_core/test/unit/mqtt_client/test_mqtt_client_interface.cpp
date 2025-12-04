@@ -27,7 +27,8 @@ public:
   MOCK_METHOD(void, disconnect, (), (override));
   MOCK_METHOD(bool, connected, (), (override));
   MOCK_METHOD(
-    void, publish, (const std::string&, const std::string&, int), (override));
+    void, publish, (const std::string&, const std::string&, int, bool),
+    (override));
   MOCK_METHOD(
     void, subscribe,
     (const std::string&,
@@ -62,8 +63,8 @@ TEST(MqttClientInterfaceTest, CheckConnection)
 TEST(MqttClientInterfaceTest, PublishMessage)
 {
   MockMqttClient mock;
-  EXPECT_CALL(mock, publish("topic", "{payload: 'data'}", 0)).Times(1);
-  mock.publish("topic", "{payload: 'data'}", 0);
+  EXPECT_CALL(mock, publish("topic", "{payload: 'data'}", 0, false)).Times(1);
+  mock.publish("topic", "{payload: 'data'}", 0, false);
 }
 
 TEST(MqttClientInterfaceTest, SubscribeTopic)
