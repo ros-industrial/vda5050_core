@@ -144,7 +144,7 @@ bool PahoMqttClient::connected()
 
 //=============================================================================
 void PahoMqttClient::publish(
-  const std::string& topic, const std::string& message, int qos)
+  const std::string& topic, const std::string& message, int qos, bool retain)
 {
   try
   {
@@ -152,6 +152,7 @@ void PahoMqttClient::publish(
     msg->set_topic(topic);
     msg->set_payload(message);
     msg->set_qos(qos);
+    msg->set_retained(retain);
 
     client_->publish(msg)->wait();
   }

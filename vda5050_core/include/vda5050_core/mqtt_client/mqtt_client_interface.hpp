@@ -48,7 +48,8 @@ public:
   /// \param message Raw message string
   /// \param qos Quality of service setting for the publish
   virtual void publish(
-    const std::string& topic, const std::string& message, int qos) = 0;
+    const std::string& topic, const std::string& message, int qos,
+    bool retain = false) = 0;
 
   using MessageHandler =
     std::function<void(const std::string&, const std::string&)>;

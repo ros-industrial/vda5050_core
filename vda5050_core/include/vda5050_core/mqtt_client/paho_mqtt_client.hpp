@@ -110,7 +110,8 @@ public:
 
   // Documentation inherited from MqttClientInterface
   void publish(
-    const std::string& topic, const std::string& message, int qos) override;
+    const std::string& topic, const std::string& message, int qos,
+    bool retain = false) override;
 
   // Documentation inherited from MqttClientInterface
   void subscribe(
