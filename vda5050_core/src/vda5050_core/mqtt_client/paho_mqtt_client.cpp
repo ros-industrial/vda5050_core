@@ -180,6 +180,21 @@ void PahoMqttClient::subscribe(
 }
 
 //=============================================================================
+void PahoMqttClient::unsubscribe(const std::string& topic)
+{
+  try
+  {
+    client_->unsubscribe(topic)->wait();
+    std::lock_guard<std::mutex> lock(handler_mutex_);
+    handlers_.erase(topic);
+  }
+  catch (const mqtt::exception& e)
+  {
+    VDA5050_ERROR_STREAM("MQTT unsubscription failed: " << e.get_message());
+  }
+}
+
+//=============================================================================
 PahoMqttClient::PahoMqttClient(
   const std::string& broker_address, const std::string& client_id)
 : client_(std::make_unique<mqtt::async_client>(broker_address, client_id)),
