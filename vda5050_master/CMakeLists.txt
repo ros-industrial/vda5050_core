@@ -77,6 +77,12 @@ if(BUILD_TESTING)
 
   target_link_libraries(test_communications vda5050_master)
 
+  # AGV unit tests (no external dependencies like MQTT broker)
+  ament_add_gmock(test_agv
+    test/agv/agv_test.cpp
+  )
+  target_link_libraries(test_agv vda5050_master)
+
   # ===== MQTT Test Broker Automation (Docker) =====
   # Setup: Start Docker MQTT broker before tests (with anonymous auth enabled)
   add_test(NAME mqtt_broker_setup
