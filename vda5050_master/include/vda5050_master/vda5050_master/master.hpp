@@ -98,12 +98,16 @@ public:
    * @brief Register an AGV for VDA5050 communication
    * @param manufacturer Manufacturer name
    * @param serial_number Serial number
+   * @param max_queue_size Maximum number of outgoing messages to queue (default: 10)
+   * @param drop_oldest If true, drop oldest message when queue full; if false, reject new message (default: true)
    *
    * Creates a dedicated communication instance for this AGV and subscribes
    * to all VDA5050 topics with auto-constructed topic paths per VDA5050 spec.
    */
   void register_agv(
-    const std::string& manufacturer, const std::string& serial_number);
+    const std::string& manufacturer, const std::string& serial_number,
+    size_t max_queue_size = AGV::DEFAULT_MAX_QUEUE_SIZE,
+    bool drop_oldest = true);
 
   /**
    * @brief Unregister an AGV
