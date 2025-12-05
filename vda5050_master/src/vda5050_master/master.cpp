@@ -32,7 +32,8 @@ VDA5050Master::VDA5050Master(CommunicationFactory factory)
 }
 
 void VDA5050Master::register_agv(
-  const std::string& manufacturer, const std::string& serial_number)
+  const std::string& manufacturer, const std::string& serial_number,
+  size_t max_queue_size, bool drop_oldest)
 {
   std::string agv_id = manufacturer + "/" + serial_number;
 
@@ -47,9 +48,10 @@ void VDA5050Master::register_agv(
   // Create communication instance for this AGV using the factory
   auto communication = communication_factory_(agv_id);
 
-  // Create AGV object
+  // Create AGV object with queue configuration
   auto agv = std::make_shared<AGV>(
-    manufacturer, serial_number, std::move(communication));
+    manufacturer, serial_number, std::move(communication),
+    max_queue_size, drop_oldest);
 
   // Connect the AGV's communication
   agv->connect();
