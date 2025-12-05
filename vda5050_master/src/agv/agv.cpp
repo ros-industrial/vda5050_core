@@ -25,18 +25,39 @@
 #include "vda5050_master/standard_names.hpp"
 
 // ============================================================================
-// Constructor
+// Constructor / Destructor
 // ============================================================================
 
 AGV::AGV(
   const std::string& manufacturer, const std::string& serial_number,
-  std::unique_ptr<ICommunicationStrategy> communication)
+  std::unique_ptr<ICommunicationStrategy> communication, size_t max_queue_size,
+  bool drop_oldest)
 : manufacturer_(manufacturer),
   serial_number_(serial_number),
   agv_id_(manufacturer + "/" + serial_number),
   communication_(std::move(communication)),
-  registered_time_(Clock::now())
+  registered_time_(Clock::now()),
+  max_queue_size_(max_queue_size),
+  drop_oldest_(drop_oldest)
 {
+  // Start the queue processing thread
+  queue_thread_ = std::thread(&AGV::process_queues, this);
+}
+
+AGV::~AGV()
+{
+  // Signal the queue thread to stop
+  {
+    std::lock_guard<std::mutex> lock(queue_mutex_);
+    stop_processing_ = true;
+  }
+  queue_cv_.notify_one();
+
+  // Wait for the thread to finish
+  if (queue_thread_.joinable())
+  {
+    queue_thread_.join();
+  }
 }
 
 // ============================================================================
@@ -210,39 +231,58 @@ void AGV::setup_subscriptions(
   VDA5050_INFO("[AGV] Setup subscriptions for AGV: {}", agv_id_);
 }
 
-void AGV::send_order(const vda5050_msgs::msg::Order& order)
+bool AGV::send_order(const vda5050_msgs::msg::Order& order)
 {
-  if (!communication_)
+  std::lock_guard<std::mutex> lock(queue_mutex_);
+
+  if (order_queue_.size() >= max_queue_size_)
   {
-    VDA5050_WARN("[AGV] Cannot send order: no communication for {}", agv_id_);
-    return;
+    if (!drop_oldest_)
+    {
+      VDA5050_WARN(
+        "[AGV] Dropping new order: queue full ({}/{}) for {}",
+        order_queue_.size(), max_queue_size_, agv_id_);
+      return false;
+    }
+    // Drop oldest order to make room
+    VDA5050_WARN(
+      "[AGV] Dropping oldest order: queue full ({}/{}) for {}",
+      order_queue_.size(), max_queue_size_, agv_id_);
+    order_queue_.pop();
   }
 
-  nlohmann::json j;
-  vda5050_msgs::msg::to_json(j, order);
-  communication_->send_message(
-    build_topic(vda5050_master::OrderTopic), j.dump(),
-    vda5050_master::OrderQos);
+  order_queue_.push(order);
+  queue_cv_.notify_one();
 
-  VDA5050_INFO("[AGV] Sent order to AGV: {}", agv_id_);
+  VDA5050_INFO("[AGV] Queued order for AGV: {}", agv_id_);
+  return true;
 }
 
-void AGV::send_instant_actions(const vda5050_msgs::msg::InstantActions& actions)
+bool AGV::send_instant_actions(const vda5050_msgs::msg::InstantActions& actions)
 {
-  if (!communication_)
+  std::lock_guard<std::mutex> lock(queue_mutex_);
+
+  if (instant_actions_queue_.size() >= max_queue_size_)
   {
+    if (!drop_oldest_)
+    {
+      VDA5050_WARN(
+        "[AGV] Dropping new instant actions: queue full ({}/{}) for {}",
+        instant_actions_queue_.size(), max_queue_size_, agv_id_);
+      return false;
+    }
+    // Drop oldest instant actions to make room
     VDA5050_WARN(
-      "[AGV] Cannot send instant actions: no communication for {}", agv_id_);
-    return;
+      "[AGV] Dropping oldest instant actions: queue full ({}/{}) for {}",
+      instant_actions_queue_.size(), max_queue_size_, agv_id_);
+    instant_actions_queue_.pop();
   }
 
-  nlohmann::json j;
-  vda5050_msgs::msg::to_json(j, actions);
-  communication_->send_message(
-    build_topic(vda5050_master::InstantActionsTopic), j.dump(),
-    vda5050_master::InstantActionsQos);
+  instant_actions_queue_.push(actions);
+  queue_cv_.notify_one();
 
-  VDA5050_INFO("[AGV] Sent instant actions to AGV: {}", agv_id_);
+  VDA5050_INFO("[AGV] Queued instant actions for AGV: {}", agv_id_);
+  return true;
 }
 
 // ============================================================================
@@ -355,4 +395,97 @@ void AGV::handle_visualization_message(
       "[AGV] Failed to parse visualization message from {}: {}", agv_id_,
       e.what());
   }
+}
+
+// ============================================================================
+// Queue Processing
+// ============================================================================
+
+void AGV::process_queues()
+{
+  VDA5050_INFO("[AGV] Queue processing thread started for {}", agv_id_);
+
+  while (true)
+  {
+    std::optional<vda5050_msgs::msg::Order> order;
+    std::optional<vda5050_msgs::msg::InstantActions> actions;
+
+    {
+      std::unique_lock<std::mutex> lock(queue_mutex_);
+
+      // Wait for a message or stop signal
+      queue_cv_.wait(lock, [this] {
+        return stop_processing_ || !order_queue_.empty() ||
+               !instant_actions_queue_.empty();
+      });
+
+      // Check if we should stop
+      if (
+        stop_processing_ && order_queue_.empty() &&
+        instant_actions_queue_.empty())
+      {
+        break;
+      }
+
+      // Process instant actions first (higher priority)
+      if (!instant_actions_queue_.empty())
+      {
+        actions = std::move(instant_actions_queue_.front());
+        instant_actions_queue_.pop();
+      }
+      else if (!order_queue_.empty())
+      {
+        order = std::move(order_queue_.front());
+        order_queue_.pop();
+      }
+    }
+
+    // Send the message (outside the lock)
+    if (actions)
+    {
+      send_instant_actions_now(*actions);
+    }
+    else if (order)
+    {
+      send_order_now(*order);
+    }
+  }
+
+  VDA5050_INFO("[AGV] Queue processing thread stopped for {}", agv_id_);
+}
+
+void AGV::send_order_now(const vda5050_msgs::msg::Order& order)
+{
+  if (!communication_)
+  {
+    VDA5050_WARN("[AGV] Cannot send order: no communication for {}", agv_id_);
+    return;
+  }
+
+  nlohmann::json j;
+  vda5050_msgs::msg::to_json(j, order);
+  communication_->send_message(
+    build_topic(vda5050_master::OrderTopic), j.dump(),
+    vda5050_master::OrderQos);
+
+  VDA5050_INFO("[AGV] Sent order to AGV: {}", agv_id_);
+}
+
+void AGV::send_instant_actions_now(
+  const vda5050_msgs::msg::InstantActions& actions)
+{
+  if (!communication_)
+  {
+    VDA5050_WARN(
+      "[AGV] Cannot send instant actions: no communication for {}", agv_id_);
+    return;
+  }
+
+  nlohmann::json j;
+  vda5050_msgs::msg::to_json(j, actions);
+  communication_->send_message(
+    build_topic(vda5050_master::InstantActionsTopic), j.dump(),
+    vda5050_master::InstantActionsQos);
+
+  VDA5050_INFO("[AGV] Sent instant actions to AGV: {}", agv_id_);
 }

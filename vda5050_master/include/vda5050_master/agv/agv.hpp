@@ -19,12 +19,16 @@
 #ifndef VDA5050_MASTER__AGV__AGV_HPP_
 #define VDA5050_MASTER__AGV__AGV_HPP_
 
+#include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <queue>
 #include <string>
+#include <thread>
 
 #include "vda5050_master/communication/communication.hpp"
 #include "vda5050_master/vda5050_interfaces.hpp"
@@ -61,23 +65,32 @@ public:
   using VisualizationCallback = std::function<void(
     const std::string&, const vda5050_msgs::msg::Visualization&)>;
 
+  // Default maximum queue size for outgoing messages
+  static constexpr size_t DEFAULT_MAX_QUEUE_SIZE = 10;
+
   /**
    * @brief Construct an AGV instance
    * @param manufacturer Manufacturer name
    * @param serial_number Serial number
    * @param communication Communication strategy for this AGV
+   * @param max_queue_size Maximum number of outgoing messages to queue (default: 10)
+   * @param drop_oldest If true, drop oldest message when queue full; if false, reject new message (default: true)
    */
   AGV(
     const std::string& manufacturer, const std::string& serial_number,
-    std::unique_ptr<ICommunicationStrategy> communication);
+    std::unique_ptr<ICommunicationStrategy> communication,
+    size_t max_queue_size = DEFAULT_MAX_QUEUE_SIZE, bool drop_oldest = true);
 
-  ~AGV() = default;
+  /**
+   * @brief Destructor - stops the queue processing thread
+   */
+  ~AGV();
 
-  // Non-copyable, movable
+  // Non-copyable, non-movable (due to thread member)
   AGV(const AGV&) = delete;
   AGV& operator=(const AGV&) = delete;
-  AGV(AGV&&) = default;
-  AGV& operator=(AGV&&) = default;
+  AGV(AGV&&) = delete;
+  AGV& operator=(AGV&&) = delete;
 
   // ============================================================================
   // Identity
@@ -216,16 +229,22 @@ private:
   // ============================================================================
 
   /**
-   * @brief Send an order to this AGV
+   * @brief Queue an order to be sent to this AGV
    * @param order The order message
+   * @return true if queued successfully, false if queue is full
+   *
+   * Messages are processed FIFO by a background thread.
    */
-  void send_order(const vda5050_msgs::msg::Order& order);
+  bool send_order(const vda5050_msgs::msg::Order& order);
 
   /**
-   * @brief Send instant actions to this AGV
+   * @brief Queue instant actions to be sent to this AGV
    * @param actions The instant actions message
+   * @return true if queued successfully, false if queue is full
+   *
+   * Messages are processed FIFO by a background thread.
    */
-  void send_instant_actions(const vda5050_msgs::msg::InstantActions& actions);
+  bool send_instant_actions(const vda5050_msgs::msg::InstantActions& actions);
 
   /**
    * @brief Update the cached connection message
@@ -293,6 +312,32 @@ private:
 
   std::optional<vda5050_msgs::msg::Visualization> last_visualization_;
   std::optional<TimePoint> last_visualization_time_;
+
+  // ============================================================================
+  // Outgoing message queues
+  // ============================================================================
+
+  // Queue processing thread function
+  void process_queues();
+
+  // Sends messages immediately (called by queue processor)
+  void send_order_now(const vda5050_msgs::msg::Order& order);
+  void send_instant_actions_now(
+    const vda5050_msgs::msg::InstantActions& actions);
+
+  // Queue configuration
+  size_t max_queue_size_;
+  bool drop_oldest_;
+
+  // Queue state (protected by queue_mutex_)
+  std::mutex queue_mutex_;
+  std::condition_variable queue_cv_;
+  std::queue<vda5050_msgs::msg::Order> order_queue_;
+  std::queue<vda5050_msgs::msg::InstantActions> instant_actions_queue_;
+
+  // Queue processing thread
+  std::atomic<bool> stop_processing_{false};
+  std::thread queue_thread_;
 };
 
 #endif  // VDA5050_MASTER__AGV__AGV_HPP_
