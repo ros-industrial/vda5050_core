@@ -129,9 +129,10 @@ public:
    * @param manufacturer Manufacturer name
    * @param serial_number Serial number
    * @param order The order message
+   * @return true if queued successfully, false if queue is full
    * @throws std::runtime_error if AGV is not registered
    */
-  void publish_order(
+  bool publish_order(
     const std::string& manufacturer, const std::string& serial_number,
     const vda5050_msgs::msg::Order& order);
 
@@ -140,9 +141,10 @@ public:
    * @param manufacturer Manufacturer name
    * @param serial_number Serial number
    * @param actions The instant actions message
+   * @return true if queued successfully, false if queue is full
    * @throws std::runtime_error if AGV is not registered
    */
-  void publish_instant_actions(
+  bool publish_instant_actions(
     const std::string& manufacturer, const std::string& serial_number,
     const vda5050_msgs::msg::InstantActions& actions);
 

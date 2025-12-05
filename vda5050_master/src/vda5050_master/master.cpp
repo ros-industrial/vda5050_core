@@ -113,40 +113,46 @@ std::shared_ptr<AGV> VDA5050Master::get_agv(const std::string& agv_id) const
   return (it != agvs_.end()) ? it->second : nullptr;
 }
 
-void VDA5050Master::publish_order(
+bool VDA5050Master::publish_order(
   const std::string& manufacturer, const std::string& serial_number,
   const vda5050_msgs::msg::Order& order)
 {
   std::string agv_id = manufacturer + "/" + serial_number;
 
-  std::lock_guard<std::mutex> lock(agv_mutex_);
+  std::shared_ptr<AGV> agv;
+  {
+    std::lock_guard<std::mutex> lock(agv_mutex_);
+    agv = get_agv(agv_id);
+  }
 
-  auto agv = get_agv(agv_id);
   if (!agv)
   {
     throw std::runtime_error(
       "Cannot publish order: AGV not registered: " + agv_id);
   }
 
-  agv->send_order(order);
+  return agv->send_order(order);
 }
 
-void VDA5050Master::publish_instant_actions(
+bool VDA5050Master::publish_instant_actions(
   const std::string& manufacturer, const std::string& serial_number,
   const vda5050_msgs::msg::InstantActions& actions)
 {
   std::string agv_id = manufacturer + "/" + serial_number;
 
-  std::lock_guard<std::mutex> lock(agv_mutex_);
+  std::shared_ptr<AGV> agv;
+  {
+    std::lock_guard<std::mutex> lock(agv_mutex_);
+    agv = get_agv(agv_id);
+  }
 
-  auto agv = get_agv(agv_id);
   if (!agv)
   {
     throw std::runtime_error(
       "Cannot publish instant actions: AGV not registered: " + agv_id);
   }
 
-  agv->send_instant_actions(actions);
+  return agv->send_instant_actions(actions);
 }
 
 // ============================================================================
