@@ -50,8 +50,8 @@ void VDA5050Master::register_agv(
 
   // Create AGV object with queue configuration
   auto agv = std::make_shared<AGV>(
-    manufacturer, serial_number, std::move(communication),
-    max_queue_size, drop_oldest);
+    manufacturer, serial_number, std::move(communication), max_queue_size,
+    drop_oldest);
 
   // Connect the AGV's communication
   agv->connect();
