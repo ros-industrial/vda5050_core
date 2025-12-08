@@ -64,9 +64,6 @@ void VDA5050Master::register_agv(
     [this](const std::string& id, const vda5050_msgs::msg::State& msg) {
       on_state(id, msg);
     },
-    [this](const std::string& id, const vda5050_msgs::msg::Factsheet& msg) {
-      on_factsheet(id, msg);
-    },
     [this](const std::string& id, const vda5050_msgs::msg::Visualization& msg) {
       on_visualization(id, msg);
     });
@@ -160,15 +157,6 @@ bool VDA5050Master::publish_instant_actions(
 // ============================================================================
 // Default implementations for optional virtual callbacks
 // ============================================================================
-
-void VDA5050Master::on_factsheet(
-  const std::string& agv_id, const vda5050_msgs::msg::Factsheet& /*msg*/)
-{
-  VDA5050_WARN(
-    "[VDA5050Master] on_factsheet not overridden. Received factsheet from "
-    "AGV: {}",
-    agv_id);
-}
 
 void VDA5050Master::on_visualization(
   const std::string& agv_id, const vda5050_msgs::msg::Visualization& /*msg*/)

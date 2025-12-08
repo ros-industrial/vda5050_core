@@ -48,8 +48,6 @@ public:
     received_connections_;
   std::vector<std::pair<std::string, vda5050_msgs::msg::State>>
     received_states_;
-  std::vector<std::pair<std::string, vda5050_msgs::msg::Factsheet>>
-    received_factsheets_;
   std::vector<std::pair<std::string, vda5050_msgs::msg::Visualization>>
     received_visualizations_;
   std::atomic<int> connection_count_{0};
@@ -71,13 +69,6 @@ protected:
     std::lock_guard<std::mutex> lock(mutex_);
     received_states_.push_back({agv_id, msg});
     state_count_++;
-  }
-
-  void on_factsheet(
-    const std::string& agv_id, const vda5050_msgs::msg::Factsheet& msg) override
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    received_factsheets_.push_back({agv_id, msg});
   }
 
   void on_visualization(

@@ -22,7 +22,57 @@
 
 #include "nlohmann/json.hpp"
 #include "vda5050_core/logger/logger.hpp"
+#include "vda5050_json_utils/serialization.hpp"
 #include "vda5050_master/standard_names.hpp"
+
+// Additional JSON serialization for messages not in vda5050_json_utils
+namespace vda5050_msgs {
+namespace msg {
+
+inline void to_json(nlohmann::json& j, const InstantActions& msg)
+{
+  vda5050_types::header_detail::to_json(j, msg.header);
+  j["actions"] = msg.actions;
+}
+
+inline void from_json(const nlohmann::json& j, InstantActions& msg)
+{
+  vda5050_types::header_detail::from_json(j, msg.header);
+  msg.actions = j.at("actions").get<std::vector<Action>>();
+}
+
+inline void to_json(nlohmann::json& j, const Visualization& msg)
+{
+  vda5050_types::header_detail::to_json(j, msg.header);
+  if (!msg.agv_position.empty())
+  {
+    j["agvPosition"] = msg.agv_position[0];
+  }
+  if (!msg.velocity.empty())
+  {
+    j["velocity"] = msg.velocity[0];
+  }
+}
+
+inline void from_json(const nlohmann::json& j, Visualization& msg)
+{
+  vda5050_types::header_detail::from_json(j, msg.header);
+  if (j.contains("agvPosition"))
+  {
+    AGVPosition pos;
+    vda5050_types::agv_position_detail::from_json(j.at("agvPosition"), pos);
+    msg.agv_position.push_back(pos);
+  }
+  if (j.contains("velocity"))
+  {
+    Velocity vel;
+    vda5050_types::velocity_detail::from_json(j.at("velocity"), vel);
+    msg.velocity.push_back(vel);
+  }
+}
+
+}  // namespace msg
+}  // namespace vda5050_msgs
 
 // ============================================================================
 // Constructor / Destructor
@@ -107,13 +157,6 @@ void AGV::update_state(const vda5050_msgs::msg::State& msg)
   last_state_time_ = Clock::now();
 }
 
-void AGV::update_factsheet(const vda5050_msgs::msg::Factsheet& msg)
-{
-  std::lock_guard<std::mutex> lock(data_mutex_);
-  last_factsheet_ = msg;
-  last_factsheet_time_ = Clock::now();
-}
-
 void AGV::update_visualization(const vda5050_msgs::msg::Visualization& msg)
 {
   std::lock_guard<std::mutex> lock(data_mutex_);
@@ -135,12 +178,6 @@ std::optional<vda5050_msgs::msg::State> AGV::get_last_state() const
 {
   std::lock_guard<std::mutex> lock(data_mutex_);
   return last_state_;
-}
-
-std::optional<vda5050_msgs::msg::Factsheet> AGV::get_last_factsheet() const
-{
-  std::lock_guard<std::mutex> lock(data_mutex_);
-  return last_factsheet_;
 }
 
 std::optional<vda5050_msgs::msg::Visualization> AGV::get_last_visualization()
@@ -166,12 +203,6 @@ std::optional<AGV::TimePoint> AGV::get_last_state_time() const
   return last_state_time_;
 }
 
-std::optional<AGV::TimePoint> AGV::get_last_factsheet_time() const
-{
-  std::lock_guard<std::mutex> lock(data_mutex_);
-  return last_factsheet_time_;
-}
-
 std::optional<AGV::TimePoint> AGV::get_last_visualization_time() const
 {
   std::lock_guard<std::mutex> lock(data_mutex_);
@@ -184,7 +215,7 @@ std::optional<AGV::TimePoint> AGV::get_last_visualization_time() const
 
 void AGV::setup_subscriptions(
   ConnectionCallback on_connection, StateCallback on_state,
-  FactsheetCallback on_factsheet, VisualizationCallback on_visualization)
+  VisualizationCallback on_visualization)
 {
   if (!communication_)
   {
@@ -209,15 +240,6 @@ void AGV::setup_subscriptions(
       handle_state_message(payload, on_state);
     },
     vda5050_master::StateQos);
-
-  // Subscribe to factsheet topic (callback is optional, but subscription always created)
-  communication_->subscribe(
-    build_topic(vda5050_master::FactsheetTopic),
-    [this, on_factsheet](
-      const std::string& /*topic*/, const std::string& payload) {
-      handle_factsheet_message(payload, on_factsheet);
-    },
-    vda5050_master::FactsheetQos);
 
   // Subscribe to visualization topic (callback is optional, but subscription always created)
   communication_->subscribe(
@@ -343,31 +365,6 @@ void AGV::handle_state_message(
   {
     VDA5050_WARN(
       "[AGV] Failed to parse state message from {}: {}", agv_id_, e.what());
-  }
-}
-
-void AGV::handle_factsheet_message(
-  const std::string& payload, const FactsheetCallback& callback)
-{
-  try
-  {
-    auto json_msg = nlohmann::json::parse(payload);
-    vda5050_msgs::msg::Factsheet msg;
-    vda5050_msgs::msg::from_json(json_msg, msg);
-
-    // Update cache
-    update_factsheet(msg);
-
-    // Invoke user callback
-    if (callback)
-    {
-      callback(agv_id_, msg);
-    }
-  }
-  catch (const std::exception& e)
-  {
-    VDA5050_WARN(
-      "[AGV] Failed to parse factsheet message from {}: {}", agv_id_, e.what());
   }
 }
 

@@ -15,6 +15,7 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(vda5050_core REQUIRED)
 find_package(vda5050_msgs REQUIRED)
+find_package(vda5050_json_utils REQUIRED)
 find_package(fmt REQUIRED)
 
 add_library(vda5050_master
@@ -27,10 +28,13 @@ add_library(vda5050_master
 ament_target_dependencies(vda5050_master
   vda5050_core
   vda5050_msgs
+  vda5050_json_utils
   fmt
   rclcpp
   std_msgs
 )
+
+target_compile_definitions(vda5050_master PRIVATE ENABLE_ROS2)
 
 target_include_directories(vda5050_master PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

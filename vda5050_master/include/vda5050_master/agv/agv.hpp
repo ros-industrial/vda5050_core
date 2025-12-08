@@ -60,8 +60,6 @@ public:
     const std::string&, const vda5050_msgs::msg::Connection&)>;
   using StateCallback =
     std::function<void(const std::string&, const vda5050_msgs::msg::State&)>;
-  using FactsheetCallback = std::function<void(
-    const std::string&, const vda5050_msgs::msg::Factsheet&)>;
   using VisualizationCallback = std::function<void(
     const std::string&, const vda5050_msgs::msg::Visualization&)>;
 
@@ -143,7 +141,6 @@ public:
    * @brief Setup VDA5050 topic subscriptions for this AGV
    * @param on_connection Callback for connection messages
    * @param on_state Callback for state messages
-   * @param on_factsheet Callback for factsheet messages (optional, cache always updated)
    * @param on_visualization Callback for visualization messages (optional, cache always updated)
    *
    * Sets up subscriptions to all standard VDA5050 topics using the AGV's
@@ -152,7 +149,6 @@ public:
    */
   void setup_subscriptions(
     ConnectionCallback on_connection, StateCallback on_state,
-    FactsheetCallback on_factsheet = nullptr,
     VisualizationCallback on_visualization = nullptr);
 
   // ============================================================================
@@ -170,12 +166,6 @@ public:
    * @return Optional containing the message if received, nullopt otherwise
    */
   std::optional<vda5050_msgs::msg::State> get_last_state() const;
-
-  /**
-   * @brief Get the last received factsheet message
-   * @return Optional containing the message if received, nullopt otherwise
-   */
-  std::optional<vda5050_msgs::msg::Factsheet> get_last_factsheet() const;
 
   /**
    * @brief Get the last received visualization message
@@ -207,12 +197,6 @@ public:
    * @return Optional containing the timestamp if received, nullopt otherwise
    */
   std::optional<TimePoint> get_last_state_time() const;
-
-  /**
-   * @brief Get the time of the last received factsheet message
-   * @return Optional containing the timestamp if received, nullopt otherwise
-   */
-  std::optional<TimePoint> get_last_factsheet_time() const;
 
   /**
    * @brief Get the time of the last received visualization message
@@ -259,12 +243,6 @@ private:
   void update_state(const vda5050_msgs::msg::State& msg);
 
   /**
-   * @brief Update the cached factsheet message
-   * @param msg The factsheet message
-   */
-  void update_factsheet(const vda5050_msgs::msg::Factsheet& msg);
-
-  /**
    * @brief Update the cached visualization message
    * @param msg The visualization message
    */
@@ -282,8 +260,6 @@ private:
     const std::string& payload, const ConnectionCallback& callback);
   void handle_state_message(
     const std::string& payload, const StateCallback& callback);
-  void handle_factsheet_message(
-    const std::string& payload, const FactsheetCallback& callback);
   void handle_visualization_message(
     const std::string& payload, const VisualizationCallback& callback);
 
@@ -306,9 +282,6 @@ private:
 
   std::optional<vda5050_msgs::msg::State> last_state_;
   std::optional<TimePoint> last_state_time_;
-
-  std::optional<vda5050_msgs::msg::Factsheet> last_factsheet_;
-  std::optional<TimePoint> last_factsheet_time_;
 
   std::optional<vda5050_msgs::msg::Visualization> last_visualization_;
   std::optional<TimePoint> last_visualization_time_;

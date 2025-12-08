@@ -178,16 +178,6 @@ protected:
     const std::string& agv_id, const vda5050_msgs::msg::State& msg) = 0;
 
   /**
-   * @brief Called when a factsheet message is received from an AGV
-   * @param agv_id The AGV identifier (manufacturer/serial_number)
-   * @param msg The factsheet message
-   *
-   * Default implementation logs a warning. Override to handle factsheets.
-   */
-  virtual void on_factsheet(
-    const std::string& agv_id, const vda5050_msgs::msg::Factsheet& msg);
-
-  /**
    * @brief Called when a visualization message is received from an AGV
    * @param agv_id The AGV identifier (manufacturer/serial_number)
    * @param msg The visualization message
