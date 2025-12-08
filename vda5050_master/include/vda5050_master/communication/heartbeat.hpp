@@ -74,9 +74,10 @@ public:
 
   void received_connection()
   {
-    if (!connection_thread_.joinable())
+    // Check state with proper synchronization
+    if (get_state() != HeartbeatState::RUNNING)
     {
-      VDA5050_INFO("Connection heartbeat not started yet, ignored...");
+      VDA5050_DEBUG("Connection heartbeat not running, ignored...");
       return;
     }
     std::lock_guard<std::mutex> lock(last_connection_report_mutex_);
@@ -143,7 +144,6 @@ public:
 
   virtual std::chrono::steady_clock::time_point get_current_time()
   {
-    VDA5050_INFO("Get Current Time no skip");
     return std::chrono::steady_clock::now();
   }
 
@@ -165,33 +165,24 @@ private:
 
   bool is_timeout()
   {
-    VDA5050_INFO("Check Timeout");
     std::chrono::steady_clock::time_point current_time = get_current_time();
     int time_since_last_connection_report;
     {
-      VDA5050_INFO("Bef lock Timeout");
       std::lock_guard<std::mutex> lock(last_connection_report_mutex_);
       time_since_last_connection_report =
         std::chrono::duration_cast<std::chrono::seconds>(
           current_time - last_connection_report_)
           .count();
-      VDA5050_INFO("aft lock TTimeout");
     }
 
-    VDA5050_INFO(
-      "time_since_last_connection_report" +
-      std::to_string(time_since_last_connection_report));
     if (std::abs(time_since_last_connection_report) > heartbeat_interval_)
     {
-      VDA5050_INFO(
-        "Connection heartbeat lost after waiting for the maximum of " +
-        std::to_string(heartbeat_interval_) + " seconds");
-      VDA5050_ERROR(
-        "Time since last connection report: " +
-        std::to_string(time_since_last_connection_report) + " seconds");
+      VDA5050_WARN(
+        "[" + id_ + "] Connection heartbeat timeout after " +
+        std::to_string(time_since_last_connection_report) + " seconds " +
+        "(max: " + std::to_string(heartbeat_interval_) + "s)");
       return true;
     }
-    VDA5050_INFO("No");
     return false;
   }
 
@@ -201,7 +192,6 @@ private:
   {
     while (!is_stop_requested())
     {
-      VDA5050_INFO("Start Listen");
       std::unique_lock<std::mutex> lock(check_lock_);
       message_received_.wait_for(
         lock, std::chrono::seconds(get_check_interval()));
@@ -209,22 +199,21 @@ private:
       // Check if shutdown was requested while waiting
       if (is_stop_requested())
       {
-        VDA5050_INFO("Shutdown requested, exiting listen loop");
+        VDA5050_DEBUG("[" + id_ + "] Shutdown requested, exiting listen loop");
         return;
       }
 
       if (is_timeout())
       {
-        VDA5050_INFO("Timeout reached");
-        // Copy callback by value in case object is destroyed
+        // Copy callback by value to ensure safe invocation
         auto callback_copy = disconnection_callback_;
         callback_thread_ = std::thread([callback_copy]() { callback_copy(); });
-        VDA5050_INFO("[" + id_ + "] Waiting for callback thread to finish");
         if (callback_thread_.joinable())
         {
           callback_thread_.join();
         }
-        VDA5050_INFO("Stopping heartbeat checks");
+        VDA5050_INFO(
+          "[" + id_ + "] Heartbeat monitoring stopped after timeout");
         return;
       }
     }
