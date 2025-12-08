@@ -48,12 +48,31 @@ void MqttCommunication::unsubscribe(const std::string& topic)
 
 void MqttCommunication::connect()
 {
-  mqtt_client_->connect();
+  VDA5050_INFO("[MQTT] Connecting to broker at {}", endpoint_);
   {
     std::lock_guard<std::mutex> lock(state_mutex_);
-    state_ = ConnectionState::CONNECTED;
+    state_ = ConnectionState::CONNECTING;
   }
-  VDA5050_INFO("[MQTT] Connecting to broker at {}", endpoint_);
+
+  try
+  {
+    mqtt_client_->connect();
+    {
+      std::lock_guard<std::mutex> lock(state_mutex_);
+      state_ = ConnectionState::CONNECTED;
+    }
+    VDA5050_INFO("[MQTT] Connected to broker at {}", endpoint_);
+  }
+  catch (const std::exception& e)
+  {
+    {
+      std::lock_guard<std::mutex> lock(state_mutex_);
+      state_ = ConnectionState::DISCONNECTED;
+    }
+    VDA5050_ERROR(
+      "[MQTT] Failed to connect to broker at {}: {}", endpoint_, e.what());
+    throw;
+  }
 }
 
 void MqttCommunication::disconnect()

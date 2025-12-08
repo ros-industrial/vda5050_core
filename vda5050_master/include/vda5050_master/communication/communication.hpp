@@ -38,13 +38,16 @@ using MessageCallback =
  * @brief Connection lifecycle states
  *
  * State transitions:
- *   DISCONNECTED -> CONNECTED (via connect())
+ *   DISCONNECTED -> CONNECTING (via connect())
+ *   CONNECTING -> CONNECTED (when connection succeeds)
+ *   CONNECTING -> DISCONNECTED (when connection fails)
  *   CONNECTED -> DISCONNECTING (via disconnect())
  *   DISCONNECTING -> DISCONNECTED (when cleanup completes)
  */
 enum class ConnectionState
 {
   DISCONNECTED,  // Not connected, safe to destroy or reconnect
+  CONNECTING,    // Connection in progress
   CONNECTED,     // Actively connected, can send/receive messages
   DISCONNECTING  // Disconnect in progress, cleanup ongoing
 };

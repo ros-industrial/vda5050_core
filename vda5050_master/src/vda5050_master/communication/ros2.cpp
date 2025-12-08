@@ -34,17 +34,26 @@ void Ros2Communication::subscribe(
   // Convert VDA5050 QoS to ROS2 QoS
   auto ros2_qos = convert_qos(qos);
 
-  // Create a subscriber for this topic
-  auto subscription = node_->create_subscription<std_msgs::msg::String>(
-    topic, ros2_qos,
-    [this, topic, callback](const std_msgs::msg::String::SharedPtr msg) {
-      callback(topic, msg->data);
-    });
+  try
+  {
+    // Create a subscriber for this topic
+    auto subscription = node_->create_subscription<std_msgs::msg::String>(
+      topic, ros2_qos,
+      [this, topic, callback](const std_msgs::msg::String::SharedPtr msg) {
+        callback(topic, msg->data);
+      });
 
-  std::lock_guard<std::mutex> lock(subscriber_mutex_);
-  // Store the subscription to keep it alive
-  subscriptions_[topic] = subscription;
-  VDA5050_INFO("[ROS2] Subscribed to topic: {}", topic);
+    std::lock_guard<std::mutex> lock(subscriber_mutex_);
+    // Store the subscription to keep it alive
+    subscriptions_[topic] = subscription;
+    VDA5050_INFO("[ROS2] Subscribed to topic: {}", topic);
+  }
+  catch (const std::exception& e)
+  {
+    VDA5050_ERROR(
+      "[ROS2] Exception while subscribing to topic {}: {}", topic, e.what());
+    throw;
+  }
 }
 
 void Ros2Communication::unsubscribe(const std::string& topic)
