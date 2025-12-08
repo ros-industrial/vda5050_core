@@ -74,7 +74,13 @@ void Ros2Communication::unsubscribe(const std::string& topic)
 
 void Ros2Communication::connect()
 {
-  // ROS2 nodes are connected when created, but we can initialize publishers here
+  VDA5050_INFO("[ROS2] Connecting node");
+  {
+    std::lock_guard<std::mutex> lock(state_mutex_);
+    state_ = ConnectionState::CONNECTING;
+  }
+
+  // ROS2 nodes are connected when created, so this is essentially instant
   {
     std::lock_guard<std::mutex> lock(state_mutex_);
     state_ = ConnectionState::CONNECTED;
@@ -149,13 +155,23 @@ Ros2Communication::get_or_create_publisher(const std::string& topic, int qos)
   }
 
   // Create new publisher
-  auto ros2_qos = convert_qos(qos);
-  auto publisher =
-    node_->create_publisher<std_msgs::msg::String>(topic, ros2_qos);
-  publishers_[topic] = publisher;
+  try
+  {
+    auto ros2_qos = convert_qos(qos);
+    auto publisher =
+      node_->create_publisher<std_msgs::msg::String>(topic, ros2_qos);
+    publishers_[topic] = publisher;
 
-  VDA5050_INFO("[ROS2] Created publisher for topic: {}", topic);
-  return publisher;
+    VDA5050_INFO("[ROS2] Created publisher for topic: {}", topic);
+    return publisher;
+  }
+  catch (const std::exception& e)
+  {
+    VDA5050_ERROR(
+      "[ROS2] Exception while creating publisher for topic {}: {}", topic,
+      e.what());
+    throw;
+  }
 }
 
 rclcpp::QoS Ros2Communication::convert_qos(int vda5050_qos)

@@ -297,6 +297,59 @@ TEST_F(Ros2CommunicationTest, MultipleDisconnectCallsSafe)
   ASSERT_EQ(ros2_comms.get_state(), ConnectionState::DISCONNECTED);
 }
 
+TEST_F(Ros2CommunicationTest, SubscribeWithInvalidTopicThrows)
+{
+  // ROS2 throws for invalid topic names
+  auto test_node = std::make_shared<rclcpp::Node>("test_invalid_topic");
+  auto ros2_comms = Ros2Communication(test_node, "test_id");
+  ASSERT_NO_THROW(ros2_comms.connect());
+
+  // Invalid topic name (contains invalid characters) should throw
+  ASSERT_THROW(
+    ros2_comms.subscribe(
+      "invalid topic with spaces",
+      [](const std::string&, const std::string&) {}, 0),
+    std::exception)
+    << "subscribe() should throw for invalid topic names";
+}
+
+TEST_F(Ros2CommunicationTest, PublishWithInvalidTopicThrows)
+{
+  // ROS2 throws for invalid topic names when creating publisher
+  auto test_node = std::make_shared<rclcpp::Node>("test_invalid_pub_topic");
+  auto ros2_comms = Ros2Communication(test_node, "test_id");
+  ASSERT_NO_THROW(ros2_comms.connect());
+
+  // Invalid topic name should throw when trying to publish
+  ASSERT_THROW(
+    ros2_comms.send_message("invalid topic with spaces", "{}", 0),
+    std::exception)
+    << "send_message() should throw for invalid topic names";
+}
+
+TEST_F(Ros2CommunicationTest, SendMessageAfterNodeShutdownThrows)
+{
+  // Create a node with its own context so we can shutdown independently
+  auto context = std::make_shared<rclcpp::Context>();
+  context->init(0, nullptr);
+
+  rclcpp::NodeOptions options;
+  options.context(context);
+  auto test_node =
+    std::make_shared<rclcpp::Node>("test_shutdown_node", options);
+
+  auto ros2_comms = Ros2Communication(test_node, "test_id");
+  ASSERT_NO_THROW(ros2_comms.connect());
+  ASSERT_EQ(ros2_comms.get_state(), ConnectionState::CONNECTED);
+
+  // Shutdown the context externally - state is still CONNECTED
+  context->shutdown("test shutdown");
+
+  // Attempting to send should throw since node context is shutdown
+  ASSERT_THROW(ros2_comms.send_message("/test/topic", "{}", 0), std::exception)
+    << "send_message() should throw when node context is shutdown";
+}
+
 // TEST_F(Ros2CommunicationTest, QoSReliableTest)
 // {
 //   std::string topic = "/test/ros2/qos_reliable";
