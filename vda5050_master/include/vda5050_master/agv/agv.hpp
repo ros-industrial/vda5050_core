@@ -38,13 +38,16 @@
 class VDA5050Master;
 
 /**
- * @brief AGV connection status based on connection heartbeat
+ * @brief AGV connection state based on VDA5050 connection message
+ *
+ * Maps directly to the connectionState field in VDA5050 connection messages.
+ * Values: ONLINE, OFFLINE, CONNECTIONBROKEN
  */
-enum class AGVConnection
+enum class AGVConnectionState
 {
-  CONNECTED,          // Connection heartbeat is being received
-  DISCONNECTED,       // Explicit disconnect() call
-  CONNECTION_DROPPED  // Connection heartbeat timed out
+  ONLINE,   // AGV reports connectionState: "ONLINE"
+  OFFLINE,  // AGV reports connectionState: "OFFLINE"
+  CONNECTIONBROKEN  // AGV reports connectionState: "CONNECTIONBROKEN" or heartbeat timeout
 };
 
 /**
@@ -162,10 +165,10 @@ public:
   bool is_connected() const;
 
   /**
-   * @brief Get the AGV connection status (based on connection heartbeat)
-   * @return CONNECTED, DISCONNECTED, or CONNECTION_DROPPED
+   * @brief Get the AGV connection state (based on VDA5050 connection message)
+   * @return ONLINE, OFFLINE, or CONNECTIONBROKEN
    */
-  AGVConnection get_connection_status() const;
+  AGVConnectionState get_connection_status() const;
 
   /**
    * @brief Get the AGV operational state (based on state heartbeat)
@@ -335,11 +338,11 @@ private:
 
   // AGV states (protected by state_mutex_)
   mutable std::mutex state_mutex_;
-  AGVConnection connection_status_{AGVConnection::DISCONNECTED};
+  AGVConnectionState connection_status_{AGVConnectionState::CONNECTIONBROKEN};
   AGVState operational_state_{AGVState::STATE_UNKNOWN};
 
   // Internal state setters (called by heartbeat callbacks)
-  void set_connection_status(AGVConnection status);
+  void set_connection_status(AGVConnectionState status);
   void set_operational_state(AGVState state);
 
   // Heartbeat timeout callbacks

@@ -119,7 +119,7 @@ void AGV::disconnect()
   }
 
   // Set explicit disconnect state
-  set_connection_status(AGVConnection::DISCONNECTED);
+  set_connection_status(AGVConnectionState::CONNECTIONBROKEN);
 }
 
 bool AGV::is_connected() const
@@ -131,7 +131,7 @@ bool AGV::is_connected() const
   return false;
 }
 
-AGVConnection AGV::get_connection_status() const
+AGVConnectionState AGV::get_connection_status() const
 {
   std::lock_guard<std::mutex> lock(state_mutex_);
   return connection_status_;
@@ -143,26 +143,10 @@ AGVState AGV::get_operational_state() const
   return operational_state_;
 }
 
-void AGV::set_connection_status(AGVConnection status)
+void AGV::set_connection_status(AGVConnectionState status)
 {
   std::lock_guard<std::mutex> lock(state_mutex_);
   connection_status_ = status;
-
-  const char* status_str = "UNKNOWN";
-  switch (status)
-  {
-    case AGVConnection::CONNECTED:
-      status_str = "CONNECTED";
-      break;
-    case AGVConnection::DISCONNECTED:
-      status_str = "DISCONNECTED";
-      break;
-    case AGVConnection::CONNECTION_DROPPED:
-      status_str = "CONNECTION_DROPPED";
-      break;
-  }
-  VDA5050_INFO(
-    "[AGV] Connection status changed to {} for {}", status_str, agv_id_);
 }
 
 void AGV::set_operational_state(AGVState state)
@@ -192,7 +176,7 @@ void AGV::set_operational_state(AGVState state)
 
 void AGV::on_connection_heartbeat_timeout()
 {
-  set_connection_status(AGVConnection::CONNECTION_DROPPED);
+  set_connection_status(AGVConnectionState::CONNECTIONBROKEN);
   VDA5050_WARN("[AGV] Connection heartbeat timeout for {}", agv_id_);
 }
 
@@ -214,12 +198,34 @@ void AGV::update_connection(const vda5050_msgs::msg::Connection& msg)
     last_connection_time_ = Clock::now();
   }
 
-  // Notify heartbeat listener and update status
+  // Notify heartbeat listener
   if (connection_heartbeat_)
   {
     connection_heartbeat_->received_connection();
   }
-  set_connection_status(AGVConnection::CONNECTED);
+
+  // Update connection status based on the connectionState field in the message
+  AGVConnectionState new_status = AGVConnectionState::CONNECTIONBROKEN;
+  if (msg.connection_state == "ONLINE")
+  {
+    new_status = AGVConnectionState::ONLINE;
+  }
+  else if (msg.connection_state == "OFFLINE")
+  {
+    new_status = AGVConnectionState::OFFLINE;
+  }
+  else if (msg.connection_state == "CONNECTIONBROKEN")
+  {
+    new_status = AGVConnectionState::CONNECTIONBROKEN;
+  }
+  else
+  {
+    VDA5050_WARN(
+      "[AGV] Unknown connectionState '{}' for {}, defaulting to "
+      "CONNECTIONBROKEN",
+      msg.connection_state, agv_id_);
+  }
+  set_connection_status(new_status);
 }
 
 void AGV::update_state(const vda5050_msgs::msg::State& msg)
