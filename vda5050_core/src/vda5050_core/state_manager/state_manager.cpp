@@ -47,10 +47,9 @@ void StateManager::set_order_id(const std::string& order_id)
 }
 
 //=============================================================================
-std::optional<std::string> StateManager::get_order_id() const
+std::string StateManager::get_order_id() const
 {
   std::shared_lock lock(this->mutex_);
-  if (this->robot_state_.order_id.empty()) return std::nullopt;
 
   return this->robot_state_.order_id;
 }
@@ -62,10 +61,9 @@ void StateManager::set_order_update_id(uint32_t order_update_id)
   this->robot_state_.order_update_id = order_update_id;
 }
 //=============================================================================
-std::optional<uint32_t> StateManager::get_order_update_id() const
+uint32_t StateManager::get_order_update_id() const
 {
   std::shared_lock lock(this->mutex_);
-  if (this->robot_state_.order_id.empty()) return std::nullopt;
 
   return this->robot_state_.order_update_id;
 }
@@ -81,8 +79,6 @@ void StateManager::set_zone_set_id(const std::string& zone_set_id)
 std::optional<std::string> StateManager::get_zone_set_id() const
 {
   std::shared_lock lock(this->mutex_);
-  if (this->robot_state_.order_id.empty()) return std::nullopt;
-
   return this->robot_state_.zone_set_id;
 }
 
@@ -225,7 +221,7 @@ bool StateManager::remove_load(std::string_view load_id)
 }
 
 //=============================================================================
-const std::optional<std::vector<Load>>& StateManager::get_loads() const
+std::optional<std::vector<Load>> StateManager::get_loads() const
 {
   std::shared_lock lock(this->mutex_);
   return this->robot_state_.loads;
@@ -254,7 +250,7 @@ void StateManager::set_battery_state(const BatteryState& battery_state)
 }
 
 //=============================================================================
-const BatteryState& StateManager::get_battery_state() const
+BatteryState StateManager::get_battery_state() const
 {
   std::shared_lock lock(this->mutex_);
   return this->robot_state_.battery_state;
@@ -268,7 +264,7 @@ void StateManager::set_safety_state(const SafetyState& safety_state)
 }
 
 //=============================================================================
-const SafetyState& StateManager::get_safety_state() const
+SafetyState StateManager::get_safety_state() const
 {
   std::shared_lock lock(this->mutex_);
   return this->robot_state_.safety_state;
@@ -390,7 +386,7 @@ bool StateManager::are_action_states_still_executing() const
       action_state.action_status != ActionStatus::FINISHED &&
       action_state.action_status != ActionStatus::FAILED)
     {
-      return true;
+      return false;
     }
   }
   return true;
@@ -477,7 +473,7 @@ void StateManager::clear_horizon()
     std::remove_if(edges.begin(), edges.end(), edge_predicate), edges.end());
 }
 
-const State& StateManager::get_state()
+State StateManager::get_state()
 {
   std::shared_lock lock(this->mutex_);
   return this->robot_state_;

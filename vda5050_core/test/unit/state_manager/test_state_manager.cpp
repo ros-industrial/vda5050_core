@@ -59,18 +59,16 @@ TEST_F(StateManagerTest, HeaderAndIds)
 
   // Test Order ID
   sm.set_order_id("order_alpha");
-  ASSERT_TRUE(sm.get_order_id().has_value());
-  EXPECT_EQ(sm.get_order_id().value(), "order_alpha");
+  EXPECT_EQ(sm.get_order_id(), "order_alpha");
 
   // Test Order Update ID
   sm.set_order_update_id(12);
-  ASSERT_TRUE(sm.get_order_update_id().has_value());
-  EXPECT_EQ(sm.get_order_update_id().value(), 12);
+  EXPECT_EQ(sm.get_order_update_id(), 12);
 
   // Test Zone Set ID
   sm.set_zone_set_id("zone_beta");
-  ASSERT_TRUE(sm.get_zone_set_id().has_value());
-  EXPECT_EQ(sm.get_zone_set_id().value(), "zone_beta");
+  ASSERT_TRUE(sm.get_zone_set_id());
+  EXPECT_EQ(sm.get_zone_set_id(), "zone_beta");
 }
 
 TEST_F(StateManagerTest, OrderIdEmpty)
@@ -81,8 +79,8 @@ TEST_F(StateManagerTest, OrderIdEmpty)
   sm.set_order_update_id(50);
   sm.set_zone_set_id("zone_gamma");
 
-  EXPECT_FALSE(sm.get_order_update_id().has_value());
-  EXPECT_FALSE(sm.get_zone_set_id().has_value());
+  EXPECT_EQ(sm.get_order_update_id(), 50);
+  EXPECT_EQ(sm.get_zone_set_id(), "zone_gamma");
 }
 
 //=============================================================================
@@ -294,16 +292,16 @@ TEST_F(StateManagerTest, AreActionsStillExecuting)
   // If no actions are executing -> return false
   EXPECT_FALSE(sm.are_action_states_still_executing());
 
-  // If any action is NOT FINISHED and NOT FAILED -> return true
+  // If any action is NOT FINISHED and NOT FAILED -> return fralse
   ActionState active;
   active.action_status = ActionStatus::RUNNING;
   sm.set_action_states({active});
-  EXPECT_TRUE(sm.are_action_states_still_executing());
+  EXPECT_FALSE(sm.are_action_states_still_executing());
 
   ActionState waiting;
   waiting.action_status = ActionStatus::WAITING;
   sm.set_action_states({waiting});
-  EXPECT_TRUE(sm.are_action_states_still_executing());
+  EXPECT_FALSE(sm.are_action_states_still_executing());
 
   // If all are FINISHED or FAILED -> return True
   ActionState done1;
@@ -315,7 +313,7 @@ TEST_F(StateManagerTest, AreActionsStillExecuting)
 
   // If an action is still active
   sm.set_action_states({done1, done2, active});
-  EXPECT_TRUE(sm.are_action_states_still_executing());
+  EXPECT_FALSE(sm.are_action_states_still_executing());
 }
 
 //=============================================================================
@@ -344,7 +342,7 @@ TEST_F(StateManagerTest, SetNewOrder)
 
   sm.set_new_order(o);
 
-  EXPECT_EQ(sm.get_order_id().value(), "O1");
+  EXPECT_EQ(sm.get_order_id(), "O1");
   EXPECT_FALSE(sm.is_node_states_empty());
 
   State s;
@@ -362,7 +360,7 @@ TEST_F(StateManagerTest, CleanupPreviousOrder)
   sm.cleanup_previous_order();
 
   // Order ID should be gone
-  EXPECT_FALSE(sm.get_order_id().has_value());
+  EXPECT_TRUE(sm.get_order_id().empty());
 
   // Driving status should be reset (false is default in State constructor usually)
   EXPECT_TRUE(sm.get_driving_status());

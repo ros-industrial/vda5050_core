@@ -82,7 +82,7 @@ public:
 
   /// \brief get the current order_id
   /// \return order_id of the current order
-  std::optional<std::string> get_order_id() const;
+  std::string get_order_id() const;
 
   /// \brief set the current order_update_id
   /// \param order_update_id the current order update_id to set
@@ -90,7 +90,7 @@ public:
 
   /// \brief get the current order_update_id
   /// \return order_update_id of the current order
-  std::optional<uint32_t> get_order_update_id() const;
+  uint32_t get_order_update_id() const;
 
   /// \brief set the current zone_set_id
   /// \param zone_set_id zone_set_id the current order to set
@@ -166,7 +166,7 @@ public:
 
   /// \brief Get the current loads
   /// \return const std::vector<Load>& the current loads
-  const std::optional<std::vector<Load>>& get_loads() const;
+  std::optional<std::vector<Load>> get_loads() const;
 
   /// \brief Set the current operating mode of the AGV
   /// \param operating_mode the new operating mode
@@ -183,7 +183,7 @@ public:
 
   /// \brief Get the current battery state from the state
   /// \return const BatteryState& the current battery state
-  const BatteryState& get_battery_state() const;
+  BatteryState get_battery_state() const;
 
   /// \brief Set the current safety state of the AGV
   /// \param safety_state the safety state
@@ -192,7 +192,7 @@ public:
 
   /// \brief Get the current safety state from the state
   /// \return const SafetyState& the current safety state
-  const SafetyState& get_safety_state() const;
+  SafetyState get_safety_state() const;
 
   /// \brief Set the request new base flag
   /// \param request_new_base is AGV requesting for new base
@@ -250,7 +250,7 @@ public:
 
   /// @brief Get the current robot state.
   /// @return const State& the current robot state.
-  const State& get_state();
+  State get_state();
 };
 
 }  // namespace state_manager
