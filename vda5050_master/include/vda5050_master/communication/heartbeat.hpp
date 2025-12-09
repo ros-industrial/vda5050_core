@@ -46,10 +46,10 @@ enum class HeartbeatState
   STOPPING  // Stop in progress, cleanup ongoing
 };
 
-class ConnectionHeartbeatListener
+class HeartbeatListener
 {
 public:
-  ConnectionHeartbeatListener(
+  HeartbeatListener(
     const std::string& id, const int heartbeat_interval,
     std::function<void()> disconnection_callback)
   : id_(id),
@@ -68,8 +68,7 @@ public:
       VDA5050_INFO("Starting Connection heartbeat listener");
       state_ = HeartbeatState::RUNNING;
     }
-    connection_thread_ =
-      std::thread(&ConnectionHeartbeatListener::listen, this);
+    connection_thread_ = std::thread(&HeartbeatListener::listen, this);
   }
 
   void received_connection()
@@ -92,10 +91,10 @@ public:
     return last_connection_report_;
   }
 
-  ~ConnectionHeartbeatListener()
+  ~HeartbeatListener()
   {
     stop_connection_heartbeat();
-    VDA5050_INFO("[" + id_ + "] Deconstructing ConnectionHeartbeatListener");
+    VDA5050_INFO("[" + id_ + "] Deconstructing HeartbeatListener");
   }
 
   /**

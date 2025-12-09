@@ -38,7 +38,16 @@ AGV::AGV(
   communication_(std::move(communication)),
   registered_time_(Clock::now()),
   max_queue_size_(max_queue_size),
-  drop_oldest_(drop_oldest)
+  drop_oldest_(drop_oldest),
+  state_heartbeat_(
+    std::make_unique<vda5050_master::communication::HeartbeatListener>(
+      agv_id_ + "_state_heartbeat", vda5050_master::StateHeartbeatInterval,
+      [this]() { on_state_heartbeat_timeout(); })),
+  connection_heartbeat_(
+    std::make_unique<vda5050_master::communication::HeartbeatListener>(
+      agv_id_ + "_connection_heartbeat",
+      vda5050_master::ConnectionHeartbeatInterval,
+      [this]() { on_connection_heartbeat_timeout(); }))
 {
   // Start the queue processing thread
   queue_thread_ = std::thread(&AGV::process_queues, this);
@@ -46,6 +55,16 @@ AGV::AGV(
 
 AGV::~AGV()
 {
+  // Stop heartbeat listeners first (they may call state setters)
+  if (connection_heartbeat_)
+  {
+    connection_heartbeat_->stop_connection_heartbeat();
+  }
+  if (state_heartbeat_)
+  {
+    state_heartbeat_->stop_connection_heartbeat();
+  }
+
   // Signal the queue thread to stop
   {
     std::lock_guard<std::mutex> lock(queue_mutex_);
@@ -70,14 +89,37 @@ void AGV::connect()
   {
     communication_->connect();
   }
+
+  // Start heartbeat listeners
+  if (connection_heartbeat_)
+  {
+    connection_heartbeat_->start_connection_heartbeat();
+  }
+  if (state_heartbeat_)
+  {
+    state_heartbeat_->start_connection_heartbeat();
+  }
 }
 
 void AGV::disconnect()
 {
+  // Stop heartbeat listeners
+  if (connection_heartbeat_)
+  {
+    connection_heartbeat_->stop_connection_heartbeat();
+  }
+  if (state_heartbeat_)
+  {
+    state_heartbeat_->stop_connection_heartbeat();
+  }
+
   if (communication_)
   {
     communication_->disconnect();
   }
+
+  // Set explicit disconnect state
+  set_connection_status(AGVConnection::DISCONNECTED);
 }
 
 bool AGV::is_connected() const
@@ -89,22 +131,111 @@ bool AGV::is_connected() const
   return false;
 }
 
+AGVConnection AGV::get_connection_status() const
+{
+  std::lock_guard<std::mutex> lock(state_mutex_);
+  return connection_status_;
+}
+
+AGVState AGV::get_operational_state() const
+{
+  std::lock_guard<std::mutex> lock(state_mutex_);
+  return operational_state_;
+}
+
+void AGV::set_connection_status(AGVConnection status)
+{
+  std::lock_guard<std::mutex> lock(state_mutex_);
+  connection_status_ = status;
+
+  const char* status_str = "UNKNOWN";
+  switch (status)
+  {
+    case AGVConnection::CONNECTED:
+      status_str = "CONNECTED";
+      break;
+    case AGVConnection::DISCONNECTED:
+      status_str = "DISCONNECTED";
+      break;
+    case AGVConnection::CONNECTION_DROPPED:
+      status_str = "CONNECTION_DROPPED";
+      break;
+  }
+  VDA5050_INFO(
+    "[AGV] Connection status changed to {} for {}", status_str, agv_id_);
+}
+
+void AGV::set_operational_state(AGVState state)
+{
+  std::lock_guard<std::mutex> lock(state_mutex_);
+  operational_state_ = state;
+
+  const char* state_str = "UNKNOWN";
+  switch (state)
+  {
+    case AGVState::STATE_UNKNOWN:
+      state_str = "STATE_UNKNOWN";
+      break;
+    case AGVState::ONLINE:
+      state_str = "ONLINE";
+      break;
+    case AGVState::OFFLINE:
+      state_str = "OFFLINE";
+      break;
+    case AGVState::ERROR:
+      state_str = "ERROR";
+      break;
+  }
+  VDA5050_INFO(
+    "[AGV] Operational state changed to {} for {}", state_str, agv_id_);
+}
+
+void AGV::on_connection_heartbeat_timeout()
+{
+  set_connection_status(AGVConnection::CONNECTION_DROPPED);
+  VDA5050_WARN("[AGV] Connection heartbeat timeout for {}", agv_id_);
+}
+
+void AGV::on_state_heartbeat_timeout()
+{
+  set_operational_state(AGVState::STATE_UNKNOWN);
+  VDA5050_WARN("[AGV] State heartbeat timeout for {}", agv_id_);
+}
+
 // ============================================================================
 // Cached Messages - Update
 // ============================================================================
 
 void AGV::update_connection(const vda5050_msgs::msg::Connection& msg)
 {
-  std::lock_guard<std::mutex> lock(data_mutex_);
-  last_connection_ = msg;
-  last_connection_time_ = Clock::now();
+  {
+    std::lock_guard<std::mutex> lock(data_mutex_);
+    last_connection_ = msg;
+    last_connection_time_ = Clock::now();
+  }
+
+  // Notify heartbeat listener and update status
+  if (connection_heartbeat_)
+  {
+    connection_heartbeat_->received_connection();
+  }
+  set_connection_status(AGVConnection::CONNECTED);
 }
 
 void AGV::update_state(const vda5050_msgs::msg::State& msg)
 {
-  std::lock_guard<std::mutex> lock(data_mutex_);
-  last_state_ = msg;
-  last_state_time_ = Clock::now();
+  {
+    std::lock_guard<std::mutex> lock(data_mutex_);
+    last_state_ = msg;
+    last_state_time_ = Clock::now();
+  }
+
+  // Notify heartbeat listener and update state
+  if (state_heartbeat_)
+  {
+    state_heartbeat_->received_connection();
+  }
+  set_operational_state(AGVState::ONLINE);
 }
 
 void AGV::update_factsheet(const vda5050_msgs::msg::Factsheet& msg)

@@ -31,10 +31,32 @@
 #include <thread>
 
 #include "vda5050_master/communication/communication.hpp"
+#include "vda5050_master/communication/heartbeat.hpp"
 #include "vda5050_master/vda5050_interfaces.hpp"
 
 // Forward declaration
 class VDA5050Master;
+
+/**
+ * @brief AGV connection status based on connection heartbeat
+ */
+enum class AGVConnection
+{
+  CONNECTED,          // Connection heartbeat is being received
+  DISCONNECTED,       // Explicit disconnect() call
+  CONNECTION_DROPPED  // Connection heartbeat timed out
+};
+
+/**
+ * @brief AGV operational state based on state heartbeat
+ */
+enum class AGVState
+{
+  STATE_UNKNOWN,  // Initial state or state heartbeat timed out
+  ONLINE,         // State heartbeat is being received, AGV operational
+  OFFLINE,        // AGV reported offline
+  ERROR           // AGV reported error state
+};
 
 /**
  * @brief Represents an individual AGV managed by VDA5050Master
@@ -138,6 +160,18 @@ public:
    * @brief Check if the AGV is connected
    */
   bool is_connected() const;
+
+  /**
+   * @brief Get the AGV connection status (based on connection heartbeat)
+   * @return CONNECTED, DISCONNECTED, or CONNECTION_DROPPED
+   */
+  AGVConnection get_connection_status() const;
+
+  /**
+   * @brief Get the AGV operational state (based on state heartbeat)
+   * @return STATE_UNKNOWN, ONLINE, OFFLINE, or ERROR
+   */
+  AGVState get_operational_state() const;
 
   /**
    * @brief Setup VDA5050 topic subscriptions for this AGV
@@ -294,6 +328,23 @@ private:
 
   // Communication
   std::unique_ptr<ICommunicationStrategy> communication_;
+  std::unique_ptr<vda5050_master::communication::HeartbeatListener>
+    state_heartbeat_;
+  std::unique_ptr<vda5050_master::communication::HeartbeatListener>
+    connection_heartbeat_;
+
+  // AGV states (protected by state_mutex_)
+  mutable std::mutex state_mutex_;
+  AGVConnection connection_status_{AGVConnection::DISCONNECTED};
+  AGVState operational_state_{AGVState::STATE_UNKNOWN};
+
+  // Internal state setters (called by heartbeat callbacks)
+  void set_connection_status(AGVConnection status);
+  void set_operational_state(AGVState state);
+
+  // Heartbeat timeout callbacks
+  void on_connection_heartbeat_timeout();
+  void on_state_heartbeat_timeout();
 
   // Timestamps
   TimePoint registered_time_;

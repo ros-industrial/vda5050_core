@@ -39,7 +39,7 @@ const int VisualizationQos = 0;
 const int InstantActionsQos = 1;
 
 const int ConnectionHeartbeatInterval = 15;  // seconds
-
+const int StateHeartbeatInterval = 30;       // seconds
 }  // namespace vda5050_master
 
 #endif  // VDA5050_MASTER__STANDARD_NAMES_HPP_
