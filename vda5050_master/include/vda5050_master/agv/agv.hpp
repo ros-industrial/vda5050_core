@@ -338,7 +338,7 @@ private:
 
   // AGV states (protected by state_mutex_)
   mutable std::mutex state_mutex_;
-  AGVConnectionState connection_status_{AGVConnectionState::CONNECTIONBROKEN};
+  AGVConnectionState connection_status_{AGVConnectionState::OFFLINE};
   AGVState operational_state_{AGVState::STATE_UNKNOWN};
 
   // Internal state setters (called by heartbeat callbacks)
