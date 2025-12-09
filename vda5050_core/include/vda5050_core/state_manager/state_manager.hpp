@@ -67,6 +67,9 @@ private:
   /// \brief Internal State of the AGV
   State robot_state_;
 
+  /// \brief Clear current robot order state
+  void cleanup();
+
 public:
   /// \brief set the AGV state header
   /// \param header of the the AGV

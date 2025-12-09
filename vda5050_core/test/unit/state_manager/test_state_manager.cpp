@@ -426,3 +426,161 @@ TEST_F(StateManagerTest, DumpToAndGetState)
   EXPECT_EQ(s_ref.order_id, "dump_id");
   EXPECT_EQ(s_ref.last_node_sequence_id, 99);
 }
+
+TEST_F(StateManagerTest, AssignAllFieldsFromPreviousTests_DumpEqualsExpected)
+{
+  // Create a VDA5050 State
+  State expected;
+
+  Header h;
+  h.header_id = 999;
+  expected.header = h;
+  expected.order_id = "order_alpha";
+  expected.order_update_id = 12u;
+  expected.zone_set_id = std::optional<std::string>("zone_beta");
+
+  expected.last_node_id = "node_start";
+  expected.last_node_sequence_id = 5u;
+
+  AGVPosition pos;
+  pos.x = 10.0;
+  pos.y = 20.0;
+  pos.theta = 1.57;
+  pos.map_id = "map_1";
+  expected.agv_position = pos;
+
+  Velocity vel;
+  vel.vx = 2.5;
+  vel.omega = 0.5;
+  expected.velocity = vel;
+  expected.driving =
+    true;  // we'll toggle later to exercise both true/false in manager
+  expected.distance_since_last_node = std::optional<double>(12.5);
+
+  Load load1;
+  load1.load_id = "L1";
+  load1.load_type = "pallet";
+
+  Load load2;
+  load2.load_id = "L2";
+  load2.load_type = "box";
+  expected.loads = std::optional<std::vector<Load>>({load1, load2});
+  expected.operating_mode = OperatingMode::SEMIAUTOMATIC;
+
+  BatteryState bat;
+  bat.battery_charge = 0.95;
+  bat.charging = true;
+  expected.battery_state = bat;
+
+  SafetyState safe;
+  safe.e_stop = EStop::AUTOACK;
+  safe.field_violation = true;
+  expected.safety_state = safe;
+  expected.new_base_request = std::optional<bool>(true);
+
+  Error e1;
+  e1.error_type = "Hardware";
+  e1.error_level = ErrorLevel::FATAL;
+
+  Error e2;
+  e2.error_type = "Software";
+  e2.error_level = ErrorLevel::WARNING;
+  expected.errors = {e1, e2};
+
+  Info i1;
+  i1.info_type = "Status";
+  i1.info_description = "All Good";
+  expected.information = std::optional<std::vector<Info>>({i1});
+
+  ActionState as1;
+  as1.action_id = "a1";
+  as1.action_status = ActionStatus::WAITING;
+
+  ActionState as2;
+  as2.action_id = "a2";
+  as2.action_status = ActionStatus::RUNNING;
+  expected.action_states = {as1, as2};
+  expected.order_id = "O1";
+  expected.order_update_id = 0u;
+  expected.zone_set_id = std::optional<std::string>("Z1");
+
+  NodeState n1;
+  n1.node_id = "n1";
+
+  n1.released = true;
+  NodeState n2;
+
+  n2.node_id = "n2";
+  n2.released = false;
+  expected.node_states = {n1, n2};
+
+  EdgeState edge1;
+  edge1.edge_id = "e1";
+  edge1.released = true;
+  expected.edge_states = {edge1};
+  expected.last_node_id = "keep_me";
+
+  // Create a VDA50500 order
+
+  sm.set_header(h);
+
+  Order order;
+  order.order_id = "O1";
+  order.order_update_id = 0;
+  order.zone_set_id = "Z1";
+
+  Node on1;
+  on1.node_id = "n1";
+  on1.sequence_id = n1.sequence_id;
+  on1.node_description = n1.node_description;
+  on1.node_position = n1.node_position;
+  on1.released = n1.released;
+  Node on2;
+  on2.node_id = "n2";
+  on2.sequence_id = n2.sequence_id;
+  on2.node_description = n2.node_description;
+  on2.node_position = n2.node_position;
+  on2.released = n2.released;
+  order.nodes = {on1, on2};
+
+  Edge oe1;
+  oe1.edge_id = "e1";
+  oe1.sequence_id = edge1.sequence_id;
+  oe1.edge_description = edge1.edge_description;
+  oe1.trajectory = edge1.trajectory;
+  oe1.released = edge1.released;
+  order.edges = {oe1};
+
+  // Assign values rto State Manager
+  sm.set_new_order(order);
+  sm.set_last_node_id(expected.last_node_id);
+  sm.set_last_node_sequence_id(expected.last_node_sequence_id);
+  sm.set_agv_position(pos);
+  sm.set_velocity(vel);
+  sm.set_load({});
+  sm.add_load(load1);
+  sm.add_load(load2);
+  sm.set_driving_status(true);
+  sm.set_distance_since_last_node(*expected.distance_since_last_node);
+  sm.set_request_new_base(*expected.new_base_request);
+  sm.set_action_states(expected.action_states);
+  sm.set_battery_state(expected.battery_state);
+  sm.set_operating_mode(expected.operating_mode);
+  sm.clear_errors();
+  sm.add_error(e1);
+  sm.add_error(e2);
+  sm.clear_info();
+  sm.add_info(i1);
+  sm.set_safety_state(expected.safety_state);
+  State actual;
+  sm.dump_to(actual);
+
+  // Use VDA5050 type equality operator to test (check for assignment)
+  EXPECT_EQ(actual, expected)
+    << "StateManager::dump_to produced a state different from expected.";
+
+  // check get state (return by value)
+  State ref = sm.get_state();
+  EXPECT_EQ(ref, expected)
+    << "StateManager::get_state returned a state different from expected.";
+}

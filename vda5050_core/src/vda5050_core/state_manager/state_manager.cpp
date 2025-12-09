@@ -397,27 +397,7 @@ void StateManager::cleanup_previous_order()
 
 {
   std::unique_lock lock(this->mutex_);
-  Header prev_header = this->robot_state_.header;
-  std::string last_node_id = this->robot_state_.last_node_id;
-  std::optional<AGVPosition> prev_agv_position =
-    this->robot_state_.agv_position;
-  std::optional<Velocity> prev_velocity = this->robot_state_.velocity;
-  bool prev_driving = this->robot_state_.driving;
-  std::optional<bool> prev_paused = this->robot_state_.paused;
-  BatteryState prev_battery_state = this->robot_state_.battery_state;
-  OperatingMode prev_operating_mode = this->robot_state_.operating_mode;
-  SafetyState prev_safety_state = this->robot_state_.safety_state;
-
-  this->robot_state_ = State();
-  this->robot_state_.header = prev_header;
-  this->robot_state_.last_node_id = last_node_id;
-  this->robot_state_.agv_position = prev_agv_position;
-  this->robot_state_.velocity = prev_velocity;
-  this->robot_state_.driving = prev_driving;
-  this->robot_state_.paused = prev_paused;
-  this->robot_state_.battery_state = prev_battery_state;
-  this->robot_state_.operating_mode = prev_operating_mode;
-  this->robot_state_.safety_state = prev_safety_state;
+  this->cleanup();
 }
 
 //=============================================================================
@@ -425,10 +405,7 @@ void StateManager::set_new_order(const Order& order)
 {
   std::unique_lock lock(this->mutex_);
 
-  // Temp fix to avoid deadlock
-  std::string last_node_id = this->robot_state_.last_node_id;
-  this->robot_state_ = State();
-  this->robot_state_.last_node_id = last_node_id;
+  this->cleanup();
 
   this->robot_state_.order_id = order.order_id;
   this->robot_state_.order_update_id = order.order_update_id;
@@ -477,6 +454,31 @@ State StateManager::get_state()
 {
   std::shared_lock lock(this->mutex_);
   return this->robot_state_;
+}
+
+void StateManager::cleanup()
+{
+  Header prev_header = this->robot_state_.header;
+  std::string last_node_id = this->robot_state_.last_node_id;
+  std::optional<AGVPosition> prev_agv_position =
+    this->robot_state_.agv_position;
+  std::optional<Velocity> prev_velocity = this->robot_state_.velocity;
+  bool prev_driving = this->robot_state_.driving;
+  std::optional<bool> prev_paused = this->robot_state_.paused;
+  BatteryState prev_battery_state = this->robot_state_.battery_state;
+  OperatingMode prev_operating_mode = this->robot_state_.operating_mode;
+  SafetyState prev_safety_state = this->robot_state_.safety_state;
+
+  this->robot_state_ = State();
+  this->robot_state_.header = prev_header;
+  this->robot_state_.last_node_id = last_node_id;
+  this->robot_state_.agv_position = prev_agv_position;
+  this->robot_state_.velocity = prev_velocity;
+  this->robot_state_.driving = prev_driving;
+  this->robot_state_.paused = prev_paused;
+  this->robot_state_.battery_state = prev_battery_state;
+  this->robot_state_.operating_mode = prev_operating_mode;
+  this->robot_state_.safety_state = prev_safety_state;
 }
 
 }  // namespace state_manager
