@@ -118,8 +118,8 @@ void AGV::disconnect()
     communication_->disconnect();
   }
 
-  // Set explicit disconnect state
-  set_connection_status(AGVConnectionState::CONNECTIONBROKEN);
+  // Set explicit disconnect state to OFFLINE (intentional disconnection)
+  set_connection_status(AGVConnectionState::OFFLINE);
 }
 
 bool AGV::is_connected() const
