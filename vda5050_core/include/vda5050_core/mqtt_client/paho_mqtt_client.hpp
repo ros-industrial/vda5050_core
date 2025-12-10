@@ -149,6 +149,7 @@ private:
   /// \brief Mutex protecting list of message handlers
   std::mutex handler_mutex_;
 
+  /// \brief MQTT connection options
   mqtt::connect_options conn_options_;
 };
 
