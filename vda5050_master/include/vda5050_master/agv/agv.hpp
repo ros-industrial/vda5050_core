@@ -57,8 +57,8 @@ enum class AGVConnectionState
 enum class AGVState
 {
   STATE_UNKNOWN,  // Initial state or state heartbeat timed out
-  ONLINE,         // State heartbeat is being received, AGV operational
-  OFFLINE,        // AGV reported offline
+  AVAILABLE,      // State heartbeat is being received, AGV operational
+  UNAVAILABLE,    // AGV reported unavailable
   ERROR           // AGV reported error state
 };
 

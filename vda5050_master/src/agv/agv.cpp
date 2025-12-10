@@ -147,6 +147,21 @@ void AGV::set_connection_status(AGVConnectionState status)
 {
   std::lock_guard<std::mutex> lock(state_mutex_);
   connection_status_ = status;
+
+  // When connection is lost, AGV becomes unavailable
+  if (
+    status == AGVConnectionState::OFFLINE ||
+    status == AGVConnectionState::CONNECTIONBROKEN)
+  {
+    if (operational_state_ != AGVState::UNAVAILABLE)
+    {
+      operational_state_ = AGVState::UNAVAILABLE;
+      VDA5050_INFO(
+        "[AGV] Operational state changed to UNAVAILABLE for {} (connection {})",
+        agv_id_,
+        status == AGVConnectionState::OFFLINE ? "OFFLINE" : "CONNECTIONBROKEN");
+    }
+  }
 }
 
 void AGV::set_operational_state(AGVState state)
@@ -160,11 +175,11 @@ void AGV::set_operational_state(AGVState state)
     case AGVState::STATE_UNKNOWN:
       state_str = "STATE_UNKNOWN";
       break;
-    case AGVState::ONLINE:
-      state_str = "ONLINE";
+    case AGVState::AVAILABLE:
+      state_str = "AVAILABLE";
       break;
-    case AGVState::OFFLINE:
-      state_str = "OFFLINE";
+    case AGVState::UNAVAILABLE:
+      state_str = "UNAVAILABLE";
       break;
     case AGVState::ERROR:
       state_str = "ERROR";
@@ -241,7 +256,7 @@ void AGV::update_state(const vda5050_msgs::msg::State& msg)
   {
     state_heartbeat_->received_connection();
   }
-  set_operational_state(AGVState::ONLINE);
+  set_operational_state(AGVState::AVAILABLE);
 }
 
 void AGV::update_factsheet(const vda5050_msgs::msg::Factsheet& msg)

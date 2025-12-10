@@ -78,6 +78,8 @@ inline bool is_broker_available()
       MQTT_BROKER, "availability_check_client");
     client->connect();
     client->disconnect();
+    // Small delay to allow Paho MQTT library to complete cleanup
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     available = true;
   }
   catch (...)
