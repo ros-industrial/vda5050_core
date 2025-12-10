@@ -80,6 +80,8 @@ if(BUILD_TESTING)
   # AGV unit tests (no external dependencies like MQTT broker)
   ament_add_gmock(test_agv
     test/agv/agv_test.cpp
+    test/agv/agv_connection_state_test.cpp
+    test/agv/agv_operational_state_test.cpp
   )
   target_link_libraries(test_agv vda5050_master)
 
