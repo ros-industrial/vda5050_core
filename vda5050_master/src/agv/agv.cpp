@@ -31,7 +31,8 @@
 AGV::AGV(
   const std::string& manufacturer, const std::string& serial_number,
   std::unique_ptr<ICommunicationStrategy> communication, size_t max_queue_size,
-  bool drop_oldest)
+  bool drop_oldest, int connection_heartbeat_interval,
+  int state_heartbeat_interval)
 : manufacturer_(manufacturer),
   serial_number_(serial_number),
   agv_id_(manufacturer + "/" + serial_number),
@@ -41,12 +42,11 @@ AGV::AGV(
   drop_oldest_(drop_oldest),
   state_heartbeat_(
     std::make_unique<vda5050_master::communication::HeartbeatListener>(
-      agv_id_ + "_state_heartbeat", vda5050_master::StateHeartbeatInterval,
+      agv_id_ + "_state_heartbeat", state_heartbeat_interval,
       [this]() { on_state_heartbeat_timeout(); })),
   connection_heartbeat_(
     std::make_unique<vda5050_master::communication::HeartbeatListener>(
-      agv_id_ + "_connection_heartbeat",
-      vda5050_master::ConnectionHeartbeatInterval,
+      agv_id_ + "_connection_heartbeat", connection_heartbeat_interval,
       [this]() { on_connection_heartbeat_timeout(); }))
 {
   // Start the queue processing thread

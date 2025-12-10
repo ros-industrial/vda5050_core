@@ -32,6 +32,7 @@
 
 #include "vda5050_master/communication/communication.hpp"
 #include "vda5050_master/communication/heartbeat.hpp"
+#include "vda5050_master/standard_names.hpp"
 #include "vda5050_master/vda5050_interfaces.hpp"
 
 // Forward declaration
@@ -100,11 +101,16 @@ public:
    * @param communication Communication strategy for this AGV
    * @param max_queue_size Maximum number of outgoing messages to queue (default: 10)
    * @param drop_oldest If true, drop oldest message when queue full; if false, reject new message (default: true)
+   * @param connection_heartbeat_interval Connection heartbeat timeout in seconds
+   * @param state_heartbeat_interval State heartbeat timeout in seconds
    */
   AGV(
     const std::string& manufacturer, const std::string& serial_number,
     std::unique_ptr<ICommunicationStrategy> communication,
-    size_t max_queue_size = DEFAULT_MAX_QUEUE_SIZE, bool drop_oldest = true);
+    size_t max_queue_size = DEFAULT_MAX_QUEUE_SIZE, bool drop_oldest = true,
+    int connection_heartbeat_interval =
+      vda5050_master::ConnectionHeartbeatInterval,
+    int state_heartbeat_interval = vda5050_master::StateHeartbeatInterval);
 
   /**
    * @brief Destructor - stops the queue processing thread
