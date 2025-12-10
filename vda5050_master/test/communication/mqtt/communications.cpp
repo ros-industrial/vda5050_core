@@ -31,13 +31,22 @@ using vda5050_master::test::make_test_topic;
 using vda5050_master::test::verify_messages_in_order;
 using vda5050_master::test::wait_for_condition;
 using vda5050_master::test::constants::default_payload_json;
+using vda5050_master::test::mqtt::constants::is_broker_available;
 using vda5050_master::test::mqtt::constants::MQTT_BROKER;
 using vda5050_master::test::mqtt::constants::MQTT_POLL_INTERVAL;
+
 class MqttCommunicationTestFixture : public ::testing::Test
 {
 protected:
   void SetUp() override
   {
+    // Skip tests if MQTT broker is not available
+    if (!is_broker_available())
+    {
+      GTEST_SKIP() << "MQTT broker at " << MQTT_BROKER
+                   << " is not available. Skipping test.";
+    }
+
     broker_endpoint_ = MQTT_BROKER;
     qos_ = 0;
     container_ = std::make_shared<std::vector<std::string>>();

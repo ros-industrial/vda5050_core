@@ -26,6 +26,7 @@
 #include "vda5050_master/communication/mqtt.hpp"
 #include "vda5050_master/vda5050_master/master.hpp"
 
+using vda5050_master::test::mqtt::constants::is_broker_available;
 using vda5050_master::test::mqtt::constants::MQTT_BROKER;
 
 /**
@@ -94,6 +95,13 @@ class VDA5050MasterTest : public ::testing::Test
 protected:
   void SetUp() override
   {
+    // Skip tests if MQTT broker is not available
+    if (!is_broker_available())
+    {
+      GTEST_SKIP() << "MQTT broker at " << MQTT_BROKER
+                   << " is not available. Skipping test.";
+    }
+
     broker_endpoint_ = MQTT_BROKER;
     // Create a factory that creates MqttCommunication instances
     mqtt_factory_ = [this](const std::string& agv_id) {

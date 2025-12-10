@@ -22,17 +22,23 @@
 #include <chrono>
 #include <cstdlib>
 #include <functional>
+#include <memory>
 #include <string>
 #include <thread>
 #include <vector>
 
 #include "nlohmann/json.hpp"
+#include "vda5050_core/mqtt_client/mqtt_client_interface.hpp"
 
 namespace vda5050_master::test::mqtt {
 
 // Test constants
 namespace constants {
-constexpr auto MQTT_POLL_INTERVAL = std::chrono::milliseconds(50);
+// Increased poll interval for network latency with public brokers
+constexpr auto MQTT_POLL_INTERVAL = std::chrono::milliseconds(500);
+
+// Timeout for broker availability check
+constexpr auto BROKER_CHECK_TIMEOUT = std::chrono::seconds(5);
 
 // Allow overriding MQTT broker via environment variable
 // Default to localhost:1883 for local mosquitto broker
@@ -50,6 +56,37 @@ inline std::string get_mqtt_broker()
 
 // NOLINTNEXTLINE(runtime/string)
 const std::string MQTT_BROKER = get_mqtt_broker();
+
+// Check if MQTT broker is available
+// Returns true if connection succeeds, false otherwise
+inline bool is_broker_available()
+{
+  static bool checked = false;
+  static bool available = false;
+
+  // Cache result to avoid repeated connection attempts
+  if (checked)
+  {
+    return available;
+  }
+
+  checked = true;
+
+  try
+  {
+    auto client = vda5050_core::mqtt_client::create_default_client(
+      MQTT_BROKER, "availability_check_client");
+    client->connect();
+    client->disconnect();
+    available = true;
+  }
+  catch (...)
+  {
+    available = false;
+  }
+
+  return available;
+}
 }  // namespace constants
 }  // namespace vda5050_master::test::mqtt
 
