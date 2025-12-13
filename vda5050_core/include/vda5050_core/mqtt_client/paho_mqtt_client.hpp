@@ -112,6 +112,9 @@ public:
   void subscribe(
     const std::string& topic, MessageHandler handler, int qos) override;
 
+  // Documentation inherited from MqttClientInterface
+  void unsubscribe(const std::string& topic) override;
+
   friend class MqttCallback;
 
 private:

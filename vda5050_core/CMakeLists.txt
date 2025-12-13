@@ -35,17 +35,13 @@ target_include_directories(logger
 )
 
 add_library(client 
-  src/vda5050_core/client/order/order_graph_validator.cpp
-)
+  src/vda5050_core/state_manager/state_manager.cpp
+  src/vda5050_core/client/order/order_graph_validator.cpp)
 target_link_libraries(client
-  PRIVATE
-    vda5050_types::vda5050_types
-)
+  vda5050_types::vda5050_types)
 target_include_directories(client
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-)
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 add_library(vda5050_core INTERFACE)
 target_link_libraries(vda5050_core
@@ -112,21 +108,11 @@ if(BUILD_TESTING)
     test/unit/mqtt_client/test_mqtt_client_interface.cpp
     test/unit/logger/test_logger.cpp
     test/unit/logger/test_default_logger.cpp
+    test/unit/order_graph_validator/test_order_graph_validator.cpp
+    test/unit/state_manager/test_state_manager.cpp
     test/integration/mqtt_client/test_paho_mqtt_client.cpp
   )
-  target_link_libraries(test_mqtt_client mqtt_client logger)
-
-  ament_add_gtest(order_graph_validator_test
-    test/unit/order_graph_validator/test_order_graph_validator.cpp
-  )
-  target_link_libraries(order_graph_validator_test
-    vda5050_types::vda5050_types
-    client
-    logger
-  )
-  target_include_directories(order_graph_validator_test
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-           $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+  target_link_libraries(test_mqtt_client mqtt_client logger client)
 endif()
 
 ament_package()

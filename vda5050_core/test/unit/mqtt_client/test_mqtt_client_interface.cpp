@@ -32,6 +32,7 @@ public:
     (const std::string&,
      std::function<void(const std::string&, const std::string&)>, int),
     (override));
+  MOCK_METHOD(void, unsubscribe, (const std::string&), (override));
 };
 
 TEST(MqttClientInterfaceTest, ConnectCall)
@@ -61,4 +62,11 @@ TEST(MqttClientInterfaceTest, SubscribeTopic)
   auto cb = [](const std::string&, const std::string&) {};
   EXPECT_CALL(mock, subscribe("topic", testing::_, 0));
   mock.subscribe("topic", cb, 0);
+}
+
+TEST(MqttClientInterfaceTest, UnsubscribeTopic)
+{
+  MockMqttClient mock;
+  EXPECT_CALL(mock, unsubscribe("topic")).Times(1);
+  mock.unsubscribe("topic");
 }

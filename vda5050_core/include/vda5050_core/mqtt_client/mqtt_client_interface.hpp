@@ -57,6 +57,11 @@ public:
   /// \param qos Quality of service setting for the subscription
   virtual void subscribe(
     const std::string& topic, MessageHandler handler, int qos) = 0;
+
+  /// \brief Unsubscribe from a topic
+  ///
+  /// \param topic Topic to unsubscribe from
+  virtual void unsubscribe(const std::string& topic) = 0;
 };
 
 /// \brief Create a default MQTT client interface
