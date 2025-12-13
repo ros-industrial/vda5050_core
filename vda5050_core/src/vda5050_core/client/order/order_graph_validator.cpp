@@ -21,8 +21,6 @@
 
 #include "vda5050_core/client/order/order_graph_validator.hpp"
 #include "vda5050_core/logger/logger.hpp"
-#include "vda5050_types/edge.hpp"
-#include "vda5050_types/error_level.hpp"
 
 namespace vda5050_core {
 namespace order {

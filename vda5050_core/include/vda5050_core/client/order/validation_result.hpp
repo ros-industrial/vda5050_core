@@ -19,9 +19,9 @@
 #ifndef VDA5050_CORE__CLIENT__ORDER__VALIDATION_RESULT_HPP_
 #define VDA5050_CORE__CLIENT__ORDER__VALIDATION_RESULT_HPP_
 
-#include "vector"
+#include <vector>
 
-#include <vda5050_types/error.hpp>
+#include "vda5050_types/error.hpp"
 
 namespace vda5050_core {
 namespace order {
