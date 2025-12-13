@@ -22,11 +22,9 @@
 #include <vector>
 
 #include <vda5050_types/order.hpp>
-#include "vda5050_core/client/order/graph_element.hpp"
 #include "vda5050_core/client/order/validation_result.hpp"
 
 namespace vda5050_core {
-namespace client {
 namespace order {
 
 /// \brief Utility class with functions to perform validity checks on the graph
@@ -34,7 +32,7 @@ namespace order {
 class OrderGraphValidator
 {
 public:
-  explicit OrderGraphValidator(const vda5050_types::Order& order);
+  OrderGraphValidator() = delete;
 
   /// \brief Checks that the nodes and edges in a VDA5050 Order form a valid
   /// graph according to the VDA5050 specification sheet.
@@ -44,56 +42,15 @@ public:
   /// and any errors if it is not.
   ///
   /// \return True if nodes and edges create a valid graph, false otherwise
-  ValidationResult is_valid_graph();
+  static ValidationResult is_valid_graph(
+    const vda5050_types::Order& order) noexcept(false);
 
-private:
-  const vda5050_types::Order& order_;
-
-  std::vector<GraphElement> graph_;
-
-  /// \brief Helper function to populate graph_ in the constructor.
-  void create_graph();
-
-  /// \brief Checks that the nodes and edges contained in a VDA5050 Order are
-  /// arranged in contiguous and ascending sequenceId order
-  ///
-  /// \param order The order to be checked.
-  /// \return ValidationResult containing if the order being checked is valid,
-  /// and any errors if it is not.
-  ///
-  /// \return True if nodes and edges are arranged according to their
-  /// sequenceId, false otherwise
-  ValidationResult is_in_traversal_order();
-
-  /// \brief Checks that after the first unreleased node or edge, the subsequent
-  /// nodes and edges are not released.
-  ///
-  /// \return ValidationResult containing if the order being checked is valid,
-  /// and any errors if it is not.
-  ValidationResult has_only_one_base();
-
-  /// \brief Checks that all node sequenceIds are always even, and that all edge
-  /// sequenceIds are always odd.
-  ///
-  /// \param order The order to be checked.
-  ///
-  /// \return ValidationResult containing if the order being checked is valid,
-  /// and any errors if it is not.
-  ValidationResult has_valid_sequence_ids();
-
-  /// \brief Checks that startNodeId and endNodeId of all edges in a VDA5050
-  /// Order match with its the start and end nodeIds
-  ///
-  /// \param order The order to be checked.
-  /// \return ValidationResult containing if the order being checked is valid,
-  /// and any errors if it is not.
-  ///
-  /// \return True if all edges' startNodeId and endNodId match, false otherwise
-  ValidationResult has_valid_edges();
+  static ValidationResult is_valid_order_update(
+    const vda5050_types::Order& base_order,
+    const vda5050_types::Order& next_order) noexcept(false);
 };
 
 }  // namespace order
-}  // namespace client
 }  // namespace vda5050_core
 
 #endif  // VDA5050_CORE__CLIENT__ORDER__ORDER_GRAPH_VALIDATOR_HPP_

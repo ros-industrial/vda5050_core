@@ -24,22 +24,25 @@
 #include <vda5050_types/error.hpp>
 
 namespace vda5050_core {
-namespace client {
 namespace order {
 
 /// \brief Struct that details the validity of an order
 struct ValidationResult
 {
-  /// \brief True if an order is valid, false otherwise
-  bool valid;
-
   /// \brief A vector of error(s) that resulted in an invalid order. Empty if
   /// order is valid.
   std::vector<vda5050_types::Error> errors;
+
+  /// \brief Allows use in boolean contexts
+  ///
+  /// \return True if the order is valid, false otherwise.
+  explicit operator bool() const
+  {
+    return errors.empty();
+  }
 };
 
 }  // namespace order
-}  // namespace client
 }  // namespace vda5050_core
 
 #endif  // VDA5050_CORE__CLIENT__ORDER__VALIDATION_RESULT_HPP_
