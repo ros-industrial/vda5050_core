@@ -21,8 +21,8 @@
 
 #include <vector>
 
-#include <vda5050_types/order.hpp>
 #include "vda5050_core/client/order/validation_result.hpp"
+#include "vda5050_types/order.hpp"
 
 namespace vda5050_core {
 namespace order {
@@ -45,6 +45,13 @@ public:
   static ValidationResult is_valid_graph(
     const vda5050_types::Order& order) noexcept(false);
 
+  /// \brief Checks if order update is valid for order stitching
+  ///
+  /// \param base_order The base order.
+  ///
+  /// \param next_order the update order.
+  ///
+  /// \return True new order is valid for stitching, false otherwise
   static ValidationResult is_valid_order_update(
     const vda5050_types::Order& base_order,
     const vda5050_types::Order& next_order) noexcept(false);
