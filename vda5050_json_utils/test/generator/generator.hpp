@@ -292,6 +292,32 @@ public:
     return vec;
   }
 
+  /// \brief Generate a random ISO8601 formatted timestamp
+  std::string generate_random_ISO8601_timestamp()
+  {
+    constexpr const char* ISO8601_FORMAT = "%Y-%m-%dT%H:%M:%S";
+
+    int64_t timestamp = milliseconds_dist_(rng_);
+    std::chrono::system_clock::time_point tp{
+      std::chrono::milliseconds(timestamp)};
+    std::time_t time_sec = std::chrono::system_clock::to_time_t(tp);
+    auto duration = tp.time_since_epoch();
+    auto millisec =
+      std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() %
+      1000;
+
+    std::ostringstream oss;
+    oss << std::put_time(std::gmtime(&time_sec), ISO8601_FORMAT);
+    oss << "." << std::setw(3) << std::setfill('0') << millisec << "Z";
+
+    if (oss.fail())
+    {
+      throw std::runtime_error("Failed to generate a random ISO8601 timestamp");
+    }
+
+    return oss.str();
+  }
+
   /// \brief Generate a fully populated message of a supported type
   template <typename T>
   T generate()
@@ -540,6 +566,12 @@ private:
 
   /// \brief Distribution for random string lengths
   std::uniform_int_distribution<int> string_length_dist_;
+
+  /// \brief Distribution for milliseconds from epoch
+  std::uniform_int_distribution<int64_t> milliseconds_dist_;
+
+  /// \brief Distribution for VDA 5050 connectionState
+  std::uniform_int_distribution<uint8_t> connection_state_dist_;
 
   /// \brief Distribution for random vector size
   std::uniform_int_distribution<uint8_t> size_dist_;
