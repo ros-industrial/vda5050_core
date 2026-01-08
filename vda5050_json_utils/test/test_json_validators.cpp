@@ -42,10 +42,12 @@ protected:
   /// TODO: Declare other VDA5050 JSON objects
 };
 
-/// \brief Tests the is_valid_schema function to check that it passes when validating a correctly formatted JSON object
+/// \brief Tests the is_valid_schema function to check that it passes when
+/// validating a correctly formatted JSON object
 TEST_F(JsonValidatorTest, BasicValidationTest)
 {
-  /// TODO (@shawnkchan) Change this to a typed test so that we can iterate over the different VDA5050 object types
+  /// TODO (@shawnkchan) Change this to a typed test so that we can iterate over
+  /// the different VDA5050 object types
   std::cout << "running test" << "\n";
   int connection_result = is_valid_schema(connection_schema, connection_object);
   EXPECT_EQ(connection_result, true);

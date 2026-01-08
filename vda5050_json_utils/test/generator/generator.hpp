@@ -298,10 +298,13 @@ public:
     constexpr const char* ISO8601_FORMAT = "%Y-%m-%dT%H:%M:%S";
 
     int64_t timestamp = milliseconds_dist_(rng_);
-    std::chrono::system_clock::time_point tp{std::chrono::milliseconds(timestamp)};
+    std::chrono::system_clock::time_point tp{
+      std::chrono::milliseconds(timestamp)};
     std::time_t time_sec = std::chrono::system_clock::to_time_t(tp);
     auto duration = tp.time_since_epoch();
-    auto millisec = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() % 1000;
+    auto millisec =
+      std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() %
+      1000;
 
     std::ostringstream oss;
     oss << std::put_time(std::gmtime(&time_sec), ISO8601_FORMAT);
@@ -313,15 +316,6 @@ public:
     }
 
     return oss.str();
-  }
-
-  /// \brief Generate a random connection state value
-  ConnectionState generate_random_connection_state()
-  {
-    std::vector<ConnectionState> states = {
-      ConnectionState::ONLINE, ConnectionState::OFFLINE, ConnectionState::CONNECTIONBROKEN};
-    auto state_idx = generate_random_index(states.size());
-    return states[state_idx];
   }
 
   /// \brief Generate a fully populated message of a supported type

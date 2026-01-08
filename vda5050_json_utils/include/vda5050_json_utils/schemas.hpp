@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_MSGS__JSON_UTILS__SCHEMAS_HPP_
-#define VDA5050_MSGS__JSON_UTILS__SCHEMAS_HPP_
+#ifndef VDA5050_JSON_UTILS__SCHEMAS_HPP_
+#define VDA5050_JSON_UTILS__SCHEMAS_HPP_
 
 #include <string>
 
@@ -78,4 +78,4 @@ inline constexpr auto connection_schema = R"(
     }
 )";
 
-#endif
+#endif  // VDA5050_JSON_UTILS__SCHEMAS_HPP_
