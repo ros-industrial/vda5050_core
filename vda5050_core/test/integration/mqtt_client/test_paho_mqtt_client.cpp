@@ -101,3 +101,21 @@ TEST(PahoMqttClientTest, UnsubscribeStopsMessages)
   ASSERT_NO_THROW(talker->disconnect());
   ASSERT_NO_THROW(listener->disconnect());
 }
+
+TEST(PahoMqttClient, LastWill)
+{
+  std::string broker = "tcp://test.mosquitto.org:1883";
+  std::string topic = "/test/integration/unsubscribe";
+  std::string payload = "hello";
+  int qos = 0;
+
+  auto client =
+    vda5050_core::mqtt_client::PahoMqttClient::make(broker, "last_will_client");
+  ASSERT_NO_THROW(client->set_will(topic, payload, qos));
+  ASSERT_NO_THROW(client->connect());
+
+  ASSERT_EQ(client->connect_options().get_will_topic(), topic);
+  ASSERT_EQ(client->connect_options().get_will_message()->to_string(), payload);
+
+  ASSERT_NO_THROW(client->disconnect());
+}
