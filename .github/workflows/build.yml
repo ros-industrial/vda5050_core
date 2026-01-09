@@ -17,11 +17,11 @@ jobs:
         env:
           - ICI_JOB_NAME: gcc
             ROS_DISTRO: jazzy
-            UPSTREAM_WORKSPACE: 'github:ros-industrial/vda5050_interfaces#throwaway/remove-serde'
+            UPSTREAM_WORKSPACE: 'github:sauk2/vda5050_interfaces#throwaway/temp'
             TARGET_CMAKE_ARGS: '-DENABLE_ROS2=ON'
           - ICI_JOB_NAME: clang
             ROS_DISTRO: jazzy
-            UPSTREAM_WORKSPACE: 'github:ros-industrial/vda5050_interfaces#throwaway/remove-serde'
+            UPSTREAM_WORKSPACE: 'github:sauk2/vda5050_interfaces#throwaway/temp'
             ADDITIONAL_DEBS: clang lld
             CC: "clang"
             CXX: "clang++"

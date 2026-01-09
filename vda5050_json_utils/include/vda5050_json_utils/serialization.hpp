@@ -19,7 +19,6 @@
 #ifndef VDA5050_JSON_UTILS__SERIALIZATION_HPP_
 #define VDA5050_JSON_UTILS__SERIALIZATION_HPP_
 
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -37,9 +36,11 @@
 #include <vda5050_types/edge_state.hpp>
 #include <vda5050_types/error.hpp>
 #include <vda5050_types/error_reference.hpp>
+#include <vda5050_types/factsheet.hpp>
 #include <vda5050_types/header.hpp>
 #include <vda5050_types/info.hpp>
 #include <vda5050_types/info_reference.hpp>
+#include <vda5050_types/instant_actions.hpp>
 #include <vda5050_types/load.hpp>
 #include <vda5050_types/node.hpp>
 #include <vda5050_types/node_position.hpp>
@@ -49,27 +50,31 @@
 #include <vda5050_types/state.hpp>
 #include <vda5050_types/trajectory.hpp>
 #include <vda5050_types/velocity.hpp>
+#include <vda5050_types/visualization.hpp>
 
 #ifdef ENABLE_ROS2
-#include <vda5050_msgs/msg/action_state.hpp>
-#include <vda5050_msgs/msg/agv_position.hpp>
-#include <vda5050_msgs/msg/battery_state.hpp>
-#include <vda5050_msgs/msg/bounding_box_reference.hpp>
-#include <vda5050_msgs/msg/connection.hpp>
-#include <vda5050_msgs/msg/edge_state.hpp>
-#include <vda5050_msgs/msg/error.hpp>
-#include <vda5050_msgs/msg/error_reference.hpp>
-#include <vda5050_msgs/msg/header.hpp>
-#include <vda5050_msgs/msg/info.hpp>
-#include <vda5050_msgs/msg/info_reference.hpp>
-#include <vda5050_msgs/msg/load.hpp>
-#include <vda5050_msgs/msg/node_position.hpp>
-#include <vda5050_msgs/msg/node_state.hpp>
-#include <vda5050_msgs/msg/order.hpp>
-#include <vda5050_msgs/msg/safety_state.hpp>
-#include <vda5050_msgs/msg/state.hpp>
-#include <vda5050_msgs/msg/trajectory.hpp>
-#include <vda5050_msgs/msg/velocity.hpp>
+#include <vda5050_interfaces/msg/action_state.hpp>
+#include <vda5050_interfaces/msg/agv_position.hpp>
+#include <vda5050_interfaces/msg/battery_state.hpp>
+#include <vda5050_interfaces/msg/bounding_box_reference.hpp>
+#include <vda5050_interfaces/msg/connection.hpp>
+#include <vda5050_interfaces/msg/edge_state.hpp>
+#include <vda5050_interfaces/msg/error.hpp>
+#include <vda5050_interfaces/msg/error_reference.hpp>
+#include <vda5050_interfaces/msg/factsheet.hpp>
+#include <vda5050_interfaces/msg/header.hpp>
+#include <vda5050_interfaces/msg/info.hpp>
+#include <vda5050_interfaces/msg/info_reference.hpp>
+#include <vda5050_interfaces/msg/instant_actions.hpp>
+#include <vda5050_interfaces/msg/load.hpp>
+#include <vda5050_interfaces/msg/node_position.hpp>
+#include <vda5050_interfaces/msg/node_state.hpp>
+#include <vda5050_interfaces/msg/order.hpp>
+#include <vda5050_interfaces/msg/safety_state.hpp>
+#include <vda5050_interfaces/msg/state.hpp>
+#include <vda5050_interfaces/msg/trajectory.hpp>
+#include <vda5050_interfaces/msg/velocity.hpp>
+#include <vda5050_interfaces/msg/visualization.hpp>
 #endif  // ENABLE_ROS2
 
 #include "traits.hpp"
@@ -1835,11 +1840,41 @@ inline void from_json(const nlohmann::json& j, Order& msg)
   vda5050_types::order_detail::from_json(j, msg);
 }
 
+inline void to_json(nlohmann::json& /*j*/, const InstantActions& /*msg*/)
+{
+  // TODO(sauk): Add missing serialization
+}
+
+inline void from_json(const nlohmann::json& /*j*/, InstantActions& /*msg*/)
+{
+  // TODO(sauk): Add missing deserialization
+}
+
+inline void to_json(nlohmann::json& /*j*/, const Factsheet& /*msg*/)
+{
+  // TODO(sauk): Add missing serialization
+}
+
+inline void from_json(const nlohmann::json& /*j*/, Factsheet& /*msg*/)
+{
+  // TODO(sauk): Add missing deserialization
+}
+
+inline void to_json(nlohmann::json& /*j*/, const Visualization& /*msg*/)
+{
+  // TODO(sauk): Add missing serialization
+}
+
+inline void from_json(const nlohmann::json& /*j*/, Visualization& /*msg*/)
+{
+  // TODO(sauk): Add missing deserialization
+}
+
 }  // namespace vda5050_types
 
 //=============================================================================
 #ifdef ENABLE_ROS2
-namespace vda5050_msgs {
+namespace vda5050_interfaces {
 
 namespace msg {
 
@@ -2093,9 +2128,39 @@ inline void from_json(const nlohmann::json& j, Order& msg)
   vda5050_types::order_detail::from_json(j, msg);
 }
 
+inline void to_json(nlohmann::json& /*j*/, const InstantActions& /*msg*/)
+{
+  // TODO(sauk): Add missing serialization
+}
+
+inline void from_json(const nlohmann::json& /*j*/, InstantActions& /*msg*/)
+{
+  // TODO(sauk): Add missing deserialization
+}
+
+inline void to_json(nlohmann::json& /*j*/, const Factsheet& /*msg*/)
+{
+  // TODO(sauk): Add missing serialization
+}
+
+inline void from_json(const nlohmann::json& /*j*/, Factsheet& /*msg*/)
+{
+  // TODO(sauk): Add missing deserialization
+}
+
+inline void to_json(nlohmann::json& /*j*/, const Visualization& /*msg*/)
+{
+  // TODO(sauk): Add missing serialization
+}
+
+inline void from_json(const nlohmann::json& /*j*/, Visualization& /*msg*/)
+{
+  // TODO(sauk): Add missing deserialization
+}
+
 }  // namespace msg
 
-}  // namespace vda5050_msgs
+}  // namespace vda5050_interfaces
 #endif  // ENABLE_ROS2
 
 #endif  // VDA5050_JSON_UTILS__SERIALIZATION_HPP_

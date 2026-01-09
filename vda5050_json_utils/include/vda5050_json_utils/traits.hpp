@@ -42,14 +42,14 @@
 
 #ifdef ENABLE_ROS2
 #include <rosidl_runtime_cpp/bounded_vector.hpp>
-#include <vda5050_msgs/msg/action.hpp>
-#include <vda5050_msgs/msg/action_state.hpp>
-#include <vda5050_msgs/msg/connection.hpp>
-#include <vda5050_msgs/msg/edge.hpp>
-#include <vda5050_msgs/msg/error.hpp>
-#include <vda5050_msgs/msg/info.hpp>
-#include <vda5050_msgs/msg/safety_state.hpp>
-#include <vda5050_msgs/msg/state.hpp>
+#include <vda5050_interfaces/msg/action.hpp>
+#include <vda5050_interfaces/msg/action_state.hpp>
+#include <vda5050_interfaces/msg/connection.hpp>
+#include <vda5050_interfaces/msg/edge.hpp>
+#include <vda5050_interfaces/msg/error.hpp>
+#include <vda5050_interfaces/msg/info.hpp>
+#include <vda5050_interfaces/msg/safety_state.hpp>
+#include <vda5050_interfaces/msg/state.hpp>
 #endif  // ENABLE_ROS2
 
 namespace vda5050_json_utils {
@@ -290,7 +290,7 @@ struct connection_state_traits<std::string>
 {
   static std::string to_string(const std::string& state)
   {
-    using vda5050_msgs::msg::Connection;
+    using vda5050_interfaces::msg::Connection;
 
     if (
       state == Connection::ONLINE || state == Connection::OFFLINE ||
@@ -303,7 +303,7 @@ struct connection_state_traits<std::string>
 
   static std::string from_string(const std::string& state)
   {
-    using vda5050_msgs::msg::Connection;
+    using vda5050_interfaces::msg::Connection;
 
     if (
       state == Connection::ONLINE || state == Connection::OFFLINE ||
@@ -365,7 +365,7 @@ struct operating_mode_traits<std::string>
 {
   static std::string to_string(const std::string& mode)
   {
-    using vda5050_msgs::msg::State;
+    using vda5050_interfaces::msg::State;
 
     if (
       mode == State::OPERATING_MODE_AUTOMATIC ||
@@ -381,7 +381,7 @@ struct operating_mode_traits<std::string>
 
   static std::string from_string(const std::string& mode)
   {
-    using vda5050_msgs::msg::State;
+    using vda5050_interfaces::msg::State;
 
     if (
       mode == State::OPERATING_MODE_AUTOMATIC ||
@@ -449,7 +449,7 @@ struct action_status_traits<std::string>
 {
   static std::string to_string(const std::string& status)
   {
-    using vda5050_msgs::msg::ActionState;
+    using vda5050_interfaces::msg::ActionState;
 
     if (
       status == ActionState::ACTION_STATUS_WAITING ||
@@ -466,7 +466,7 @@ struct action_status_traits<std::string>
 
   static std::string from_string(const std::string& status)
   {
-    using vda5050_msgs::msg::ActionState;
+    using vda5050_interfaces::msg::ActionState;
 
     if (
       status == ActionState::ACTION_STATUS_WAITING ||
@@ -523,7 +523,7 @@ struct error_level_traits<std::string>
 {
   static std::string to_string(const std::string& level)
   {
-    using vda5050_msgs::msg::Error;
+    using vda5050_interfaces::msg::Error;
 
     if (
       level == Error::ERROR_LEVEL_WARNING || level == Error::ERROR_LEVEL_FATAL)
@@ -535,7 +535,7 @@ struct error_level_traits<std::string>
 
   static std::string from_string(const std::string& level)
   {
-    using vda5050_msgs::msg::Error;
+    using vda5050_interfaces::msg::Error;
 
     if (
       level == Error::ERROR_LEVEL_WARNING || level == Error::ERROR_LEVEL_FATAL)
@@ -593,7 +593,7 @@ struct e_stop_traits<std::string>
 {
   static std::string to_string(const std::string& type)
   {
-    using vda5050_msgs::msg::SafetyState;
+    using vda5050_interfaces::msg::SafetyState;
 
     if (
       type == SafetyState::E_STOP_AUTOACK ||
@@ -607,7 +607,7 @@ struct e_stop_traits<std::string>
 
   static std::string from_string(const std::string& type)
   {
-    using vda5050_msgs::msg::SafetyState;
+    using vda5050_interfaces::msg::SafetyState;
 
     if (
       type == SafetyState::E_STOP_AUTOACK ||
@@ -661,7 +661,7 @@ struct info_level_traits<std::string>
 {
   static std::string to_string(const std::string& level)
   {
-    using vda5050_msgs::msg::Info;
+    using vda5050_interfaces::msg::Info;
 
     if (level == Info::INFO_LEVEL_INFO || level == Info::INFO_LEVEL_DEBUG)
     {
@@ -672,7 +672,7 @@ struct info_level_traits<std::string>
 
   static std::string from_string(const std::string& level)
   {
-    using vda5050_msgs::msg::Info;
+    using vda5050_interfaces::msg::Info;
 
     if (level == Info::INFO_LEVEL_INFO || level == Info::INFO_LEVEL_DEBUG)
     {
@@ -726,7 +726,7 @@ struct blocking_type_traits<std::string>
 {
   static std::string to_string(const std::string& type)
   {
-    using vda5050_msgs::msg::Action;
+    using vda5050_interfaces::msg::Action;
 
     if (
       type == Action::BLOCKING_TYPE_NONE ||
@@ -739,7 +739,7 @@ struct blocking_type_traits<std::string>
 
   static std::string from_string(const std::string& type)
   {
-    using vda5050_msgs::msg::Action;
+    using vda5050_interfaces::msg::Action;
 
     if (
       type == Action::BLOCKING_TYPE_NONE ||
@@ -792,7 +792,7 @@ struct orientation_type_traits<std::string>
 {
   static std::string to_string(const std::string& type)
   {
-    using vda5050_msgs::msg::Edge;
+    using vda5050_interfaces::msg::Edge;
 
     if (
       type == Edge::ORIENTATION_TYPE_TANGENTIAL ||
@@ -805,7 +805,7 @@ struct orientation_type_traits<std::string>
 
   static std::string from_string(const std::string& type)
   {
-    using vda5050_msgs::msg::Edge;
+    using vda5050_interfaces::msg::Edge;
 
     if (
       type == Edge::ORIENTATION_TYPE_TANGENTIAL ||

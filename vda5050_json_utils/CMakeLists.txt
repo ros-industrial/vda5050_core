@@ -15,7 +15,7 @@ option(ENABLE_ROS2 "Enable ROS 2 message support in JSON utilities" OFF)
 
 if(ENABLE_ROS2)
   message(STATUS "Building vda5050_json_utils with ROS 2 support")
-  find_package(vda5050_msgs REQUIRED)
+  find_package(vda5050_interfaces REQUIRED)
 else()
   message(STATUS "Building vda5050_json_utils without ROS 2 support")
 endif()
@@ -37,12 +37,12 @@ target_include_directories(vda5050_json_utils
 if(ENABLE_ROS2)
   target_link_libraries(vda5050_json_utils
     INTERFACE
-      ${vda5050_msgs_LIBRARIES}
+      ${vda5050_interfaces_LIBRARIES}
   )
 
   target_include_directories(vda5050_json_utils
     INTERFACE
-      ${vda5050_msgs_INCLUDE_DIRS}
+      ${vda5050_interfaces_INCLUDE_DIRS}
   )
 
   target_compile_definitions(vda5050_json_utils INTERFACE ENABLE_ROS2)
@@ -66,7 +66,7 @@ ament_export_dependencies(
 )
 
 if(ENABLE_ROS2)
-  ament_export_dependencies(vda5050_msgs)
+  ament_export_dependencies(vda5050_interfaces)
 endif()
 
 if(BUILD_TESTING)
