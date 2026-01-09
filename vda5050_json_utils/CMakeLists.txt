@@ -8,7 +8,6 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(vda5050_types REQUIRED)
 find_package(nlohmann_json REQUIRED)
-find_package(vda5050_msgs REQUIRED)
 
 include(GNUInstallDirs)
 
@@ -64,7 +63,6 @@ ament_export_targets(export_vda5050_json_utils HAS_LIBRARY_TARGET)
 ament_export_dependencies(
   nlohmann_json
   vda5050_types
-  vda5050_msgs
 )
 
 if(ENABLE_ROS2)
