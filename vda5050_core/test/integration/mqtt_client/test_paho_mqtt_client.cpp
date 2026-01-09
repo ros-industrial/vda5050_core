@@ -113,6 +113,7 @@ TEST(PahoMqttClient, LastWill)
     vda5050_core::mqtt_client::PahoMqttClient::make(broker, "last_will_client");
   ASSERT_NO_THROW(client->set_will(topic, payload, qos));
   ASSERT_NO_THROW(client->connect());
+  ASSERT_TRUE(client->connected());
 
   ASSERT_EQ(client->connect_options().get_will_topic(), topic);
   ASSERT_EQ(client->connect_options().get_will_message()->to_string(), payload);
