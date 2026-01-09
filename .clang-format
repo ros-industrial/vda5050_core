@@ -12,10 +12,11 @@ BraceWrapping:
   AfterControlStatement: Always
   AfterFunction: true
   AfterNamespace: false
-  AfterStruct: true
+  AfterStruct:  true
   AfterEnum: true
   BeforeElse: true
   BeforeCatch: true
+  SplitEmptyRecord: false
 ColumnLimit: 80
 ConstructorInitializerIndentWidth: 0
 ContinuationIndentWidth: 2
