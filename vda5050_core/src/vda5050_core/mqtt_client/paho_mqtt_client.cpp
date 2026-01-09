@@ -207,6 +207,12 @@ void PahoMqttClient::set_will(
 }
 
 //=============================================================================
+mqtt::connect_options& PahoMqttClient::connect_options()
+{
+  return conn_options_;
+}
+
+//=============================================================================
 PahoMqttClient::PahoMqttClient(
   const std::string& broker_address, const std::string& client_id)
 : client_(std::make_unique<mqtt::async_client>(broker_address, client_id)),

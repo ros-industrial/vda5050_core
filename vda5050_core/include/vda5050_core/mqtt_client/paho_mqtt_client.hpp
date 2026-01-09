@@ -124,6 +124,11 @@ public:
   void set_will(
     const std::string& topic, const std::string& message, int qos) override;
 
+  /// \brief Get a mutable reference to Paho configuration options
+  ///
+  /// \return Mutable reference to Paho configuration options
+  mqtt::connect_options& connect_options();
+
   friend class MqttCallback;
 
 private:
