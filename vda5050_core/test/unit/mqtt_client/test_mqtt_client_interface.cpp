@@ -25,14 +25,18 @@ class MockMqttClient : public vda5050_core::mqtt_client::MqttClientInterface
 public:
   MOCK_METHOD(void, connect, (), (override));
   MOCK_METHOD(void, disconnect, (), (override));
+  MOCK_METHOD(bool, connected, (), (override));
   MOCK_METHOD(
-    void, publish, (const std::string&, const std::string&, int), (override));
+    void, publish, (const std::string&, const std::string&, int, bool),
+    (override));
   MOCK_METHOD(
     void, subscribe,
     (const std::string&,
      std::function<void(const std::string&, const std::string&)>, int),
     (override));
   MOCK_METHOD(void, unsubscribe, (const std::string&), (override));
+  MOCK_METHOD(
+    void, set_will, (const std::string&, const std::string&, int), (override));
 };
 
 TEST(MqttClientInterfaceTest, ConnectCall)
@@ -49,11 +53,18 @@ TEST(MqttClientInterfaceTest, DisconnectCall)
   mock.disconnect();
 }
 
+TEST(MqttClientInterfaceTest, CheckConnection)
+{
+  MockMqttClient mock;
+  EXPECT_CALL(mock, connected()).Times(1);
+  mock.connected();
+}
+
 TEST(MqttClientInterfaceTest, PublishMessage)
 {
   MockMqttClient mock;
-  EXPECT_CALL(mock, publish("topic", "{payload: 'data'}", 0)).Times(1);
-  mock.publish("topic", "{payload: 'data'}", 0);
+  EXPECT_CALL(mock, publish("topic", "{payload: 'data'}", 0, false)).Times(1);
+  mock.publish("topic", "{payload: 'data'}", 0, false);
 }
 
 TEST(MqttClientInterfaceTest, SubscribeTopic)
@@ -69,4 +80,11 @@ TEST(MqttClientInterfaceTest, UnsubscribeTopic)
   MockMqttClient mock;
   EXPECT_CALL(mock, unsubscribe("topic")).Times(1);
   mock.unsubscribe("topic");
+}
+
+TEST(MqttClientInterfaceTest, SetWill)
+{
+  MockMqttClient mock;
+  EXPECT_CALL(mock, set_will("topic", "{payload: 'data'}", 1)).Times(1);
+  mock.set_will("topic", "{payload: 'data'}", 1);
 }

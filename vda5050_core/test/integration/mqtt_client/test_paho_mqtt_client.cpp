@@ -22,6 +22,7 @@
 #include <thread>
 
 #include "vda5050_core/mqtt_client/mqtt_client_interface.hpp"
+#include "vda5050_core/mqtt_client/paho_mqtt_client.hpp"
 
 TEST(PahoMqttClientTest, PublishSubscribe)
 {
@@ -30,15 +31,16 @@ TEST(PahoMqttClientTest, PublishSubscribe)
   std::string payload = "hello";
   int qos = 0;
 
-  std::atomic_bool received = false;
+  std::atomic_int message_count{0};
 
   auto listener =
-    vda5050_core::mqtt_client::create_default_client(broker, "listener");
+    vda5050_core::mqtt_client::PahoMqttClient::make(broker, "listener");
   ASSERT_NO_THROW(listener->connect());
+  ASSERT_TRUE(listener->connected());
   ASSERT_NO_THROW(listener->subscribe(
     topic,
     [&](const std::string& topic_, const std::string& payload_) {
-      received = true;
+      message_count++;
       ASSERT_EQ(topic, topic_);
       ASSERT_EQ(payload, payload_);
     },
@@ -51,7 +53,7 @@ TEST(PahoMqttClientTest, PublishSubscribe)
 
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-  ASSERT_TRUE(received);
+  ASSERT_EQ(message_count, 1);
 
   ASSERT_NO_THROW(talker->disconnect());
   ASSERT_NO_THROW(listener->disconnect());
@@ -67,7 +69,7 @@ TEST(PahoMqttClientTest, UnsubscribeStopsMessages)
   std::atomic_int message_count{0};
 
   auto listener =
-    vda5050_core::mqtt_client::create_default_client(broker, "unsub_listener");
+    vda5050_core::mqtt_client::PahoMqttClient::make(broker, "unsub_listener");
   ASSERT_NO_THROW(listener->connect());
   ASSERT_NO_THROW(listener->subscribe(
     topic,
@@ -98,4 +100,23 @@ TEST(PahoMqttClientTest, UnsubscribeStopsMessages)
 
   ASSERT_NO_THROW(talker->disconnect());
   ASSERT_NO_THROW(listener->disconnect());
+}
+
+TEST(PahoMqttClient, LastWill)
+{
+  std::string broker = "tcp://test.mosquitto.org:1883";
+  std::string topic = "/test/integration/unsubscribe";
+  std::string payload = "hello";
+  int qos = 0;
+
+  auto client =
+    vda5050_core::mqtt_client::PahoMqttClient::make(broker, "last_will_client");
+  ASSERT_NO_THROW(client->set_will(topic, payload, qos));
+  ASSERT_NO_THROW(client->connect());
+  ASSERT_TRUE(client->connected());
+
+  ASSERT_EQ(client->connect_options().get_will_topic(), topic);
+  ASSERT_EQ(client->connect_options().get_will_message()->to_string(), payload);
+
+  ASSERT_NO_THROW(client->disconnect());
 }
