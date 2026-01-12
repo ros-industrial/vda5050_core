@@ -58,16 +58,16 @@ void VDA5050Master::register_agv(
 
   // Setup subscriptions for this AGV, routing callbacks to virtual methods
   agv->setup_subscriptions(
-    [this](const std::string& id, const vda5050_msgs::msg::Connection& msg) {
+    [this](const std::string& id, const vda5050_types::Connection& msg) {
       on_connection(id, msg);
     },
-    [this](const std::string& id, const vda5050_msgs::msg::State& msg) {
+    [this](const std::string& id, const vda5050_types::State& msg) {
       on_state(id, msg);
     },
-    [this](const std::string& id, const vda5050_msgs::msg::Factsheet& msg) {
+    [this](const std::string& id, const vda5050_types::Factsheet& msg) {
       on_factsheet(id, msg);
     },
-    [this](const std::string& id, const vda5050_msgs::msg::Visualization& msg) {
+    [this](const std::string& id, const vda5050_types::Visualization& msg) {
       on_visualization(id, msg);
     });
 
@@ -117,7 +117,7 @@ std::shared_ptr<AGV> VDA5050Master::get_agv(const std::string& agv_id) const
 
 bool VDA5050Master::publish_order(
   const std::string& manufacturer, const std::string& serial_number,
-  const vda5050_msgs::msg::Order& order)
+  const vda5050_types::Order& order)
 {
   std::string agv_id = manufacturer + "/" + serial_number;
 
@@ -138,7 +138,7 @@ bool VDA5050Master::publish_order(
 
 bool VDA5050Master::publish_instant_actions(
   const std::string& manufacturer, const std::string& serial_number,
-  const vda5050_msgs::msg::InstantActions& actions)
+  const vda5050_types::InstantActions& actions)
 {
   std::string agv_id = manufacturer + "/" + serial_number;
 
@@ -162,7 +162,7 @@ bool VDA5050Master::publish_instant_actions(
 // ============================================================================
 
 void VDA5050Master::on_factsheet(
-  const std::string& agv_id, const vda5050_msgs::msg::Factsheet& /*msg*/)
+  const std::string& agv_id, const vda5050_types::Factsheet& /*msg*/)
 {
   VDA5050_WARN(
     "[VDA5050Master] on_factsheet not overridden. Received factsheet from "
@@ -171,7 +171,7 @@ void VDA5050Master::on_factsheet(
 }
 
 void VDA5050Master::on_visualization(
-  const std::string& agv_id, const vda5050_msgs::msg::Visualization& /*msg*/)
+  const std::string& agv_id, const vda5050_types::Visualization& /*msg*/)
 {
   VDA5050_WARN(
     "[VDA5050Master] on_visualization not overridden. Received visualization "

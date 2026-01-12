@@ -45,21 +45,19 @@ public:
 
   // Thread-safe storage for received messages
   std::mutex mutex_;
-  std::vector<std::pair<std::string, vda5050_msgs::msg::Connection>>
+  std::vector<std::pair<std::string, vda5050_types::Connection>>
     received_connections_;
-  std::vector<std::pair<std::string, vda5050_msgs::msg::State>>
-    received_states_;
-  std::vector<std::pair<std::string, vda5050_msgs::msg::Factsheet>>
+  std::vector<std::pair<std::string, vda5050_types::State>> received_states_;
+  std::vector<std::pair<std::string, vda5050_types::Factsheet>>
     received_factsheets_;
-  std::vector<std::pair<std::string, vda5050_msgs::msg::Visualization>>
+  std::vector<std::pair<std::string, vda5050_types::Visualization>>
     received_visualizations_;
   std::atomic<int> connection_count_{0};
   std::atomic<int> state_count_{0};
 
 protected:
   void on_connection(
-    const std::string& agv_id,
-    const vda5050_msgs::msg::Connection& msg) override
+    const std::string& agv_id, const vda5050_types::Connection& msg) override
   {
     std::lock_guard<std::mutex> lock(mutex_);
     received_connections_.push_back({agv_id, msg});
@@ -67,7 +65,7 @@ protected:
   }
 
   void on_state(
-    const std::string& agv_id, const vda5050_msgs::msg::State& msg) override
+    const std::string& agv_id, const vda5050_types::State& msg) override
   {
     std::lock_guard<std::mutex> lock(mutex_);
     received_states_.push_back({agv_id, msg});
@@ -75,15 +73,14 @@ protected:
   }
 
   void on_factsheet(
-    const std::string& agv_id, const vda5050_msgs::msg::Factsheet& msg) override
+    const std::string& agv_id, const vda5050_types::Factsheet& msg) override
   {
     std::lock_guard<std::mutex> lock(mutex_);
     received_factsheets_.push_back({agv_id, msg});
   }
 
   void on_visualization(
-    const std::string& agv_id,
-    const vda5050_msgs::msg::Visualization& msg) override
+    const std::string& agv_id, const vda5050_types::Visualization& msg) override
   {
     std::lock_guard<std::mutex> lock(mutex_);
     received_visualizations_.push_back({agv_id, msg});

@@ -138,7 +138,7 @@ public:
    */
   bool publish_order(
     const std::string& manufacturer, const std::string& serial_number,
-    const vda5050_msgs::msg::Order& order);
+    const vda5050_types::Order& order);
 
   /**
    * @brief Publish instant actions to a specific AGV
@@ -150,7 +150,7 @@ public:
    */
   bool publish_instant_actions(
     const std::string& manufacturer, const std::string& serial_number,
-    const vda5050_msgs::msg::InstantActions& actions);
+    const vda5050_types::InstantActions& actions);
 
 protected:
   // ============================================================================
@@ -165,7 +165,7 @@ protected:
    * This is a pure virtual method - derived classes must implement it.
    */
   virtual void on_connection(
-    const std::string& agv_id, const vda5050_msgs::msg::Connection& msg) = 0;
+    const std::string& agv_id, const vda5050_types::Connection& msg) = 0;
 
   /**
    * @brief Called when a state message is received from an AGV
@@ -175,7 +175,7 @@ protected:
    * This is a pure virtual method - derived classes must implement it.
    */
   virtual void on_state(
-    const std::string& agv_id, const vda5050_msgs::msg::State& msg) = 0;
+    const std::string& agv_id, const vda5050_types::State& msg) = 0;
 
   /**
    * @brief Called when a factsheet message is received from an AGV
@@ -185,7 +185,7 @@ protected:
    * Default implementation logs a warning. Override to handle factsheets.
    */
   virtual void on_factsheet(
-    const std::string& agv_id, const vda5050_msgs::msg::Factsheet& msg);
+    const std::string& agv_id, const vda5050_types::Factsheet& msg);
 
   /**
    * @brief Called when a visualization message is received from an AGV
@@ -195,7 +195,7 @@ protected:
    * Default implementation logs a warning. Override to handle visualizations.
    */
   virtual void on_visualization(
-    const std::string& agv_id, const vda5050_msgs::msg::Visualization& msg);
+    const std::string& agv_id, const vda5050_types::Visualization& msg);
 
 private:
   /**

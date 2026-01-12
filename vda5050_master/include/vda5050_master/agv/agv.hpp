@@ -39,19 +39,6 @@
 class VDA5050Master;
 
 /**
- * @brief AGV connection state based on VDA5050 connection message
- *
- * Maps directly to the connectionState field in VDA5050 connection messages.
- * Values: ONLINE, OFFLINE, CONNECTIONBROKEN
- */
-enum class AGVConnectionState
-{
-  ONLINE,   // AGV reports connectionState: "ONLINE"
-  OFFLINE,  // AGV reports connectionState: "OFFLINE"
-  CONNECTIONBROKEN  // AGV reports connectionState: "CONNECTIONBROKEN" or heartbeat timeout
-};
-
-/**
  * @brief AGV operational state based on state heartbeat
  */
 enum class AGVState
@@ -82,14 +69,14 @@ public:
   using TimePoint = std::chrono::time_point<Clock>;
 
   // Callback types for VDA5050 message handling
-  using ConnectionCallback = std::function<void(
-    const std::string&, const vda5050_msgs::msg::Connection&)>;
+  using ConnectionCallback =
+    std::function<void(const std::string&, const vda5050_types::Connection&)>;
   using StateCallback =
-    std::function<void(const std::string&, const vda5050_msgs::msg::State&)>;
-  using FactsheetCallback = std::function<void(
-    const std::string&, const vda5050_msgs::msg::Factsheet&)>;
+    std::function<void(const std::string&, const vda5050_types::State&)>;
+  using FactsheetCallback =
+    std::function<void(const std::string&, const vda5050_types::Factsheet&)>;
   using VisualizationCallback = std::function<void(
-    const std::string&, const vda5050_msgs::msg::Visualization&)>;
+    const std::string&, const vda5050_types::Visualization&)>;
 
   // Default maximum queue size for outgoing messages
   static constexpr size_t DEFAULT_MAX_QUEUE_SIZE = 10;
@@ -174,7 +161,7 @@ public:
    * @brief Get the AGV connection state (based on VDA5050 connection message)
    * @return ONLINE, OFFLINE, or CONNECTIONBROKEN
    */
-  AGVConnectionState get_connection_status() const;
+  vda5050_types::ConnectionState get_connection_status() const;
 
   /**
    * @brief Get the AGV operational state (based on state heartbeat)
@@ -206,26 +193,25 @@ public:
    * @brief Get the last received connection message
    * @return Optional containing the message if received, nullopt otherwise
    */
-  std::optional<vda5050_msgs::msg::Connection> get_last_connection() const;
+  std::optional<vda5050_types::Connection> get_last_connection() const;
 
   /**
    * @brief Get the last received state message
    * @return Optional containing the message if received, nullopt otherwise
    */
-  std::optional<vda5050_msgs::msg::State> get_last_state() const;
+  std::optional<vda5050_types::State> get_last_state() const;
 
   /**
    * @brief Get the last received factsheet message
    * @return Optional containing the message if received, nullopt otherwise
    */
-  std::optional<vda5050_msgs::msg::Factsheet> get_last_factsheet() const;
+  std::optional<vda5050_types::Factsheet> get_last_factsheet() const;
 
   /**
    * @brief Get the last received visualization message
    * @return Optional containing the message if received, nullopt otherwise
    */
-  std::optional<vda5050_msgs::msg::Visualization> get_last_visualization()
-    const;
+  std::optional<vda5050_types::Visualization> get_last_visualization() const;
 
   // ============================================================================
   // Timestamps
@@ -278,7 +264,7 @@ private:
    *
    * Messages are processed FIFO by a background thread.
    */
-  bool send_order(const vda5050_msgs::msg::Order& order);
+  bool send_order(const vda5050_types::Order& order);
 
   /**
    * @brief Queue instant actions to be sent to this AGV
@@ -287,31 +273,31 @@ private:
    *
    * Messages are processed FIFO by a background thread.
    */
-  bool send_instant_actions(const vda5050_msgs::msg::InstantActions& actions);
+  bool send_instant_actions(const vda5050_types::InstantActions& actions);
 
   /**
    * @brief Update the cached connection message
    * @param msg The connection message
    */
-  void update_connection(const vda5050_msgs::msg::Connection& msg);
+  void update_connection(const vda5050_types::Connection& msg);
 
   /**
    * @brief Update the cached state message
    * @param msg The state message
    */
-  void update_state(const vda5050_msgs::msg::State& msg);
+  void update_state(const vda5050_types::State& msg);
 
   /**
    * @brief Update the cached factsheet message
    * @param msg The factsheet message
    */
-  void update_factsheet(const vda5050_msgs::msg::Factsheet& msg);
+  void update_factsheet(const vda5050_types::Factsheet& msg);
 
   /**
    * @brief Update the cached visualization message
    * @param msg The visualization message
    */
-  void update_visualization(const vda5050_msgs::msg::Visualization& msg);
+  void update_visualization(const vda5050_types::Visualization& msg);
 
   // ============================================================================
   // Helper methods
@@ -344,11 +330,12 @@ private:
 
   // AGV states (protected by state_mutex_)
   mutable std::mutex state_mutex_;
-  AGVConnectionState connection_status_{AGVConnectionState::OFFLINE};
+  vda5050_types::ConnectionState connection_status_{
+    vda5050_types::ConnectionState::OFFLINE};
   AGVState operational_state_{AGVState::STATE_UNKNOWN};
 
   // Internal state setters (called by heartbeat callbacks)
-  void set_connection_status(AGVConnectionState status);
+  void set_connection_status(vda5050_types::ConnectionState status);
   void set_operational_state(AGVState state);
 
   // Heartbeat timeout callbacks
@@ -361,16 +348,16 @@ private:
   // Cached messages and timestamps (protected by mutex)
   mutable std::mutex data_mutex_;
 
-  std::optional<vda5050_msgs::msg::Connection> last_connection_;
+  std::optional<vda5050_types::Connection> last_connection_;
   std::optional<TimePoint> last_connection_time_;
 
-  std::optional<vda5050_msgs::msg::State> last_state_;
+  std::optional<vda5050_types::State> last_state_;
   std::optional<TimePoint> last_state_time_;
 
-  std::optional<vda5050_msgs::msg::Factsheet> last_factsheet_;
+  std::optional<vda5050_types::Factsheet> last_factsheet_;
   std::optional<TimePoint> last_factsheet_time_;
 
-  std::optional<vda5050_msgs::msg::Visualization> last_visualization_;
+  std::optional<vda5050_types::Visualization> last_visualization_;
   std::optional<TimePoint> last_visualization_time_;
 
   // ============================================================================
@@ -381,9 +368,8 @@ private:
   void process_queues();
 
   // Sends messages immediately (called by queue processor)
-  void send_order_now(const vda5050_msgs::msg::Order& order);
-  void send_instant_actions_now(
-    const vda5050_msgs::msg::InstantActions& actions);
+  void send_order_now(const vda5050_types::Order& order);
+  void send_instant_actions_now(const vda5050_types::InstantActions& actions);
 
   // Queue configuration
   size_t max_queue_size_;
@@ -392,8 +378,8 @@ private:
   // Queue state (protected by queue_mutex_)
   std::mutex queue_mutex_;
   std::condition_variable queue_cv_;
-  std::queue<vda5050_msgs::msg::Order> order_queue_;
-  std::queue<vda5050_msgs::msg::InstantActions> instant_actions_queue_;
+  std::queue<vda5050_types::Order> order_queue_;
+  std::queue<vda5050_types::InstantActions> instant_actions_queue_;
 
   // Queue processing thread
   std::atomic<bool> stop_processing_{false};

@@ -133,7 +133,8 @@ protected:
     if (agv_)
     {
       agv_->disconnect();
-      EXPECT_EQ(agv_->get_connection_status(), AGVConnectionState::OFFLINE);
+      EXPECT_EQ(
+        agv_->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
       agv_.reset();
     }
     mock_ptr_ = nullptr;
@@ -189,7 +190,8 @@ protected:
 TEST_F(AGVConnectionStateTestFixture, InitialConnectionStateIsOffline)
 {
   auto& agv = create_agv();
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::OFFLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
 }
 
 // =============================================================================
@@ -204,10 +206,10 @@ TEST_F(
 
   bool callback_invoked = false;
   std::string received_agv_id;
-  std::string received_connection_state;
+  vda5050_types::ConnectionState received_connection_state;
 
   agv->setup_subscriptions(
-    [&](const std::string& agv_id, const vda5050_msgs::msg::Connection& msg) {
+    [&](const std::string& agv_id, const vda5050_types::Connection& msg) {
       callback_invoked = true;
       received_agv_id = agv_id;
       received_connection_state = msg.connection_state;
@@ -215,7 +217,8 @@ TEST_F(
     nullptr, nullptr);
   agv->connect();
 
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::OFFLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
 
   std::string conn_topic = mock_ptr_->find_topic_containing("connection");
   ASSERT_FALSE(conn_topic.empty())
@@ -223,10 +226,11 @@ TEST_F(
 
   mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
 
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::ONLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
   EXPECT_TRUE(callback_invoked);
   EXPECT_EQ(received_agv_id, manufacturer_ + "/" + serial_number_);
-  EXPECT_EQ(received_connection_state, "ONLINE");
+  EXPECT_EQ(received_connection_state, vda5050_types::ConnectionState::ONLINE);
 }
 
 TEST_F(
@@ -237,14 +241,16 @@ TEST_F(
 
   agv->setup_subscriptions(nullptr, nullptr, nullptr);
   agv->connect();
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::OFFLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
 
   std::string conn_topic = mock_ptr_->find_topic_containing("connection");
   ASSERT_FALSE(conn_topic.empty());
 
   mock_ptr_->simulate_receive(conn_topic, create_connection_json("OFFLINE"));
 
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::OFFLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
 }
 
 TEST_F(
@@ -255,7 +261,8 @@ TEST_F(
 
   agv->setup_subscriptions(nullptr, nullptr, nullptr);
   agv->connect();
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::OFFLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
 
   std::string conn_topic = mock_ptr_->find_topic_containing("connection");
   ASSERT_FALSE(conn_topic.empty());
@@ -263,7 +270,9 @@ TEST_F(
   mock_ptr_->simulate_receive(
     conn_topic, create_connection_json("CONNECTIONBROKEN"));
 
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::CONNECTIONBROKEN);
+  EXPECT_EQ(
+    agv->get_connection_status(),
+    vda5050_types::ConnectionState::CONNECTIONBROKEN);
 }
 
 // =============================================================================
@@ -279,10 +288,12 @@ TEST_F(AGVConnectionStateTestFixture, TransitionOnlineToOfflineViaMessage)
   std::string conn_topic = mock_ptr_->find_topic_containing("connection");
 
   mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::ONLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
 
   mock_ptr_->simulate_receive(conn_topic, create_connection_json("OFFLINE"));
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::OFFLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
 }
 
 TEST_F(AGVConnectionStateTestFixture, TransitionOnlineToOfflineViaDisconnect)
@@ -294,10 +305,12 @@ TEST_F(AGVConnectionStateTestFixture, TransitionOnlineToOfflineViaDisconnect)
   std::string conn_topic = mock_ptr_->find_topic_containing("connection");
 
   mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::ONLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
 
   agv->disconnect();
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::OFFLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
 }
 
 TEST_F(
@@ -310,14 +323,18 @@ TEST_F(
   std::string conn_topic = mock_ptr_->find_topic_containing("connection");
   ASSERT_FALSE(conn_topic.empty());
 
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::OFFLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
 
   mock_ptr_->simulate_receive(
     conn_topic, create_connection_json("CONNECTIONBROKEN"));
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::CONNECTIONBROKEN);
+  EXPECT_EQ(
+    agv->get_connection_status(),
+    vda5050_types::ConnectionState::CONNECTIONBROKEN);
 
   mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::ONLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
 }
 
 TEST_F(
@@ -331,17 +348,22 @@ TEST_F(
   std::string conn_topic = mock_ptr_->find_topic_containing("connection");
   ASSERT_FALSE(conn_topic.empty());
 
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::OFFLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
 
   mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::ONLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
 
   mock_ptr_->simulate_receive(
     conn_topic, create_connection_json("CONNECTIONBROKEN"));
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::CONNECTIONBROKEN);
+  EXPECT_EQ(
+    agv->get_connection_status(),
+    vda5050_types::ConnectionState::CONNECTIONBROKEN);
 
   mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::ONLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
 }
 
 // =============================================================================
@@ -361,11 +383,14 @@ TEST_F(
   ASSERT_FALSE(conn_topic.empty());
 
   mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::ONLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(2500));
 
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::CONNECTIONBROKEN);
+  EXPECT_EQ(
+    agv->get_connection_status(),
+    vda5050_types::ConnectionState::CONNECTIONBROKEN);
 }
 
 TEST_F(
@@ -381,16 +406,19 @@ TEST_F(
   ASSERT_FALSE(conn_topic.empty());
 
   mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::ONLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
 
   for (int i = 0; i < 3; ++i)
   {
     std::this_thread::sleep_for(std::chrono::seconds(1));
     mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
-    EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::ONLINE);
+    EXPECT_EQ(
+      agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
   }
 
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::ONLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
 }
 
 TEST_F(
@@ -405,16 +433,21 @@ TEST_F(
   std::string conn_topic = mock_ptr_->find_topic_containing("connection");
   ASSERT_FALSE(conn_topic.empty());
 
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::OFFLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
 
   mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::ONLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(2500));
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::CONNECTIONBROKEN);
+  EXPECT_EQ(
+    agv->get_connection_status(),
+    vda5050_types::ConnectionState::CONNECTIONBROKEN);
 
   mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::ONLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
 }
 
 // =============================================================================
@@ -428,17 +461,20 @@ TEST_F(AGVConnectionStateTestFixture, MultipleConnectDisconnectCycles)
 
   std::string conn_topic = mock_ptr_->find_topic_containing("connection");
 
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::OFFLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
 
   for (int i = 0; i < 5; ++i)
   {
     agv->connect();
 
     mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
-    EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::ONLINE);
+    EXPECT_EQ(
+      agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
 
     agv->disconnect();
-    EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::OFFLINE);
+    EXPECT_EQ(
+      agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
   }
 }
 
@@ -448,9 +484,15 @@ TEST_F(AGVConnectionStateTestFixture, MultipleConnectDisconnectCycles)
 
 TEST_F(AGVConnectionStateTestFixture, AGVConnectionStateEnumValues)
 {
-  EXPECT_NE(AGVConnectionState::ONLINE, AGVConnectionState::OFFLINE);
-  EXPECT_NE(AGVConnectionState::ONLINE, AGVConnectionState::CONNECTIONBROKEN);
-  EXPECT_NE(AGVConnectionState::OFFLINE, AGVConnectionState::CONNECTIONBROKEN);
+  EXPECT_NE(
+    vda5050_types::ConnectionState::ONLINE,
+    vda5050_types::ConnectionState::OFFLINE);
+  EXPECT_NE(
+    vda5050_types::ConnectionState::ONLINE,
+    vda5050_types::ConnectionState::CONNECTIONBROKEN);
+  EXPECT_NE(
+    vda5050_types::ConnectionState::OFFLINE,
+    vda5050_types::ConnectionState::CONNECTIONBROKEN);
 }
 
 // =============================================================================
@@ -510,7 +552,8 @@ TEST_F(AGVConnectionStateTestFixture, AGVCanBeDestroyedWhileDisconnected)
 TEST_F(AGVConnectionStateTestFixture, AGVCanBeDestroyedWithoutEverConnecting)
 {
   auto& agv = create_agv();
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::OFFLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
 }
 
 }  // namespace vda5050_master::test

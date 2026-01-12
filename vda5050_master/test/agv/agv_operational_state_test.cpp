@@ -234,7 +234,7 @@ TEST_F(
 
   agv->setup_subscriptions(
     nullptr,
-    [&](const std::string& agv_id, const vda5050_msgs::msg::State& msg) {
+    [&](const std::string& agv_id, const vda5050_types::State& msg) {
       callback_invoked = true;
       received_agv_id = agv_id;
       (void)msg;
@@ -433,13 +433,16 @@ TEST_F(
     conn_topic,
     R"({"headerId": 1, "timestamp": "2025-01-01T00:00:00.000Z", "version": "2.0.0", "manufacturer": "TestManufacturer", "serialNumber": "SN001", "connectionState": "ONLINE"})");
   EXPECT_EQ(agv->get_operational_state(), AGVState::AVAILABLE);
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::ONLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
 
   // Wait for connection heartbeat timeout
   std::this_thread::sleep_for(std::chrono::milliseconds(2500));
 
   // Connection becomes CONNECTIONBROKEN, operational state becomes UNAVAILABLE
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::CONNECTIONBROKEN);
+  EXPECT_EQ(
+    agv->get_connection_status(),
+    vda5050_types::ConnectionState::CONNECTIONBROKEN);
   EXPECT_EQ(agv->get_operational_state(), AGVState::UNAVAILABLE);
 }
 
@@ -469,7 +472,8 @@ TEST_F(
   mock_ptr_->simulate_receive(
     conn_topic,
     R"({"headerId": 2, "timestamp": "2025-01-01T00:00:01.000Z", "version": "2.0.0", "manufacturer": "TestManufacturer", "serialNumber": "SN001", "connectionState": "ONLINE"})");
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::ONLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
 
   // Operational state is still UNAVAILABLE until state message received
   EXPECT_EQ(agv->get_operational_state(), AGVState::UNAVAILABLE);
@@ -533,14 +537,16 @@ TEST_F(AGVOperationalStateTestFixture, InitialStatesBeforeAnyMessages)
   auto& agv = create_agv();
 
   // Both start in their initial states
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::OFFLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
   EXPECT_EQ(agv->get_operational_state(), AGVState::STATE_UNKNOWN);
 
   agv->connect();
 
   // Both should remain in initial states (no messages received yet)
   // Note: connect() starts heartbeat listeners but doesn't change state
-  EXPECT_EQ(agv->get_connection_status(), AGVConnectionState::OFFLINE);
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
   EXPECT_EQ(agv->get_operational_state(), AGVState::STATE_UNKNOWN);
 }
 

@@ -22,7 +22,11 @@
 
 #include "nlohmann/json.hpp"
 #include "vda5050_core/logger/logger.hpp"
+#include "vda5050_json_utils/serialization.hpp"
 #include "vda5050_master/standard_names.hpp"
+
+// TODO(vda5050_json_utils): Add serializers for InstantActions, Visualization,
+// and Factsheet to vda5050_json_utils/serialization.hpp
 
 // ============================================================================
 // Constructor / Destructor
@@ -119,7 +123,7 @@ void AGV::disconnect()
   }
 
   // Set explicit disconnect state to OFFLINE (intentional disconnection)
-  set_connection_status(AGVConnectionState::OFFLINE);
+  set_connection_status(vda5050_types::ConnectionState::OFFLINE);
 }
 
 bool AGV::is_connected() const
@@ -131,7 +135,7 @@ bool AGV::is_connected() const
   return false;
 }
 
-AGVConnectionState AGV::get_connection_status() const
+vda5050_types::ConnectionState AGV::get_connection_status() const
 {
   std::lock_guard<std::mutex> lock(state_mutex_);
   return connection_status_;
@@ -143,15 +147,15 @@ AGVState AGV::get_operational_state() const
   return operational_state_;
 }
 
-void AGV::set_connection_status(AGVConnectionState status)
+void AGV::set_connection_status(vda5050_types::ConnectionState status)
 {
   std::lock_guard<std::mutex> lock(state_mutex_);
   connection_status_ = status;
 
   // When connection is lost, AGV becomes unavailable
   if (
-    status == AGVConnectionState::OFFLINE ||
-    status == AGVConnectionState::CONNECTIONBROKEN)
+    status == vda5050_types::ConnectionState::OFFLINE ||
+    status == vda5050_types::ConnectionState::CONNECTIONBROKEN)
   {
     if (operational_state_ != AGVState::UNAVAILABLE)
     {
@@ -159,7 +163,8 @@ void AGV::set_connection_status(AGVConnectionState status)
       VDA5050_INFO(
         "[AGV] Operational state changed to UNAVAILABLE for {} (connection {})",
         agv_id_,
-        status == AGVConnectionState::OFFLINE ? "OFFLINE" : "CONNECTIONBROKEN");
+        status == vda5050_types::ConnectionState::OFFLINE ? "OFFLINE"
+                                                          : "CONNECTIONBROKEN");
     }
   }
 }
@@ -191,7 +196,7 @@ void AGV::set_operational_state(AGVState state)
 
 void AGV::on_connection_heartbeat_timeout()
 {
-  set_connection_status(AGVConnectionState::CONNECTIONBROKEN);
+  set_connection_status(vda5050_types::ConnectionState::CONNECTIONBROKEN);
   VDA5050_WARN("[AGV] Connection heartbeat timeout for {}", agv_id_);
 }
 
@@ -205,7 +210,7 @@ void AGV::on_state_heartbeat_timeout()
 // Cached Messages - Update
 // ============================================================================
 
-void AGV::update_connection(const vda5050_msgs::msg::Connection& msg)
+void AGV::update_connection(const vda5050_types::Connection& msg)
 {
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
@@ -220,30 +225,10 @@ void AGV::update_connection(const vda5050_msgs::msg::Connection& msg)
   }
 
   // Update connection status based on the connectionState field in the message
-  AGVConnectionState new_status = AGVConnectionState::CONNECTIONBROKEN;
-  if (msg.connection_state == "ONLINE")
-  {
-    new_status = AGVConnectionState::ONLINE;
-  }
-  else if (msg.connection_state == "OFFLINE")
-  {
-    new_status = AGVConnectionState::OFFLINE;
-  }
-  else if (msg.connection_state == "CONNECTIONBROKEN")
-  {
-    new_status = AGVConnectionState::CONNECTIONBROKEN;
-  }
-  else
-  {
-    VDA5050_WARN(
-      "[AGV] Unknown connectionState '{}' for {}, defaulting to "
-      "CONNECTIONBROKEN",
-      msg.connection_state, agv_id_);
-  }
-  set_connection_status(new_status);
+  set_connection_status(msg.connection_state);
 }
 
-void AGV::update_state(const vda5050_msgs::msg::State& msg)
+void AGV::update_state(const vda5050_types::State& msg)
 {
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
@@ -259,14 +244,14 @@ void AGV::update_state(const vda5050_msgs::msg::State& msg)
   set_operational_state(AGVState::AVAILABLE);
 }
 
-void AGV::update_factsheet(const vda5050_msgs::msg::Factsheet& msg)
+void AGV::update_factsheet(const vda5050_types::Factsheet& msg)
 {
   std::lock_guard<std::mutex> lock(data_mutex_);
   last_factsheet_ = msg;
   last_factsheet_time_ = Clock::now();
 }
 
-void AGV::update_visualization(const vda5050_msgs::msg::Visualization& msg)
+void AGV::update_visualization(const vda5050_types::Visualization& msg)
 {
   std::lock_guard<std::mutex> lock(data_mutex_);
   last_visualization_ = msg;
@@ -277,26 +262,25 @@ void AGV::update_visualization(const vda5050_msgs::msg::Visualization& msg)
 // Cached Messages - Get
 // ============================================================================
 
-std::optional<vda5050_msgs::msg::Connection> AGV::get_last_connection() const
+std::optional<vda5050_types::Connection> AGV::get_last_connection() const
 {
   std::lock_guard<std::mutex> lock(data_mutex_);
   return last_connection_;
 }
 
-std::optional<vda5050_msgs::msg::State> AGV::get_last_state() const
+std::optional<vda5050_types::State> AGV::get_last_state() const
 {
   std::lock_guard<std::mutex> lock(data_mutex_);
   return last_state_;
 }
 
-std::optional<vda5050_msgs::msg::Factsheet> AGV::get_last_factsheet() const
+std::optional<vda5050_types::Factsheet> AGV::get_last_factsheet() const
 {
   std::lock_guard<std::mutex> lock(data_mutex_);
   return last_factsheet_;
 }
 
-std::optional<vda5050_msgs::msg::Visualization> AGV::get_last_visualization()
-  const
+std::optional<vda5050_types::Visualization> AGV::get_last_visualization() const
 {
   std::lock_guard<std::mutex> lock(data_mutex_);
   return last_visualization_;
@@ -383,7 +367,7 @@ void AGV::setup_subscriptions(
   VDA5050_INFO("[AGV] Setup subscriptions for AGV: {}", agv_id_);
 }
 
-bool AGV::send_order(const vda5050_msgs::msg::Order& order)
+bool AGV::send_order(const vda5050_types::Order& order)
 {
   std::lock_guard<std::mutex> lock(queue_mutex_);
 
@@ -410,7 +394,7 @@ bool AGV::send_order(const vda5050_msgs::msg::Order& order)
   return true;
 }
 
-bool AGV::send_instant_actions(const vda5050_msgs::msg::InstantActions& actions)
+bool AGV::send_instant_actions(const vda5050_types::InstantActions& actions)
 {
   std::lock_guard<std::mutex> lock(queue_mutex_);
 
@@ -453,8 +437,8 @@ void AGV::handle_connection_message(
   try
   {
     auto json_msg = nlohmann::json::parse(payload);
-    vda5050_msgs::msg::Connection msg;
-    vda5050_msgs::msg::from_json(json_msg, msg);
+    vda5050_types::Connection msg;
+    vda5050_types::from_json(json_msg, msg);
 
     // Update cache
     update_connection(msg);
@@ -479,8 +463,8 @@ void AGV::handle_state_message(
   try
   {
     auto json_msg = nlohmann::json::parse(payload);
-    vda5050_msgs::msg::State msg;
-    vda5050_msgs::msg::from_json(json_msg, msg);
+    vda5050_types::State msg;
+    vda5050_types::from_json(json_msg, msg);
 
     // Update cache
     update_state(msg);
@@ -504,8 +488,8 @@ void AGV::handle_factsheet_message(
   try
   {
     auto json_msg = nlohmann::json::parse(payload);
-    vda5050_msgs::msg::Factsheet msg;
-    vda5050_msgs::msg::from_json(json_msg, msg);
+    vda5050_types::Factsheet msg;
+    vda5050_types::from_json(json_msg, msg);
 
     // Update cache
     update_factsheet(msg);
@@ -529,8 +513,8 @@ void AGV::handle_visualization_message(
   try
   {
     auto json_msg = nlohmann::json::parse(payload);
-    vda5050_msgs::msg::Visualization msg;
-    vda5050_msgs::msg::from_json(json_msg, msg);
+    vda5050_types::Visualization msg;
+    vda5050_types::from_json(json_msg, msg);
 
     // Update cache
     update_visualization(msg);
@@ -559,8 +543,8 @@ void AGV::process_queues()
 
   while (true)
   {
-    std::optional<vda5050_msgs::msg::Order> order;
-    std::optional<vda5050_msgs::msg::InstantActions> actions;
+    std::optional<vda5050_types::Order> order;
+    std::optional<vda5050_types::InstantActions> actions;
 
     {
       std::unique_lock<std::mutex> lock(queue_mutex_);
@@ -606,7 +590,7 @@ void AGV::process_queues()
   VDA5050_INFO("[AGV] Queue processing thread stopped for {}", agv_id_);
 }
 
-void AGV::send_order_now(const vda5050_msgs::msg::Order& order)
+void AGV::send_order_now(const vda5050_types::Order& order)
 {
   if (!communication_)
   {
@@ -615,7 +599,7 @@ void AGV::send_order_now(const vda5050_msgs::msg::Order& order)
   }
 
   nlohmann::json j;
-  vda5050_msgs::msg::to_json(j, order);
+  vda5050_types::to_json(j, order);
   communication_->send_message(
     build_topic(vda5050_master::OrderTopic), j.dump(),
     vda5050_master::OrderQos);
@@ -623,8 +607,7 @@ void AGV::send_order_now(const vda5050_msgs::msg::Order& order)
   VDA5050_INFO("[AGV] Sent order to AGV: {}", agv_id_);
 }
 
-void AGV::send_instant_actions_now(
-  const vda5050_msgs::msg::InstantActions& actions)
+void AGV::send_instant_actions_now(const vda5050_types::InstantActions& actions)
 {
   if (!communication_)
   {
@@ -634,7 +617,7 @@ void AGV::send_instant_actions_now(
   }
 
   nlohmann::json j;
-  vda5050_msgs::msg::to_json(j, actions);
+  vda5050_types::to_json(j, actions);
   communication_->send_message(
     build_topic(vda5050_master::InstantActionsTopic), j.dump(),
     vda5050_master::InstantActionsQos);
