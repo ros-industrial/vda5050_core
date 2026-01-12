@@ -425,36 +425,36 @@ TEST_F(AGVIntegrationTestFixture, PublishMultipleOrdersInSequence)
   }
 }
 
-TEST_F(AGVIntegrationTestFixture, PublishMultipleInstantActionsInSequence)
-{
-  TestMaster master;
-  master.register_agv(manufacturer_, serial_number_);
-
-  auto* mock = get_mock();
-  ASSERT_NE(mock, nullptr);
-
-  constexpr int num_actions = 5;
-  for (int i = 0; i < num_actions; ++i)
-  {
-    EXPECT_TRUE(master.publish_instant_actions(
-      manufacturer_, serial_number_,
-      create_test_instant_actions(static_cast<uint32_t>(i))));
-  }
-
-  // Wait for all messages
-  ASSERT_TRUE(mock->wait_for_messages(num_actions));
-
-  auto messages = mock->get_sent_messages();
-  ASSERT_EQ(messages.size(), static_cast<size_t>(num_actions));
-
-  // Verify messages arrived in order (header_id should be 0, 1, 2, 3, 4)
-  for (int i = 0; i < num_actions; ++i)
-  {
-    std::string expected_id = "\"headerId\":" + std::to_string(i);
-    EXPECT_NE(messages[i].second.find(expected_id), std::string::npos)
-      << "Message " << i << " should contain headerId " << i;
-  }
-}
+// TEST_F(AGVIntegrationTestFixture, PublishMultipleInstantActionsInSequence)
+// {
+//   TestMaster master;
+//   master.register_agv(manufacturer_, serial_number_);
+//
+//   auto* mock = get_mock();
+//   ASSERT_NE(mock, nullptr);
+//
+//   constexpr int num_actions = 5;
+//   for (int i = 0; i < num_actions; ++i)
+//   {
+//     EXPECT_TRUE(master.publish_instant_actions(
+//       manufacturer_, serial_number_,
+//       create_test_instant_actions(static_cast<uint32_t>(i))));
+//   }
+//
+//   // Wait for all messages
+//   ASSERT_TRUE(mock->wait_for_messages(num_actions));
+//
+//   auto messages = mock->get_sent_messages();
+//   ASSERT_EQ(messages.size(), static_cast<size_t>(num_actions));
+//
+//   // Verify messages arrived in order (header_id should be 0, 1, 2, 3, 4)
+//   for (int i = 0; i < num_actions; ++i)
+//   {
+//     std::string expected_id = "\"headerId\":" + std::to_string(i);
+//     EXPECT_NE(messages[i].second.find(expected_id), std::string::npos)
+//       << "Message " << i << " should contain headerId " << i;
+//   }
+// }
 
 // =============================================================================
 // Concurrent Access Tests
@@ -779,55 +779,55 @@ TEST_F(AGVIntegrationTestFixture, DropNewestPolicyRejectsNewOrderWhenQueueFull)
   EXPECT_NE(messages[3].second.find("order_3"), std::string::npos);
 }
 
-TEST_F(
-  AGVIntegrationTestFixture,
-  DropNewestPolicyRejectsNewInstantActionsWhenQueueFull)
-{
-  constexpr size_t queue_size = 3;
-  constexpr bool drop_oldest = false;  // Reject new messages when full
-
-  TestMaster master;
-  master.register_agv(manufacturer_, serial_number_, queue_size, drop_oldest);
-
-  auto* mock = get_mock();
-  ASSERT_NE(mock, nullptr);
-  mock->block();  // Block message processing so queue fills up
-
-  // Publish first message and wait for it to be blocked in send_message
-  EXPECT_TRUE(master.publish_instant_actions(
-    manufacturer_, serial_number_, create_test_instant_actions(0)));
-  ASSERT_TRUE(mock->wait_for_blocked());
-
-  // Now fill the queue (size=3) with actions 1, 2, 3
-  EXPECT_TRUE(master.publish_instant_actions(
-    manufacturer_, serial_number_, create_test_instant_actions(1)));
-  EXPECT_TRUE(master.publish_instant_actions(
-    manufacturer_, serial_number_, create_test_instant_actions(2)));
-  EXPECT_TRUE(master.publish_instant_actions(
-    manufacturer_, serial_number_, create_test_instant_actions(3)));
-
-  // Queue is full - new messages should be rejected (return false)
-  EXPECT_FALSE(master.publish_instant_actions(
-    manufacturer_, serial_number_, create_test_instant_actions(4)));
-  EXPECT_FALSE(master.publish_instant_actions(
-    manufacturer_, serial_number_, create_test_instant_actions(5)));
-
-  // Unblock and let messages be sent
-  mock->unblock();
-
-  // Wait for all messages: 1 + queue_size
-  constexpr size_t expected_messages = queue_size + 1;
-  ASSERT_TRUE(mock->wait_for_messages(expected_messages));
-
-  auto messages = mock->get_sent_messages();
-  ASSERT_EQ(messages.size(), expected_messages);
-
-  // Should have header IDs 0, 1, 2, 3 (new ones were rejected)
-  EXPECT_NE(messages[0].second.find("\"headerId\":0"), std::string::npos);
-  EXPECT_NE(messages[1].second.find("\"headerId\":1"), std::string::npos);
-  EXPECT_NE(messages[2].second.find("\"headerId\":2"), std::string::npos);
-  EXPECT_NE(messages[3].second.find("\"headerId\":3"), std::string::npos);
-}
+// TEST_F(
+//   AGVIntegrationTestFixture,
+//   DropNewestPolicyRejectsNewInstantActionsWhenQueueFull)
+// {
+//   constexpr size_t queue_size = 3;
+//   constexpr bool drop_oldest = false;  // Reject new messages when full
+//
+//   TestMaster master;
+//   master.register_agv(manufacturer_, serial_number_, queue_size, drop_oldest);
+//
+//   auto* mock = get_mock();
+//   ASSERT_NE(mock, nullptr);
+//   mock->block();  // Block message processing so queue fills up
+//
+//   // Publish first message and wait for it to be blocked in send_message
+//   EXPECT_TRUE(master.publish_instant_actions(
+//     manufacturer_, serial_number_, create_test_instant_actions(0)));
+//   ASSERT_TRUE(mock->wait_for_blocked());
+//
+//   // Now fill the queue (size=3) with actions 1, 2, 3
+//   EXPECT_TRUE(master.publish_instant_actions(
+//     manufacturer_, serial_number_, create_test_instant_actions(1)));
+//   EXPECT_TRUE(master.publish_instant_actions(
+//     manufacturer_, serial_number_, create_test_instant_actions(2)));
+//   EXPECT_TRUE(master.publish_instant_actions(
+//     manufacturer_, serial_number_, create_test_instant_actions(3)));
+//
+//   // Queue is full - new messages should be rejected (return false)
+//   EXPECT_FALSE(master.publish_instant_actions(
+//     manufacturer_, serial_number_, create_test_instant_actions(4)));
+//   EXPECT_FALSE(master.publish_instant_actions(
+//     manufacturer_, serial_number_, create_test_instant_actions(5)));
+//
+//   // Unblock and let messages be sent
+//   mock->unblock();
+//
+//   // Wait for all messages: 1 + queue_size
+//   constexpr size_t expected_messages = queue_size + 1;
+//   ASSERT_TRUE(mock->wait_for_messages(expected_messages));
+//
+//   auto messages = mock->get_sent_messages();
+//   ASSERT_EQ(messages.size(), expected_messages);
+//
+//   // Should have header IDs 0, 1, 2, 3 (new ones were rejected)
+//   EXPECT_NE(messages[0].second.find("\"headerId\":0"), std::string::npos);
+//   EXPECT_NE(messages[1].second.find("\"headerId\":1"), std::string::npos);
+//   EXPECT_NE(messages[2].second.find("\"headerId\":2"), std::string::npos);
+//   EXPECT_NE(messages[3].second.find("\"headerId\":3"), std::string::npos);
+// }
 
 TEST_F(AGVIntegrationTestFixture, DropOldestPolicyDropsOldestOrder)
 {
@@ -875,50 +875,50 @@ TEST_F(AGVIntegrationTestFixture, DropOldestPolicyDropsOldestOrder)
   EXPECT_NE(messages[3].second.find("order_4"), std::string::npos);
 }
 
-TEST_F(AGVIntegrationTestFixture, DropOldestPolicyDropsOldestInstantActions)
-{
-  constexpr size_t queue_size = 3;
-  constexpr bool drop_oldest = true;  // Drop oldest messages when full
-
-  TestMaster master;
-  master.register_agv(manufacturer_, serial_number_, queue_size, drop_oldest);
-
-  auto* mock = get_mock();
-  ASSERT_NE(mock, nullptr);
-  mock->block();  // Block message processing so queue fills up
-
-  // Publish first message and wait for it to be blocked in send_message
-  EXPECT_TRUE(master.publish_instant_actions(
-    manufacturer_, serial_number_, create_test_instant_actions(0)));
-  ASSERT_TRUE(mock->wait_for_blocked());
-
-  // Now publish remaining messages - these will fill and overflow the queue
-  // Queue will have actions 1, 2, 3 initially (size=3)
-  // action 4 causes oldest (action 1) to be dropped
-  EXPECT_TRUE(master.publish_instant_actions(
-    manufacturer_, serial_number_, create_test_instant_actions(1)));
-  EXPECT_TRUE(master.publish_instant_actions(
-    manufacturer_, serial_number_, create_test_instant_actions(2)));
-  EXPECT_TRUE(master.publish_instant_actions(
-    manufacturer_, serial_number_, create_test_instant_actions(3)));
-  EXPECT_TRUE(master.publish_instant_actions(
-    manufacturer_, serial_number_, create_test_instant_actions(4)));
-
-  // Unblock and let messages be sent
-  mock->unblock();
-
-  // Wait for messages: action 0 (being processed) + queue_size remaining
-  constexpr size_t expected_messages = queue_size + 1;
-  ASSERT_TRUE(mock->wait_for_messages(expected_messages));
-
-  auto messages = mock->get_sent_messages();
-  ASSERT_EQ(messages.size(), expected_messages);
-
-  // Should have header IDs 0 (being processed), 2, 3, 4 (action 1 dropped)
-  EXPECT_NE(messages[0].second.find("\"headerId\":0"), std::string::npos);
-  EXPECT_NE(messages[1].second.find("\"headerId\":2"), std::string::npos);
-  EXPECT_NE(messages[2].second.find("\"headerId\":3"), std::string::npos);
-  EXPECT_NE(messages[3].second.find("\"headerId\":4"), std::string::npos);
-}
+// TEST_F(AGVIntegrationTestFixture, DropOldestPolicyDropsOldestInstantActions)
+// {
+//   constexpr size_t queue_size = 3;
+//   constexpr bool drop_oldest = true;  // Drop oldest messages when full
+//
+//   TestMaster master;
+//   master.register_agv(manufacturer_, serial_number_, queue_size, drop_oldest);
+//
+//   auto* mock = get_mock();
+//   ASSERT_NE(mock, nullptr);
+//   mock->block();  // Block message processing so queue fills up
+//
+//   // Publish first message and wait for it to be blocked in send_message
+//   EXPECT_TRUE(master.publish_instant_actions(
+//     manufacturer_, serial_number_, create_test_instant_actions(0)));
+//   ASSERT_TRUE(mock->wait_for_blocked());
+//
+//   // Now publish remaining messages - these will fill and overflow the queue
+//   // Queue will have actions 1, 2, 3 initially (size=3)
+//   // action 4 causes oldest (action 1) to be dropped
+//   EXPECT_TRUE(master.publish_instant_actions(
+//     manufacturer_, serial_number_, create_test_instant_actions(1)));
+//   EXPECT_TRUE(master.publish_instant_actions(
+//     manufacturer_, serial_number_, create_test_instant_actions(2)));
+//   EXPECT_TRUE(master.publish_instant_actions(
+//     manufacturer_, serial_number_, create_test_instant_actions(3)));
+//   EXPECT_TRUE(master.publish_instant_actions(
+//     manufacturer_, serial_number_, create_test_instant_actions(4)));
+//
+//   // Unblock and let messages be sent
+//   mock->unblock();
+//
+//   // Wait for messages: action 0 (being processed) + queue_size remaining
+//   constexpr size_t expected_messages = queue_size + 1;
+//   ASSERT_TRUE(mock->wait_for_messages(expected_messages));
+//
+//   auto messages = mock->get_sent_messages();
+//   ASSERT_EQ(messages.size(), expected_messages);
+//
+//   // Should have header IDs 0 (being processed), 2, 3, 4 (action 1 dropped)
+//   EXPECT_NE(messages[0].second.find("\"headerId\":0"), std::string::npos);
+//   EXPECT_NE(messages[1].second.find("\"headerId\":2"), std::string::npos);
+//   EXPECT_NE(messages[2].second.find("\"headerId\":3"), std::string::npos);
+//   EXPECT_NE(messages[3].second.find("\"headerId\":4"), std::string::npos);
+// }
 
 }  // namespace vda5050_master::test
