@@ -27,6 +27,7 @@
 #include <string>
 #include <thread>
 
+#include "../communication/test_helpers.hpp"
 #include "vda5050_master/agv/agv.hpp"
 #include "vda5050_master/communication/communication.hpp"
 #include "vda5050_master/standard_names.hpp"
@@ -193,6 +194,17 @@ protected:
     })";
   }
 
+  // Helper to establish connection (sends ONLINE message to trigger AGV setup)
+  void establish_connection(AGV* agv)
+  {
+    (void)agv;  // Parameter kept for consistency with other test files
+    std::string conn_topic = mock_ptr_->find_topic_containing("connection");
+    ASSERT_FALSE(conn_topic.empty()) << "Connection topic not found";
+    mock_ptr_->simulate_receive(
+      conn_topic,
+      make_connection_json(manufacturer_, serial_number_, "ONLINE"));
+  }
+
   std::string manufacturer_;
   std::string serial_number_;
   MockCommunicationForOperationalTests* mock_ptr_ = nullptr;
@@ -243,6 +255,9 @@ TEST_F(
 
   EXPECT_EQ(agv->get_operational_state(), AGVState::STATE_UNKNOWN);
 
+  // First establish connection to trigger AGV component setup
+  establish_connection(agv.get());
+
   std::string state_topic = mock_ptr_->find_topic_containing("state");
   ASSERT_FALSE(state_topic.empty()) << "State topic not found in subscriptions";
 
@@ -267,6 +282,9 @@ TEST_F(
   agv->setup_subscriptions(nullptr, nullptr, nullptr);
   agv->connect();
 
+  // Establish connection to trigger AGV component setup
+  establish_connection(agv.get());
+
   std::string state_topic = mock_ptr_->find_topic_containing("state");
   ASSERT_FALSE(state_topic.empty());
 
@@ -289,6 +307,9 @@ TEST_F(
 
   agv->setup_subscriptions(nullptr, nullptr, nullptr);
   agv->connect();
+
+  // Establish connection to trigger AGV component setup
+  establish_connection(agv.get());
 
   std::string state_topic = mock_ptr_->find_topic_containing("state");
   ASSERT_FALSE(state_topic.empty());
@@ -316,6 +337,9 @@ TEST_F(
 
   agv->setup_subscriptions(nullptr, nullptr, nullptr);
   agv->connect();
+
+  // Establish connection to trigger AGV component setup
+  establish_connection(agv.get());
 
   std::string state_topic = mock_ptr_->find_topic_containing("state");
   ASSERT_FALSE(state_topic.empty());
@@ -347,6 +371,9 @@ TEST_F(
   agv->setup_subscriptions(nullptr, nullptr, nullptr);
   agv->connect();
 
+  // Establish connection to trigger AGV component setup
+  establish_connection(agv.get());
+
   std::string state_topic = mock_ptr_->find_topic_containing("state");
   mock_ptr_->simulate_receive(state_topic, create_state_json());
   EXPECT_EQ(agv->get_operational_state(), AGVState::AVAILABLE);
@@ -364,6 +391,9 @@ TEST_F(
   auto& agv = create_agv();
   agv->setup_subscriptions(nullptr, nullptr, nullptr);
   agv->connect();
+
+  // Establish connection to trigger AGV component setup
+  establish_connection(agv.get());
 
   std::string state_topic = mock_ptr_->find_topic_containing("state");
   std::string conn_topic = mock_ptr_->find_topic_containing("connection");
@@ -390,6 +420,9 @@ TEST_F(
   agv->setup_subscriptions(nullptr, nullptr, nullptr);
   agv->connect();
 
+  // Establish connection to trigger AGV component setup
+  establish_connection(agv.get());
+
   std::string state_topic = mock_ptr_->find_topic_containing("state");
   std::string conn_topic = mock_ptr_->find_topic_containing("connection");
   ASSERT_FALSE(state_topic.empty());
@@ -413,6 +446,9 @@ TEST_F(
   auto& agv = create_agv();
   agv->setup_subscriptions(nullptr, nullptr, nullptr);
   agv->connect();
+
+  // Establish connection to trigger AGV component setup
+  establish_connection(agv.get());
 
   std::string state_topic = mock_ptr_->find_topic_containing("state");
   std::string conn_topic = mock_ptr_->find_topic_containing("connection");

@@ -323,6 +323,19 @@ private:
   std::unique_ptr<vda5050_master::communication::HeartbeatListener>
     state_heartbeat_;
 
+  // Connection establishment state
+  std::atomic<bool> connection_established_{false};
+  int state_heartbeat_interval_;
+
+  // Stored callbacks for deferred subscription setup
+  ConnectionCallback stored_connection_callback_;
+  StateCallback stored_state_callback_;
+  FactsheetCallback stored_factsheet_callback_;
+  VisualizationCallback stored_visualization_callback_;
+
+  // Set up AGV components when connection is established (ONLINE received)
+  void setup_agv_components();
+
   // AGV states (protected by state_mutex_)
   mutable std::mutex state_mutex_;
   vda5050_types::ConnectionState connection_status_{

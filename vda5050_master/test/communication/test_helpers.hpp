@@ -118,6 +118,32 @@ inline std::vector<std::string> make_numbered_payloads(size_t count)
   return payloads;
 }
 
+/**
+ * @brief Create a VDA5050 connection JSON message
+ * @param manufacturer AGV manufacturer
+ * @param serial_number AGV serial number
+ * @param state Connection state: "ONLINE", "OFFLINE", or "CONNECTIONBROKEN"
+ */
+inline std::string make_connection_json(
+  const std::string& manufacturer, const std::string& serial_number,
+  const std::string& state = "ONLINE")
+{
+  return R"({"headerId": 1, "timestamp": "2025-01-01T00:00:00.000Z", "version": "2.0.0", "manufacturer": ")" +
+         manufacturer + R"(", "serialNumber": ")" + serial_number +
+         R"(", "connectionState": ")" + state + R"("})";
+}
+
+/**
+ * @brief Build the VDA5050 connection topic path for an AGV
+ * @param manufacturer AGV manufacturer
+ * @param serial_number AGV serial number
+ */
+inline std::string make_connection_topic(
+  const std::string& manufacturer, const std::string& serial_number)
+{
+  return "rmf2/v2/" + manufacturer + "/" + serial_number + "/connection";
+}
+
 }  // namespace vda5050_master::test
 
 #endif  // COMMUNICATION__TEST_HELPERS_HPP_

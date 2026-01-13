@@ -30,6 +30,7 @@
 #include <utility>
 #include <vector>
 
+#include "../communication/test_helpers.hpp"
 #include "vda5050_master/agv/agv.hpp"
 #include "vda5050_master/communication/communication.hpp"
 #include "vda5050_master/vda5050_master/master.hpp"
@@ -295,6 +296,20 @@ protected:
     return MockRegistry::instance().get_mock(agv_id_);
   }
 
+  // Helper to simulate ONLINE connection message to trigger AGV component setup
+  void establish_connection()
+  {
+    auto* mock = get_mock();
+    ASSERT_NE(mock, nullptr);
+
+    std::string conn_topic =
+      make_connection_topic(manufacturer_, serial_number_);
+    std::string online_msg =
+      make_connection_json(manufacturer_, serial_number_, "ONLINE");
+
+    mock->simulate_receive(conn_topic, online_msg);
+  }
+
   std::string manufacturer_;
   std::string serial_number_;
   std::string agv_id_;
@@ -357,6 +372,9 @@ TEST_F(AGVIntegrationTestFixture, PublishOrderSendsMessage)
   auto* mock = get_mock();
   ASSERT_NE(mock, nullptr);
 
+  // Establish connection to trigger AGV component setup
+  establish_connection();
+
   EXPECT_TRUE(master.publish_order(
     manufacturer_, serial_number_, create_test_order("order_1")));
 
@@ -381,6 +399,9 @@ TEST_F(AGVIntegrationTestFixture, PublishInstantActionsSendsMessage)
   auto* mock = get_mock();
   ASSERT_NE(mock, nullptr);
 
+  // Establish connection to trigger AGV component setup
+  establish_connection();
+
   EXPECT_TRUE(master.publish_instant_actions(
     manufacturer_, serial_number_, create_test_instant_actions(42)));
 
@@ -401,6 +422,9 @@ TEST_F(AGVIntegrationTestFixture, PublishMultipleOrdersInSequence)
 
   auto* mock = get_mock();
   ASSERT_NE(mock, nullptr);
+
+  // Establish connection to trigger AGV component setup
+  establish_connection();
 
   constexpr int num_orders = 5;
   for (int i = 0; i < num_orders; ++i)
@@ -468,6 +492,9 @@ TEST_F(AGVIntegrationTestFixture, ConcurrentPublishOrdersAreThreadSafe)
   auto* mock = get_mock();
   ASSERT_NE(mock, nullptr);
 
+  // Establish connection to trigger AGV component setup
+  establish_connection();
+
   // Use fewer messages to stay within default queue size (10)
   // This ensures all messages are sent without drops
   constexpr int num_threads = 2;
@@ -509,6 +536,9 @@ TEST_F(AGVIntegrationTestFixture, ConcurrentPublishInstantActionsAreThreadSafe)
   auto* mock = get_mock();
   ASSERT_NE(mock, nullptr);
 
+  // Establish connection to trigger AGV component setup
+  establish_connection();
+
   // Use fewer messages to stay within default queue size (10)
   // This ensures all messages are sent without drops
   constexpr int num_threads = 2;
@@ -549,6 +579,9 @@ TEST_F(AGVIntegrationTestFixture, ConcurrentOrdersAndInstantActions)
 
   auto* mock = get_mock();
   ASSERT_NE(mock, nullptr);
+
+  // Establish connection to trigger AGV component setup
+  establish_connection();
 
   constexpr int num_orders = 10;
   constexpr int num_actions = 10;
@@ -630,6 +663,14 @@ TEST_F(AGVIntegrationTestFixture, MessagesRoutedToCorrectAGV)
   auto* mock2 = MockRegistry::instance().get_mock("Mfg1/AGV2");
   ASSERT_NE(mock1, nullptr);
   ASSERT_NE(mock2, nullptr);
+
+  // Establish connection for each AGV to trigger component setup
+  mock1->simulate_receive(
+    make_connection_topic("Mfg1", "AGV1"),
+    make_connection_json("Mfg1", "AGV1", "ONLINE"));
+  mock2->simulate_receive(
+    make_connection_topic("Mfg1", "AGV2"),
+    make_connection_json("Mfg1", "AGV2", "ONLINE"));
 
   // Send to AGV1
   master.publish_order("Mfg1", "AGV1", create_test_order("order_for_agv1"));
@@ -741,6 +782,10 @@ TEST_F(AGVIntegrationTestFixture, DropNewestPolicyRejectsNewOrderWhenQueueFull)
 
   auto* mock = get_mock();
   ASSERT_NE(mock, nullptr);
+
+  // Establish connection to trigger AGV component setup
+  establish_connection();
+
   mock->block();  // Block message processing so queue fills up
 
   // Publish first message and wait for it to be blocked in send_message
@@ -839,6 +884,10 @@ TEST_F(AGVIntegrationTestFixture, DropOldestPolicyDropsOldestOrder)
 
   auto* mock = get_mock();
   ASSERT_NE(mock, nullptr);
+
+  // Establish connection to trigger AGV component setup
+  establish_connection();
+
   mock->block();  // Block message processing so queue fills up
 
   // Publish first message and wait for it to be blocked in send_message

@@ -43,33 +43,25 @@ AGV::AGV(
   registered_time_(Clock::now()),
   max_queue_size_(max_queue_size),
   drop_oldest_(drop_oldest),
-  state_heartbeat_(
-    std::make_unique<vda5050_master::communication::HeartbeatListener>(
-      agv_id_ + "_state_heartbeat", state_heartbeat_interval,
-      [this]() { on_state_heartbeat_timeout(); }))
+  state_heartbeat_interval_(state_heartbeat_interval)
 {
-  // Start the queue processing thread
-  queue_thread_ = std::thread(&AGV::process_queues, this);
+  // AGV components will be set up when ONLINE connection message is received
 }
 
 AGV::~AGV()
 {
-  // Stop heartbeat listener first (it may call state setters)
-  if (state_heartbeat_)
+  // Only need to clean up if AGV components were initialized
+  if (connection_established_)
   {
+    // Stop heartbeat listener
     state_heartbeat_->stop_connection_heartbeat();
-  }
 
-  // Signal the queue thread to stop
-  {
-    std::lock_guard<std::mutex> lock(queue_mutex_);
-    stop_processing_ = true;
-  }
-  queue_cv_.notify_one();
-
-  // Wait for the thread to finish
-  if (queue_thread_.joinable())
-  {
+    // Signal the queue thread to stop and wait for it to finish
+    {
+      std::lock_guard<std::mutex> lock(queue_mutex_);
+      stop_processing_ = true;
+    }
+    queue_cv_.notify_one();
     queue_thread_.join();
   }
 }
@@ -83,12 +75,6 @@ void AGV::connect()
   if (communication_)
   {
     communication_->connect();
-  }
-
-  // Start state heartbeat listener
-  if (state_heartbeat_)
-  {
-    state_heartbeat_->start_connection_heartbeat();
   }
 }
 
@@ -107,6 +93,45 @@ void AGV::disconnect()
 
   // Set explicit disconnect state to OFFLINE (intentional disconnection)
   set_connection_status(vda5050_types::ConnectionState::OFFLINE);
+}
+
+void AGV::setup_agv_components()
+{
+  VDA5050_INFO("[AGV] Setting up AGV components for {}", agv_id_);
+
+  // Create and start state heartbeat listener
+  state_heartbeat_ =
+    std::make_unique<vda5050_master::communication::HeartbeatListener>(
+      agv_id_ + "_state_heartbeat", state_heartbeat_interval_,
+      [this]() { on_state_heartbeat_timeout(); });
+  state_heartbeat_->start_connection_heartbeat();
+
+  // Subscribe to remaining topics
+  communication_->subscribe(
+    build_topic(vda5050_master::StateTopic),
+    [this](const std::string& /*topic*/, const std::string& payload) {
+      handle_state_message(payload, stored_state_callback_);
+    },
+    vda5050_master::StateQos);
+
+  communication_->subscribe(
+    build_topic(vda5050_master::FactsheetTopic),
+    [this](const std::string& /*topic*/, const std::string& payload) {
+      handle_factsheet_message(payload, stored_factsheet_callback_);
+    },
+    vda5050_master::FactsheetQos);
+
+  communication_->subscribe(
+    build_topic(vda5050_master::VisualizationTopic),
+    [this](const std::string& /*topic*/, const std::string& payload) {
+      handle_visualization_message(payload, stored_visualization_callback_);
+    },
+    vda5050_master::VisualizationQos);
+
+  // Start queue processing thread
+  queue_thread_ = std::thread(&AGV::process_queues, this);
+
+  VDA5050_INFO("[AGV] AGV components setup complete for {}", agv_id_);
 }
 
 bool AGV::is_connected() const
@@ -197,6 +222,15 @@ void AGV::update_connection(const vda5050_types::Connection& msg)
 
   // Update connection status based on the connectionState field in the message
   set_connection_status(msg.connection_state);
+
+  // Set up AGV components when first ONLINE message is received
+  if (
+    msg.connection_state == vda5050_types::ConnectionState::ONLINE &&
+    !connection_established_)
+  {
+    setup_agv_components();
+    connection_established_ = true;
+  }
 }
 
 void AGV::update_state(const vda5050_types::State& msg)
@@ -300,42 +334,23 @@ void AGV::setup_subscriptions(
     return;
   }
 
-  // Subscribe to connection topic
+  // Store callbacks for later use when connection is established
+  stored_connection_callback_ = on_connection;
+  stored_state_callback_ = on_state;
+  stored_factsheet_callback_ = on_factsheet;
+  stored_visualization_callback_ = on_visualization;
+
+  // Initially only subscribe to connection topic to wait for ONLINE status
   communication_->subscribe(
     build_topic(vda5050_master::ConnectionTopic),
-    [this, on_connection](
-      const std::string& /*topic*/, const std::string& payload) {
-      handle_connection_message(payload, on_connection);
+    [this](const std::string& /*topic*/, const std::string& payload) {
+      handle_connection_message(payload, stored_connection_callback_);
     },
     vda5050_master::ConnectionQos);
 
-  // Subscribe to state topic
-  communication_->subscribe(
-    build_topic(vda5050_master::StateTopic),
-    [this, on_state](const std::string& /*topic*/, const std::string& payload) {
-      handle_state_message(payload, on_state);
-    },
-    vda5050_master::StateQos);
-
-  // Subscribe to factsheet topic (callback is optional, but subscription always created)
-  communication_->subscribe(
-    build_topic(vda5050_master::FactsheetTopic),
-    [this, on_factsheet](
-      const std::string& /*topic*/, const std::string& payload) {
-      handle_factsheet_message(payload, on_factsheet);
-    },
-    vda5050_master::FactsheetQos);
-
-  // Subscribe to visualization topic (callback is optional, but subscription always created)
-  communication_->subscribe(
-    build_topic(vda5050_master::VisualizationTopic),
-    [this, on_visualization](
-      const std::string& /*topic*/, const std::string& payload) {
-      handle_visualization_message(payload, on_visualization);
-    },
-    vda5050_master::VisualizationQos);
-
-  VDA5050_INFO("[AGV] Setup subscriptions for AGV: {}", agv_id_);
+  VDA5050_INFO(
+    "[AGV] Setup connection subscription for AGV: {} (waiting for ONLINE)",
+    agv_id_);
 }
 
 bool AGV::send_order(const vda5050_types::Order& order)
