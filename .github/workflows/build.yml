@@ -36,6 +36,10 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update -qq -y
-          apt-get install libpaho-mqtt-dev libpaho-mqttpp-dev libfmt-dev -qq -y
+          apt-get install libpaho-mqtt-dev libpaho-mqttpp-dev libfmt-dev mosquitto -qq -y
+      - name: Start MQTT broker
+        run: |
+          mosquitto -d
+          sleep 2  # Wait for broker to start
       - uses: 'ros-industrial/industrial_ci@master'
         env: ${{ matrix.env }}

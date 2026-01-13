@@ -26,7 +26,7 @@
 
 TEST(PahoMqttClientTest, PublishSubscribe)
 {
-  std::string broker = "tcp://test.mosquitto.org:1883";
+  std::string broker = "tcp://localhost:1883";
   std::string topic = "/test/integration";
   std::string payload = "hello";
   int qos = 0;
@@ -61,7 +61,7 @@ TEST(PahoMqttClientTest, PublishSubscribe)
 
 TEST(PahoMqttClientTest, UnsubscribeStopsMessages)
 {
-  std::string broker = "tcp://test.mosquitto.org:1883";
+  std::string broker = "tcp://localhost:1883";
   std::string topic = "/test/integration/unsubscribe";
   std::string payload = "hello";
   int qos = 0;
@@ -104,7 +104,7 @@ TEST(PahoMqttClientTest, UnsubscribeStopsMessages)
 
 TEST(PahoMqttClient, LastWill)
 {
-  std::string broker = "tcp://test.mosquitto.org:1883";
+  std::string broker = "tcp://localhost:1883";
   std::string topic = "/test/integration/unsubscribe";
   std::string payload = "hello";
   int qos = 0;
