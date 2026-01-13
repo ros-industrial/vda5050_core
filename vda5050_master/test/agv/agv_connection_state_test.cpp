@@ -470,4 +470,252 @@ TEST_F(AGVConnectionStateTestFixture, AGVCanBeDestroyedWithoutEverConnecting)
     agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
 }
 
+// =============================================================================
+// Component Cleanup Tests
+// =============================================================================
+
+TEST_F(AGVConnectionStateTestFixture, ComponentsCleanedUpOnOfflineMessage)
+{
+  auto& agv = create_agv();
+  agv->setup_subscriptions(nullptr, nullptr, nullptr);
+  agv->connect();
+
+  std::string conn_topic = mock_ptr_->find_topic_containing("connection");
+  ASSERT_FALSE(conn_topic.empty());
+
+  // Establish connection - this sets up AGV components
+  mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
+
+  // Verify subscriptions are set up after ONLINE
+  EXPECT_FALSE(mock_ptr_->find_topic_containing("state").empty())
+    << "State topic should be subscribed after ONLINE";
+  EXPECT_FALSE(mock_ptr_->find_topic_containing("factsheet").empty())
+    << "Factsheet topic should be subscribed after ONLINE";
+  EXPECT_FALSE(mock_ptr_->find_topic_containing("visualization").empty())
+    << "Visualization topic should be subscribed after ONLINE";
+
+  // Send OFFLINE message - should trigger cleanup
+  mock_ptr_->simulate_receive(conn_topic, create_connection_json("OFFLINE"));
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
+  EXPECT_EQ(agv->get_operational_state(), AGVState::UNAVAILABLE);
+
+  // Verify subscriptions are cleaned up after OFFLINE
+  EXPECT_TRUE(mock_ptr_->find_topic_containing("state").empty())
+    << "State topic should be unsubscribed after OFFLINE";
+  EXPECT_TRUE(mock_ptr_->find_topic_containing("factsheet").empty())
+    << "Factsheet topic should be unsubscribed after OFFLINE";
+  EXPECT_TRUE(mock_ptr_->find_topic_containing("visualization").empty())
+    << "Visualization topic should be unsubscribed after OFFLINE";
+
+  // Connection topic should still be subscribed for reconnection
+  EXPECT_FALSE(mock_ptr_->find_topic_containing("connection").empty())
+    << "Connection topic should remain subscribed";
+}
+
+TEST_F(
+  AGVConnectionStateTestFixture, ComponentsCleanedUpOnConnectionBrokenMessage)
+{
+  auto& agv = create_agv();
+  agv->setup_subscriptions(nullptr, nullptr, nullptr);
+  agv->connect();
+
+  std::string conn_topic = mock_ptr_->find_topic_containing("connection");
+  ASSERT_FALSE(conn_topic.empty());
+
+  // Establish connection
+  mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
+
+  // Verify subscriptions are set up
+  EXPECT_FALSE(mock_ptr_->find_topic_containing("state").empty());
+  EXPECT_FALSE(mock_ptr_->find_topic_containing("factsheet").empty());
+  EXPECT_FALSE(mock_ptr_->find_topic_containing("visualization").empty());
+
+  // Send CONNECTIONBROKEN message - should trigger cleanup
+  mock_ptr_->simulate_receive(
+    conn_topic, create_connection_json("CONNECTIONBROKEN"));
+  EXPECT_EQ(
+    agv->get_connection_status(),
+    vda5050_types::ConnectionState::CONNECTIONBROKEN);
+  EXPECT_EQ(agv->get_operational_state(), AGVState::UNAVAILABLE);
+
+  // Verify subscriptions are cleaned up
+  EXPECT_TRUE(mock_ptr_->find_topic_containing("state").empty())
+    << "State topic should be unsubscribed after CONNECTIONBROKEN";
+  EXPECT_TRUE(mock_ptr_->find_topic_containing("factsheet").empty())
+    << "Factsheet topic should be unsubscribed after CONNECTIONBROKEN";
+  EXPECT_TRUE(mock_ptr_->find_topic_containing("visualization").empty())
+    << "Visualization topic should be unsubscribed after CONNECTIONBROKEN";
+}
+
+TEST_F(
+  AGVConnectionStateTestFixture, ComponentsReInitializedAfterOfflineThenOnline)
+{
+  auto& agv = create_agv();
+
+  int callback_count = 0;
+  agv->setup_subscriptions(
+    [&](const std::string&, const vda5050_types::Connection&) {
+      callback_count++;
+    },
+    nullptr, nullptr);
+  agv->connect();
+
+  std::string conn_topic = mock_ptr_->find_topic_containing("connection");
+  ASSERT_FALSE(conn_topic.empty());
+
+  // First ONLINE - sets up components
+  mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
+  EXPECT_EQ(callback_count, 1);
+  EXPECT_FALSE(mock_ptr_->find_topic_containing("state").empty());
+
+  // OFFLINE - cleans up components
+  mock_ptr_->simulate_receive(conn_topic, create_connection_json("OFFLINE"));
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
+  EXPECT_EQ(callback_count, 2);
+  EXPECT_TRUE(mock_ptr_->find_topic_containing("state").empty())
+    << "State topic should be unsubscribed after OFFLINE";
+
+  // Second ONLINE - should re-initialize components
+  mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
+  EXPECT_EQ(callback_count, 3);
+  EXPECT_FALSE(mock_ptr_->find_topic_containing("state").empty())
+    << "State topic should be re-subscribed after second ONLINE";
+}
+
+TEST_F(
+  AGVConnectionStateTestFixture,
+  ComponentsReInitializedAfterConnectionBrokenThenOnline)
+{
+  auto& agv = create_agv();
+  agv->setup_subscriptions(nullptr, nullptr, nullptr);
+  agv->connect();
+
+  std::string conn_topic = mock_ptr_->find_topic_containing("connection");
+  ASSERT_FALSE(conn_topic.empty());
+
+  // ONLINE -> verify subscriptions
+  mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
+  EXPECT_FALSE(mock_ptr_->find_topic_containing("state").empty());
+
+  // CONNECTIONBROKEN -> verify cleanup
+  mock_ptr_->simulate_receive(
+    conn_topic, create_connection_json("CONNECTIONBROKEN"));
+  EXPECT_EQ(
+    agv->get_connection_status(),
+    vda5050_types::ConnectionState::CONNECTIONBROKEN);
+  EXPECT_TRUE(mock_ptr_->find_topic_containing("state").empty());
+
+  // Second ONLINE -> verify re-initialization
+  mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
+  EXPECT_FALSE(mock_ptr_->find_topic_containing("state").empty())
+    << "State topic should be re-subscribed after reconnection";
+}
+
+TEST_F(AGVConnectionStateTestFixture, CachedDataRetainedAfterCleanup)
+{
+  auto& agv = create_agv();
+  agv->setup_subscriptions(nullptr, nullptr, nullptr);
+  agv->connect();
+
+  std::string conn_topic = mock_ptr_->find_topic_containing("connection");
+  ASSERT_FALSE(conn_topic.empty());
+
+  // Establish connection
+  mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
+
+  // Verify last_connection is cached
+  auto last_conn = agv->get_last_connection();
+  ASSERT_TRUE(last_conn.has_value());
+  EXPECT_EQ(
+    last_conn->connection_state, vda5050_types::ConnectionState::ONLINE);
+
+  // Send OFFLINE - triggers cleanup but should retain cached data
+  mock_ptr_->simulate_receive(conn_topic, create_connection_json("OFFLINE"));
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
+
+  // Verify cached data is still accessible (now shows OFFLINE)
+  last_conn = agv->get_last_connection();
+  ASSERT_TRUE(last_conn.has_value());
+  EXPECT_EQ(
+    last_conn->connection_state, vda5050_types::ConnectionState::OFFLINE);
+
+  // Verify connection time is still set
+  auto last_conn_time = agv->get_last_connection_time();
+  EXPECT_TRUE(last_conn_time.has_value());
+}
+
+TEST_F(AGVConnectionStateTestFixture, MultipleCleanupCyclesAreSafe)
+{
+  auto& agv = create_agv();
+  agv->setup_subscriptions(nullptr, nullptr, nullptr);
+  agv->connect();
+
+  std::string conn_topic = mock_ptr_->find_topic_containing("connection");
+  ASSERT_FALSE(conn_topic.empty());
+
+  // Run multiple ONLINE/OFFLINE cycles
+  for (int i = 0; i < 3; ++i)
+  {
+    mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
+    EXPECT_EQ(
+      agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
+    EXPECT_FALSE(mock_ptr_->find_topic_containing("state").empty())
+      << "State should be subscribed after ONLINE in cycle " << i;
+
+    mock_ptr_->simulate_receive(conn_topic, create_connection_json("OFFLINE"));
+    EXPECT_EQ(
+      agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
+    EXPECT_TRUE(mock_ptr_->find_topic_containing("state").empty())
+      << "State should be unsubscribed after OFFLINE in cycle " << i;
+  }
+
+  // Final ONLINE to verify components can still be set up
+  mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
+  EXPECT_FALSE(mock_ptr_->find_topic_containing("state").empty());
+}
+
+TEST_F(AGVConnectionStateTestFixture, CleanupWithoutPriorSetupIsNoOp)
+{
+  auto& agv = create_agv();
+  agv->setup_subscriptions(nullptr, nullptr, nullptr);
+  agv->connect();
+
+  std::string conn_topic = mock_ptr_->find_topic_containing("connection");
+  ASSERT_FALSE(conn_topic.empty());
+
+  // Verify no state subscription before ONLINE
+  EXPECT_TRUE(mock_ptr_->find_topic_containing("state").empty());
+
+  // Send OFFLINE without ever receiving ONLINE - should be safe (no cleanup needed)
+  mock_ptr_->simulate_receive(conn_topic, create_connection_json("OFFLINE"));
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
+
+  // Now send ONLINE - should set up components normally
+  mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
+  EXPECT_EQ(
+    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
+  EXPECT_FALSE(mock_ptr_->find_topic_containing("state").empty())
+    << "State topic should be subscribed after ONLINE";
+}
+
 }  // namespace vda5050_master::test

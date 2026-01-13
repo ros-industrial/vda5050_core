@@ -50,20 +50,8 @@ AGV::AGV(
 
 AGV::~AGV()
 {
-  // Only need to clean up if AGV components were initialized
-  if (connection_established_)
-  {
-    // Stop heartbeat listener
-    state_heartbeat_->stop_connection_heartbeat();
-
-    // Signal the queue thread to stop and wait for it to finish
-    {
-      std::lock_guard<std::mutex> lock(queue_mutex_);
-      stop_processing_ = true;
-    }
-    queue_cv_.notify_one();
-    queue_thread_.join();
-  }
+  // Reuse cleanup logic - safe to call even if already cleaned up
+  cleanup_agv_components();
 }
 
 // ============================================================================
@@ -132,6 +120,53 @@ void AGV::setup_agv_components()
   queue_thread_ = std::thread(&AGV::process_queues, this);
 
   VDA5050_INFO("[AGV] AGV components setup complete for {}", agv_id_);
+}
+
+void AGV::cleanup_agv_components()
+{
+  // Only clean up if components were previously set up
+  if (!connection_established_)
+  {
+    return;
+  }
+
+  VDA5050_INFO("[AGV] Cleaning up AGV components for {}", agv_id_);
+
+  // Stop heartbeat listener
+  if (state_heartbeat_)
+  {
+    state_heartbeat_->stop_connection_heartbeat();
+    state_heartbeat_.reset();
+  }
+
+  // Stop queue processing thread
+  {
+    std::lock_guard<std::mutex> lock(queue_mutex_);
+    stop_processing_ = true;
+  }
+  queue_cv_.notify_one();
+
+  if (queue_thread_.joinable())
+  {
+    queue_thread_.join();
+  }
+
+  // Reset stop flag for potential re-initialization
+  stop_processing_ = false;
+
+  // Unsubscribe from topics (connection topic remains subscribed)
+  if (communication_)
+  {
+    communication_->unsubscribe(build_topic(vda5050_master::StateTopic));
+    communication_->unsubscribe(build_topic(vda5050_master::FactsheetTopic));
+    communication_->unsubscribe(
+      build_topic(vda5050_master::VisualizationTopic));
+  }
+
+  // Mark as not established so components can be re-initialized on next ONLINE
+  connection_established_ = false;
+
+  VDA5050_INFO("[AGV] AGV components cleanup complete for {}", agv_id_);
 }
 
 bool AGV::is_connected() const
@@ -223,8 +258,15 @@ void AGV::update_connection(const vda5050_types::Connection& msg)
   // Update connection status based on the connectionState field in the message
   set_connection_status(msg.connection_state);
 
-  // Set up AGV components when first ONLINE message is received
+  // Clean up AGV components when connection is lost
   if (
+    msg.connection_state == vda5050_types::ConnectionState::OFFLINE ||
+    msg.connection_state == vda5050_types::ConnectionState::CONNECTIONBROKEN)
+  {
+    cleanup_agv_components();
+  }
+  // Set up AGV components when ONLINE message is received
+  else if (
     msg.connection_state == vda5050_types::ConnectionState::ONLINE &&
     !connection_established_)
   {

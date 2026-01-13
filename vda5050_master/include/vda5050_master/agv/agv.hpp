@@ -336,6 +336,10 @@ private:
   // Set up AGV components when connection is established (ONLINE received)
   void setup_agv_components();
 
+  // Clean up AGV components when connection is lost (OFFLINE/CONNECTIONBROKEN)
+  // Stops threads and unsubscribes, but retains cached message data
+  void cleanup_agv_components();
+
   // AGV states (protected by state_mutex_)
   mutable std::mutex state_mutex_;
   vda5050_types::ConnectionState connection_status_{
