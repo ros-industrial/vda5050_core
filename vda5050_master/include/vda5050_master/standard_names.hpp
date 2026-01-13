@@ -33,10 +33,10 @@ const std::string VisualizationTopic = "visualization";     // NOLINT
 
 const int ConnectionQos = 1;
 const int FactsheetQos = 0;
-const int OrderQos = 1;
-const int StateQos = 1;
+const int OrderQos = 0;
+const int StateQos = 0;
 const int VisualizationQos = 0;
-const int InstantActionsQos = 1;
+const int InstantActionsQos = 0;
 
 const int ConnectionHeartbeatInterval = 15;  // seconds
 const int StateHeartbeatInterval = 30;       // seconds

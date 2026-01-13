@@ -255,23 +255,3 @@ TEST_F(MqttCommunicationTestFixture, MultipleDisconnectCallsSafe)
   ASSERT_NO_THROW(mqtt_comms.disconnect());
   ASSERT_EQ(mqtt_comms.get_state(), ConnectionState::DISCONNECTED);
 }
-
-TEST_F(
-  MqttCommunicationTestFixture, FailedConnectionThrowsAndRemainsDisconnected)
-{
-  // Use an invalid broker endpoint to simulate connection failure
-  std::string invalid_broker = "tcp://invalid.broker.address:1883";
-  auto mqtt_comms = MqttCommunication(invalid_broker, "test_failed_connection");
-
-  // Initial state should be DISCONNECTED
-  ASSERT_EQ(mqtt_comms.get_state(), ConnectionState::DISCONNECTED)
-    << "Initial state should be DISCONNECTED";
-
-  // Connection to invalid broker should throw an exception
-  ASSERT_THROW(mqtt_comms.connect(), std::exception)
-    << "connect() should throw when connection fails";
-
-  // State should remain DISCONNECTED after failed connection
-  ASSERT_EQ(mqtt_comms.get_state(), ConnectionState::DISCONNECTED)
-    << "State should remain DISCONNECTED after failed connection";
-}

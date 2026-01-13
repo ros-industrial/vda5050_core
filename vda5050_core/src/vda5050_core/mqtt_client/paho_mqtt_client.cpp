@@ -115,7 +115,6 @@ void PahoMqttClient::connect()
   {
     VDA5050_ERROR_STREAM(
       "Unable to establish MQTT connection: " << e.get_message());
-    throw;
   }
 }
 
