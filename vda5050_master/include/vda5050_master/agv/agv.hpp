@@ -88,15 +88,12 @@ public:
    * @param communication Communication strategy for this AGV
    * @param max_queue_size Maximum number of outgoing messages to queue (default: 10)
    * @param drop_oldest If true, drop oldest message when queue full; if false, reject new message (default: true)
-   * @param connection_heartbeat_interval Connection heartbeat timeout in seconds
    * @param state_heartbeat_interval State heartbeat timeout in seconds
    */
   AGV(
     const std::string& manufacturer, const std::string& serial_number,
     std::unique_ptr<ICommunicationStrategy> communication,
     size_t max_queue_size = DEFAULT_MAX_QUEUE_SIZE, bool drop_oldest = true,
-    int connection_heartbeat_interval =
-      vda5050_master::ConnectionHeartbeatInterval,
     int state_heartbeat_interval = vda5050_master::StateHeartbeatInterval);
 
   /**
@@ -325,8 +322,6 @@ private:
   std::unique_ptr<ICommunicationStrategy> communication_;
   std::unique_ptr<vda5050_master::communication::HeartbeatListener>
     state_heartbeat_;
-  std::unique_ptr<vda5050_master::communication::HeartbeatListener>
-    connection_heartbeat_;
 
   // AGV states (protected by state_mutex_)
   mutable std::mutex state_mutex_;
@@ -338,8 +333,7 @@ private:
   void set_connection_status(vda5050_types::ConnectionState status);
   void set_operational_state(AGVState state);
 
-  // Heartbeat timeout callbacks
-  void on_connection_heartbeat_timeout();
+  // Heartbeat timeout callback
   void on_state_heartbeat_timeout();
 
   // Timestamps

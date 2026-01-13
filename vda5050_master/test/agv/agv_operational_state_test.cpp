@@ -148,14 +148,13 @@ protected:
   }
 
   std::unique_ptr<AGV>& create_agv_with_heartbeat_intervals(
-    int connection_heartbeat_interval, int state_heartbeat_interval)
+    int state_heartbeat_interval)
   {
     auto mock = std::make_unique<MockCommunicationForOperationalTests>();
     mock_ptr_ = mock.get();
     agv_ = std::make_unique<AGV>(
       manufacturer_, serial_number_, std::move(mock),
-      AGV::DEFAULT_MAX_QUEUE_SIZE, true, connection_heartbeat_interval,
-      state_heartbeat_interval);
+      AGV::DEFAULT_MAX_QUEUE_SIZE, true, state_heartbeat_interval);
     return agv_;
   }
 
@@ -263,8 +262,7 @@ TEST_F(
   StateHeartbeatTimeoutTransitionsToStateUnknown)
 {
   // Create AGV with short state heartbeat interval (1 second)
-  auto& agv = create_agv_with_heartbeat_intervals(
-    vda5050_master::ConnectionHeartbeatInterval, 1);
+  auto& agv = create_agv_with_heartbeat_intervals(1);
 
   agv->setup_subscriptions(nullptr, nullptr, nullptr);
   agv->connect();
@@ -287,8 +285,7 @@ TEST_F(
   AGVOperationalStateTestFixture, StateHeartbeatReceivingMessagesPreventTimeout)
 {
   // Create AGV with short state heartbeat interval (2 seconds)
-  auto& agv = create_agv_with_heartbeat_intervals(
-    vda5050_master::ConnectionHeartbeatInterval, 2);
+  auto& agv = create_agv_with_heartbeat_intervals(2);
 
   agv->setup_subscriptions(nullptr, nullptr, nullptr);
   agv->connect();
@@ -315,8 +312,7 @@ TEST_F(
   TransitionOnlineToUnknownViaTimeoutThenRecover)
 {
   // Create AGV with short state heartbeat interval (1 second)
-  auto& agv = create_agv_with_heartbeat_intervals(
-    vda5050_master::ConnectionHeartbeatInterval, 1);
+  auto& agv = create_agv_with_heartbeat_intervals(1);
 
   agv->setup_subscriptions(nullptr, nullptr, nullptr);
   agv->connect();
@@ -408,41 +404,6 @@ TEST_F(
     conn_topic,
     R"({"headerId": 1, "timestamp": "2025-01-01T00:00:00.000Z", "version": "2.0.0", "manufacturer": "TestManufacturer", "serialNumber": "SN001", "connectionState": "CONNECTIONBROKEN"})");
 
-  EXPECT_EQ(agv->get_operational_state(), AGVState::UNAVAILABLE);
-}
-
-TEST_F(
-  AGVOperationalStateTestFixture,
-  ConnectionHeartbeatTimeoutSetsOperationalStateToUnavailable)
-{
-  // Create AGV with short connection heartbeat interval (1 second)
-  auto& agv = create_agv_with_heartbeat_intervals(
-    1, vda5050_master::StateHeartbeatInterval);
-
-  agv->setup_subscriptions(nullptr, nullptr, nullptr);
-  agv->connect();
-
-  std::string state_topic = mock_ptr_->find_topic_containing("state");
-  std::string conn_topic = mock_ptr_->find_topic_containing("connection");
-  ASSERT_FALSE(state_topic.empty());
-  ASSERT_FALSE(conn_topic.empty());
-
-  // Receive state and connection messages to go AVAILABLE/ONLINE
-  mock_ptr_->simulate_receive(state_topic, create_state_json());
-  mock_ptr_->simulate_receive(
-    conn_topic,
-    R"({"headerId": 1, "timestamp": "2025-01-01T00:00:00.000Z", "version": "2.0.0", "manufacturer": "TestManufacturer", "serialNumber": "SN001", "connectionState": "ONLINE"})");
-  EXPECT_EQ(agv->get_operational_state(), AGVState::AVAILABLE);
-  EXPECT_EQ(
-    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
-
-  // Wait for connection heartbeat timeout
-  std::this_thread::sleep_for(std::chrono::milliseconds(2500));
-
-  // Connection becomes CONNECTIONBROKEN, operational state becomes UNAVAILABLE
-  EXPECT_EQ(
-    agv->get_connection_status(),
-    vda5050_types::ConnectionState::CONNECTIONBROKEN);
   EXPECT_EQ(agv->get_operational_state(), AGVState::UNAVAILABLE);
 }
 

@@ -150,15 +150,13 @@ protected:
   }
 
   std::unique_ptr<AGV>& create_agv_with_heartbeat_intervals(
-    int connection_heartbeat_interval,
     int state_heartbeat_interval = vda5050_master::StateHeartbeatInterval)
   {
     auto mock = std::make_unique<MockCommunicationForConnectionTests>();
     mock_ptr_ = mock.get();
     agv_ = std::make_unique<AGV>(
       manufacturer_, serial_number_, std::move(mock),
-      AGV::DEFAULT_MAX_QUEUE_SIZE, true, connection_heartbeat_interval,
-      state_heartbeat_interval);
+      AGV::DEFAULT_MAX_QUEUE_SIZE, true, state_heartbeat_interval);
     return agv_;
   }
 
@@ -357,90 +355,6 @@ TEST_F(
 
   mock_ptr_->simulate_receive(
     conn_topic, create_connection_json("CONNECTIONBROKEN"));
-  EXPECT_EQ(
-    agv->get_connection_status(),
-    vda5050_types::ConnectionState::CONNECTIONBROKEN);
-
-  mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
-  EXPECT_EQ(
-    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
-}
-
-// =============================================================================
-// Connection Heartbeat Timeout Tests
-// =============================================================================
-
-TEST_F(
-  AGVConnectionStateTestFixture,
-  ConnectionHeartbeatTimeoutTransitionsToConnectionBroken)
-{
-  auto& agv = create_agv_with_heartbeat_intervals(1);
-
-  agv->setup_subscriptions(nullptr, nullptr, nullptr);
-  agv->connect();
-
-  std::string conn_topic = mock_ptr_->find_topic_containing("connection");
-  ASSERT_FALSE(conn_topic.empty());
-
-  mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
-  EXPECT_EQ(
-    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(2500));
-
-  EXPECT_EQ(
-    agv->get_connection_status(),
-    vda5050_types::ConnectionState::CONNECTIONBROKEN);
-}
-
-TEST_F(
-  AGVConnectionStateTestFixture,
-  ConnectionHeartbeatReceivingMessagesPreventTimeout)
-{
-  auto& agv = create_agv_with_heartbeat_intervals(2);
-
-  agv->setup_subscriptions(nullptr, nullptr, nullptr);
-  agv->connect();
-
-  std::string conn_topic = mock_ptr_->find_topic_containing("connection");
-  ASSERT_FALSE(conn_topic.empty());
-
-  mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
-  EXPECT_EQ(
-    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
-
-  for (int i = 0; i < 3; ++i)
-  {
-    std::this_thread::sleep_for(std::chrono::seconds(1));
-    mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
-    EXPECT_EQ(
-      agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
-  }
-
-  EXPECT_EQ(
-    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
-}
-
-TEST_F(
-  AGVConnectionStateTestFixture,
-  TransitionOnlineToConnectionBrokenViaTimeoutThenRecover)
-{
-  auto& agv = create_agv_with_heartbeat_intervals(1);
-
-  agv->setup_subscriptions(nullptr, nullptr, nullptr);
-  agv->connect();
-
-  std::string conn_topic = mock_ptr_->find_topic_containing("connection");
-  ASSERT_FALSE(conn_topic.empty());
-
-  EXPECT_EQ(
-    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
-
-  mock_ptr_->simulate_receive(conn_topic, create_connection_json("ONLINE"));
-  EXPECT_EQ(
-    agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(2500));
   EXPECT_EQ(
     agv->get_connection_status(),
     vda5050_types::ConnectionState::CONNECTIONBROKEN);

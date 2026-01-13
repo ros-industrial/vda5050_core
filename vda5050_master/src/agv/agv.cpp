@@ -35,8 +35,7 @@
 AGV::AGV(
   const std::string& manufacturer, const std::string& serial_number,
   std::unique_ptr<ICommunicationStrategy> communication, size_t max_queue_size,
-  bool drop_oldest, int connection_heartbeat_interval,
-  int state_heartbeat_interval)
+  bool drop_oldest, int state_heartbeat_interval)
 : manufacturer_(manufacturer),
   serial_number_(serial_number),
   agv_id_(manufacturer + "/" + serial_number),
@@ -47,11 +46,7 @@ AGV::AGV(
   state_heartbeat_(
     std::make_unique<vda5050_master::communication::HeartbeatListener>(
       agv_id_ + "_state_heartbeat", state_heartbeat_interval,
-      [this]() { on_state_heartbeat_timeout(); })),
-  connection_heartbeat_(
-    std::make_unique<vda5050_master::communication::HeartbeatListener>(
-      agv_id_ + "_connection_heartbeat", connection_heartbeat_interval,
-      [this]() { on_connection_heartbeat_timeout(); }))
+      [this]() { on_state_heartbeat_timeout(); }))
 {
   // Start the queue processing thread
   queue_thread_ = std::thread(&AGV::process_queues, this);
@@ -59,11 +54,7 @@ AGV::AGV(
 
 AGV::~AGV()
 {
-  // Stop heartbeat listeners first (they may call state setters)
-  if (connection_heartbeat_)
-  {
-    connection_heartbeat_->stop_connection_heartbeat();
-  }
+  // Stop heartbeat listener first (it may call state setters)
   if (state_heartbeat_)
   {
     state_heartbeat_->stop_connection_heartbeat();
@@ -94,11 +85,7 @@ void AGV::connect()
     communication_->connect();
   }
 
-  // Start heartbeat listeners
-  if (connection_heartbeat_)
-  {
-    connection_heartbeat_->start_connection_heartbeat();
-  }
+  // Start state heartbeat listener
   if (state_heartbeat_)
   {
     state_heartbeat_->start_connection_heartbeat();
@@ -107,11 +94,7 @@ void AGV::connect()
 
 void AGV::disconnect()
 {
-  // Stop heartbeat listeners
-  if (connection_heartbeat_)
-  {
-    connection_heartbeat_->stop_connection_heartbeat();
-  }
+  // Stop state heartbeat listener
   if (state_heartbeat_)
   {
     state_heartbeat_->stop_connection_heartbeat();
@@ -194,12 +177,6 @@ void AGV::set_operational_state(AGVState state)
     "[AGV] Operational state changed to {} for {}", state_str, agv_id_);
 }
 
-void AGV::on_connection_heartbeat_timeout()
-{
-  set_connection_status(vda5050_types::ConnectionState::CONNECTIONBROKEN);
-  VDA5050_WARN("[AGV] Connection heartbeat timeout for {}", agv_id_);
-}
-
 void AGV::on_state_heartbeat_timeout()
 {
   set_operational_state(AGVState::STATE_UNKNOWN);
@@ -216,12 +193,6 @@ void AGV::update_connection(const vda5050_types::Connection& msg)
     std::lock_guard<std::mutex> lock(data_mutex_);
     last_connection_ = msg;
     last_connection_time_ = Clock::now();
-  }
-
-  // Notify heartbeat listener
-  if (connection_heartbeat_)
-  {
-    connection_heartbeat_->received_connection();
   }
 
   // Update connection status based on the connectionState field in the message
