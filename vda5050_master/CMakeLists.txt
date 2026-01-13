@@ -77,6 +77,12 @@ if(BUILD_TESTING)
 
   target_link_libraries(test_communications vda5050_master)
 
+  # AGV unit tests (no external dependencies like MQTT broker)
+  ament_add_gmock(test_agv
+    test/agv/agv_test.cpp
+  )
+  target_link_libraries(test_agv vda5050_master)
+
 endif()
 
 ament_package()
