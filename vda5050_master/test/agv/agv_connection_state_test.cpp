@@ -19,101 +19,17 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <atomic>
 #include <chrono>
-#include <map>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <thread>
 
+#include "../communication/test_helpers.hpp"
+#include "mock_mqtt_client.hpp"
 #include "vda5050_master/agv/agv.hpp"
-#include "vda5050_master/communication/communication.hpp"
 #include "vda5050_master/standard_names.hpp"
 
 namespace vda5050_master::test {
-
-// =============================================================================
-// Mock Communication Strategy for Connection State Tests
-// =============================================================================
-
-class MockCommunicationForConnectionTests : public ICommunicationStrategy
-{
-public:
-  MockCommunicationForConnectionTests() : state_(ConnectionState::DISCONNECTED)
-  {
-  }
-
-  void connect() override
-  {
-    state_ = ConnectionState::CONNECTED;
-  }
-
-  void disconnect() override
-  {
-    state_ = ConnectionState::DISCONNECTED;
-  }
-
-  void subscribe(
-    const std::string& topic, MessageCallback callback,
-    const int /*qos*/ = 0) override
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    subscriptions_[topic] = callback;
-  }
-
-  void unsubscribe(const std::string& topic) override
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    subscriptions_.erase(topic);
-  }
-
-  void send_message(
-    const std::string& /*topic*/, const std::string& /*message*/,
-    const int /*qos*/ = 0) override
-  {
-  }
-
-  ConnectionState get_state() const override
-  {
-    return state_;
-  }
-
-  void simulate_receive(const std::string& topic, const std::string& payload)
-  {
-    MessageCallback callback;
-    {
-      std::lock_guard<std::mutex> lock(mutex_);
-      auto it = subscriptions_.find(topic);
-      if (it != subscriptions_.end())
-      {
-        callback = it->second;
-      }
-    }
-    if (callback)
-    {
-      callback(topic, payload);
-    }
-  }
-
-  std::string find_topic_containing(const std::string& substring) const
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    for (const auto& pair : subscriptions_)
-    {
-      if (pair.first.find(substring) != std::string::npos)
-      {
-        return pair.first;
-      }
-    }
-    return "";
-  }
-
-private:
-  std::atomic<ConnectionState> state_;
-  mutable std::mutex mutex_;
-  std::map<std::string, MessageCallback> subscriptions_;
-};
 
 // =============================================================================
 // Test Fixture
@@ -142,7 +58,7 @@ protected:
 
   std::unique_ptr<AGV>& create_agv()
   {
-    auto mock = std::make_unique<MockCommunicationForConnectionTests>();
+    auto mock = std::make_shared<MockMqttClient>();
     mock_ptr_ = mock.get();
     agv_ =
       std::make_unique<AGV>(manufacturer_, serial_number_, std::move(mock));
@@ -152,7 +68,7 @@ protected:
   std::unique_ptr<AGV>& create_agv_with_heartbeat_intervals(
     int state_heartbeat_interval = vda5050_master::StateHeartbeatInterval)
   {
-    auto mock = std::make_unique<MockCommunicationForConnectionTests>();
+    auto mock = std::make_shared<MockMqttClient>();
     mock_ptr_ = mock.get();
     agv_ = std::make_unique<AGV>(
       manufacturer_, serial_number_, std::move(mock),
@@ -164,21 +80,12 @@ protected:
 
   std::string create_connection_json(const std::string& state = "ONLINE")
   {
-    return
-      R"({
-      "headerId": 1,
-      "timestamp": "2025-01-01T00:00:00.000Z",
-      "version": "2.0.0",
-      "manufacturer": "TestManufacturer",
-      "serialNumber": "SN001",
-      "connectionState": ")" +
-      state + R"("
-    })";
+    return make_connection_json(manufacturer_, serial_number_, state);
   }
 
   std::string manufacturer_;
   std::string serial_number_;
-  MockCommunicationForConnectionTests* mock_ptr_ = nullptr;
+  MockMqttClient* mock_ptr_ = nullptr;
 };
 
 // =============================================================================

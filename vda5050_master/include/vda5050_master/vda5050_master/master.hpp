@@ -25,19 +25,18 @@
 #include <string>
 #include <unordered_map>
 
+#include "vda5050_core/mqtt_client/mqtt_client_interface.hpp"
 #include "vda5050_master/agv/agv.hpp"
-#include "vda5050_master/communication/communication.hpp"
 #include "vda5050_master/vda5050_interfaces.hpp"
 
 /**
- * @brief Factory function type for creating communication strategies
+ * @brief Factory function type for creating MQTT clients
  *
  * The factory takes an AGV identifier (used for client naming) and returns
- * a new ICommunicationStrategy instance. Each ICommunicationStrategy
- * implementation handles its own configuration internally.
+ * a new MqttClientInterface instance.
  */
-using CommunicationFactory =
-  std::function<std::unique_ptr<ICommunicationStrategy>(
+using MqttClientFactory =
+  std::function<std::shared_ptr<vda5050_core::mqtt_client::MqttClientInterface>(
     const std::string& agv_id)>;
 
 /**
@@ -65,29 +64,20 @@ class VDA5050Master
 {
 public:
   /**
-   * @brief Construct a VDA5050 master with a communication factory
-   * @param factory Factory function that creates ICommunicationStrategy instances
+   * @brief Construct a VDA5050 master with an MQTT client factory
+   * @param factory Factory function that creates MqttClientInterface instances
    *
    * The factory is called for each AGV when register_agv() is invoked.
-   * Each ICommunicationStrategy implementation handles its own configuration.
    *
-   * Example usage with MQTT:
+   * Example usage:
    * @code
    * auto factory = [broker](const std::string& agv_id) {
-   *   return std::make_unique<MqttCommunication>(broker, agv_id);
-   * };
-   * MyMaster master(factory);
-   * @endcode
-   *
-   * Example usage with ROS2:
-   * @code
-   * auto factory = [node](const std::string& agv_id) {
-   *   return std::make_unique<Ros2Communication>(node, agv_id);
+   *   return vda5050_core::mqtt_client::create_default_client(broker, agv_id);
    * };
    * MyMaster master(factory);
    * @endcode
    */
-  explicit VDA5050Master(CommunicationFactory factory);
+  explicit VDA5050Master(MqttClientFactory factory);
 
   /**
    * @brief Virtual destructor for inheritance
@@ -205,8 +195,8 @@ private:
    */
   std::shared_ptr<AGV> get_agv(const std::string& agv_id) const;
 
-  // Factory for creating communication strategies
-  CommunicationFactory communication_factory_;
+  // Factory for creating MQTT clients
+  MqttClientFactory mqtt_client_factory_;
 
   // Registered AGVs (shared_ptr allows safe access from get_agv())
   mutable std::mutex agv_mutex_;

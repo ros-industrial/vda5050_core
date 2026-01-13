@@ -34,12 +34,12 @@
 
 AGV::AGV(
   const std::string& manufacturer, const std::string& serial_number,
-  std::unique_ptr<ICommunicationStrategy> communication, size_t max_queue_size,
-  bool drop_oldest, int state_heartbeat_interval)
+  std::shared_ptr<vda5050_core::mqtt_client::MqttClientInterface> mqtt_client,
+  size_t max_queue_size, bool drop_oldest, int state_heartbeat_interval)
 : manufacturer_(manufacturer),
   serial_number_(serial_number),
   agv_id_(manufacturer + "/" + serial_number),
-  communication_(std::move(communication)),
+  mqtt_client_(std::move(mqtt_client)),
   registered_time_(Clock::now()),
   max_queue_size_(max_queue_size),
   drop_oldest_(drop_oldest),
@@ -60,9 +60,9 @@ AGV::~AGV()
 
 void AGV::connect()
 {
-  if (communication_)
+  if (mqtt_client_)
   {
-    communication_->connect();
+    mqtt_client_->connect();
   }
 }
 
@@ -74,9 +74,9 @@ void AGV::disconnect()
     state_heartbeat_->stop_connection_heartbeat();
   }
 
-  if (communication_)
+  if (mqtt_client_)
   {
-    communication_->disconnect();
+    mqtt_client_->disconnect();
   }
 
   // Set explicit disconnect state to OFFLINE (intentional disconnection)
@@ -95,21 +95,21 @@ void AGV::setup_agv_components()
   state_heartbeat_->start_connection_heartbeat();
 
   // Subscribe to remaining topics
-  communication_->subscribe(
+  mqtt_client_->subscribe(
     build_topic(vda5050_master::StateTopic),
     [this](const std::string& /*topic*/, const std::string& payload) {
       handle_state_message(payload, stored_state_callback_);
     },
     vda5050_master::StateQos);
 
-  communication_->subscribe(
+  mqtt_client_->subscribe(
     build_topic(vda5050_master::FactsheetTopic),
     [this](const std::string& /*topic*/, const std::string& payload) {
       handle_factsheet_message(payload, stored_factsheet_callback_);
     },
     vda5050_master::FactsheetQos);
 
-  communication_->subscribe(
+  mqtt_client_->subscribe(
     build_topic(vda5050_master::VisualizationTopic),
     [this](const std::string& /*topic*/, const std::string& payload) {
       handle_visualization_message(payload, stored_visualization_callback_);
@@ -155,12 +155,11 @@ void AGV::cleanup_agv_components()
   stop_processing_ = false;
 
   // Unsubscribe from topics (connection topic remains subscribed)
-  if (communication_)
+  if (mqtt_client_)
   {
-    communication_->unsubscribe(build_topic(vda5050_master::StateTopic));
-    communication_->unsubscribe(build_topic(vda5050_master::FactsheetTopic));
-    communication_->unsubscribe(
-      build_topic(vda5050_master::VisualizationTopic));
+    mqtt_client_->unsubscribe(build_topic(vda5050_master::StateTopic));
+    mqtt_client_->unsubscribe(build_topic(vda5050_master::FactsheetTopic));
+    mqtt_client_->unsubscribe(build_topic(vda5050_master::VisualizationTopic));
   }
 
   // Mark as not established so components can be re-initialized on next ONLINE
@@ -171,9 +170,9 @@ void AGV::cleanup_agv_components()
 
 bool AGV::is_connected() const
 {
-  if (communication_)
+  if (mqtt_client_)
   {
-    return communication_->get_state() == ConnectionState::CONNECTED;
+    return mqtt_client_->connected();
   }
   return false;
 }
@@ -369,10 +368,10 @@ void AGV::setup_subscriptions(
   ConnectionCallback on_connection, StateCallback on_state,
   FactsheetCallback on_factsheet, VisualizationCallback on_visualization)
 {
-  if (!communication_)
+  if (!mqtt_client_)
   {
     VDA5050_WARN(
-      "[AGV] Cannot setup subscriptions: no communication for {}", agv_id_);
+      "[AGV] Cannot setup subscriptions: no MQTT client for {}", agv_id_);
     return;
   }
 
@@ -383,7 +382,7 @@ void AGV::setup_subscriptions(
   stored_visualization_callback_ = on_visualization;
 
   // Initially only subscribe to connection topic to wait for ONLINE status
-  communication_->subscribe(
+  mqtt_client_->subscribe(
     build_topic(vda5050_master::ConnectionTopic),
     [this](const std::string& /*topic*/, const std::string& payload) {
       handle_connection_message(payload, stored_connection_callback_);
@@ -620,15 +619,15 @@ void AGV::process_queues()
 
 void AGV::send_order_now(const vda5050_types::Order& order)
 {
-  if (!communication_)
+  if (!mqtt_client_)
   {
-    VDA5050_WARN("[AGV] Cannot send order: no communication for {}", agv_id_);
+    VDA5050_WARN("[AGV] Cannot send order: no MQTT client for {}", agv_id_);
     return;
   }
 
   nlohmann::json j;
   vda5050_types::to_json(j, order);
-  communication_->send_message(
+  mqtt_client_->publish(
     build_topic(vda5050_master::OrderTopic), j.dump(),
     vda5050_master::OrderQos);
 
@@ -637,16 +636,16 @@ void AGV::send_order_now(const vda5050_types::Order& order)
 
 void AGV::send_instant_actions_now(const vda5050_types::InstantActions& actions)
 {
-  if (!communication_)
+  if (!mqtt_client_)
   {
     VDA5050_WARN(
-      "[AGV] Cannot send instant actions: no communication for {}", agv_id_);
+      "[AGV] Cannot send instant actions: no MQTT client for {}", agv_id_);
     return;
   }
 
   nlohmann::json j;
   vda5050_types::to_json(j, actions);
-  communication_->send_message(
+  mqtt_client_->publish(
     build_topic(vda5050_master::InstantActionsTopic), j.dump(),
     vda5050_master::InstantActionsQos);
 

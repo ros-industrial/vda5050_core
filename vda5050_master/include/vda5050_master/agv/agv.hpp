@@ -30,7 +30,7 @@
 #include <string>
 #include <thread>
 
-#include "vda5050_master/communication/communication.hpp"
+#include "vda5050_core/mqtt_client/mqtt_client_interface.hpp"
 #include "vda5050_master/communication/heartbeat.hpp"
 #include "vda5050_master/standard_names.hpp"
 #include "vda5050_master/vda5050_interfaces.hpp"
@@ -85,14 +85,14 @@ public:
    * @brief Construct an AGV instance
    * @param manufacturer Manufacturer name
    * @param serial_number Serial number
-   * @param communication Communication strategy for this AGV
+   * @param mqtt_client MQTT client for this AGV
    * @param max_queue_size Maximum number of outgoing messages to queue (default: 10)
    * @param drop_oldest If true, drop oldest message when queue full; if false, reject new message (default: true)
    * @param state_heartbeat_interval State heartbeat timeout in seconds
    */
   AGV(
     const std::string& manufacturer, const std::string& serial_number,
-    std::unique_ptr<ICommunicationStrategy> communication,
+    std::shared_ptr<vda5050_core::mqtt_client::MqttClientInterface> mqtt_client,
     size_t max_queue_size = DEFAULT_MAX_QUEUE_SIZE, bool drop_oldest = true,
     int state_heartbeat_interval = vda5050_master::StateHeartbeatInterval);
 
@@ -319,7 +319,7 @@ private:
   std::string agv_id_;
 
   // Communication
-  std::unique_ptr<ICommunicationStrategy> communication_;
+  std::shared_ptr<vda5050_core::mqtt_client::MqttClientInterface> mqtt_client_;
   std::unique_ptr<vda5050_master::communication::HeartbeatListener>
     state_heartbeat_;
 

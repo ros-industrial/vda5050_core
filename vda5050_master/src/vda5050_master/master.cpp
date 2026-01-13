@@ -26,8 +26,8 @@
 // VDA5050Master Implementation
 // ============================================================================
 
-VDA5050Master::VDA5050Master(CommunicationFactory factory)
-: communication_factory_(std::move(factory))
+VDA5050Master::VDA5050Master(MqttClientFactory factory)
+: mqtt_client_factory_(std::move(factory))
 {
 }
 
@@ -45,12 +45,12 @@ void VDA5050Master::register_agv(
     return;
   }
 
-  // Create communication instance for this AGV using the factory
-  auto communication = communication_factory_(agv_id);
+  // Create MQTT client for this AGV using the factory
+  auto mqtt_client = mqtt_client_factory_(agv_id);
 
   // Create AGV object with queue configuration
   auto agv = std::make_shared<AGV>(
-    manufacturer, serial_number, std::move(communication), max_queue_size,
+    manufacturer, serial_number, std::move(mqtt_client), max_queue_size,
     drop_oldest);
 
   // Connect the AGV's communication

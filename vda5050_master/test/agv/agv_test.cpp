@@ -19,166 +19,18 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <atomic>
-#include <chrono>
-#include <condition_variable>
-#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
-#include <utility>
 #include <vector>
 
 #include "../communication/test_helpers.hpp"
+#include "mock_mqtt_client.hpp"
 #include "vda5050_master/agv/agv.hpp"
-#include "vda5050_master/communication/communication.hpp"
 #include "vda5050_master/vda5050_master/master.hpp"
 
 namespace vda5050_master::test {
-
-// =============================================================================
-// Mock Communication Strategy
-// =============================================================================
-
-class MockCommunicationStrategy : public ICommunicationStrategy
-{
-public:
-  MockCommunicationStrategy() : state_(ConnectionState::DISCONNECTED) {}
-
-  void connect() override
-  {
-    state_ = ConnectionState::CONNECTED;
-  }
-
-  void disconnect() override
-  {
-    state_ = ConnectionState::DISCONNECTED;
-  }
-
-  void subscribe(
-    const std::string& topic, MessageCallback callback,
-    const int /*qos*/ = 0) override
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    subscriptions_[topic] = callback;
-  }
-
-  void unsubscribe(const std::string& topic) override
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    subscriptions_.erase(topic);
-  }
-
-  void send_message(
-    const std::string& topic, const std::string& message,
-    const int /*qos*/ = 0) override
-  {
-    // Wait until unblocked (for queue policy testing)
-    {
-      std::unique_lock<std::mutex> lock(block_mutex_);
-      blocked_waiters_++;
-      blocked_waiter_cv_.notify_all();  // Notify that we're waiting
-      block_cv_.wait(lock, [this] { return !blocked_; });
-      blocked_waiters_--;
-    }
-
-    std::lock_guard<std::mutex> lock(mutex_);
-    sent_messages_.push_back({topic, message});
-    send_count_++;
-    cv_.notify_all();
-  }
-
-  ConnectionState get_state() const override
-  {
-    return state_;
-  }
-
-  // Blocking control for queue policy testing
-  void block()
-  {
-    std::lock_guard<std::mutex> lock(block_mutex_);
-    blocked_ = true;
-  }
-  void unblock()
-  {
-    std::lock_guard<std::mutex> lock(block_mutex_);
-    blocked_ = false;
-    block_cv_.notify_all();
-  }
-
-  // Wait until at least one message is blocked in send_message
-  bool wait_for_blocked(
-    std::chrono::milliseconds timeout = std::chrono::milliseconds(1000))
-  {
-    std::unique_lock<std::mutex> lock(block_mutex_);
-    return blocked_waiter_cv_.wait_for(
-      lock, timeout, [this] { return blocked_waiters_ > 0; });
-  }
-
-  // Test helper methods
-  size_t get_send_count() const
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return send_count_;
-  }
-
-  std::vector<std::pair<std::string, std::string>> get_sent_messages() const
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return sent_messages_;
-  }
-
-  void clear_sent_messages()
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    sent_messages_.clear();
-    send_count_ = 0;
-  }
-
-  bool wait_for_messages(
-    size_t count,
-    std::chrono::milliseconds timeout = std::chrono::milliseconds(5000))
-  {
-    std::unique_lock<std::mutex> lock(mutex_);
-    return cv_.wait_for(
-      lock, timeout, [this, count] { return send_count_ >= count; });
-  }
-
-  // Simulate receiving a message on a subscribed topic
-  void simulate_receive(const std::string& topic, const std::string& payload)
-  {
-    MessageCallback callback;
-    {
-      std::lock_guard<std::mutex> lock(mutex_);
-      auto it = subscriptions_.find(topic);
-      if (it != subscriptions_.end())
-      {
-        callback = it->second;
-      }
-    }
-    // Call callback outside lock to avoid deadlock
-    if (callback)
-    {
-      callback(topic, payload);
-    }
-  }
-
-private:
-  std::atomic<ConnectionState> state_;
-  mutable std::mutex mutex_;
-  std::condition_variable cv_;
-  std::map<std::string, MessageCallback> subscriptions_;
-  std::vector<std::pair<std::string, std::string>> sent_messages_;
-  size_t send_count_ = 0;
-
-  // Blocking support for queue policy testing
-  bool blocked_{false};
-  size_t blocked_waiters_{0};
-  std::mutex block_mutex_;
-  std::condition_variable block_cv_;
-  std::condition_variable blocked_waiter_cv_;
-};
 
 // =============================================================================
 // Shared Mock Registry - allows test fixture to access mocks created by factory
@@ -193,13 +45,13 @@ public:
     return registry;
   }
 
-  void register_mock(const std::string& agv_id, MockCommunicationStrategy* mock)
+  void register_mock(const std::string& agv_id, MockMqttClient* mock)
   {
     std::lock_guard<std::mutex> lock(mutex_);
     mocks_[agv_id] = mock;
   }
 
-  MockCommunicationStrategy* get_mock(const std::string& agv_id)
+  MockMqttClient* get_mock(const std::string& agv_id)
   {
     std::lock_guard<std::mutex> lock(mutex_);
     auto it = mocks_.find(agv_id);
@@ -215,7 +67,7 @@ public:
 private:
   MockRegistry() = default;
   std::mutex mutex_;
-  std::map<std::string, MockCommunicationStrategy*> mocks_;
+  std::map<std::string, MockMqttClient*> mocks_;
 };
 
 // =============================================================================
@@ -227,7 +79,7 @@ class TestMaster : public VDA5050Master
 public:
   TestMaster()
   : VDA5050Master([](const std::string& agv_id) {
-      auto mock = std::make_unique<MockCommunicationStrategy>();
+      auto mock = std::make_shared<MockMqttClient>();
       MockRegistry::instance().register_mock(agv_id, mock.get());
       return mock;
     })
@@ -291,7 +143,7 @@ protected:
     return actions;
   }
 
-  MockCommunicationStrategy* get_mock()
+  MockMqttClient* get_mock()
   {
     return MockRegistry::instance().get_mock(agv_id_);
   }

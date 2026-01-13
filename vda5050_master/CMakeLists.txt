@@ -21,8 +21,7 @@ find_package(fmt REQUIRED)
 add_library(vda5050_master
   src/agv/agv.cpp
   src/vda5050_master/master.cpp
-  src/vda5050_master/communication/mqtt.cpp
-  src/vda5050_master/communication/ros2.cpp
+  src/vda5050_master/communication/heartbeat.cpp
 )
 
 ament_target_dependencies(vda5050_master
@@ -70,14 +69,12 @@ if(BUILD_TESTING)
   # )
 
   find_package(ament_cmake_gmock REQUIRED)
-  ament_add_gmock(test_communications
-    test/communication/mqtt/communications.cpp
-    test/communication/ros2/communications.cpp
-    test/communication/vda5050/vda5050_mqtt.cpp
+
+  # Heartbeat unit tests
+  ament_add_gmock(test_heartbeat
     test/integration/heartbeat.cpp
   )
-
-  target_link_libraries(test_communications vda5050_master)
+  target_link_libraries(test_heartbeat vda5050_master)
 
   # AGV unit tests (no external dependencies like MQTT broker)
   ament_add_gmock(test_agv
