@@ -1,0 +1,237 @@
+/*
+ * Copyright (C) 2025 ROS-Industrial Consortium Asia Pacific
+ * Advanced Remanufacturing and Technology Centre
+ * A*STAR Research Entities (Co. Registration No. 199702110H)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <gmock/gmock.h>
+
+#include <chrono>
+#include <thread>
+
+#include "../test_helpers.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
+#include "test_helpers.hpp"
+#include "vda5050_master/communication/ros2.hpp"
+namespace {
+auto payload_json = R"(
+  {
+    "happy": true,
+    "pi": 3.141
+  }
+)"_json;
+}  // namespace
+
+// Using declarations instead of using-directives for cpplint compliance
+using vda5050_master::test::make_numbered_payloads;
+using vda5050_master::test::make_test_topic;
+using vda5050_master::test::verify_messages_in_order;
+using vda5050_master::test::constants::default_payload_json;
+using vda5050_master::test::ros2::publish_messages;
+using vda5050_master::test::ros2::TestExecutor;
+using vda5050_master::test::ros2::wait_for_condition_with_spin;
+using vda5050_master::test::ros2::wait_for_discovery;
+using vda5050_master::test::ros2::wait_for_publisher_discovery;
+
+class Ros2CommunicationTest : public ::testing::Test
+{
+protected:
+  void SetUp() override
+  {
+    if (!rclcpp::ok()) {
+      rclcpp::init(0, nullptr);
+    }
+    qos_ = 0;
+    container_ = std::make_shared<std::vector<std::string>>();
+  }
+
+  void TearDown() override
+  {
+    // Note: We don't shutdown rclcpp here to allow multiple tests to run
+  }
+
+  std::string get_last_subscription_message()
+  {
+    auto msg = *(container_->begin());
+    container_->erase(container_->begin());
+    return msg;
+  }
+  std::shared_ptr<std::vector<std::string>> container_;
+
+  int qos_;
+};
+
+TEST_F(Ros2CommunicationTest, SubscriptionTest)
+{
+  std::string topic = make_test_topic("ros2/subscription");
+  std::string payload = default_payload_json().dump();
+
+  // Create node for Ros2Communication
+  auto test_node = std::make_shared<rclcpp::Node>("test_ros2_subscriber");
+  auto ros2_comms = Ros2Communication(test_node, "test_id");
+  ASSERT_NO_THROW(ros2_comms.connect());
+  ros2_comms.subscribe(
+    topic,
+    [this](const std::string& topic, const std::string& payload) {
+      // Parse JSON and call the connection callback
+      container_->push_back(payload);
+    },
+    qos_);
+
+  // Create a separate publisher node
+  auto talker_node = std::make_shared<rclcpp::Node>("test_talker");
+  auto talker_pub =
+    talker_node->create_publisher<std_msgs::msg::String>(topic, 10);
+
+  // Create executor to spin both nodes
+  TestExecutor executor;
+  executor.add_node(test_node);
+  executor.add_node(talker_node);
+
+  // Publish message
+  auto msg = std_msgs::msg::String();
+  msg.data = payload;
+  talker_pub->publish(msg);
+
+  bool received = executor.wait_for([&]() { return container_->size() > 0; });
+
+  // Verify message was received
+  ASSERT_TRUE(received);
+  ASSERT_EQ(payload, get_last_subscription_message());
+  ASSERT_EQ(0, container_->size());
+
+  ASSERT_NO_THROW(ros2_comms.disconnect());
+}
+
+TEST_F(Ros2CommunicationTest, PublishTest)
+{
+  std::string topic = make_test_topic("ros2/publish");
+  std::string payload = default_payload_json().dump();
+
+  std::atomic_bool ros2_received = false;
+  std::string received_payload;
+
+  // Create listener node with subscription
+  auto listener_node = std::make_shared<rclcpp::Node>("test_listener");
+  auto listener_sub = listener_node->create_subscription<std_msgs::msg::String>(
+    topic, rclcpp::QoS(10).best_effort().durability_volatile(),
+    [&](const std_msgs::msg::String::SharedPtr msg) {
+      ros2_received = true;
+      received_payload = msg->data;
+    });
+
+  // Create Ros2Communication instance
+  auto publisher_node = std::make_shared<rclcpp::Node>("test_ros2_publisher");
+  auto ros2_comms = Ros2Communication(publisher_node, "test_id");
+  ASSERT_NO_THROW(ros2_comms.connect());
+
+  TestExecutor executor;
+  executor.add_node(listener_node);
+  executor.add_node(publisher_node);
+
+  // Publish message (publisher will be created and discovery will happen)
+  ros2_comms.send_message(topic, payload, qos_);
+
+  // Wait for message to be received (allows time for discovery and transmission)
+  ASSERT_TRUE(executor.wait_for([&]() { return ros2_received.load(); }));
+  ASSERT_EQ(payload, received_payload);
+  ASSERT_NO_THROW(ros2_comms.disconnect());
+}
+
+TEST_F(Ros2CommunicationTest, MultipleMessagesTest)
+{
+  std::string topic = make_test_topic("ros2/multiple");
+  auto payloads = make_numbered_payloads(3);  // Helper generates test data
+
+  // Create node for Ros2Communication
+  auto test_node = std::make_shared<rclcpp::Node>("test_ros2_multi");
+  auto ros2_comms = Ros2Communication(test_node, "test_multi");
+  ASSERT_NO_THROW(ros2_comms.connect());
+  ros2_comms.subscribe(
+    topic,
+    [this](const std::string& topic, const std::string& payload) {
+      // Parse JSON and call the connection callback
+      container_->push_back(payload);
+    },
+    qos_);
+
+  // Create publisher node
+  auto talker_node = std::make_shared<rclcpp::Node>("test_talker_multi");
+  auto talker_pub =
+    talker_node->create_publisher<std_msgs::msg::String>(topic, 10);
+
+  // Create executor
+  TestExecutor executor;
+  executor.add_node(test_node);
+  executor.add_node(talker_node);
+
+  // Use helper to publish multiple messages
+  publish_messages(talker_pub, payloads);
+
+  // Wait for all messages using helper
+  bool all_received =
+    executor.wait_for([&]() { return container_->size() >= payloads.size(); });
+  ASSERT_TRUE(all_received);
+
+  // Use helper to verify messages in order
+  verify_messages_in_order(
+    [&]() { return get_last_subscription_message(); }, payloads,
+    [&](size_t expected) { ASSERT_EQ(expected, container_->size()); });
+
+  ASSERT_NO_THROW(ros2_comms.disconnect());
+}
+
+// TEST_F(Ros2CommunicationTest, QoSReliableTest)
+// {
+//   std::string topic = "/test/ros2/qos_reliable";
+//   std::string payload = payload_json.dump();
+//   int qos = 1;  // Reliable QoS
+
+//   // Create node for Ros2Communication with QoS 1 (reliable)
+//   auto test_node = std::make_shared<rclcpp::Node>("test_ros2_qos");
+//   auto ros2_comms = Ros2Communication(test_node, "test_qos");
+//   ASSERT_NO_THROW(ros2_comms.connect());
+//   ros2_comms.subscribe(topic, qos);
+
+//   // Create a separate publisher node with matching QoS
+//   auto talker_node = std::make_shared<rclcpp::Node>("test_talker_qos");
+//   auto talker_pub = talker_node->create_publisher<std_msgs::msg::String>(
+//     topic, rclcpp::QoS(10).reliable());
+
+//   // Create executor
+//   rclcpp::executors::SingleThreadedExecutor executor;
+//   executor.add_node(test_node);
+//   executor.add_node(talker_node);
+
+//   // Publish message
+//   auto msg = std_msgs::msg::String();
+//   msg.data = payload;
+//   talker_pub->publish(msg);
+
+//   // Spin to process callbacks
+//   auto start_time = std::chrono::steady_clock::now();
+//   while (ros2_comms.storage_[topic].empty() &&
+//          (std::chrono::steady_clock::now() - start_time) <
+//            std::chrono::seconds(2)) {
+//     executor.spin_some(std::chrono::milliseconds(100));
+//   }
+
+//   // Verify message was received
+//   ASSERT_EQ(1, ros2_comms.storage_[topic].size());
+//   ASSERT_EQ(payload, ros2_comms.get_last_subscription_message(topic));
+
+//   ASSERT_NO_THROW(ros2_comms.disconnect());
+// }
