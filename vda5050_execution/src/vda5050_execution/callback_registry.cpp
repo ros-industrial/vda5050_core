@@ -36,4 +36,16 @@ void CallbackRegistry::dispatch(std::shared_ptr<EventBase> event) const
   }
 }
 
+//=============================================================================
+void CallbackRegistry::query(std::shared_ptr<UpdateBase> update) const
+{
+  std::cout << update->get_type().name() << std::endl;
+  auto it = providers_.find(update->get_type());
+  if (it != providers_.end())
+  {
+    auto& cb = it->second;
+    cb(update);
+  }
+}
+
 }  // namespace vda5050_execution

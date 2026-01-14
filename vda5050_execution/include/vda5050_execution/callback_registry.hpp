@@ -22,9 +22,12 @@
 #include <functional>
 #include <memory>
 #include <typeindex>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "vda5050_execution/event.hpp"
-#include "vda5050_execution/provider.hpp"
+#include "vda5050_execution/update.hpp"
 
 namespace vda5050_execution {
 
@@ -48,33 +51,28 @@ public:
 
   void dispatch(std::shared_ptr<EventBase> event) const;
 
-  template <typename T>
-  void register_provider(std::function<std::shared_ptr<T>()> provider)
+  template <typename UpdateT>
+  void register_provider(std::function<void(std::shared_ptr<UpdateT>)> provider)
   {
     static_assert(
-      std::is_base_of_v<ProviderBase, T>,
-      "Provider must be derived from ProviderBase");
+      std::is_base_of_v<UpdateBase, UpdateT>,
+      "Update must be derived from UpdateBase");
 
-    providers_[std::type_index(typeid(T))] = [cb = std::move(provider)]() {
-      return std::static_pointer_cast<ProviderBase>(cb());
+    auto wrapper = [cb =
+                      std::move(provider)](std::shared_ptr<UpdateBase> update) {
+      cb(std::static_pointer_cast<UpdateT>(update));
     };
+
+    providers_[std::type_index(typeid(UpdateT))] = std::move(wrapper);
   }
 
-  template <typename T>
-  std::shared_ptr<T> query() const
-  {
-    auto it = providers_.find(std::type_index(typeid(T)));
-    if (it != providers_.end())
-    {
-      return std::static_pointer_cast<T>(it->second());
-    }
-  }
+  void query(std::shared_ptr<UpdateBase> update) const;
 
 private:
   using ErasedCallback = std::function<void(std::shared_ptr<EventBase>)>;
   std::unordered_map<std::type_index, std::vector<ErasedCallback>> callbacks_;
 
-  using ErasedProvider = std::function<std::shared_ptr<ProviderBase>()>;
+  using ErasedProvider = std::function<void(std::shared_ptr<UpdateBase>)>;
   std::unordered_map<std::type_index, ErasedProvider> providers_;
 };
 
