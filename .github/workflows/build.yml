@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        distro: [humble, foxy]
+        distro: [humble, jazzy]
         compiler: [gcc, clang]
     env:
       ISOLATION: "shell"
@@ -34,7 +34,7 @@ jobs:
           sleep 2  # Wait for broker to start
 
       # GCC
-      - if: ${{ matrix.comiler == 'gcc' }}
+      - if: ${{ matrix.compiler == 'gcc' }}
         uses: 'ros-industrial/industrial_ci@master'
         env:
           ROS_DISTRO: ${{ matrix.distro }}
@@ -42,7 +42,7 @@ jobs:
           TARGET_CMAKE_ARGS: '-DENABLE_ROS2=ON'
 
       # Clang
-      - if: ${{ matrix.comiler == 'clang' }}
+      - if: ${{ matrix.compiler == 'clang' }}
         uses: 'ros-industrial/industrial_ci@master'
         env:
           ROS_DISTRO: ${{ matrix.distro }}
