@@ -21,6 +21,7 @@
 
 #include <functional>
 #include <memory>
+#include <utility>
 
 #include "vda5050_execution/callback_registry.hpp"
 #include "vda5050_execution/event_queue.hpp"
@@ -31,7 +32,7 @@ class ExecutionEngine : public std::enable_shared_from_this<ExecutionEngine>
 {
 public:
   template <typename EventT, typename... Args>
-  void emit(Args&... args)
+  void emit(Args&&... args)
   {
     event_queue_.push<EventT>(std::forward<Args>(args)...);
   }
