@@ -21,6 +21,8 @@
 
 #include <memory>
 #include <typeindex>
+#include <utility>
+#include <vector>
 
 #include <vda5050_types/edge.hpp>
 #include <vda5050_types/node.hpp>
