@@ -16,54 +16,41 @@
  * limitations under the License.
  */
 
+#include <functional>
 #include <memory>
-#include <typeindex>
+#include <utility>
 
-#include <vda5050_types/agv_position.hpp>
-#include <vda5050_types/battery_state.hpp>
-#include <vda5050_types/operating_mode.hpp>
+#include "vda5050_execution/callback_registry.hpp"
+#include "vda5050_execution/update.hpp"
 
 #ifndef VDA5050_EXECUTION__PROVIDER_HPP_
 #define VDA5050_EXECUTION__PROVIDER_HPP_
 
 namespace vda5050_execution {
 
-struct ProviderBase
+class Provider : public std::enable_shared_from_this<Provider>
 {
-  virtual ~ProviderBase() = default;
-  virtual std::type_index get_type() const = 0;
-};
-
-struct PositionData : public ProviderBase
-{
-  std::shared_ptr<vda5050_types::AGVPosition> agv_position;
-
-  std::type_index get_type() const override
+public:
+  template <typename UpdateT, typename... Args>
+  void push(Args&&... args)
   {
-    return std::type_index(typeid(PositionData));
+    static_assert(
+      std::is_base_of_v<UpdateBase, UpdateT>,
+      "Update must be derived from UpdateBase");
+    callback_registry_.query(
+      std::make_shared<UpdateT>(std::forward<Args>(args)...));
   }
-};
 
-struct BatteryData : public ProviderBase
-{
-  std::shared_ptr<vda5050_types::BatteryState> battery_state;
-
-  std::type_index get_type() const override
+  template <typename UpdateT>
+  void on(std::function<void(std::shared_ptr<UpdateT>)> callback)
   {
-    return std::type_index(typeid(BatteryData));
+    callback_registry_.register_provider<UpdateT>(std::move(callback));
   }
-};
 
-struct OperatingModeData : public ProviderBase
-{
-  std::shared_ptr<vda5050_types::OperatingMode> operating_mode;
-
-  std::type_index get_type() const override
-  {
-    return std::type_index(typeid(OperatingModeData));
-  }
+private:
+  CallbackRegistry callback_registry_;
 };
 
 }  // namespace vda5050_execution
 
-#endif  // VDA5050_EXECUTION__STATE_PROVIDER_HPP_
+#endif  // VDA5050_EXECUTION__PROVIDER_HPP_
