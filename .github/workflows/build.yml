@@ -7,6 +7,7 @@ on:
     branches:
       - main
       - develop
+      - feature/add-humble-ci
 
 jobs:
   industrial_ci:
