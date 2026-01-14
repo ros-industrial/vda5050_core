@@ -56,15 +56,26 @@ ament_export_dependencies(
 )
 
 if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # comment the line when a copyright and license is added to all source files
-  set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # comment the line when this package is in a git repo and when
-  # a copyright and license is added to all source files
-  set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
+  find_package(ament_cmake_cppcheck REQUIRED)
+  ament_cppcheck()
+
+  find_package(ament_cmake_cpplint REQUIRED)
+  set(cpplint_filters
+    "-whitespace/newline"
+  )
+  ament_cpplint(
+    FILTERS "${cpplint_filters}"
+  )
+
+  find_package(ament_cmake_clang_format REQUIRED)
+  ament_clang_format(
+    CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../.clang-format"
+  )
+
+  find_package(ament_cmake_copyright REQUIRED)
+  ament_copyright()
+
+  find_package(ament_cmake_gmock REQUIRED)
 endif()
 
 ament_package()
