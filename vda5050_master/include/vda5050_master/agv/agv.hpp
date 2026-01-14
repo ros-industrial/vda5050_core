@@ -45,21 +45,24 @@ enum class AGVState
 {
   STATE_UNKNOWN,  // Initial state or state heartbeat timed out
   AVAILABLE,      // State heartbeat is being received, AGV operational
-  UNAVAILABLE,    // AGV reported unavailable
+  UNAVAILABLE,    // AGV reported unavailable or connection lost
   ERROR           // AGV reported error state
 };
 
 /**
  * @brief Represents an individual AGV managed by VDA5050Master
  *
- * This class encapsulates all per-AGV data including:
+ * This class is primarily a data container that holds:
  * - Identity information (manufacturer, serial number)
- * - Communication instance
  * - Cached VDA5050 messages (connection, state, factsheet, visualization)
- * - Connection status and timestamps
+ * - Connection and operational state
+ * - Outgoing message queue for orders and instant actions
+ *
+ * The VDA5050Master routes incoming messages to AGV instances and the AGV
+ * handles outgoing messages via transient MQTT clients.
  *
  * Thread safety: Methods are thread-safe. Cached data access is protected
- * by a mutex.
+ * by mutexes.
  */
 class AGV
 {
@@ -68,16 +71,6 @@ public:
   using Clock = std::chrono::steady_clock;
   using TimePoint = std::chrono::time_point<Clock>;
 
-  // Callback types for VDA5050 message handling
-  using ConnectionCallback =
-    std::function<void(const std::string&, const vda5050_types::Connection&)>;
-  using StateCallback =
-    std::function<void(const std::string&, const vda5050_types::State&)>;
-  using FactsheetCallback =
-    std::function<void(const std::string&, const vda5050_types::Factsheet&)>;
-  using VisualizationCallback = std::function<void(
-    const std::string&, const vda5050_types::Visualization&)>;
-
   // Default maximum queue size for outgoing messages
   static constexpr size_t DEFAULT_MAX_QUEUE_SIZE = 10;
 
@@ -85,14 +78,14 @@ public:
    * @brief Construct an AGV instance
    * @param manufacturer Manufacturer name
    * @param serial_number Serial number
-   * @param mqtt_client MQTT client for this AGV
+   * @param broker_address MQTT broker address for creating transient publish clients
    * @param max_queue_size Maximum number of outgoing messages to queue (default: 10)
-   * @param drop_oldest If true, drop oldest message when queue full; if false, reject new message (default: true)
+   * @param drop_oldest If true, drop oldest message when queue full; if false, reject new (default: true)
    * @param state_heartbeat_interval State heartbeat timeout in seconds
    */
   AGV(
     const std::string& manufacturer, const std::string& serial_number,
-    std::shared_ptr<vda5050_core::mqtt_client::MqttClientInterface> mqtt_client,
+    const std::string& broker_address,
     size_t max_queue_size = DEFAULT_MAX_QUEUE_SIZE, bool drop_oldest = true,
     int state_heartbeat_interval = vda5050_master::StateHeartbeatInterval);
 
@@ -136,21 +129,12 @@ public:
   }
 
   // ============================================================================
-  // Communication
+  // Connection and Operational State
   // ============================================================================
 
   /**
-   * @brief Connect the AGV's communication
-   */
-  void connect();
-
-  /**
-   * @brief Disconnect the AGV's communication
-   */
-  void disconnect();
-
-  /**
-   * @brief Check if the AGV is connected
+   * @brief Check if the AGV is connected (based on VDA5050 connection message)
+   * @return true if connection_status is ONLINE, false otherwise
    */
   bool is_connected() const;
 
@@ -162,25 +146,9 @@ public:
 
   /**
    * @brief Get the AGV operational state (based on state heartbeat)
-   * @return STATE_UNKNOWN, ONLINE, OFFLINE, or ERROR
+   * @return STATE_UNKNOWN, AVAILABLE, UNAVAILABLE, or ERROR
    */
   AGVState get_operational_state() const;
-
-  /**
-   * @brief Setup VDA5050 topic subscriptions for this AGV
-   * @param on_connection Callback for connection messages
-   * @param on_state Callback for state messages
-   * @param on_factsheet Callback for factsheet messages (optional, cache always updated)
-   * @param on_visualization Callback for visualization messages (optional, cache always updated)
-   *
-   * Sets up subscriptions to all standard VDA5050 topics using the AGV's
-   * manufacturer and serial number. Received messages are parsed from JSON
-   * and cached in the AGV. User callbacks are invoked if provided.
-   */
-  void setup_subscriptions(
-    ConnectionCallback on_connection, StateCallback on_state,
-    FactsheetCallback on_factsheet = nullptr,
-    VisualizationCallback on_visualization = nullptr);
 
   // ============================================================================
   // Cached Messages (read-only access)
@@ -215,11 +183,11 @@ public:
   // ============================================================================
 
   /**
-   * @brief Get the time when the AGV was registered
+   * @brief Get the time when the AGV was created
    */
-  TimePoint get_registered_time() const
+  TimePoint get_created_time() const
   {
-    return registered_time_;
+    return created_time_;
   }
 
   /**
@@ -246,99 +214,96 @@ public:
    */
   std::optional<TimePoint> get_last_visualization_time() const;
 
-private:
-  // VDA5050Master needs access to send/update methods
-  friend class VDA5050Master;
-
   // ============================================================================
-  // Master-only methods (accessed via friend class)
+  // Outgoing Messages
   // ============================================================================
 
   /**
    * @brief Queue an order to be sent to this AGV
    * @param order The order message
-   * @return true if queued successfully, false if queue is full
-   *
-   * Messages are processed FIFO by a background thread.
+   * @return true if queued successfully, false if queue is full (drop_oldest=false)
    */
   bool send_order(const vda5050_types::Order& order);
 
   /**
    * @brief Queue instant actions to be sent to this AGV
    * @param actions The instant actions message
-   * @return true if queued successfully, false if queue is full
-   *
-   * Messages are processed FIFO by a background thread.
+   * @return true if queued successfully, false if queue is full (drop_oldest=false)
    */
   bool send_instant_actions(const vda5050_types::InstantActions& actions);
 
-  /**
-   * @brief Update the cached connection message
-   * @param msg The connection message
-   */
-  void update_connection(const vda5050_types::Connection& msg);
-
-  /**
-   * @brief Update the cached state message
-   * @param msg The state message
-   */
-  void update_state(const vda5050_types::State& msg);
-
-  /**
-   * @brief Update the cached factsheet message
-   * @param msg The factsheet message
-   */
-  void update_factsheet(const vda5050_types::Factsheet& msg);
-
-  /**
-   * @brief Update the cached visualization message
-   * @param msg The visualization message
-   */
-  void update_visualization(const vda5050_types::Visualization& msg);
-
   // ============================================================================
-  // Helper methods
+  // Message Handlers (called by VDA5050Master to route incoming messages)
   // ============================================================================
 
-  // Helper methods for building VDA5050 topic paths
+  /**
+   * @brief Handle an incoming connection message
+   * @param msg The parsed connection message
+   */
+  void handle_connection(const vda5050_types::Connection& msg);
+
+  /**
+   * @brief Handle an incoming state message
+   * @param msg The parsed state message
+   */
+  void handle_state(const vda5050_types::State& msg);
+
+  /**
+   * @brief Handle an incoming factsheet message
+   * @param msg The parsed factsheet message
+   */
+  void handle_factsheet(const vda5050_types::Factsheet& msg);
+
+  /**
+   * @brief Handle an incoming visualization message
+   * @param msg The parsed visualization message
+   */
+  void handle_visualization(const vda5050_types::Visualization& msg);
+
+private:
+  // ============================================================================
+  // Internal State Management
+  // ============================================================================
+
+  void set_connection_status(vda5050_types::ConnectionState status);
+  void set_operational_state(AGVState state);
+  void on_state_heartbeat_timeout();
+
+  // Setup/cleanup heartbeat when connection state changes
+  void setup_heartbeat();
+  void cleanup_heartbeat();
+
+  // ============================================================================
+  // Queue Processing
+  // ============================================================================
+
+  void start_queue_processor();
+  void stop_queue_processor();
+  void process_queues();
+
+  // Publish via transient MQTT client
+  void publish_order(const vda5050_types::Order& order);
+  void publish_instant_actions(const vda5050_types::InstantActions& actions);
+
+  // Helper to build topic paths
   std::string build_topic(const std::string& topic_name) const;
 
-  // Internal message handlers that parse JSON, update cache, and invoke callbacks
-  void handle_connection_message(
-    const std::string& payload, const ConnectionCallback& callback);
-  void handle_state_message(
-    const std::string& payload, const StateCallback& callback);
-  void handle_factsheet_message(
-    const std::string& payload, const FactsheetCallback& callback);
-  void handle_visualization_message(
-    const std::string& payload, const VisualizationCallback& callback);
+  // ============================================================================
+  // Member Variables
+  // ============================================================================
 
   // Identity
   std::string manufacturer_;
   std::string serial_number_;
   std::string agv_id_;
 
-  // Communication
-  std::shared_ptr<vda5050_core::mqtt_client::MqttClientInterface> mqtt_client_;
+  // Broker address for creating transient MQTT clients
+  std::string broker_address_;
+
+  // Heartbeat listener for state timeout detection
   std::unique_ptr<vda5050_master::communication::HeartbeatListener>
     state_heartbeat_;
-
-  // Connection establishment state
-  std::atomic<bool> connection_established_{false};
   int state_heartbeat_interval_;
-
-  // Stored callbacks for deferred subscription setup
-  ConnectionCallback stored_connection_callback_;
-  StateCallback stored_state_callback_;
-  FactsheetCallback stored_factsheet_callback_;
-  VisualizationCallback stored_visualization_callback_;
-
-  // Set up AGV components when connection is established (ONLINE received)
-  void setup_agv_components();
-
-  // Clean up AGV components when connection is lost (OFFLINE/CONNECTIONBROKEN)
-  // Stops threads and unsubscribes, but retains cached message data
-  void cleanup_agv_components();
 
   // AGV states (protected by state_mutex_)
   mutable std::mutex state_mutex_;
@@ -346,17 +311,10 @@ private:
     vda5050_types::ConnectionState::OFFLINE};
   AGVState operational_state_{AGVState::STATE_UNKNOWN};
 
-  // Internal state setters (called by heartbeat callbacks)
-  void set_connection_status(vda5050_types::ConnectionState status);
-  void set_operational_state(AGVState state);
-
-  // Heartbeat timeout callback
-  void on_state_heartbeat_timeout();
-
   // Timestamps
-  TimePoint registered_time_;
+  TimePoint created_time_;
 
-  // Cached messages and timestamps (protected by mutex)
+  // Cached messages and timestamps (protected by data_mutex_)
   mutable std::mutex data_mutex_;
 
   std::optional<vda5050_types::Connection> last_connection_;
@@ -371,22 +329,10 @@ private:
   std::optional<vda5050_types::Visualization> last_visualization_;
   std::optional<TimePoint> last_visualization_time_;
 
-  // ============================================================================
-  // Outgoing message queues
-  // ============================================================================
-
-  // Queue processing thread function
-  void process_queues();
-
-  // Sends messages immediately (called by queue processor)
-  void send_order_now(const vda5050_types::Order& order);
-  void send_instant_actions_now(const vda5050_types::InstantActions& actions);
-
-  // Queue configuration
+  // Outgoing message queues (protected by queue_mutex_)
   size_t max_queue_size_;
   bool drop_oldest_;
 
-  // Queue state (protected by queue_mutex_)
   std::mutex queue_mutex_;
   std::condition_variable queue_cv_;
   std::queue<vda5050_types::Order> order_queue_;
@@ -394,6 +340,7 @@ private:
 
   // Queue processing thread
   std::atomic<bool> stop_processing_{false};
+  std::atomic<bool> queue_processor_running_{false};
   std::thread queue_thread_;
 };
 

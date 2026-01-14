@@ -22,11 +22,9 @@
 
 #include "nlohmann/json.hpp"
 #include "vda5050_core/logger/logger.hpp"
+#include "vda5050_core/mqtt_client/mqtt_client_interface.hpp"
 #include "vda5050_json_utils/serialization.hpp"
 #include "vda5050_master/standard_names.hpp"
-
-// TODO(vda5050_json_utils): Add serializers for InstantActions, Visualization,
-// and Factsheet to vda5050_json_utils/serialization.hpp
 
 // ============================================================================
 // Constructor / Destructor
@@ -34,147 +32,41 @@
 
 AGV::AGV(
   const std::string& manufacturer, const std::string& serial_number,
-  std::shared_ptr<vda5050_core::mqtt_client::MqttClientInterface> mqtt_client,
-  size_t max_queue_size, bool drop_oldest, int state_heartbeat_interval)
+  const std::string& broker_address, size_t max_queue_size, bool drop_oldest,
+  int state_heartbeat_interval)
 : manufacturer_(manufacturer),
   serial_number_(serial_number),
   agv_id_(manufacturer + "/" + serial_number),
-  mqtt_client_(std::move(mqtt_client)),
-  registered_time_(Clock::now()),
+  broker_address_(broker_address),
+  state_heartbeat_interval_(state_heartbeat_interval),
+  created_time_(Clock::now()),
   max_queue_size_(max_queue_size),
-  drop_oldest_(drop_oldest),
-  state_heartbeat_interval_(state_heartbeat_interval)
+  drop_oldest_(drop_oldest)
 {
-  // AGV components will be set up when ONLINE connection message is received
+  VDA5050_INFO("[AGV] Created AGV instance: {}", agv_id_);
 }
 
 AGV::~AGV()
 {
-  // Reuse cleanup logic - safe to call even if already cleaned up
-  cleanup_agv_components();
+  VDA5050_INFO("[AGV] Destroying AGV instance: {}", agv_id_);
+
+  // Stop queue processor
+  stop_queue_processor();
+
+  // Cleanup heartbeat
+  cleanup_heartbeat();
+
+  VDA5050_INFO("[AGV] AGV instance destroyed: {}", agv_id_);
 }
 
 // ============================================================================
-// Communication
+// Connection and Operational State
 // ============================================================================
-
-void AGV::connect()
-{
-  if (mqtt_client_)
-  {
-    mqtt_client_->connect();
-  }
-}
-
-void AGV::disconnect()
-{
-  // Stop state heartbeat listener
-  if (state_heartbeat_)
-  {
-    state_heartbeat_->stop_connection_heartbeat();
-  }
-
-  if (mqtt_client_)
-  {
-    mqtt_client_->disconnect();
-  }
-
-  // Set explicit disconnect state to OFFLINE (intentional disconnection)
-  set_connection_status(vda5050_types::ConnectionState::OFFLINE);
-}
-
-void AGV::setup_agv_components()
-{
-  VDA5050_INFO("[AGV] Setting up AGV components for {}", agv_id_);
-
-  // Create and start state heartbeat listener
-  state_heartbeat_ =
-    std::make_unique<vda5050_master::communication::HeartbeatListener>(
-      agv_id_ + "_state_heartbeat", state_heartbeat_interval_,
-      [this]() { on_state_heartbeat_timeout(); });
-  state_heartbeat_->start_connection_heartbeat();
-
-  // Subscribe to remaining topics
-  mqtt_client_->subscribe(
-    build_topic(vda5050_master::StateTopic),
-    [this](const std::string& /*topic*/, const std::string& payload) {
-      handle_state_message(payload, stored_state_callback_);
-    },
-    vda5050_master::StateQos);
-
-  mqtt_client_->subscribe(
-    build_topic(vda5050_master::FactsheetTopic),
-    [this](const std::string& /*topic*/, const std::string& payload) {
-      handle_factsheet_message(payload, stored_factsheet_callback_);
-    },
-    vda5050_master::FactsheetQos);
-
-  mqtt_client_->subscribe(
-    build_topic(vda5050_master::VisualizationTopic),
-    [this](const std::string& /*topic*/, const std::string& payload) {
-      handle_visualization_message(payload, stored_visualization_callback_);
-    },
-    vda5050_master::VisualizationQos);
-
-  // Start queue processing thread
-  queue_thread_ = std::thread(&AGV::process_queues, this);
-
-  VDA5050_INFO("[AGV] AGV components setup complete for {}", agv_id_);
-}
-
-void AGV::cleanup_agv_components()
-{
-  // Only clean up if components were previously set up
-  if (!connection_established_)
-  {
-    return;
-  }
-
-  VDA5050_INFO("[AGV] Cleaning up AGV components for {}", agv_id_);
-
-  // Stop heartbeat listener
-  if (state_heartbeat_)
-  {
-    state_heartbeat_->stop_connection_heartbeat();
-    state_heartbeat_.reset();
-  }
-
-  // Stop queue processing thread
-  {
-    std::lock_guard<std::mutex> lock(queue_mutex_);
-    stop_processing_ = true;
-  }
-  queue_cv_.notify_one();
-
-  if (queue_thread_.joinable())
-  {
-    queue_thread_.join();
-  }
-
-  // Reset stop flag for potential re-initialization
-  stop_processing_ = false;
-
-  // Unsubscribe from topics (connection topic remains subscribed)
-  if (mqtt_client_)
-  {
-    mqtt_client_->unsubscribe(build_topic(vda5050_master::StateTopic));
-    mqtt_client_->unsubscribe(build_topic(vda5050_master::FactsheetTopic));
-    mqtt_client_->unsubscribe(build_topic(vda5050_master::VisualizationTopic));
-  }
-
-  // Mark as not established so components can be re-initialized on next ONLINE
-  connection_established_ = false;
-
-  VDA5050_INFO("[AGV] AGV components cleanup complete for {}", agv_id_);
-}
 
 bool AGV::is_connected() const
 {
-  if (mqtt_client_)
-  {
-    return mqtt_client_->connected();
-  }
-  return false;
+  std::lock_guard<std::mutex> lock(state_mutex_);
+  return connection_status_ == vda5050_types::ConnectionState::ONLINE;
 }
 
 vda5050_types::ConnectionState AGV::get_connection_status() const
@@ -192,6 +84,7 @@ AGVState AGV::get_operational_state() const
 void AGV::set_connection_status(vda5050_types::ConnectionState status)
 {
   std::lock_guard<std::mutex> lock(state_mutex_);
+  auto old_status = connection_status_;
   connection_status_ = status;
 
   // When connection is lost, AGV becomes unavailable
@@ -208,6 +101,26 @@ void AGV::set_connection_status(vda5050_types::ConnectionState status)
         status == vda5050_types::ConnectionState::OFFLINE ? "OFFLINE"
                                                           : "CONNECTIONBROKEN");
     }
+  }
+
+  // Log connection status change
+  if (old_status != status)
+  {
+    const char* status_str = "UNKNOWN";
+    switch (status)
+    {
+      case vda5050_types::ConnectionState::ONLINE:
+        status_str = "ONLINE";
+        break;
+      case vda5050_types::ConnectionState::OFFLINE:
+        status_str = "OFFLINE";
+        break;
+      case vda5050_types::ConnectionState::CONNECTIONBROKEN:
+        status_str = "CONNECTIONBROKEN";
+        break;
+    }
+    VDA5050_INFO(
+      "[AGV] Connection status changed to {} for {}", status_str, agv_id_);
   }
 }
 
@@ -243,61 +156,96 @@ void AGV::on_state_heartbeat_timeout()
 }
 
 // ============================================================================
-// Cached Messages - Update
+// Heartbeat Management
 // ============================================================================
 
-void AGV::update_connection(const vda5050_types::Connection& msg)
+void AGV::setup_heartbeat()
 {
+  if (state_heartbeat_)
+  {
+    return;  // Already set up
+  }
+
+  VDA5050_INFO("[AGV] Setting up heartbeat for {}", agv_id_);
+
+  state_heartbeat_ =
+    std::make_unique<vda5050_master::communication::HeartbeatListener>(
+      agv_id_ + "_state_heartbeat", state_heartbeat_interval_,
+      [this]() { on_state_heartbeat_timeout(); });
+  state_heartbeat_->start_connection_heartbeat();
+}
+
+void AGV::cleanup_heartbeat()
+{
+  if (!state_heartbeat_)
+  {
+    return;  // Nothing to clean up
+  }
+
+  VDA5050_INFO("[AGV] Cleaning up heartbeat for {}", agv_id_);
+
+  state_heartbeat_->stop_connection_heartbeat();
+  state_heartbeat_.reset();
+}
+
+// ============================================================================
+// Message Handlers
+// ============================================================================
+
+void AGV::handle_connection(const vda5050_types::Connection& msg)
+{
+  // Update cached message
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     last_connection_ = msg;
     last_connection_time_ = Clock::now();
   }
 
-  // Update connection status based on the connectionState field in the message
+  // Update connection status
   set_connection_status(msg.connection_state);
 
-  // Clean up AGV components when connection is lost
-  if (
-    msg.connection_state == vda5050_types::ConnectionState::OFFLINE ||
-    msg.connection_state == vda5050_types::ConnectionState::CONNECTIONBROKEN)
+  // Manage heartbeat based on connection state
+  if (msg.connection_state == vda5050_types::ConnectionState::ONLINE)
   {
-    cleanup_agv_components();
+    // Start heartbeat and queue processor when ONLINE
+    setup_heartbeat();
+    start_queue_processor();
   }
-  // Set up AGV components when ONLINE message is received
-  else if (
-    msg.connection_state == vda5050_types::ConnectionState::ONLINE &&
-    !connection_established_)
+  else
   {
-    setup_agv_components();
-    connection_established_ = true;
+    // Stop heartbeat and queue processor when OFFLINE/CONNECTIONBROKEN
+    cleanup_heartbeat();
+    stop_queue_processor();
   }
 }
 
-void AGV::update_state(const vda5050_types::State& msg)
+void AGV::handle_state(const vda5050_types::State& msg)
 {
+  // Update cached message
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     last_state_ = msg;
     last_state_time_ = Clock::now();
   }
 
-  // Notify heartbeat listener and update state
+  // Notify heartbeat listener
   if (state_heartbeat_)
   {
     state_heartbeat_->received_connection();
   }
+
+  // Update operational state to AVAILABLE
   set_operational_state(AGVState::AVAILABLE);
 }
 
-void AGV::update_factsheet(const vda5050_types::Factsheet& msg)
+void AGV::handle_factsheet(const vda5050_types::Factsheet& msg)
 {
   std::lock_guard<std::mutex> lock(data_mutex_);
   last_factsheet_ = msg;
   last_factsheet_time_ = Clock::now();
 }
 
-void AGV::update_visualization(const vda5050_types::Visualization& msg)
+void AGV::handle_visualization(const vda5050_types::Visualization& msg)
 {
   std::lock_guard<std::mutex> lock(data_mutex_);
   last_visualization_ = msg;
@@ -361,38 +309,8 @@ std::optional<AGV::TimePoint> AGV::get_last_visualization_time() const
 }
 
 // ============================================================================
-// Subscriptions and Publishing
+// Outgoing Messages - Queue
 // ============================================================================
-
-void AGV::setup_subscriptions(
-  ConnectionCallback on_connection, StateCallback on_state,
-  FactsheetCallback on_factsheet, VisualizationCallback on_visualization)
-{
-  if (!mqtt_client_)
-  {
-    VDA5050_WARN(
-      "[AGV] Cannot setup subscriptions: no MQTT client for {}", agv_id_);
-    return;
-  }
-
-  // Store callbacks for later use when connection is established
-  stored_connection_callback_ = on_connection;
-  stored_state_callback_ = on_state;
-  stored_factsheet_callback_ = on_factsheet;
-  stored_visualization_callback_ = on_visualization;
-
-  // Initially only subscribe to connection topic to wait for ONLINE status
-  mqtt_client_->subscribe(
-    build_topic(vda5050_master::ConnectionTopic),
-    [this](const std::string& /*topic*/, const std::string& payload) {
-      handle_connection_message(payload, stored_connection_callback_);
-    },
-    vda5050_master::ConnectionQos);
-
-  VDA5050_INFO(
-    "[AGV] Setup connection subscription for AGV: {} (waiting for ONLINE)",
-    agv_id_);
-}
 
 bool AGV::send_order(const vda5050_types::Order& order)
 {
@@ -449,120 +367,46 @@ bool AGV::send_instant_actions(const vda5050_types::InstantActions& actions)
 }
 
 // ============================================================================
-// Private Helper Methods
-// ============================================================================
-
-std::string AGV::build_topic(const std::string& topic_name) const
-{
-  return vda5050_master::InterfaceName + "/" + vda5050_master::Version + "/" +
-         manufacturer_ + "/" + serial_number_ + "/" + topic_name;
-}
-
-void AGV::handle_connection_message(
-  const std::string& payload, const ConnectionCallback& callback)
-{
-  try
-  {
-    auto json_msg = nlohmann::json::parse(payload);
-    vda5050_types::Connection msg;
-    vda5050_types::from_json(json_msg, msg);
-
-    // Update cache
-    update_connection(msg);
-
-    // Invoke user callback
-    if (callback)
-    {
-      callback(agv_id_, msg);
-    }
-  }
-  catch (const std::exception& e)
-  {
-    VDA5050_WARN(
-      "[AGV] Failed to parse connection message from {}: {}", agv_id_,
-      e.what());
-  }
-}
-
-void AGV::handle_state_message(
-  const std::string& payload, const StateCallback& callback)
-{
-  try
-  {
-    auto json_msg = nlohmann::json::parse(payload);
-    vda5050_types::State msg;
-    vda5050_types::from_json(json_msg, msg);
-
-    // Update cache
-    update_state(msg);
-
-    // Invoke user callback
-    if (callback)
-    {
-      callback(agv_id_, msg);
-    }
-  }
-  catch (const std::exception& e)
-  {
-    VDA5050_WARN(
-      "[AGV] Failed to parse state message from {}: {}", agv_id_, e.what());
-  }
-}
-
-void AGV::handle_factsheet_message(
-  const std::string& payload, const FactsheetCallback& callback)
-{
-  try
-  {
-    auto json_msg = nlohmann::json::parse(payload);
-    vda5050_types::Factsheet msg;
-    vda5050_types::from_json(json_msg, msg);
-
-    // Update cache
-    update_factsheet(msg);
-
-    // Invoke user callback
-    if (callback)
-    {
-      callback(agv_id_, msg);
-    }
-  }
-  catch (const std::exception& e)
-  {
-    VDA5050_WARN(
-      "[AGV] Failed to parse factsheet message from {}: {}", agv_id_, e.what());
-  }
-}
-
-void AGV::handle_visualization_message(
-  const std::string& payload, const VisualizationCallback& callback)
-{
-  try
-  {
-    auto json_msg = nlohmann::json::parse(payload);
-    vda5050_types::Visualization msg;
-    vda5050_types::from_json(json_msg, msg);
-
-    // Update cache
-    update_visualization(msg);
-
-    // Invoke user callback
-    if (callback)
-    {
-      callback(agv_id_, msg);
-    }
-  }
-  catch (const std::exception& e)
-  {
-    VDA5050_WARN(
-      "[AGV] Failed to parse visualization message from {}: {}", agv_id_,
-      e.what());
-  }
-}
-
-// ============================================================================
 // Queue Processing
 // ============================================================================
+
+void AGV::start_queue_processor()
+{
+  if (queue_processor_running_.load())
+  {
+    return;  // Already running
+  }
+
+  VDA5050_INFO("[AGV] Starting queue processor for {}", agv_id_);
+
+  stop_processing_ = false;
+  queue_processor_running_ = true;
+  queue_thread_ = std::thread(&AGV::process_queues, this);
+}
+
+void AGV::stop_queue_processor()
+{
+  if (!queue_processor_running_.load())
+  {
+    return;  // Not running
+  }
+
+  VDA5050_INFO("[AGV] Stopping queue processor for {}", agv_id_);
+
+  {
+    std::lock_guard<std::mutex> lock(queue_mutex_);
+    stop_processing_ = true;
+  }
+  queue_cv_.notify_one();
+
+  if (queue_thread_.joinable())
+  {
+    queue_thread_.join();
+  }
+
+  queue_processor_running_ = false;
+  VDA5050_INFO("[AGV] Queue processor stopped for {}", agv_id_);
+}
 
 void AGV::process_queues()
 {
@@ -603,51 +447,106 @@ void AGV::process_queues()
       }
     }
 
-    // Send the message (outside the lock)
+    // Publish the message (outside the lock)
     if (actions)
     {
-      send_instant_actions_now(*actions);
+      publish_instant_actions(*actions);
     }
     else if (order)
     {
-      send_order_now(*order);
+      publish_order(*order);
     }
   }
 
   VDA5050_INFO("[AGV] Queue processing thread stopped for {}", agv_id_);
 }
 
-void AGV::send_order_now(const vda5050_types::Order& order)
+// ============================================================================
+// Publishing via Transient MQTT Client
+// ============================================================================
+
+void AGV::publish_order(const vda5050_types::Order& order)
 {
-  if (!mqtt_client_)
-  {
-    VDA5050_WARN("[AGV] Cannot send order: no MQTT client for {}", agv_id_);
-    return;
-  }
-
-  nlohmann::json j;
-  vda5050_types::to_json(j, order);
-  mqtt_client_->publish(
-    build_topic(vda5050_master::OrderTopic), j.dump(),
-    vda5050_master::OrderQos);
-
-  VDA5050_INFO("[AGV] Sent order to AGV: {}", agv_id_);
-}
-
-void AGV::send_instant_actions_now(const vda5050_types::InstantActions& actions)
-{
-  if (!mqtt_client_)
+  if (broker_address_.empty())
   {
     VDA5050_WARN(
-      "[AGV] Cannot send instant actions: no MQTT client for {}", agv_id_);
+      "[AGV] Cannot publish order: no broker address for {}", agv_id_);
     return;
   }
 
-  nlohmann::json j;
-  vda5050_types::to_json(j, actions);
-  mqtt_client_->publish(
-    build_topic(vda5050_master::InstantActionsTopic), j.dump(),
-    vda5050_master::InstantActionsQos);
+  try
+  {
+    // Create transient client
+    std::string client_id =
+      agv_id_ + "_order_" +
+      std::to_string(Clock::now().time_since_epoch().count());
+    auto client = vda5050_core::mqtt_client::create_default_client(
+      broker_address_, client_id);
 
-  VDA5050_INFO("[AGV] Sent instant actions to AGV: {}", agv_id_);
+    // Connect, publish, disconnect
+    client->connect();
+
+    nlohmann::json j;
+    vda5050_types::to_json(j, order);
+    client->publish(
+      build_topic(vda5050_master::OrderTopic), j.dump(),
+      vda5050_master::OrderQos);
+
+    client->disconnect();
+
+    VDA5050_INFO("[AGV] Published order to AGV: {}", agv_id_);
+  }
+  catch (const std::exception& e)
+  {
+    VDA5050_WARN("[AGV] Failed to publish order for {}: {}", agv_id_, e.what());
+  }
+}
+
+void AGV::publish_instant_actions(const vda5050_types::InstantActions& actions)
+{
+  if (broker_address_.empty())
+  {
+    VDA5050_WARN(
+      "[AGV] Cannot publish instant actions: no broker address for {}",
+      agv_id_);
+    return;
+  }
+
+  try
+  {
+    // Create transient client
+    std::string client_id =
+      agv_id_ + "_actions_" +
+      std::to_string(Clock::now().time_since_epoch().count());
+    auto client = vda5050_core::mqtt_client::create_default_client(
+      broker_address_, client_id);
+
+    // Connect, publish, disconnect
+    client->connect();
+
+    nlohmann::json j;
+    vda5050_types::to_json(j, actions);
+    client->publish(
+      build_topic(vda5050_master::InstantActionsTopic), j.dump(),
+      vda5050_master::InstantActionsQos);
+
+    client->disconnect();
+
+    VDA5050_INFO("[AGV] Published instant actions to AGV: {}", agv_id_);
+  }
+  catch (const std::exception& e)
+  {
+    VDA5050_WARN(
+      "[AGV] Failed to publish instant actions for {}: {}", agv_id_, e.what());
+  }
+}
+
+// ============================================================================
+// Helper Methods
+// ============================================================================
+
+std::string AGV::build_topic(const std::string& topic_name) const
+{
+  return vda5050_master::InterfaceName + "/" + vda5050_master::Version + "/" +
+         manufacturer_ + "/" + serial_number_ + "/" + topic_name;
 }

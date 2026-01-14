@@ -144,6 +144,30 @@ inline std::string make_connection_topic(
   return "rmf2/v2/" + manufacturer + "/" + serial_number + "/connection";
 }
 
+/**
+ * @brief Create a VDA5050 state JSON message
+ * @param manufacturer AGV manufacturer
+ * @param serial_number AGV serial number
+ */
+inline std::string make_state_json(
+  const std::string& manufacturer, const std::string& serial_number)
+{
+  return R"({"headerId": 1, "timestamp": "2025-01-01T00:00:00.000Z", "version": "2.0.0", "manufacturer": ")" +
+         manufacturer + R"(", "serialNumber": ")" + serial_number +
+         R"(", "orderId": "", "orderUpdateId": 0, "driving": false, "paused": false, "newBaseRequest": false, "distanceSinceLastNode": 0.0, "nodeStates": [], "edgeStates": [], "actionStates": [], "batteryState": {"batteryCharge": 100.0, "charging": false}, "errors": [], "safetyState": {"eStop": "NONE", "fieldViolation": false}, "operatingMode": "AUTOMATIC"})";
+}
+
+/**
+ * @brief Build the VDA5050 state topic path for an AGV
+ * @param manufacturer AGV manufacturer
+ * @param serial_number AGV serial number
+ */
+inline std::string make_state_topic(
+  const std::string& manufacturer, const std::string& serial_number)
+{
+  return "rmf2/v2/" + manufacturer + "/" + serial_number + "/state";
+}
+
 }  // namespace vda5050_master::test
 
 #endif  // COMMUNICATION__TEST_HELPERS_HPP_

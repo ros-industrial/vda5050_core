@@ -76,13 +76,19 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_heartbeat vda5050_master)
 
-  # AGV unit tests (no external dependencies like MQTT broker)
+  # AGV unit tests
   ament_add_gmock(test_agv
-    test/agv/agv_test.cpp
     test/agv/agv_connection_state_test.cpp
     test/agv/agv_operational_state_test.cpp
   )
   target_link_libraries(test_agv vda5050_master)
+
+  # Master unit tests (uses real MQTT broker, skipped if unavailable)
+  ament_add_gmock(test_master
+    test/master/master_logic_test.cpp
+    test/master/master_mqtt_test.cpp
+  )
+  target_link_libraries(test_master vda5050_master)
 
 endif()
 

@@ -24,39 +24,30 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 #include "vda5050_core/mqtt_client/mqtt_client_interface.hpp"
 #include "vda5050_master/agv/agv.hpp"
 #include "vda5050_master/vda5050_interfaces.hpp"
 
 /**
- * @brief Factory function type for creating MQTT clients
- *
- * The factory takes an AGV identifier (used for client naming) and returns
- * a new MqttClientInterface instance.
- */
-using MqttClientFactory =
-  std::function<std::shared_ptr<vda5050_core::mqtt_client::MqttClientInterface>(
-    const std::string& agv_id)>;
-
-/**
  * @brief VDA5050 Master for multi-AGV fleet management
  *
- * This abstract base class manages VDA5050 communication for multiple AGVs.
- * Each registered AGV gets its own communication instance. Users should
- * inherit from this class and override the virtual callback methods to
- * handle incoming VDA5050 messages.
+ * This abstract base class manages VDA5050 communication for multiple AGVs
+ * using a single shared MQTT client with wildcard subscriptions.
  *
  * Features:
- * - AGV registration with automatic communication setup
- * - Per-AGV communication isolation
- * - Message routing with AGV identification
- * - Order and instant action publishing to specific AGVs
+ * - Single shared MQTT client with wildcard subscriptions
+ * - AGV onboarding/offboarding with allow list
+ * - Message routing based on topic parsing
+ * - Transient MQTT clients for publishing to AGVs
  *
  * Topic structure: {interfaceName}/{majorVersion}/{manufacturer}/{serialNumber}/{topic}
  * Example: rmf2/v2/MyManufacturer/AGV001/state
  *
- * Thread safety note: Callbacks are invoked on the communication thread.
+ * Wildcard subscriptions: rmf2/v2/+/+/connection, rmf2/v2/+/+/state, etc.
+ *
+ * Thread safety note: Callbacks are invoked on the MQTT client thread.
  * If thread safety is required, the callback implementation should handle
  * synchronization (e.g., using a mutex).
  */
@@ -64,59 +55,110 @@ class VDA5050Master
 {
 public:
   /**
-   * @brief Construct a VDA5050 master with an MQTT client factory
-   * @param factory Factory function that creates MqttClientInterface instances
+   * @brief Construct a VDA5050 master with shared MQTT client and broker address
+   * @param mqtt_client Shared MQTT client for subscriptions
+   * @param broker_address MQTT broker address for creating transient publish clients
    *
-   * The factory is called for each AGV when register_agv() is invoked.
+   * The mqtt_client is used for all wildcard subscriptions.
+   * The broker_address is used to create transient MQTT clients for publishing
+   * using vda5050_core::mqtt_client::create_default_client().
    *
    * Example usage:
    * @code
-   * auto factory = [broker](const std::string& agv_id) {
-   *   return vda5050_core::mqtt_client::create_default_client(broker, agv_id);
-   * };
-   * MyMaster master(factory);
+   * auto client = vda5050_core::mqtt_client::create_default_client(broker, "master");
+   * MyMaster master(client, broker);
+   * master.connect();
    * @endcode
    */
-  explicit VDA5050Master(MqttClientFactory factory);
+  VDA5050Master(
+    std::shared_ptr<vda5050_core::mqtt_client::MqttClientInterface> mqtt_client,
+    const std::string& broker_address);
 
   /**
-   * @brief Virtual destructor for inheritance
+   * @brief Virtual destructor - disconnects MQTT client
    */
-  virtual ~VDA5050Master() = default;
+  virtual ~VDA5050Master();
+
+  // Non-copyable, non-movable
+  VDA5050Master(const VDA5050Master&) = delete;
+  VDA5050Master& operator=(const VDA5050Master&) = delete;
+  VDA5050Master(VDA5050Master&&) = delete;
+  VDA5050Master& operator=(VDA5050Master&&) = delete;
+
+  // ============================================================================
+  // Connection Management
+  // ============================================================================
 
   /**
-   * @brief Register an AGV for VDA5050 communication
+   * @brief Connect the MQTT client and setup wildcard subscriptions
+   */
+  void connect();
+
+  /**
+   * @brief Disconnect the MQTT client
+   */
+  void disconnect();
+
+  /**
+   * @brief Check if MQTT client is connected
+   */
+  bool is_connected() const;
+
+  // ============================================================================
+  // AGV Onboarding/Offboarding
+  // ============================================================================
+
+  /**
+   * @brief Onboard an AGV to allow message routing
    * @param manufacturer Manufacturer name
    * @param serial_number Serial number
    * @param max_queue_size Maximum number of outgoing messages to queue (default: 10)
    * @param drop_oldest If true, drop oldest message when queue full; if false, reject new message (default: true)
    *
-   * Creates a dedicated communication instance for this AGV and subscribes
-   * to all VDA5050 topics with auto-constructed topic paths per VDA5050 spec.
+   * Creates an AGV instance in the allowed list. Messages from this AGV
+   * will be routed to the appropriate handlers.
    */
-  void register_agv(
+  void onboard_agv(
     const std::string& manufacturer, const std::string& serial_number,
     size_t max_queue_size = AGV::DEFAULT_MAX_QUEUE_SIZE,
     bool drop_oldest = true);
 
   /**
-   * @brief Unregister an AGV
+   * @brief Offboard an AGV to stop message routing
    * @param manufacturer Manufacturer name
    * @param serial_number Serial number
    *
-   * Disconnects and removes the AGV's communication instance.
+   * Removes the AGV from the allowed list. Messages from this AGV
+   * will be ignored with a warning.
    */
-  void unregister_agv(
+  void offboard_agv(
     const std::string& manufacturer, const std::string& serial_number);
 
   /**
-   * @brief Check if an AGV is registered
+   * @brief Check if an AGV is onboarded
    * @param manufacturer Manufacturer name
    * @param serial_number Serial number
-   * @return true if AGV is registered
+   * @return true if AGV is onboarded
    */
-  bool is_agv_registered(
+  bool is_agv_onboarded(
     const std::string& manufacturer, const std::string& serial_number) const;
+
+  // ============================================================================
+  // AGV Access
+  // ============================================================================
+
+  /**
+   * @brief Get a shared pointer to an onboarded AGV
+   * @param manufacturer Manufacturer name
+   * @param serial_number Serial number
+   * @return Shared pointer to AGV, or nullptr if not onboarded
+   */
+  std::shared_ptr<AGV> get_agv(
+    const std::string& manufacturer, const std::string& serial_number) const;
+
+  // ============================================================================
+  // Outgoing Messages
+  // ============================================================================
 
   /**
    * @brief Publish an order to a specific AGV
@@ -124,7 +166,7 @@ public:
    * @param serial_number Serial number
    * @param order The order message
    * @return true if queued successfully, false if queue is full
-   * @throws std::runtime_error if AGV is not registered
+   * @throws std::runtime_error if AGV is not onboarded
    */
   bool publish_order(
     const std::string& manufacturer, const std::string& serial_number,
@@ -136,7 +178,7 @@ public:
    * @param serial_number Serial number
    * @param actions The instant actions message
    * @return true if queued successfully, false if queue is full
-   * @throws std::runtime_error if AGV is not registered
+   * @throws std::runtime_error if AGV is not onboarded
    */
   bool publish_instant_actions(
     const std::string& manufacturer, const std::string& serial_number,
@@ -148,27 +190,27 @@ protected:
   // ============================================================================
 
   /**
-   * @brief Called when a connection message is received from an AGV
+   * @brief Called when a connection message is received from an onboarded AGV
    * @param agv_id The AGV identifier (manufacturer/serial_number)
    * @param msg The connection message
    *
-   * This is a pure virtual method - derived classes must implement it.
+   * Default implementation logs a warning. Override to handle connections.
    */
   virtual void on_connection(
-    const std::string& agv_id, const vda5050_types::Connection& msg) = 0;
+    const std::string& agv_id, const vda5050_types::Connection& msg);
 
   /**
-   * @brief Called when a state message is received from an AGV
+   * @brief Called when a state message is received from an onboarded AGV
    * @param agv_id The AGV identifier (manufacturer/serial_number)
    * @param msg The state message
    *
-   * This is a pure virtual method - derived classes must implement it.
+   * Default implementation logs a warning. Override to handle states.
    */
   virtual void on_state(
-    const std::string& agv_id, const vda5050_types::State& msg) = 0;
+    const std::string& agv_id, const vda5050_types::State& msg);
 
   /**
-   * @brief Called when a factsheet message is received from an AGV
+   * @brief Called when a factsheet message is received from an onboarded AGV
    * @param agv_id The AGV identifier (manufacturer/serial_number)
    * @param msg The factsheet message
    *
@@ -178,7 +220,7 @@ protected:
     const std::string& agv_id, const vda5050_types::Factsheet& msg);
 
   /**
-   * @brief Called when a visualization message is received from an AGV
+   * @brief Called when a visualization message is received from an onboarded AGV
    * @param agv_id The AGV identifier (manufacturer/serial_number)
    * @param msg The visualization message
    *
@@ -188,17 +230,88 @@ protected:
     const std::string& agv_id, const vda5050_types::Visualization& msg);
 
 private:
+  // ============================================================================
+  // Subscription Management
+  // ============================================================================
+
+  void setup_subscriptions();
+  void cleanup_subscriptions();
+
+  // ============================================================================
+  // Topic Utilities
+  // ============================================================================
+
   /**
-   * @brief Internal AGV lookup (must be called with agv_mutex_ held)
-   * @param agv_id The AGV identifier (manufacturer/serial_number)
-   * @return Shared pointer to AGV, or nullptr if not found
+   * @brief Build a wildcard topic pattern for subscribing to all AGVs
+   * @param topic_name The topic name (e.g., "connection", "state")
+   * @return Wildcard topic pattern (e.g., "rmf2/v2/+/+/connection")
    */
-  std::shared_ptr<AGV> get_agv(const std::string& agv_id) const;
+  static std::string build_wildcard_topic(const std::string& topic_name);
 
-  // Factory for creating MQTT clients
-  MqttClientFactory mqtt_client_factory_;
+  /**
+   * @brief Parse manufacturer and serial number from a VDA5050 topic
+   * @param topic The full topic string (e.g., "rmf2/v2/Manu/SN001/state")
+   * @return Pair of (manufacturer, serial_number), or empty strings if parse fails
+   *
+   * Topic structure: {interfaceName}/{version}/{manufacturer}/{serialNumber}/{topic}
+   */
+  static std::pair<std::string, std::string> parse_topic(
+    const std::string& topic);
 
-  // Registered AGVs (shared_ptr allows safe access from get_agv())
+  // ============================================================================
+  // Message Handlers (from MQTT callbacks)
+  // ============================================================================
+
+  /**
+   * @brief Generic message handler template
+   * @tparam MsgType The VDA5050 message type
+   * @param topic The MQTT topic
+   * @param payload The JSON payload
+   * @param message_type Type name for logging
+   * @param agv_handler Pointer to AGV handler method
+   * @param callback Pointer to callback method
+   */
+  template <typename MsgType>
+  void handle_message(
+    const std::string& topic, const std::string& payload,
+    const std::string& message_type, void (AGV::*agv_handler)(const MsgType&),
+    void (VDA5050Master::*callback)(const std::string&, const MsgType&));
+
+  void handle_connection_message(
+    const std::string& topic, const std::string& payload);
+  void handle_state_message(
+    const std::string& topic, const std::string& payload);
+  void handle_factsheet_message(
+    const std::string& topic, const std::string& payload);
+  void handle_visualization_message(
+    const std::string& topic, const std::string& payload);
+
+  // ============================================================================
+  // Internal AGV lookup
+  // ============================================================================
+
+  std::shared_ptr<AGV> get_agv_by_id(const std::string& agv_id) const;
+
+  /**
+   * @brief Get AGV from topic with validation and logging
+   * @param topic The MQTT topic
+   * @param message_type Type name for logging (e.g., "connection", "state")
+   * @return Pair of (agv_id, AGV pointer), AGV is nullptr if not onboarded
+   */
+  std::pair<std::string, std::shared_ptr<AGV>> get_agv_from_topic(
+    const std::string& topic, const std::string& message_type);
+
+  // ============================================================================
+  // Member Variables
+  // ============================================================================
+
+  // Shared MQTT client for subscriptions
+  std::shared_ptr<vda5050_core::mqtt_client::MqttClientInterface> mqtt_client_;
+
+  // Broker address for creating transient MQTT clients (passed to AGVs)
+  std::string broker_address_;
+
+  // Onboarded AGVs (shared_ptr allows safe access)
   mutable std::mutex agv_mutex_;
   std::unordered_map<std::string, std::shared_ptr<AGV>> agvs_;
 };

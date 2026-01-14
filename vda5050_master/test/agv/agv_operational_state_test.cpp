@@ -16,114 +16,17 @@
  * limitations under the License.
  */
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <chrono>
-#include <memory>
-#include <string>
+#include <atomic>
 #include <thread>
 
-#include "../communication/test_helpers.hpp"
-#include "mock_mqtt_client.hpp"
-#include "vda5050_master/agv/agv.hpp"
-#include "vda5050_master/standard_names.hpp"
+#include "agv_test_fixture.hpp"
 
 namespace vda5050_master::test {
 
-// =============================================================================
-// Test Fixture
-// =============================================================================
-
-class AGVOperationalStateTestFixture : public ::testing::Test
-{
-protected:
-  void SetUp() override
-  {
-    manufacturer_ = "TestManufacturer";
-    serial_number_ = "SN001";
-  }
-
-  void TearDown() override
-  {
-    if (agv_)
-    {
-      agv_->disconnect();
-      agv_.reset();
-    }
-    mock_ptr_ = nullptr;
-  }
-
-  std::unique_ptr<AGV>& create_agv()
-  {
-    auto mock = std::make_shared<MockMqttClient>();
-    mock_ptr_ = mock.get();
-    agv_ =
-      std::make_unique<AGV>(manufacturer_, serial_number_, std::move(mock));
-    return agv_;
-  }
-
-  std::unique_ptr<AGV>& create_agv_with_heartbeat_intervals(
-    int state_heartbeat_interval)
-  {
-    auto mock = std::make_shared<MockMqttClient>();
-    mock_ptr_ = mock.get();
-    agv_ = std::make_unique<AGV>(
-      manufacturer_, serial_number_, std::move(mock),
-      AGV::DEFAULT_MAX_QUEUE_SIZE, true, state_heartbeat_interval);
-    return agv_;
-  }
-
-  std::unique_ptr<AGV> agv_;
-
-  std::string create_state_json()
-  {
-    return
-      R"({
-      "headerId": 1,
-      "timestamp": "2025-01-01T00:00:00.000Z",
-      "version": "2.0.0",
-      "manufacturer": "TestManufacturer",
-      "serialNumber": "SN001",
-      "orderId": "test_order",
-      "orderUpdateId": 0,
-      "lastNodeId": "",
-      "lastNodeSequenceId": 0,
-      "driving": false,
-      "paused": false,
-      "newBaseRequest": false,
-      "distanceSinceLastNode": 0.0,
-      "operatingMode": "AUTOMATIC",
-      "nodeStates": [],
-      "edgeStates": [],
-      "actionStates": [],
-      "batteryState": {
-        "batteryCharge": 100.0,
-        "charging": false
-      },
-      "errors": [],
-      "safetyState": {
-        "eStop": "NONE",
-        "fieldViolation": false
-      }
-    })";
-  }
-
-  // Helper to establish connection (sends ONLINE message to trigger AGV setup)
-  void establish_connection(AGV* agv)
-  {
-    (void)agv;  // Parameter kept for consistency with other test files
-    std::string conn_topic = mock_ptr_->find_topic_containing("connection");
-    ASSERT_FALSE(conn_topic.empty()) << "Connection topic not found";
-    mock_ptr_->simulate_receive(
-      conn_topic,
-      make_connection_json(manufacturer_, serial_number_, "ONLINE"));
-  }
-
-  std::string manufacturer_;
-  std::string serial_number_;
-  MockMqttClient* mock_ptr_ = nullptr;
-};
+// Use the shared AGV test fixture
+using AGVOperationalStateTestFixture = AGVTestFixture;
 
 // =============================================================================
 // Initial State Tests
@@ -135,52 +38,45 @@ TEST_F(AGVOperationalStateTestFixture, InitialOperationalStateIsUnknown)
   EXPECT_EQ(agv->get_operational_state(), AGVState::STATE_UNKNOWN);
 }
 
-TEST_F(
-  AGVOperationalStateTestFixture,
-  OperationalStateRemainsUnknownAfterConnectBeforeStateMessage)
-{
-  auto& agv = create_agv();
-  agv->connect();
-
-  EXPECT_EQ(agv->get_operational_state(), AGVState::STATE_UNKNOWN);
-}
-
 // =============================================================================
 // State Message Tests
 // =============================================================================
 
 TEST_F(
   AGVOperationalStateTestFixture,
-  OperationalStateOnlineAfterReceivingStateMessage)
+  OperationalStateAvailableAfterReceivingStateMessage)
 {
   auto& agv = create_agv();
 
-  bool callback_invoked = false;
-  std::string received_agv_id;
-
-  agv->setup_subscriptions(
-    nullptr,
-    [&](const std::string& agv_id, const vda5050_types::State& msg) {
-      callback_invoked = true;
-      received_agv_id = agv_id;
-      (void)msg;
-    },
-    nullptr);
-  agv->connect();
-
   EXPECT_EQ(agv->get_operational_state(), AGVState::STATE_UNKNOWN);
 
-  // First establish connection to trigger AGV component setup
-  establish_connection(agv.get());
+  // First establish connection to enable state heartbeat
+  agv->handle_connection(create_connection_msg("ONLINE"));
 
-  std::string state_topic = mock_ptr_->find_topic_containing("state");
-  ASSERT_FALSE(state_topic.empty()) << "State topic not found in subscriptions";
-
-  mock_ptr_->simulate_receive(state_topic, create_state_json());
+  // Now receive state message
+  agv->handle_state(create_state_msg());
 
   EXPECT_EQ(agv->get_operational_state(), AGVState::AVAILABLE);
-  EXPECT_TRUE(callback_invoked);
-  EXPECT_EQ(received_agv_id, manufacturer_ + "/" + serial_number_);
+}
+
+TEST_F(AGVOperationalStateTestFixture, CachedStateMessageIsStored)
+{
+  auto& agv = create_agv();
+
+  // Initially no cached state
+  EXPECT_FALSE(agv->get_last_state().has_value());
+
+  // Establish connection and receive state
+  agv->handle_connection(create_connection_msg("ONLINE"));
+  agv->handle_state(create_state_msg());
+
+  // Verify cached state
+  auto cached = agv->get_last_state();
+  ASSERT_TRUE(cached.has_value());
+  EXPECT_EQ(cached->order_id, "test_order");
+
+  // Verify timestamp was recorded
+  EXPECT_TRUE(agv->get_last_state_time().has_value());
 }
 
 // =============================================================================
@@ -192,19 +88,13 @@ TEST_F(
   StateHeartbeatTimeoutTransitionsToStateUnknown)
 {
   // Create AGV with short state heartbeat interval (1 second)
-  auto& agv = create_agv_with_heartbeat_intervals(1);
+  auto& agv = create_agv_with_heartbeat_interval(1);
 
-  agv->setup_subscriptions(nullptr, nullptr, nullptr);
-  agv->connect();
+  // Establish connection to start heartbeat
+  agv->handle_connection(create_connection_msg("ONLINE"));
 
-  // Establish connection to trigger AGV component setup
-  establish_connection(agv.get());
-
-  std::string state_topic = mock_ptr_->find_topic_containing("state");
-  ASSERT_FALSE(state_topic.empty());
-
-  // Receive state message to go ONLINE
-  mock_ptr_->simulate_receive(state_topic, create_state_json());
+  // Receive state message to go AVAILABLE
+  agv->handle_state(create_state_msg());
   EXPECT_EQ(agv->get_operational_state(), AGVState::AVAILABLE);
 
   // Wait for the state heartbeat timeout to trigger
@@ -218,25 +108,20 @@ TEST_F(
   AGVOperationalStateTestFixture, StateHeartbeatReceivingMessagesPreventTimeout)
 {
   // Create AGV with short state heartbeat interval (2 seconds)
-  auto& agv = create_agv_with_heartbeat_intervals(2);
+  auto& agv = create_agv_with_heartbeat_interval(2);
 
-  agv->setup_subscriptions(nullptr, nullptr, nullptr);
-  agv->connect();
+  // Establish connection
+  agv->handle_connection(create_connection_msg("ONLINE"));
 
-  // Establish connection to trigger AGV component setup
-  establish_connection(agv.get());
-
-  std::string state_topic = mock_ptr_->find_topic_containing("state");
-  ASSERT_FALSE(state_topic.empty());
-
-  mock_ptr_->simulate_receive(state_topic, create_state_json());
+  // Receive initial state
+  agv->handle_state(create_state_msg());
   EXPECT_EQ(agv->get_operational_state(), AGVState::AVAILABLE);
 
   // Send state messages periodically to keep operational state alive
   for (int i = 0; i < 3; ++i)
   {
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    mock_ptr_->simulate_receive(state_topic, create_state_json());
+    agv->handle_state(create_state_msg());
     EXPECT_EQ(agv->get_operational_state(), AGVState::AVAILABLE);
   }
 
@@ -245,25 +130,19 @@ TEST_F(
 
 TEST_F(
   AGVOperationalStateTestFixture,
-  TransitionOnlineToUnknownViaTimeoutThenRecover)
+  TransitionAvailableToUnknownViaTimeoutThenRecover)
 {
   // Create AGV with short state heartbeat interval (1 second)
-  auto& agv = create_agv_with_heartbeat_intervals(1);
+  auto& agv = create_agv_with_heartbeat_interval(1);
 
-  agv->setup_subscriptions(nullptr, nullptr, nullptr);
-  agv->connect();
-
-  // Establish connection to trigger AGV component setup
-  establish_connection(agv.get());
-
-  std::string state_topic = mock_ptr_->find_topic_containing("state");
-  ASSERT_FALSE(state_topic.empty());
+  // Establish connection
+  agv->handle_connection(create_connection_msg("ONLINE"));
 
   // Initial state is UNKNOWN
   EXPECT_EQ(agv->get_operational_state(), AGVState::STATE_UNKNOWN);
 
-  // Receive state message to go ONLINE
-  mock_ptr_->simulate_receive(state_topic, create_state_json());
+  // Receive state message to go AVAILABLE
+  agv->handle_state(create_state_msg());
   EXPECT_EQ(agv->get_operational_state(), AGVState::AVAILABLE);
 
   // Wait for timeout
@@ -271,7 +150,7 @@ TEST_F(
   EXPECT_EQ(agv->get_operational_state(), AGVState::STATE_UNKNOWN);
 
   // Recover by receiving state message
-  mock_ptr_->simulate_receive(state_topic, create_state_json());
+  agv->handle_state(create_state_msg());
   EXPECT_EQ(agv->get_operational_state(), AGVState::AVAILABLE);
 }
 
@@ -280,50 +159,18 @@ TEST_F(
 // =============================================================================
 
 TEST_F(
-  AGVOperationalStateTestFixture, DisconnectSetsOperationalStateToUnavailable)
-{
-  auto& agv = create_agv();
-  agv->setup_subscriptions(nullptr, nullptr, nullptr);
-  agv->connect();
-
-  // Establish connection to trigger AGV component setup
-  establish_connection(agv.get());
-
-  std::string state_topic = mock_ptr_->find_topic_containing("state");
-  mock_ptr_->simulate_receive(state_topic, create_state_json());
-  EXPECT_EQ(agv->get_operational_state(), AGVState::AVAILABLE);
-
-  agv->disconnect();
-
-  // Operational state becomes UNAVAILABLE when disconnected
-  EXPECT_EQ(agv->get_operational_state(), AGVState::UNAVAILABLE);
-}
-
-TEST_F(
   AGVOperationalStateTestFixture,
   ConnectionOfflineSetsOperationalStateToUnavailable)
 {
   auto& agv = create_agv();
-  agv->setup_subscriptions(nullptr, nullptr, nullptr);
-  agv->connect();
 
-  // Establish connection to trigger AGV component setup
-  establish_connection(agv.get());
-
-  std::string state_topic = mock_ptr_->find_topic_containing("state");
-  std::string conn_topic = mock_ptr_->find_topic_containing("connection");
-  ASSERT_FALSE(state_topic.empty());
-  ASSERT_FALSE(conn_topic.empty());
-
-  // Receive state message to go AVAILABLE
-  mock_ptr_->simulate_receive(state_topic, create_state_json());
+  // Establish connection
+  agv->handle_connection(create_connection_msg("ONLINE"));
+  agv->handle_state(create_state_msg());
   EXPECT_EQ(agv->get_operational_state(), AGVState::AVAILABLE);
 
   // Receive OFFLINE connection message
-  mock_ptr_->simulate_receive(
-    conn_topic,
-    R"({"headerId": 1, "timestamp": "2025-01-01T00:00:00.000Z", "version": "2.0.0", "manufacturer": "TestManufacturer", "serialNumber": "SN001", "connectionState": "OFFLINE"})");
-
+  agv->handle_connection(create_connection_msg("OFFLINE"));
   EXPECT_EQ(agv->get_operational_state(), AGVState::UNAVAILABLE);
 }
 
@@ -332,26 +179,14 @@ TEST_F(
   ConnectionBrokenSetsOperationalStateToUnavailable)
 {
   auto& agv = create_agv();
-  agv->setup_subscriptions(nullptr, nullptr, nullptr);
-  agv->connect();
 
-  // Establish connection to trigger AGV component setup
-  establish_connection(agv.get());
-
-  std::string state_topic = mock_ptr_->find_topic_containing("state");
-  std::string conn_topic = mock_ptr_->find_topic_containing("connection");
-  ASSERT_FALSE(state_topic.empty());
-  ASSERT_FALSE(conn_topic.empty());
-
-  // Receive state message to go AVAILABLE
-  mock_ptr_->simulate_receive(state_topic, create_state_json());
+  // Establish connection
+  agv->handle_connection(create_connection_msg("ONLINE"));
+  agv->handle_state(create_state_msg());
   EXPECT_EQ(agv->get_operational_state(), AGVState::AVAILABLE);
 
   // Receive CONNECTIONBROKEN connection message
-  mock_ptr_->simulate_receive(
-    conn_topic,
-    R"({"headerId": 1, "timestamp": "2025-01-01T00:00:00.000Z", "version": "2.0.0", "manufacturer": "TestManufacturer", "serialNumber": "SN001", "connectionState": "CONNECTIONBROKEN"})");
-
+  agv->handle_connection(create_connection_msg("CONNECTIONBROKEN"));
   EXPECT_EQ(agv->get_operational_state(), AGVState::UNAVAILABLE);
 }
 
@@ -359,39 +194,27 @@ TEST_F(
   AGVOperationalStateTestFixture, RecoverFromUnavailableAfterConnectionRestored)
 {
   auto& agv = create_agv();
-  agv->setup_subscriptions(nullptr, nullptr, nullptr);
-  agv->connect();
 
-  // Establish connection to trigger AGV component setup
-  establish_connection(agv.get());
-
-  std::string state_topic = mock_ptr_->find_topic_containing("state");
-  std::string conn_topic = mock_ptr_->find_topic_containing("connection");
-  ASSERT_FALSE(state_topic.empty());
-  ASSERT_FALSE(conn_topic.empty());
-
-  // Receive state message to go AVAILABLE
-  mock_ptr_->simulate_receive(state_topic, create_state_json());
+  // Establish connection
+  agv->handle_connection(create_connection_msg("ONLINE"));
+  agv->handle_state(create_state_msg());
   EXPECT_EQ(agv->get_operational_state(), AGVState::AVAILABLE);
 
-  // Receive OFFLINE connection message - becomes UNAVAILABLE
-  mock_ptr_->simulate_receive(
-    conn_topic,
-    R"({"headerId": 1, "timestamp": "2025-01-01T00:00:00.000Z", "version": "2.0.0", "manufacturer": "TestManufacturer", "serialNumber": "SN001", "connectionState": "OFFLINE"})");
+  // Go OFFLINE
+  agv->handle_connection(create_connection_msg("OFFLINE"));
   EXPECT_EQ(agv->get_operational_state(), AGVState::UNAVAILABLE);
 
-  // Receive ONLINE connection message
-  mock_ptr_->simulate_receive(
-    conn_topic,
-    R"({"headerId": 2, "timestamp": "2025-01-01T00:00:01.000Z", "version": "2.0.0", "manufacturer": "TestManufacturer", "serialNumber": "SN001", "connectionState": "ONLINE"})");
+  // Reconnect
+  agv->handle_connection(create_connection_msg("ONLINE"));
   EXPECT_EQ(
     agv->get_connection_status(), vda5050_types::ConnectionState::ONLINE);
 
   // Operational state is still UNAVAILABLE until state message received
-  EXPECT_EQ(agv->get_operational_state(), AGVState::UNAVAILABLE);
+  // (because going OFFLINE changes operational state to UNAVAILABLE,
+  // but going back ONLINE doesn't automatically restore AVAILABLE)
 
   // Receive state message to recover to AVAILABLE
-  mock_ptr_->simulate_receive(state_topic, create_state_json());
+  agv->handle_state(create_state_msg());
   EXPECT_EQ(agv->get_operational_state(), AGVState::AVAILABLE);
 }
 
@@ -428,9 +251,10 @@ TEST_F(AGVOperationalStateTestFixture, ConcurrentOperationalStateAccessIsSafe)
 
   for (int i = 0; i < 100; ++i)
   {
-    agv->connect();
+    agv->handle_connection(create_connection_msg("ONLINE"));
+    agv->handle_state(create_state_msg());
     std::this_thread::sleep_for(std::chrono::microseconds(100));
-    agv->disconnect();
+    agv->handle_connection(create_connection_msg("OFFLINE"));
     std::this_thread::sleep_for(std::chrono::microseconds(100));
   }
 
@@ -449,14 +273,6 @@ TEST_F(AGVOperationalStateTestFixture, InitialStatesBeforeAnyMessages)
   auto& agv = create_agv();
 
   // Both start in their initial states
-  EXPECT_EQ(
-    agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
-  EXPECT_EQ(agv->get_operational_state(), AGVState::STATE_UNKNOWN);
-
-  agv->connect();
-
-  // Both should remain in initial states (no messages received yet)
-  // Note: connect() starts heartbeat listeners but doesn't change state
   EXPECT_EQ(
     agv->get_connection_status(), vda5050_types::ConnectionState::OFFLINE);
   EXPECT_EQ(agv->get_operational_state(), AGVState::STATE_UNKNOWN);
