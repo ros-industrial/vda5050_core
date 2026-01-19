@@ -27,7 +27,7 @@
 
 namespace vda5050_execution {
 
-class ExecutionEngine
+class ExecutionEngine : public std::enable_shared_from_this<ExecutionEngine>
 {
 public:
   template <typename EventT, typename... Args>
