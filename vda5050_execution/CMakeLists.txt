@@ -76,6 +76,12 @@ if(BUILD_TESTING)
   ament_copyright()
 
   find_package(ament_cmake_gmock REQUIRED)
+  ament_add_gmock(test_vda5050_execution
+    test/unit/test_protocol_adapter.cpp
+    test/unit/test_callback_registry.cpp
+    test/unit/test_event_queue.cpp
+  )
+  target_link_libraries(test_vda5050_execution vda5050_execution)
 endif()
 
 ament_package()
