@@ -20,6 +20,7 @@
 #define VDA5050_EXECUTION__EVENT_QUEUE_HPP_
 
 #include <memory>
+#include <mutex>
 #include <queue>
 #include <utility>
 
@@ -41,10 +42,11 @@ public:
 
   bool empty() const;
 
-  std::unique_ptr<EventBase> pop();
+  std::shared_ptr<EventBase> pop();
 
 private:
   std::queue<std::unique_ptr<EventBase>> queue_;
+  mutable std::mutex mutex_;
 };
 
 }  // namespace vda5050_execution

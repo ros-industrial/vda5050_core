@@ -23,13 +23,17 @@ namespace vda5050_execution {
 //=============================================================================
 bool EventQueue::empty() const
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   return queue_.empty();
 }
 
 //=============================================================================
-std::unique_ptr<EventBase> EventQueue::pop()
+std::shared_ptr<EventBase> EventQueue::pop()
 {
   if (queue_.empty()) return nullptr;
+
+  std::lock_guard<std::mutex> lock(mutex_);
+
   auto event = std::move(queue_.front());
   queue_.pop();
   return event;
