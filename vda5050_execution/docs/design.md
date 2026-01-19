@@ -2,7 +2,7 @@
 
 This document outlines the architectural design and key components of the
 `vda5050_execution` package. The goal is to provide a decoupled, type-safe,
-and thread-safe library for processing VDA5050 messages and execution robot
+and thread-safe library for processing VDA5050 messages and executing robot
 commands.
 
 ## Overall Architecture
@@ -20,11 +20,11 @@ deserialized into concrete `vda5050_types` structs.
 passed to the `EventQueue` through an `ExecutionEngine`.
 
 3. Buffering: The `EventQueue` holds events in a thread-safe FIFO buffer
-allowing other threads to return the their specific tasks.
+allowing other threads to return to their specific tasks.
 
 4. Logic Processing: The `ExecutionEngine` is stepped in a continuous loop in a
 dedicated thread. It pops events from the queue and checks the
-`CallbackeRegistry` to find the associated logic.
+`CallbackRegistry` to find the associated logic.
 
 5. Feedback: As the execution progresses, the state changes can be reported by
 pushing `Update` objects back through the `Provider`.
@@ -58,7 +58,7 @@ instant action, order cancellation, etc.).
 update, battery status, order status, action status, etc.).
 
 - Both use a `get_type()` virtual function to return a `std::type_index`
-allowing for routing with the need to perform a `dynamic_cast`.
+allowing for efficient routing without the need to perform a `dynamic_cast`.
 
 ### 3. `CallbackRegistry`
 
@@ -74,14 +74,14 @@ specific callback to a one update. Typically used to route robot state changes
 back to the execution system.
 
 - The registry uses an `std::unordered_map<std::type_index, ...>` to store
-lambda wrappers that reconstruct the original type before calling the user
+lambda wrappers that reconstruct the original type before calling the user-
 defined callback.
 
 ### 4. `EventQueue`
 
 A thread-safe queue object for storage and retrieval of events.
 
-- It is thread-safe by and internally managed mutex.
+- It is thread-safe due to an internally managed mutex.
 
 - It uses variadic templates to construct events in-place and minimizing large
 copies of objects.
