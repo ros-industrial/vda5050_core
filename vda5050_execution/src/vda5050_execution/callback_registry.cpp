@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-#include <iostream>
-
 #include "vda5050_execution/callback_registry.hpp"
 
 namespace vda5050_execution {
@@ -25,7 +23,6 @@ namespace vda5050_execution {
 //=============================================================================
 void CallbackRegistry::dispatch(std::shared_ptr<EventBase> event) const
 {
-  std::cout << event->get_type().name() << std::endl;
   auto it = callbacks_.find(event->get_type());
   if (it != callbacks_.end())
   {
@@ -39,7 +36,6 @@ void CallbackRegistry::dispatch(std::shared_ptr<EventBase> event) const
 //=============================================================================
 void CallbackRegistry::query(std::shared_ptr<UpdateBase> update) const
 {
-  std::cout << update->get_type().name() << std::endl;
   auto it = providers_.find(update->get_type());
   if (it != providers_.end())
   {
