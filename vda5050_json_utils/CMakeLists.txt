@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 project(vda5050_json_utils)
 
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
@@ -70,26 +73,8 @@ if(ENABLE_ROS2)
 endif()
 
 if(BUILD_TESTING)
-  find_package(ament_cmake_cppcheck REQUIRED)
-  ament_cppcheck()
-
-  find_package(ament_cmake_cpplint REQUIRED)
-
-  set(cpplint_filters
-    "-whitespace/newline"
-  )
-
-  ament_cpplint(
-    FILTERS "${cpplint_filters}"
-  )
-
-  find_package(ament_cmake_clang_format REQUIRED)
-  ament_clang_format(
-    CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../.clang-format"
-  )
-
-  find_package(ament_cmake_copyright REQUIRED)
-  ament_copyright()
+  include(../cmake/vda5050_lint_common.cmake)
+  vda5050_lint_common()
 
   find_package(ament_cmake_gtest REQUIRED)
 

@@ -14,23 +14,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env:
-          - ICI_JOB_NAME: gcc
-            ROS_DISTRO: jazzy
-            UPSTREAM_WORKSPACE: 'github:sauk2/vda5050_interfaces#throwaway/temp'
-            TARGET_CMAKE_ARGS: '-DENABLE_ROS2=ON'
-          - ICI_JOB_NAME: clang
-            ROS_DISTRO: jazzy
-            UPSTREAM_WORKSPACE: 'github:sauk2/vda5050_interfaces#throwaway/temp'
-            ADDITIONAL_DEBS: clang lld
-            CC: "clang"
-            CXX: "clang++"
-            TARGET_CMAKE_ARGS: '-DENABLE_ROS2=ON'
+        distro: [humble, jazzy]
+        compiler: [gcc, clang]
     env:
       ISOLATION: "shell"
     runs-on: ubuntu-latest
     container:
-      image: ros:jazzy-ros-core
+      image: ros:${{ matrix.distro }}-ros-core
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
@@ -41,5 +31,22 @@ jobs:
         run: |
           mosquitto -d
           sleep 2  # Wait for broker to start
-      - uses: 'ros-industrial/industrial_ci@master'
-        env: ${{ matrix.env }}
+
+      # GCC
+      - if: ${{ matrix.compiler == 'gcc' }}
+        uses: 'ros-industrial/industrial_ci@master'
+        env:
+          ROS_DISTRO: ${{ matrix.distro }}
+          UPSTREAM_WORKSPACE: 'github:sauk2/vda5050_interfaces#throwaway/temp'
+          TARGET_CMAKE_ARGS: '-DENABLE_ROS2=ON'
+
+      # Clang
+      - if: ${{ matrix.compiler == 'clang' }}
+        uses: 'ros-industrial/industrial_ci@master'
+        env:
+          ROS_DISTRO: ${{ matrix.distro }}
+          UPSTREAM_WORKSPACE: 'github:sauk2/vda5050_interfaces#throwaway/temp'
+          ADDITIONAL_DEBS: clang lld
+          CC: "clang"
+          CXX: "clang++"
+          TARGET_CMAKE_ARGS: '-DENABLE_ROS2=ON'
