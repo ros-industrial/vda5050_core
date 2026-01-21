@@ -1585,6 +1585,28 @@ void from_json(const nlohmann::json& j, OrderT& msg)
 
 }  // namespace order_detail
 
+namespace instant_actions_detail {
+
+//=============================================================================
+template <typename InstantActionsT>
+void to_json(nlohmann::json& j, const InstantActionsT& msg)
+{
+  to_json(j, msg.header);
+
+  j["actions"] = msg.actions;
+}
+
+//=============================================================================
+template <typename InstantActionsT>
+void from_json(const nlohmann::json& j, InstantActionsT& msg)
+{
+  from_json(j, msg.header);
+
+  msg.actions = j.at("actions");
+}
+
+}  // namespace instant_actions_detail
+
 }  // namespace vda5050_types
 
 //=============================================================================
@@ -1840,14 +1862,14 @@ inline void from_json(const nlohmann::json& j, Order& msg)
   vda5050_types::order_detail::from_json(j, msg);
 }
 
-inline void to_json(nlohmann::json& /*j*/, const InstantActions& /*msg*/)
+inline void to_json(nlohmann::json& j, const InstantActions& msg)
 {
-  // TODO(sauk): Add missing serialization
+  vda5050_types::instant_actions_detail::to_json(j, msg);
 }
 
-inline void from_json(const nlohmann::json& /*j*/, InstantActions& /*msg*/)
+inline void from_json(const nlohmann::json& j, InstantActions& msg)
 {
-  // TODO(sauk): Add missing deserialization
+  vda5050_types::instant_actions_detail::from_json(j, msg);
 }
 
 inline void to_json(nlohmann::json& /*j*/, const Factsheet& /*msg*/)
@@ -2128,14 +2150,14 @@ inline void from_json(const nlohmann::json& j, Order& msg)
   vda5050_types::order_detail::from_json(j, msg);
 }
 
-inline void to_json(nlohmann::json& /*j*/, const InstantActions& /*msg*/)
+inline void to_json(nlohmann::json& j, const InstantActions& msg)
 {
-  // TODO(sauk): Add missing serialization
+  vda5050_types::instant_actions_detail::to_json(j, msg);
 }
 
-inline void from_json(const nlohmann::json& /*j*/, InstantActions& /*msg*/)
+inline void from_json(const nlohmann::json& j, InstantActions& msg)
 {
-  // TODO(sauk): Add missing deserialization
+  vda5050_types::instant_actions_detail::from_json(j, msg);
 }
 
 inline void to_json(nlohmann::json& /*j*/, const Factsheet& /*msg*/)
