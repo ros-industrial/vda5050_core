@@ -33,6 +33,7 @@
 #include <vda5050_types/header.hpp>
 #include <vda5050_types/info.hpp>
 #include <vda5050_types/info_reference.hpp>
+#include <vda5050_types/instant_actions.hpp>
 #include <vda5050_types/load.hpp>
 #include <vda5050_types/load_dimensions.hpp>
 #include <vda5050_types/node.hpp>
@@ -63,6 +64,7 @@ using vda5050_types::ErrorReference;
 using vda5050_types::Header;
 using vda5050_types::Info;
 using vda5050_types::InfoReference;
+using vda5050_types::InstantActions;
 using vda5050_types::Load;
 using vda5050_types::LoadDimensions;
 using vda5050_types::Node;
@@ -78,8 +80,9 @@ using vda5050_types::Velocity;
 using SerializableTypes = ::testing::Types<
   Action, ActionParameter, ActionState, AGVPosition, BatteryState,
   BoundingBoxReference, Connection, ControlPoint, Edge, EdgeState, Error,
-  ErrorReference, Header, Info, InfoReference, Load, LoadDimensions, Node,
-  NodePosition, NodeState, Order, SafetyState, State, Trajectory, Velocity>;
+  ErrorReference, Header, Info, InfoReference, InstantActions, Load,
+  LoadDimensions, Node, NodePosition, NodeState, Order, SafetyState, State,
+  Trajectory, Velocity>;
 
 template <typename T>
 class SerializationTest : public ::testing::Test
