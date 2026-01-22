@@ -43,24 +43,8 @@ install(TARGETS vda5050_master
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
-  find_package(ament_cmake_cppcheck REQUIRED)
-  ament_cppcheck()
-
-  find_package(ament_cmake_cpplint REQUIRED)
-  set(cpplint_filters
-    "-whitespace/newline"
-  )
-  ament_cpplint(
-    FILTERS "${cpplint_filters}"
-  )
-
-  find_package(ament_cmake_clang_format REQUIRED)
-  ament_clang_format(
-    CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../.clang-format"
-  )
-
-  find_package(ament_cmake_copyright REQUIRED)
-  ament_copyright()
+  include(../cmake/vda5050_lint_common.cmake)
+  vda5050_lint_common()
 
   # find_package(ament_cmake_gtest REQUIRED)
   # ament_add_gtest(test_mqtt_client
