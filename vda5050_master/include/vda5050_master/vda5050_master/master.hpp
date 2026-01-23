@@ -120,8 +120,7 @@ public:
    */
   void onboard_agv(
     const std::string& manufacturer, const std::string& serial_number,
-    size_t max_queue_size = AGV::DEFAULT_MAX_QUEUE_SIZE,
-    bool drop_oldest = true);
+    size_t max_queue_size = 10, bool drop_oldest = true);
 
   /**
    * @brief Offboard an AGV to stop message routing

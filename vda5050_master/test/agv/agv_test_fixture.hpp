@@ -62,8 +62,7 @@ protected:
   {
     // Use empty broker address for unit tests
     agv_ = std::make_unique<AGV>(
-      manufacturer_, serial_number_, "", AGV::DEFAULT_MAX_QUEUE_SIZE, true,
-      state_heartbeat_interval);
+      manufacturer_, serial_number_, "", 10, true, state_heartbeat_interval);
     return agv_;
   }
 

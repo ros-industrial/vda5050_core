@@ -68,11 +68,8 @@ class AGV
 {
 public:
   // Type aliases
-  using Clock = std::chrono::steady_clock;
+  using Clock = std::chrono::system_clock;
   using TimePoint = std::chrono::time_point<Clock>;
-
-  // Default maximum queue size for outgoing messages
-  static constexpr size_t DEFAULT_MAX_QUEUE_SIZE = 10;
 
   /**
    * @brief Construct an AGV instance
@@ -85,8 +82,8 @@ public:
    */
   AGV(
     const std::string& manufacturer, const std::string& serial_number,
-    const std::string& broker_address,
-    size_t max_queue_size = DEFAULT_MAX_QUEUE_SIZE, bool drop_oldest = true,
+    const std::string& broker_address, size_t max_queue_size = 10,
+    bool drop_oldest = true,
     int state_heartbeat_interval = vda5050_master::StateHeartbeatInterval);
 
   /**
