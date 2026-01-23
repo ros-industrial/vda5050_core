@@ -22,506 +22,381 @@
 #include <vector>
 
 #include "vda5050_core/client/order/order_graph_validator.hpp"
-#include "vda5050_core/client/order/validation_result.hpp"
+#include "vda5050_core/errors/error_codes.hpp"
 
-class OrderGraphValidatorTest : public testing::Test
+class OrderValidationTest : public testing::Test
 {
 protected:
-  vda5050_types::Node n0_{"node0", 0, true, {}, std::nullopt, std::nullopt};
-  vda5050_types::Edge e1_{"edge1",      1,
-                          "node0",      "node2",
-                          true,         {},
-                          std::nullopt, std::nullopt,
-                          std::nullopt, std::nullopt,
-                          std::nullopt, std::nullopt,
-                          std::nullopt, std::nullopt,
-                          std::nullopt, std::nullopt,
-                          std::nullopt};
-  vda5050_types::Node n2_{"node2", 2, true, {}, std::nullopt, std::nullopt};
-  vda5050_types::Edge e3_{"edge3",      3,
-                          "node2",      "node4",
-                          true,         {},
-                          std::nullopt, std::nullopt,
-                          std::nullopt, std::nullopt,
-                          std::nullopt, std::nullopt,
-                          std::nullopt, std::nullopt,
-                          std::nullopt, std::nullopt,
-                          std::nullopt};
-  vda5050_types::Node n4_{"node4", 4, true, {}, std::nullopt, std::nullopt};
+  vda5050_types::Order create_order(
+    const std::string& order_id, uint32_t order_update_id)
+  {
+    return vda5050_types::Order{
+      vda5050_types::Header{}, order_id, order_update_id, {}, {}, std::nullopt};
+  }
 
-  vda5050_types::Order order_{};
-  std::vector<vda5050_types::Node> nodes;
-  std::vector<vda5050_types::Edge> edges;
+  vda5050_types::Node create_node(
+    const std::string& node_id, uint32_t sequence_id, bool released)
+  {
+    return vda5050_types::Node{node_id, sequence_id,  released,
+                               {},      std::nullopt, std::nullopt};
+  }
+
+  vda5050_types::Edge create_edge(
+    const std::string& edge_id, uint32_t sequence_id,
+    const std::string& start_node_id, const std::string& end_node_id,
+    bool released)
+  {
+    return vda5050_types::Edge{
+      edge_id,      sequence_id,  start_node_id, end_node_id,  released,
+      {},           std::nullopt, std::nullopt,  std::nullopt, std::nullopt,
+      std::nullopt, std::nullopt, std::nullopt,  std::nullopt, std::nullopt,
+      std::nullopt, std::nullopt};
+  }
 };
 
-//=============================================================================
-/// \brief Tests that graph validator returns true on a valid graph
-TEST_F(OrderGraphValidatorTest, ValidGraphTest)
+TEST_F(OrderValidationTest, EmptyNodeList)
 {
-  nodes.push_back(n0_);
-  edges.push_back(e1_);
-  nodes.push_back(n2_);
-  edges.push_back(e3_);
-  nodes.push_back(n4_);
-
-  order_.order_id = "ValidGraphTest";
-  order_.order_update_id = 0;
-  order_.edges = edges;
-  order_.nodes = nodes;
-
-  auto res = vda5050_core::order::OrderGraphValidator::is_valid_graph(order_);
-  EXPECT_TRUE(res);
-}
-
-//=============================================================================
-// /// \brief Tests that graph validator returns false when nodes and edges are
-// not in traversal order
-TEST_F(OrderGraphValidatorTest, NotInTraversalOrderTest)
-{
-  nodes.push_back(n0_);
-  edges.push_back(e3_);
-  nodes.push_back(n2_);
-  edges.push_back(e1_);
-  nodes.push_back(n4_);
-
-  order_.order_id = "NotInTraversalOrderTest";
-  order_.order_update_id = 0;
-  order_.edges = edges;
-  order_.nodes = nodes;
-
-  auto res = vda5050_core::order::OrderGraphValidator::is_valid_graph(order_);
-  EXPECT_FALSE(res);
-}
-
-//=============================================================================
-/// \brief Tests that graph validator returns false if there are more nodes
-/// than edges
-TEST_F(OrderGraphValidatorTest, MoreNodesThanEdgesTest)
-{
-  nodes.push_back(n0_);
-  edges.push_back(e1_);
-  nodes.push_back(n2_);
-  edges.push_back(e3_);
-  nodes.push_back(n4_);
-
-  vda5050_types::Node n6{"node6", 6, true, {}, std::nullopt, std::nullopt};
-  nodes.push_back(n6);
-
-  order_.order_id = "MoreNodesThanEdgesTest";
-  order_.order_update_id = 0;
-  order_.nodes = nodes;
-  order_.edges = edges;
-
-  auto res = vda5050_core::order::OrderGraphValidator::is_valid_graph(order_);
-  EXPECT_FALSE(res);
-}
-
-//=============================================================================
-/// \brief Tests that validation fails if there are more edges
-/// than nodes
-TEST_F(OrderGraphValidatorTest, MoreEdgesThanNodesTest)
-{
-  nodes.push_back(n0_);
-  edges.push_back(e1_);
-  nodes.push_back(n2_);
-  edges.push_back(e3_);
-
-  vda5050_types::Edge e5{"edge5",      5,
-                         "node4",      "node6",
-                         true,         {},
-                         std::nullopt, std::nullopt,
-                         std::nullopt, std::nullopt,
-                         std::nullopt, std::nullopt,
-                         std::nullopt, std::nullopt,
-                         std::nullopt, std::nullopt,
-                         std::nullopt};
-  edges.push_back(e5);
-
-  order_.order_id = "MoreEdgesThanNodesTest";
-  order_.order_update_id = 0;
-  order_.nodes = nodes;
-  order_.edges = edges;
-
-  auto res = vda5050_core::order::OrderGraphValidator::is_valid_graph(order_);
-  EXPECT_FALSE(res);
-}
-
-//=============================================================================
-/// \brief Tests that an edge in the right sequenceId order causes validation
-/// to fail if its startNodeId and endNodeId do not match the nodeIds of
-/// its neighbouring nodes
-TEST_F(OrderGraphValidatorTest, ValidEdgesTest)
-{
-  nodes.push_back(n0_);
-
-  e1_.start_node_id = "foo";
-  e1_.end_node_id = "bar";
-  edges.push_back(e1_);
-
-  nodes.push_back(n2_);
-
-  order_.order_id = "ValidEdgesTest";
-  order_.order_update_id = 0;
-  order_.nodes = nodes;
-  order_.edges = edges;
-
-  auto res = vda5050_core::order::OrderGraphValidator::is_valid_graph(order_);
-  EXPECT_FALSE(res);
-}
-
-//=============================================================================
-/// \brief Tests that an order with odd node sequenceIds and even edge
-/// sequenceIds causes validation to fail
-TEST_F(OrderGraphValidatorTest, NodeWithOddSequenceIdTest)
-{
-  vda5050_types::Node odd_node1{"oddNode1",   1,           true, {},
-                                std::nullopt, std::nullopt};
-  nodes.push_back(odd_node1);
-  vda5050_types::Node odd_node2{"oddNode2",   3,           true, {},
-                                std::nullopt, std::nullopt};
-  nodes.push_back(odd_node2);
-
-  vda5050_types::Edge even_edge{"evenEdge",   2,
-                                "node4",      "node6",
-                                true,         {},
-                                std::nullopt, std::nullopt,
-                                std::nullopt, std::nullopt,
-                                std::nullopt, std::nullopt,
-                                std::nullopt, std::nullopt,
-                                std::nullopt, std::nullopt,
-                                std::nullopt};
-  edges.push_back(even_edge);
-
-  order_.order_id = "NodeWithOddSequenceIdTest";
-  order_.order_update_id = 0;
-  order_.nodes = nodes;
-  order_.edges = edges;
-
-  auto res = vda5050_core::order::OrderGraphValidator::is_valid_graph(order_);
-  EXPECT_FALSE(res);
-}
-
-//=============================================================================
-/// \brief Tests that no two nodes share the same sequenceId
-TEST_F(OrderGraphValidatorTest, DuplicateNodeSequenceIdTest)
-{
-  n2_.sequence_id = 0;
-
-  nodes.push_back(n0_);
-  nodes.push_back(n2_);
-
-  edges.push_back(e1_);
-
-  order_.order_id = "DuplicateNodeSequenceIdTest";
-  order_.order_update_id = 0;
-  order_.nodes = nodes;
-  order_.edges = edges;
-
-  auto res = vda5050_core::order::OrderGraphValidator::is_valid_graph(order_);
-  EXPECT_FALSE(res);
-}
-
-//=============================================================================
-/// \brief Tests that there is only one base in the order
-TEST_F(OrderGraphValidatorTest, MultipleBaseTest)
-{
-  /// n0_, e1_, n2_, and n4_ all released. Create a gap by setting e3_ to
-  /// unreleased.
-  e3_.released = false;
-
-  nodes.push_back(n0_);
-  nodes.push_back(n2_);
-  nodes.push_back(n4_);
-
-  edges.push_back(e1_);
-  edges.push_back(e3_);
-
-  order_.order_id = "MultipleBaseTest";
-  order_.order_update_id = 0;
-  order_.nodes = nodes;
-  order_.edges = edges;
-
-  auto res = vda5050_core::order::OrderGraphValidator::is_valid_graph(order_);
-  EXPECT_FALSE(res);
-}
-
-//=============================================================================
-/// \brief Tests that there is only one base in the order
-TEST_F(OrderGraphValidatorTest, ValidOrderUpdate)
-{
-  // Base order: node0 -> node2
-  nodes = {n0_, n2_};
-  edges = {e1_};
-
-  order_.order_id = "OrderA";
-  order_.order_update_id = 0;
-  order_.nodes = nodes;
-  order_.edges = edges;
-
-  auto base_order = order_;
-
-  // Next order continues from node2 -> node4
-  nodes = {n2_, n4_};
-  edges = {e3_};
-
-  order_.order_update_id = 1;
-  order_.nodes = nodes;
-  order_.edges = edges;
-
-  auto next_order = order_;
-
-  auto res = vda5050_core::order::OrderGraphValidator::is_valid_order_update(
-    base_order, next_order);
-
-  EXPECT_TRUE(res);
-}
-
-//=============================================================================
-/// \brief test if base order is invalid
-TEST_F(OrderGraphValidatorTest, InvalidBaseOrder)
-{
-  // Invalid base order: missing edge
-  nodes = {n0_, n2_};
-  edges = {};
-
-  order_.order_id = "OrderA";
-  order_.order_update_id = 0;
-  order_.nodes = nodes;
-  order_.edges = edges;
-
-  auto base_order = order_;
-
-  // Valid next order
-  nodes = {n2_, n4_};
-  edges = {e3_};
-
-  order_.order_update_id = 1;
-  order_.nodes = nodes;
-  order_.edges = edges;
-
-  auto next_order = order_;
-
-  auto res = vda5050_core::order::OrderGraphValidator::is_valid_order_update(
-    base_order, next_order);
+  auto order = create_order("order_0", 0);
+  auto res = vda5050_core::order::is_valid_graph(order);
 
   EXPECT_FALSE(res);
+  EXPECT_EQ(
+    res.errors.front().error_type, vda5050_core::errors::GraphValidationError);
+  EXPECT_EQ(
+    res.errors.front().error_description.value(), "Order contains no nodes.");
 }
 
-//=============================================================================
-/// \brief test if next order is invalid
-TEST_F(OrderGraphValidatorTest, InvalidNextOrder)
+TEST_F(OrderValidationTest, UnequalNodesEdges)
 {
-  // Valid base order
-  nodes = {n0_, n2_};
-  edges = {e1_};
+  auto order = create_order("order_0", 0);
 
-  order_.order_id = "OrderA";
-  order_.order_update_id = 0;
-  order_.nodes = nodes;
-  order_.edges = edges;
+  order.nodes = {
+    create_node("node_0", 0, true), create_node("node_1", 2, true),
+    create_node("node_2", 4, true)};
 
-  auto base_order = order_;
+  order.edges = {create_edge("edge_0", 1, "node_0", "node_1", true)};
 
-  // Invalid next order: wrong edge count
-  nodes = {n2_, n4_};
-  edges = {};
-
-  order_.order_update_id = 1;
-  order_.nodes = nodes;
-  order_.edges = edges;
-
-  auto next_order = order_;
-
-  auto res = vda5050_core::order::OrderGraphValidator::is_valid_order_update(
-    base_order, next_order);
+  auto res = vda5050_core::order::is_valid_graph(order);
 
   EXPECT_FALSE(res);
+  EXPECT_EQ(
+    res.errors.front().error_type, vda5050_core::errors::GraphValidationError);
+  EXPECT_EQ(
+    res.errors.front().error_description.value(),
+    "Graph mismatch: Order contains 3 node(s) but 1 edge(s).");
 }
 
-//=============================================================================
-/// \brief test for order id mismatch between base order and next order
-TEST_F(OrderGraphValidatorTest, OrderIdMismatch)
+TEST_F(OrderValidationTest, FirstSequenceOfUpdate)
 {
-  // Base order
-  nodes = {n0_, n2_};
-  edges = {e1_};
+  auto order = create_order("order_0", 0);
 
-  order_.order_id = "OrderA";
-  order_.order_update_id = 0;
-  order_.nodes = nodes;
-  order_.edges = edges;
+  order.nodes = {
+    create_node("node_0", 2, true), create_node("node_1", 4, true),
+    create_node("node_2", 6, true)};
 
-  auto base_order = order_;
+  order.edges = {
+    create_edge("edge_0", 3, "node_0", "node_1", true),
+    create_edge("edge_1", 5, "node_1", "node_2", true)};
 
-  // Next order with different order_id
-  nodes = {n2_, n4_};
-  edges = {e3_};
-
-  order_.order_id = "OrderB";  // mismatch
-  order_.order_update_id = 1;
-  order_.nodes = nodes;
-  order_.edges = edges;
-
-  auto next_order = order_;
-
-  auto res = vda5050_core::order::OrderGraphValidator::is_valid_order_update(
-    base_order, next_order);
+  auto res = vda5050_core::order::is_valid_graph(order);
 
   EXPECT_FALSE(res);
+  EXPECT_EQ(
+    res.errors.front().error_type, vda5050_core::errors::GraphValidationError);
+  EXPECT_EQ(
+    res.errors.front().error_description.value(),
+    "Initial order (update 0) must start at sequence 0.");
 }
 
-//=============================================================================
-/// \brief test if order update id of next order is greater than base order
-TEST_F(OrderGraphValidatorTest, OrderUpdateIdRegression)
+TEST_F(OrderValidationTest, UnreleasedFirstNode)
 {
-  // Base order update_id = 2
-  nodes = {n0_, n2_};
-  edges = {e1_};
+  auto order = create_order("order_0", 0);
 
-  order_.order_id = "OrderA";
-  order_.order_update_id = 2;
-  order_.nodes = nodes;
-  order_.edges = edges;
+  order.nodes = {
+    create_node("node_0", 0, false), create_node("node_1", 2, false),
+    create_node("node_2", 4, false)};
 
-  auto base_order = order_;
+  order.edges = {
+    create_edge("edge_0", 1, "node_0", "node_1", false),
+    create_edge("edge_1", 3, "node_1", "node_2", false)};
 
-  // Next order update_id = 1 (invalid)
-  nodes = {n2_, n4_};
-  edges = {e3_};
-
-  order_.order_update_id = 1;
-  order_.nodes = nodes;
-  order_.edges = edges;
-
-  auto next_order = order_;
-
-  auto res = vda5050_core::order::OrderGraphValidator::is_valid_order_update(
-    base_order, next_order);
+  auto res = vda5050_core::order::is_valid_graph(order);
 
   EXPECT_FALSE(res);
+  EXPECT_EQ(
+    res.errors.front().error_type, vda5050_core::errors::GraphValidationError);
+  EXPECT_EQ(
+    res.errors.front().error_description.value(),
+    "First node of the oder must always be released.");
 }
 
-//=============================================================================
-/// \brief test if base order and next order is valid for stitching
-TEST_F(OrderGraphValidatorTest, ValidOrderStitching)
+TEST_F(OrderValidationTest, EvenNodeSequences)
 {
-  // Base Order: Node0(Rel) -> Edge1(Rel) -> Node2(Rel)
-  // Next Order:                             Node2(Rel) -> Edge3(Rel) -> Node4(Rel)
+  auto order = create_order("order_0", 1);
 
-  // Path: [Node0] -> [Edge1] -> [Node2] (All Released)
-  order_.order_id = "StitchTest";
-  order_.order_update_id = 0;
-  order_.nodes = {n0_, n2_};
-  order_.edges = {e1_};
+  order.nodes = {create_node("node_0", 1, true)};
 
-  // Path: [Node2] -> [Edge3] -> [Node4]
-  vda5050_types::Order next_order;
-  next_order.order_id = "StitchTest";
-  next_order.order_update_id = 1;
-  next_order.nodes = {n2_, n4_};  // Starts at n2_
-  next_order.edges = {e3_};
-
-  auto res = vda5050_core::order::OrderGraphValidator::is_valid_order_update(
-    order_, next_order);
-  EXPECT_TRUE(res);
-}
-
-//=============================================================================
-/// \brief test for invalid stitch
-TEST_F(OrderGraphValidatorTest, InvalidOrderStitching)
-{
-  // CASE 1: Gap in Graph
-  // Base Order: Node0(Rel) -> Edge1(Rel) -> Node2(Rel)
-  // Next Order:                                            Node4(Rel) -> ...
-  order_.order_id = "StitchFailNode";
-  order_.order_update_id = 0;
-  order_.nodes = {n0_, n2_};
-  order_.edges = {e1_};
-
-  // Starts at Node4 (The robot is at Node2, cannot jump to Node4)
-  vda5050_types::Order next_order;
-  next_order.order_id = "StitchFailNode";
-  next_order.order_update_id = 1;
-  next_order.nodes = {n4_};  // Error: Should start at n2_
-  next_order.edges = {e3_};
-
-  auto res = vda5050_core::order::OrderGraphValidator::is_valid_order_update(
-    order_, next_order);
-  EXPECT_FALSE(res);
-
-  // CASE 2: Backtracking / Discontinuity
-  // Base Order: Node0(Rel) -> Edge1(Rel) -> Node2(Rel)
-  // Next Order: Node0(Rel) -> ...
-  order_.order_id = "StitchFailNode";
-  order_.order_update_id = 0;
-  order_.nodes = {n0_, n2_};
-  order_.edges = {e1_};
-
-  // Starts at Node4 (The robot is at Node2, next order cant jump to Node0)
-  next_order.order_id = "StitchFailNode";
-  next_order.order_update_id = 1;
-  next_order.nodes = {n0_};  // Error: Should start at n2_
-  next_order.edges = {e3_};
-
-  res = vda5050_core::order::OrderGraphValidator::is_valid_order_update(
-    order_, next_order);
-  EXPECT_FALSE(res);
-}
-
-//=============================================================================
-/// \brief test for sequence mismatch
-TEST_F(OrderGraphValidatorTest, SequenceMismatch)
-{
-  // Base Order: Node0(Rel) -> Edge1(Rel) -> Node2(Rel, Seq=2)
-  // Next Order:                             Node2(Rel, Seq=0) -> Edge3 -> ...
-  // Ends at Node2 (Sequence ID 2)
-
-  order_.order_id = "StitchFailSeq";
-  order_.order_update_id = 0;
-  order_.nodes = {n0_, n2_};
-  order_.edges = {e1_};
-
-  // Starts at Node2, BUT with Sequence ID 0
-  vda5050_types::Node n2_wrong_seq = n2_;
-  n2_wrong_seq.sequence_id = 0;
-
-  vda5050_types::Order next_order;
-  next_order.order_id = "StitchFailSeq";
-  next_order.order_update_id = 1;
-  next_order.nodes = {n2_wrong_seq, n4_};
-  next_order.edges = {e3_};
-
-  auto res = vda5050_core::order::OrderGraphValidator::is_valid_order_update(
-    order_, next_order);
+  auto res = vda5050_core::order::is_valid_graph(order);
 
   EXPECT_FALSE(res);
+  EXPECT_EQ(
+    res.errors.front().error_type, vda5050_core::errors::GraphValidationError);
+  EXPECT_EQ(
+    res.errors.front().error_description.value(),
+    "Node sequences must be even.");
 }
 
-//=============================================================================
-/// \brief test for the "Last Released Node" logic.
-TEST_F(OrderGraphValidatorTest, StitchingReplacesHorizon)
+TEST_F(OrderValidationTest, NodeBaseHorizonSeparation)
 {
-  // Base Order: Node0(Rel) -> Edge1(Rel) -> Node2(Rel) -> Edge3(Unreleased) -> Node4(Unreleased)
-  // Next Order:                             Node2(Rel) -> Edge3(Rel)        -> Node4(Rel)
+  auto order = create_order("order_0", 0);
 
-  vda5050_types::Edge e3_horizon = e3_;
-  e3_horizon.released = false;
-  vda5050_types::Node n4_horizon = n4_;
-  n4_horizon.released = false;
+  order.nodes = {
+    create_node("node_0", 0, true), create_node("node_1", 2, false),
+    create_node("node_2", 4, true)};
 
-  order_.order_id = "StitchingReplacesHorizon";
-  order_.order_update_id = 0;
-  order_.nodes = {n0_, n2_, n4_horizon};
-  order_.edges = {e1_, e3_horizon};
+  order.edges = {
+    create_edge("edge_0", 1, "node_0", "node_1", true),
+    create_edge("edge_1", 3, "node_1", "node_2", false)};
 
-  vda5050_types::Order next_order;
-  next_order.order_id = "StitchingReplacesHorizon";
-  next_order.order_update_id = 1;
+  auto res = vda5050_core::order::is_valid_graph(order);
+
+  EXPECT_FALSE(res);
+  EXPECT_EQ(
+    res.errors.front().error_type, vda5050_core::errors::GraphValidationError);
+  EXPECT_EQ(
+    res.errors.front().error_description.value(),
+    "Released node found within horizon.");
+}
+
+TEST_F(OrderValidationTest, OddEdgeSequences)
+{
+  auto order = create_order("order_0", 0);
+
+  order.nodes = {
+    create_node("node_0", 0, true), create_node("node_1", 4, true)};
+
+  order.edges = {create_edge("edge_0", 2, "node_0", "node_1", true)};
+
+  auto res = vda5050_core::order::is_valid_graph(order);
+
+  EXPECT_FALSE(res);
+  EXPECT_EQ(
+    res.errors.front().error_type, vda5050_core::errors::GraphValidationError);
+  EXPECT_EQ(
+    res.errors.front().error_description.value(),
+    "Edge sequences must be odd.");
+}
+
+TEST_F(OrderValidationTest, DisconnectedGraph)
+{
+  auto order = create_order("order_0", 0);
+
+  order.nodes = {
+    create_node("node_0", 0, true), create_node("node_1", 4, true)};
+
+  order.edges = {create_edge("edge_0", 1, "node_0", "node_1", true)};
+
+  auto res = vda5050_core::order::is_valid_graph(order);
+
+  EXPECT_FALSE(res);
+  EXPECT_EQ(
+    res.errors.front().error_type, vda5050_core::errors::GraphValidationError);
+  EXPECT_EQ(
+    res.errors.front().error_description.value(), "Sequence jump detected.");
+}
+
+TEST_F(OrderValidationTest, DisconnectedEdge)
+{
+  auto order = create_order("order_0", 0);
+
+  order.nodes = {
+    create_node("node_0", 0, true), create_node("node_1", 2, true)};
+
+  order.edges = {create_edge("edge_0", 1, "node_0", "node_2", true)};
+
+  auto res = vda5050_core::order::is_valid_graph(order);
+
+  EXPECT_FALSE(res);
+  EXPECT_EQ(
+    res.errors.front().error_type, vda5050_core::errors::GraphValidationError);
+  EXPECT_EQ(
+    res.errors.front().error_description.value(),
+    "Edge connectivity mismatch.");
+}
+
+TEST_F(OrderValidationTest, EdgeBaseHorizonSeparation)
+{
+  auto order = create_order("order_0", 0);
+
+  order.nodes = {
+    create_node("node_0", 0, true), create_node("node_1", 2, false),
+    create_node("node_2", 4, false)};
+
+  order.edges = {
+    create_edge("edge_0", 1, "node_0", "node_1", false),
+    create_edge("edge_1", 3, "node_1", "node_2", true)};
+
+  auto res = vda5050_core::order::is_valid_graph(order);
+
+  EXPECT_FALSE(res);
+  EXPECT_EQ(
+    res.errors.front().error_type, vda5050_core::errors::GraphValidationError);
+  EXPECT_EQ(
+    res.errors.front().error_description.value(),
+    "Released edge found within horizon.");
+}
+
+TEST_F(OrderValidationTest, OrderUpdateAgainstCurrentBase)
+{
+  auto base_order = create_order("order_0", 1);
+
+  base_order.nodes = {
+    create_node("node_0", 0, true), create_node("node_1", 2, true),
+    create_node("node_2", 4, true), create_node("node_3", 6, false)};
+
+  base_order.edges = {
+    create_edge("edge_0", 1, "node_0", "node_1", true),
+    create_edge("edge_1", 3, "node_1", "node_2", true),
+    create_edge("edge_2", 5, "node_2", "node_3", false)};
+
+  auto next_order = create_order("order_0", 1);
+
   next_order.nodes = {
-    n2_, n4_};  // Stitching at n2 (Last released), IGNORING n4_horizon
-  next_order.edges = {e3_};
+    create_node("node_1", 2, true), create_node("node_2", 4, true),
+    create_node("node_4", 6, true)};
 
-  auto res = vda5050_core::order::OrderGraphValidator::is_valid_order_update(
-    order_, next_order);
+  next_order.edges = {
+    create_edge("edge_1", 3, "node_1", "node_2", true),
+    create_edge("edge_3", 5, "node_2", "node_4", true),
+  };
+
+  auto res = vda5050_core::order::is_valid_update(base_order, next_order);
+
+  EXPECT_FALSE(res);
+  EXPECT_EQ(res.errors.size(), 1);
+  EXPECT_EQ(
+    res.errors.front().error_type, vda5050_core::errors::OrderUpdateError);
+  EXPECT_EQ(
+    res.errors.front().error_description.value(),
+    "Order update must be strictly increasing.");
+}
+
+TEST_F(OrderValidationTest, ExistingOrderOrNewOrder)
+{
+  auto base_order = create_order("order_0", 1);
+
+  base_order.nodes = {
+    create_node("node_0", 0, true), create_node("node_1", 2, true),
+    create_node("node_2", 4, true), create_node("node_3", 6, false)};
+
+  base_order.edges = {
+    create_edge("edge_0", 1, "node_0", "node_1", true),
+    create_edge("edge_1", 3, "node_1", "node_2", true),
+    create_edge("edge_2", 5, "node_2", "node_3", false)};
+
+  auto next_order = create_order("order_1", 2);
+
+  next_order.nodes = {
+    create_node("node_1", 2, true), create_node("node_2", 4, true),
+    create_node("node_4", 6, true)};
+
+  next_order.edges = {
+    create_edge("edge_1", 3, "node_1", "node_2", true),
+    create_edge("edge_3", 5, "node_2", "node_4", true),
+  };
+
+  auto res = vda5050_core::order::is_valid_update(base_order, next_order);
+
+  EXPECT_FALSE(res);
+  EXPECT_EQ(res.errors.size(), 1);
+  EXPECT_EQ(
+    res.errors.front().error_type, vda5050_core::errors::OrderUpdateError);
+  EXPECT_EQ(
+    res.errors.front().error_description.value(),
+    "New order must start with update 0 and sequence 0.");
+}
+
+TEST_F(OrderValidationTest, DisconnectedOrderUpdate)
+{
+  auto base_order = create_order("order_0", 1);
+
+  base_order.nodes = {
+    create_node("node_0", 0, true), create_node("node_1", 2, true),
+    create_node("node_2", 4, true), create_node("node_3", 6, false)};
+
+  base_order.edges = {
+    create_edge("edge_0", 1, "node_0", "node_1", true),
+    create_edge("edge_1", 3, "node_1", "node_2", true),
+    create_edge("edge_2", 5, "node_2", "node_3", false)};
+
+  auto next_order = create_order("order_0", 2);
+
+  next_order.nodes = {create_node("node_4", 6, true)};
+
+  auto res = vda5050_core::order::is_valid_update(base_order, next_order);
+
+  EXPECT_FALSE(res);
+  EXPECT_EQ(res.errors.size(), 1);
+  EXPECT_EQ(
+    res.errors.front().error_type, vda5050_core::errors::OrderUpdateError);
+  EXPECT_EQ(
+    res.errors.front().error_description.value(),
+    "Updated order starts with a disconnected sequence.");
+}
+
+TEST_F(OrderValidationTest, StitchingNewOrder)
+{
+  auto base_order = create_order("order_0", 1);
+
+  base_order.nodes = {
+    create_node("node_0", 0, true), create_node("node_1", 2, true),
+    create_node("node_2", 4, true), create_node("node_3", 6, false)};
+
+  base_order.edges = {
+    create_edge("edge_0", 1, "node_0", "node_1", true),
+    create_edge("edge_1", 3, "node_1", "node_2", true),
+    create_edge("edge_2", 5, "node_2", "node_3", false)};
+
+  auto next_order = create_order("order_0", 2);
+
+  next_order.nodes = {create_node("node_4", 4, true)};
+
+  auto res = vda5050_core::order::is_valid_update(base_order, next_order);
+
+  EXPECT_FALSE(res);
+  EXPECT_EQ(res.errors.size(), 1);
+  EXPECT_EQ(
+    res.errors.front().error_type, vda5050_core::errors::OrderUpdateError);
+  EXPECT_EQ(
+    res.errors.front().error_description.value(),
+    "Last released node not found in new message.");
+}
+
+TEST_F(OrderValidationTest, OrderValidationSuccess)
+{
+  auto base_order = create_order("order_0", 0);
+
+  base_order.nodes = {
+    create_node("node_0", 0, true), create_node("node_1", 2, true),
+    create_node("node_2", 4, true), create_node("node_3", 6, false)};
+
+  base_order.edges = {
+    create_edge("edge_0", 1, "node_0", "node_1", true),
+    create_edge("edge_1", 3, "node_1", "node_2", true),
+    create_edge("edge_2", 5, "node_2", "node_3", false)};
+
+  auto next_order = create_order("order_0", 1);
+
+  next_order.nodes = {
+    create_node("node_1", 2, true), create_node("node_2", 4, true),
+    create_node("node_4", 6, true)};
+
+  next_order.edges = {
+    create_edge("edge_1", 3, "node_1", "node_2", true),
+    create_edge("edge_3", 5, "node_2", "node_4", true),
+  };
+
+  auto res = vda5050_core::order::is_valid_update(base_order, next_order);
+
   EXPECT_TRUE(res);
 }
