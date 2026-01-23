@@ -35,6 +35,7 @@
 #include <vda5050_interfaces/msg/header.hpp>
 #include <vda5050_interfaces/msg/info.hpp>
 #include <vda5050_interfaces/msg/info_reference.hpp>
+#include <vda5050_interfaces/msg/instant_actions.hpp>
 #include <vda5050_interfaces/msg/load.hpp>
 #include <vda5050_interfaces/msg/load_dimensions.hpp>
 #include <vda5050_interfaces/msg/node.hpp>
@@ -65,6 +66,7 @@ using vda5050_interfaces::msg::ErrorReference;
 using vda5050_interfaces::msg::Header;
 using vda5050_interfaces::msg::Info;
 using vda5050_interfaces::msg::InfoReference;
+using vda5050_interfaces::msg::InstantActions;
 using vda5050_interfaces::msg::Load;
 using vda5050_interfaces::msg::LoadDimensions;
 using vda5050_interfaces::msg::Node;
@@ -80,8 +82,9 @@ using vda5050_interfaces::msg::Velocity;
 using SerializableTypesROS2 = ::testing::Types<
   Action, ActionParameter, ActionState, AGVPosition, BatteryState,
   BoundingBoxReference, Connection, ControlPoint, Edge, EdgeState, Error,
-  ErrorReference, Header, Info, InfoReference, Load, LoadDimensions, Node,
-  NodePosition, NodeState, Order, SafetyState, State, Trajectory, Velocity>;
+  ErrorReference, Header, Info, InfoReference, InstantActions, Load,
+  LoadDimensions, Node, NodePosition, NodeState, Order, SafetyState, State,
+  Trajectory, Velocity>;
 
 template <typename T>
 class SerializationTestROS2 : public ::testing::Test

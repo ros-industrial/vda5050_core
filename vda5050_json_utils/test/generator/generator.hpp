@@ -46,6 +46,7 @@
 #include <vda5050_types/info.hpp>
 #include <vda5050_types/info_level.hpp>
 #include <vda5050_types/info_reference.hpp>
+#include <vda5050_types/instant_actions.hpp>
 #include <vda5050_types/load.hpp>
 #include <vda5050_types/load_dimensions.hpp>
 #include <vda5050_types/node.hpp>
@@ -80,6 +81,7 @@ using vda5050_types::Header;
 using vda5050_types::Info;
 using vda5050_types::InfoLevel;
 using vda5050_types::InfoReference;
+using vda5050_types::InstantActions;
 using vda5050_types::Load;
 using vda5050_types::LoadDimensions;
 using vda5050_types::Node;
@@ -425,6 +427,11 @@ public:
       msg.bounding_box_reference = generate<BoundingBoxReference>();
       msg.load_dimensions = generate<LoadDimensions>();
       msg.weight = generate_random_float();
+    }
+    else if constexpr (std::is_same_v<T, InstantActions>)
+    {
+      msg.header = generate<Header>();
+      msg.actions = generate_random_vector<Action>(generate_random_size());
     }
     else if constexpr (std::is_same_v<T, LoadDimensions>)
     {

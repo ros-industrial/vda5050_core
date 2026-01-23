@@ -39,6 +39,7 @@
 #include <vda5050_interfaces/msg/header.hpp>
 #include <vda5050_interfaces/msg/info.hpp>
 #include <vda5050_interfaces/msg/info_reference.hpp>
+#include <vda5050_interfaces/msg/instant_actions.hpp>
 #include <vda5050_interfaces/msg/load.hpp>
 #include <vda5050_interfaces/msg/load_dimensions.hpp>
 #include <vda5050_interfaces/msg/node.hpp>
@@ -65,6 +66,7 @@ using vda5050_interfaces::msg::ErrorReference;
 using vda5050_interfaces::msg::Header;
 using vda5050_interfaces::msg::Info;
 using vda5050_interfaces::msg::InfoReference;
+using vda5050_interfaces::msg::InstantActions;
 using vda5050_interfaces::msg::Load;
 using vda5050_interfaces::msg::LoadDimensions;
 using vda5050_interfaces::msg::Node;
@@ -421,6 +423,11 @@ public:
     {
       msg.reference_key = generate_random_string();
       msg.reference_value = generate_random_string();
+    }
+    else if constexpr (std::is_same_v<T, InstantActions>)
+    {
+      msg.header = generate<Header>();
+      msg.actions = generate_random_vector<Action>(generate_random_size());
     }
     else if constexpr (std::is_same_v<T, Load>)
     {
