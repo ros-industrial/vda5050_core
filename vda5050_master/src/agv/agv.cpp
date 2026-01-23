@@ -59,6 +59,79 @@ AGV::~AGV()
   VDA5050_INFO("[AGV] AGV instance destroyed: {}", agv_id_);
 }
 
+void AGV::stop()
+{
+  VDA5050_INFO("[AGV] Stopping AGV: {}", agv_id_);
+
+  // Stop queue processor and heartbeat
+  stop_queue_processor();
+  cleanup_heartbeat();
+
+  // Reset states
+  {
+    std::lock_guard<std::mutex> lock(state_mutex_);
+    connection_status_ = vda5050_types::ConnectionState::OFFLINE;
+    operational_state_ = AGVState::STATE_UNKNOWN;
+  }
+
+  // Clear message queues
+  {
+    std::lock_guard<std::mutex> lock(queue_mutex_);
+    order_queue_ = {};
+    instant_actions_queue_ = {};
+  }
+
+  VDA5050_INFO("[AGV] AGV stopped: {}", agv_id_);
+}
+
+void AGV::restart()
+{
+  VDA5050_INFO("[AGV] Restarting AGV: {}", agv_id_);
+
+  stop();
+
+  // Clear cached messages and timestamps
+  {
+    std::lock_guard<std::mutex> lock(data_mutex_);
+    last_connection_.reset();
+    last_connection_time_.reset();
+    last_state_.reset();
+    last_state_time_.reset();
+    last_factsheet_.reset();
+    last_factsheet_time_.reset();
+    last_visualization_.reset();
+    last_visualization_time_.reset();
+  }
+
+  VDA5050_INFO("[AGV] AGV restarted, ready for connections: {}", agv_id_);
+}
+
+void AGV::pause()
+{
+  VDA5050_INFO("[AGV] Pausing AGV: {}", agv_id_);
+
+  stop_queue_processor();
+  cleanup_heartbeat();
+
+  {
+    std::lock_guard<std::mutex> lock(state_mutex_);
+    connection_status_ = vda5050_types::ConnectionState::OFFLINE;
+    operational_state_ = AGVState::UNAVAILABLE;
+  }
+
+  VDA5050_INFO("[AGV] AGV paused: {}", agv_id_);
+}
+
+void AGV::resume()
+{
+  VDA5050_INFO("[AGV] Resuming AGV: {}", agv_id_);
+
+  setup_heartbeat();
+  start_queue_processor();
+
+  VDA5050_INFO("[AGV] AGV resumed: {}", agv_id_);
+}
+
 // ============================================================================
 // Connection and Operational State
 // ============================================================================

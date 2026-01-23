@@ -147,6 +147,41 @@ public:
    */
   AGVState get_operational_state() const;
 
+  /**
+   * @brief Stop the AGV, releasing all runtime resources (heartbeat, queue processor)
+   *
+   * Stops the queue processor and heartbeat, resets connection and operational state,
+   * and clears all message queues. Cached messages are preserved.
+   * The AGV can be restarted later with start().
+   */
+  void stop();
+
+  /**
+   * @brief Restart the AGV, fully resetting state to accept new connections
+   *
+   * Calls stop(), then clears cached messages and timestamps.
+   * The heartbeat and queue processor will be started automatically when an
+   * ONLINE connection message is received.
+   */
+  void restart();
+
+  /**
+   * @brief Pause the AGV, suspending runtime resources without clearing queues
+   *
+   * Stops the queue processor and heartbeat, sets connection status to OFFLINE
+   * and operational state to UNAVAILABLE. Queued messages and cached data are
+   * preserved and will be processed when resumed.
+   */
+  void pause();
+
+  /**
+   * @brief Resume a paused AGV, restarting the queue processor and heartbeat
+   *
+   * Restarts the queue processor and heartbeat so the AGV can resume
+   * publishing queued messages and monitoring state heartbeats.
+   */
+  void resume();
+
   // ============================================================================
   // Cached Messages (read-only access)
   // ============================================================================

@@ -64,6 +64,7 @@ if(BUILD_TESTING)
   ament_add_gmock(test_agv
     test/agv/agv_connection_state_test.cpp
     test/agv/agv_operational_state_test.cpp
+    test/agv/agv_lifecycle_test.cpp
   )
   target_link_libraries(test_agv vda5050_master)
 
