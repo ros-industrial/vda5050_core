@@ -313,7 +313,10 @@ private:
   void stop_queue_processor();
   void process_queues();
 
-  // Publish via transient MQTT client
+  // Publishing
+  void publish_message(
+    const std::string& topic, const std::string& payload, int qos,
+    const std::string& label);
   void publish_order(const vda5050_types::Order& order);
   void publish_instant_actions(const vda5050_types::InstantActions& actions);
 
@@ -329,8 +332,9 @@ private:
   std::string serial_number_;
   std::string agv_id_;
 
-  // Broker address for creating transient MQTT clients
+  // MQTT client for publishing outgoing messages
   std::string broker_address_;
+  std::shared_ptr<vda5050_core::mqtt_client::MqttClientInterface> mqtt_client_;
 
   // Heartbeat listener for state timeout detection
   std::unique_ptr<vda5050_master::communication::HeartbeatListener>

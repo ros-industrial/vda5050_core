@@ -43,6 +43,11 @@ AGV::AGV(
   max_queue_size_(max_queue_size),
   drop_oldest_(drop_oldest)
 {
+  if (!broker_address_.empty())
+  {
+    mqtt_client_ = vda5050_core::mqtt_client::create_default_client(
+      broker_address_, agv_id_);
+  }
   VDA5050_INFO("[AGV] Created AGV instance: {}", agv_id_);
 }
 
@@ -535,83 +540,50 @@ void AGV::process_queues()
 }
 
 // ============================================================================
-// Publishing via Transient MQTT Client
+// Publishing
 // ============================================================================
 
-void AGV::publish_order(const vda5050_types::Order& order)
+void AGV::publish_message(
+  const std::string& topic, const std::string& payload, int qos,
+  const std::string& label)
 {
-  if (broker_address_.empty())
+  if (!mqtt_client_)
   {
     VDA5050_WARN(
-      "[AGV] Cannot publish order: no broker address for {}", agv_id_);
+      "[AGV] Cannot publish {}: no MQTT client for {}", label, agv_id_);
     return;
   }
 
   try
   {
-    // Create transient client
-    std::string client_id =
-      agv_id_ + "_order_" +
-      std::to_string(Clock::now().time_since_epoch().count());
-    auto client = vda5050_core::mqtt_client::create_default_client(
-      broker_address_, client_id);
+    mqtt_client_->connect();
+    mqtt_client_->publish(build_topic(topic), payload, qos);
+    mqtt_client_->disconnect();
 
-    // Connect, publish, disconnect
-    client->connect();
-
-    nlohmann::json j;
-    vda5050_types::to_json(j, order);
-    client->publish(
-      build_topic(vda5050_master::OrderTopic), j.dump(),
-      vda5050_master::OrderQos);
-
-    client->disconnect();
-
-    VDA5050_INFO("[AGV] Published order to AGV: {}", agv_id_);
+    VDA5050_INFO("[AGV] Published {} to AGV: {}", label, agv_id_);
   }
   catch (const std::exception& e)
   {
-    VDA5050_WARN("[AGV] Failed to publish order for {}: {}", agv_id_, e.what());
+    VDA5050_WARN(
+      "[AGV] Failed to publish {} for {}: {}", label, agv_id_, e.what());
   }
+}
+
+void AGV::publish_order(const vda5050_types::Order& order)
+{
+  nlohmann::json j;
+  vda5050_types::to_json(j, order);
+  publish_message(
+    vda5050_master::OrderTopic, j.dump(), vda5050_master::OrderQos, "order");
 }
 
 void AGV::publish_instant_actions(const vda5050_types::InstantActions& actions)
 {
-  if (broker_address_.empty())
-  {
-    VDA5050_WARN(
-      "[AGV] Cannot publish instant actions: no broker address for {}",
-      agv_id_);
-    return;
-  }
-
-  try
-  {
-    // Create transient client
-    std::string client_id =
-      agv_id_ + "_actions_" +
-      std::to_string(Clock::now().time_since_epoch().count());
-    auto client = vda5050_core::mqtt_client::create_default_client(
-      broker_address_, client_id);
-
-    // Connect, publish, disconnect
-    client->connect();
-
-    nlohmann::json j;
-    vda5050_types::to_json(j, actions);
-    client->publish(
-      build_topic(vda5050_master::InstantActionsTopic), j.dump(),
-      vda5050_master::InstantActionsQos);
-
-    client->disconnect();
-
-    VDA5050_INFO("[AGV] Published instant actions to AGV: {}", agv_id_);
-  }
-  catch (const std::exception& e)
-  {
-    VDA5050_WARN(
-      "[AGV] Failed to publish instant actions for {}: {}", agv_id_, e.what());
-  }
+  nlohmann::json j;
+  vda5050_types::to_json(j, actions);
+  publish_message(
+    vda5050_master::InstantActionsTopic, j.dump(),
+    vda5050_master::InstantActionsQos, "instant actions");
 }
 
 // ============================================================================
