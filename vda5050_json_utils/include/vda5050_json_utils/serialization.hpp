@@ -2150,16 +2150,6 @@ inline void from_json(const nlohmann::json& j, Order& msg)
   vda5050_types::order_detail::from_json(j, msg);
 }
 
-<<<<<<< HEAD
-inline void to_json(nlohmann::json& /*j*/, const InstantActions& /*msg*/)
-{
-  // TODO(sauk): Add missing serialization
-}
-
-inline void from_json(const nlohmann::json& /*j*/, InstantActions& /*msg*/)
-{
-  // TODO(sauk): Add missing deserialization
-=======
 inline void to_json(nlohmann::json& j, const InstantActions& msg)
 {
   vda5050_types::instant_actions_detail::to_json(j, msg);
@@ -2168,7 +2158,6 @@ inline void to_json(nlohmann::json& j, const InstantActions& msg)
 inline void from_json(const nlohmann::json& j, InstantActions& msg)
 {
   vda5050_types::instant_actions_detail::from_json(j, msg);
->>>>>>> develop
 }
 
 inline void to_json(nlohmann::json& /*j*/, const Factsheet& /*msg*/)
