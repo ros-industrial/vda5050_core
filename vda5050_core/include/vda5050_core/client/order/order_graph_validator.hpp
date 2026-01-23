@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2025 ROS-Industrial Consortium Asia Pacific
  * Advanced Remanufacturing and Technology Centre
  * A*STAR Research Entities (Co. Registration No. 199702110H)
@@ -19,43 +19,30 @@
 #ifndef VDA5050_CORE__CLIENT__ORDER__ORDER_GRAPH_VALIDATOR_HPP_
 #define VDA5050_CORE__CLIENT__ORDER__ORDER_GRAPH_VALIDATOR_HPP_
 
-#include <vector>
-
 #include "vda5050_core/client/order/validation_result.hpp"
 #include "vda5050_types/order.hpp"
 
 namespace vda5050_core {
+
 namespace order {
 
-/// \brief Utility class with functions to perform validity checks on the graph
-/// contained in a VDA5050 Order message
-class OrderGraphValidator
-{
-public:
-  OrderGraphValidator() = delete;
+/// \brief Checks that the nodes and edges in a VDA5050 Order form a valid
+/// graph according to the VDA5050 specification sheet.
+///
+/// \param order The order to be checked.
+///
+/// \return A result struct of type ValidationResult
+ValidationResult is_valid_graph(const vda5050_types::Order& order);
 
-  /// \brief Checks that the nodes and edges in a VDA5050 Order form a valid
-  /// graph according to the VDA5050 specification sheet.
-  ///
-  /// \param order The order to be checked.
-  /// \return ValidationResult containing if the order being checked is valid,
-  /// and any errors if it is not.
-  ///
-  /// \return True if nodes and edges create a valid graph, false otherwise
-  static ValidationResult is_valid_graph(
-    const vda5050_types::Order& order) noexcept(false);
-
-  /// \brief Checks if order update is valid for order stitching
-  ///
-  /// \param base_order The base order.
-  ///
-  /// \param next_order the update order.
-  ///
-  /// \return True new order is valid for stitching, false otherwise
-  static ValidationResult is_valid_order_update(
-    const vda5050_types::Order& base_order,
-    const vda5050_types::Order& next_order) noexcept(false);
-};
+/// \brief Checks if order update is valid for order stitching
+///
+/// \param base_order The base order.
+/// \param next_order the update order.
+///
+/// \return A result struct of type ValidationResult
+ValidationResult is_valid_update(
+  const vda5050_types::Order& base_order,
+  const vda5050_types::Order& next_order);
 
 }  // namespace order
 }  // namespace vda5050_core
