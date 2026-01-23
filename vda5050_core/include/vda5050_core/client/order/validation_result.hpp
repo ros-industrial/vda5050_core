@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2025 ROS-Industrial Consortium Asia Pacific
  * Advanced Remanufacturing and Technology Centre
  * A*STAR Research Entities (Co. Registration No. 199702110H)
@@ -26,7 +26,6 @@
 namespace vda5050_core {
 namespace order {
 
-/// \brief Struct that details the validity of an order
 struct ValidationResult
 {
   /// \brief A vector of error(s) that resulted in an invalid order. Empty if
