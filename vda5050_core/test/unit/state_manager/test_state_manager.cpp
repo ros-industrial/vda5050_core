@@ -17,7 +17,7 @@
  */
 
 #include <gtest/gtest.h>
-#include "vda5050_core/state_manager/state_manager.hpp"
+#include "vda5050_core/client/state/state_manager.hpp"
 
 using vda5050_types::ActionState;
 using vda5050_types::ActionStatus;
@@ -42,7 +42,7 @@ using vda5050_types::Velocity;
 class StateManagerTest : public ::testing::Test
 {
 protected:
-  vda5050_core::state_manager::StateManager sm;
+  vda5050_core::state::StateManager sm;
 };
 
 //=============================================================================
