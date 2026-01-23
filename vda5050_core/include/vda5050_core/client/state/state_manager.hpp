@@ -251,8 +251,8 @@ public:
   /// \brief Clear the horizon nodes/edges from the current nodeStates and edgeStates.
   void clear_horizon();
 
-  /// @brief Get the current robot state.
-  /// @return const State& the current robot state.
+  /// \brief Get the current robot state.
+  /// \return const State& the current robot state.
   State get_state();
 };
 
