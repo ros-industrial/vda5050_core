@@ -16,11 +16,10 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__STATE_MANAGER__STATE_MANAGER_HPP_
-#define VDA5050_CORE__STATE_MANAGER__STATE_MANAGER_HPP_
+#ifndef VDA5050_CORE__CLIENT__STATE__STATE_MANAGER_HPP_
+#define VDA5050_CORE__CLIENT__STATE__STATE_MANAGER_HPP_
 
 #include <cstdint>
-#include <mutex>
 #include <optional>
 #include <shared_mutex>
 #include <string>
@@ -40,7 +39,7 @@
 
 namespace vda5050_core {
 
-namespace state_manager {
+namespace state {
 
 using vda5050_types::ActionState;
 using vda5050_types::ActionStatus;
@@ -256,7 +255,7 @@ public:
   State get_state();
 };
 
-}  // namespace state_manager
+}  // namespace state
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__STATE_MANAGER__STATE_MANAGER_HPP_
+#endif  // VDA5050_CORE__CLIENT__STATE__STATE_MANAGER_HPP_

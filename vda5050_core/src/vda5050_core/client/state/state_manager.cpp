@@ -19,11 +19,11 @@
 #include <algorithm>
 #include <mutex>
 
-#include "vda5050_core/state_manager/state_manager.hpp"
+#include "vda5050_core/client/state/state_manager.hpp"
 
 namespace vda5050_core {
 
-namespace state_manager {
+namespace state {
 
 //=============================================================================
 void StateManager::set_header(const Header& header)
@@ -481,5 +481,5 @@ void StateManager::cleanup()
   this->robot_state_.safety_state = prev_safety_state;
 }
 
-}  // namespace state_manager
+}  // namespace state
 }  // namespace vda5050_core
