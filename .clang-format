@@ -12,7 +12,7 @@ BraceWrapping:
   AfterControlStatement: Always
   AfterFunction: true
   AfterNamespace: false
-  AfterStruct:  true
+  AfterStruct: true
   AfterEnum: true
   BeforeElse: true
   BeforeCatch: true
