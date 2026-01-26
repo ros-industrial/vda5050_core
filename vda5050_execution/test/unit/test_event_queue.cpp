@@ -75,9 +75,9 @@ TEST(EventQueueTest, MultiEventPop)
 {
   vda5050_execution::EventQueue queue;
 
-  queue.push<EventA>(1);
-  queue.push<EventB>("second");
-  queue.push<EventA>(3);
+  queue.push(std::make_shared<EventA>(1));
+  queue.push(std::make_shared<EventB>("second"));
+  queue.push(std::make_shared<EventA>(3));
 
   auto event_1 = queue.pop();
   EXPECT_NE(event_1, nullptr);
@@ -99,7 +99,7 @@ TEST(EventQueueTest, ArgumentForwarding)
 {
   vda5050_execution::EventQueue queue;
 
-  queue.push<ComplexEvent>(8, 2.5, "test");
+  queue.push(std::make_shared<ComplexEvent>(8, 2.5, "test"));
 
   auto event = queue.pop();
   auto concrete = static_cast<ComplexEvent*>(event.get());

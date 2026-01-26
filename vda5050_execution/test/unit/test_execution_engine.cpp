@@ -24,6 +24,84 @@
 #include "vda5050_execution/event.hpp"
 #include "vda5050_execution/execution_engine.hpp"
 
+struct EventA : public vda5050_execution::EventBase
+{
+  std::type_index get_type() const override
+  {
+    return typeid(EventA);
+  }
+};
+
+struct EventB : public vda5050_execution::EventBase
+{
+  std::type_index get_type() const override
+  {
+    return typeid(EventB);
+  }
+};
+
+TEST(ExecutionEngineTest, SingleEventDispatch)
+{
+  vda5050_execution::ExecutionEngine engine;
+
+  int call_count_1 = 0;
+  int call_count_2 = 0;
+  int wront_type_count = 0;
+
+  engine.on<EventA>([&](std::shared_ptr<EventA> /*event*/) { call_count_1++; });
+  engine.on<EventA>([&](std::shared_ptr<EventA> /*event*/) { call_count_2++; });
+  engine.on<EventB>(
+    [&](std::shared_ptr<EventB> /*event*/) { wront_type_count++; });
+
+  auto event = std::make_shared<EventA>();
+  engine.emit_shared(event);
+
+  engine.step();
+  EXPECT_EQ(call_count_1, 1);
+  EXPECT_EQ(call_count_2, 1);
+  EXPECT_EQ(wront_type_count, 0);
+
+  engine.step();
+  EXPECT_EQ(call_count_1, 1);
+  EXPECT_EQ(call_count_2, 1);
+  EXPECT_EQ(wront_type_count, 0);
+}
+
+TEST(ExecutionEngineTest, MultiEventDispatch)
+{
+  vda5050_execution::ExecutionEngine engine;
+
+  int call_count_1 = 0;
+  int call_count_2 = 0;
+
+  engine.on<EventA>([&](std::shared_ptr<EventA> /*event*/) { call_count_1++; });
+  engine.on<EventB>([&](std::shared_ptr<EventB> /*event*/) { call_count_2++; });
+
+  auto event_a = std::make_shared<EventA>();
+  engine.emit_shared(event_a);
+
+  auto event_b = std::make_shared<EventB>();
+  engine.emit_shared(event_b);
+
+  engine.emit_shared(event_a);
+
+  engine.step();
+  EXPECT_EQ(call_count_1, 1);
+  EXPECT_EQ(call_count_2, 0);
+
+  engine.step();
+  EXPECT_EQ(call_count_1, 1);
+  EXPECT_EQ(call_count_2, 1);
+}
+
+TEST(ExecutionEngineTest, EmptyCalls)
+{
+  vda5050_execution::ExecutionEngine engine;
+
+  auto event = std::make_shared<EventA>();
+  EXPECT_NO_THROW(engine.emit_shared(event));
+}
+
 TEST(ExecutionEngineTest, DispatchUpdate)
 {
   auto engine = std::make_shared<vda5050_execution::ExecutionEngine>();
