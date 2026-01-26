@@ -30,9 +30,9 @@ bool EventQueue::empty() const
 //=============================================================================
 std::shared_ptr<EventBase> EventQueue::pop()
 {
-  if (queue_.empty()) return nullptr;
-
   std::lock_guard<std::mutex> lock(mutex_);
+
+  if (queue_.empty()) return nullptr;
 
   auto event = std::move(queue_.front());
   queue_.pop();

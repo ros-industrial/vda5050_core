@@ -37,6 +37,8 @@ public:
     static_assert(
       std::is_base_of_v<EventBase, EventT>,
       "Event must be derived from EventBase");
+
+    std::lock_guard<std::mutex> lock(mutex_);
     queue_.push(std::make_unique<EventT>(std::forward<Args>(args)...));
   }
 
