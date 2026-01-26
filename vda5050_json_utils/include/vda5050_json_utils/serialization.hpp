@@ -49,6 +49,7 @@
 #include <vda5050_types/safety_state.hpp>
 #include <vda5050_types/state.hpp>
 #include <vda5050_types/trajectory.hpp>
+#include <vda5050_types/type_specification.hpp>
 #include <vda5050_types/velocity.hpp>
 #include <vda5050_types/visualization.hpp>
 
@@ -73,6 +74,7 @@
 #include <vda5050_interfaces/msg/safety_state.hpp>
 #include <vda5050_interfaces/msg/state.hpp>
 #include <vda5050_interfaces/msg/trajectory.hpp>
+#include <vda5050_interfaces/msg/type_specification.hpp>
 #include <vda5050_interfaces/msg/velocity.hpp>
 #include <vda5050_interfaces/msg/visualization.hpp>
 #endif  // ENABLE_ROS2
@@ -1607,6 +1609,96 @@ void from_json(const nlohmann::json& j, InstantActionsT& msg)
 
 }  // namespace instant_actions_detail
 
+namespace type_specification_detail {
+
+//=============================================================================
+template <typename TypeSpecificationT>
+void to_json(nlohmann::json& j, const TypeSpecificationT& msg)
+{
+  using vda5050_json_utils::agv_class_traits;
+  using vda5050_json_utils::agv_kinematic_traits;
+  using vda5050_json_utils::optional_field_traits;
+
+  using series_description_trait =
+    optional_field_traits<decltype(msg.series_description)>;
+
+  j["seriesName"] = msg.series_name;
+
+  j["agvKinematic"] =
+    agv_kinematic_traits<decltype(msg.agv_kinematic)>::to_string(
+      msg.agv_kinematic);
+
+  j["agvClass"] =
+    agv_class_traits<decltype(msg.agv_class)>::to_string(msg.agv_class);
+
+  j["maxLoadMass"] = msg.max_load_mass;
+  j["localizationTypes"] = msg.localization_types;
+  j["navigationTypes"] = msg.navigation_types;
+
+  if (series_description_trait::has_value(msg.series_description))
+  {
+    j["seriesDescription"] =
+      series_description_trait::get(msg.series_description);
+  }
+}
+
+//=============================================================================
+template <typename TypeSpecificationT>
+void from_json(const nlohmann::json& j, TypeSpecificationT& msg)
+{
+  using vda5050_json_utils::agv_class_traits;
+  using vda5050_json_utils::agv_kinematic_traits;
+  using vda5050_json_utils::optional_field_traits;
+
+  using series_description_trait =
+    optional_field_traits<decltype(msg.series_description)>;
+
+  msg.series_name = j.at("seriesName").get<std::string>();
+
+  msg.agv_kinematic =
+    agv_kinematic_traits<decltype(msg.agv_kinematic)>::from_string(
+      j.at("agvKinematic").get<std::string>());
+
+  msg.agv_class = agv_class_traits<decltype(msg.agv_class)>::from_string(
+    j.at("agvClass").get<std::string>());
+
+  msg.max_load_mass = j.at("maxLoadMass").get<double>();
+  msg.localization_types =
+    j.at("localizationTypes").get<std::vector<std::string>>();
+  msg.navigation_types =
+    j.at("navigationTypes").get<std::vector<std::string>>();
+
+  if (j.contains("seriesDescription"))
+  {
+    series_description_trait::set(
+      msg.series_description, j.at("seriesDescription").get<std::string>());
+  }
+}
+
+}  // namespace type_specification_detail
+
+namespace factsheet_detail {
+
+//=============================================================================
+template <typename FactsheetT>
+void to_json(nlohmann::json& j, const FactsheetT& msg)
+{
+  to_json(j, msg.header);
+
+  j["typeSpecification"] = msg.type_specification;
+}
+
+//=============================================================================
+template <typename FactsheetT>
+void from_json(const nlohmann::json& j, FactsheetT& msg)
+{
+  from_json(j, msg.header);
+
+  msg.type_specification = j.at("typeSpecification");
+}
+
+}  // namespace factsheet_detail
+
 }  // namespace vda5050_types
 
 //=============================================================================
@@ -1872,14 +1964,24 @@ inline void from_json(const nlohmann::json& j, InstantActions& msg)
   vda5050_types::instant_actions_detail::from_json(j, msg);
 }
 
-inline void to_json(nlohmann::json& /*j*/, const Factsheet& /*msg*/)
+inline void to_json(nlohmann::json& j, const TypeSpecification& msg)
 {
-  // TODO(sauk): Add missing serialization
+  vda5050_types::type_specification_detail::to_json(j, msg);
 }
 
-inline void from_json(const nlohmann::json& /*j*/, Factsheet& /*msg*/)
+inline void from_json(const nlohmann::json& j, TypeSpecification& msg)
 {
-  // TODO(sauk): Add missing deserialization
+  vda5050_types::type_specification_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Factsheet& msg)
+{
+  vda5050_types::factsheet_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Factsheet& msg)
+{
+  vda5050_types::factsheet_detail::from_json(j, msg);
 }
 
 inline void to_json(nlohmann::json& /*j*/, const Visualization& /*msg*/)
@@ -2160,14 +2262,24 @@ inline void from_json(const nlohmann::json& j, InstantActions& msg)
   vda5050_types::instant_actions_detail::from_json(j, msg);
 }
 
-inline void to_json(nlohmann::json& /*j*/, const Factsheet& /*msg*/)
+inline void to_json(nlohmann::json& j, const TypeSpecification& msg)
 {
-  // TODO(sauk): Add missing serialization
+  vda5050_types::type_specification_detail::to_json(j, msg);
 }
 
-inline void from_json(const nlohmann::json& /*j*/, Factsheet& /*msg*/)
+inline void from_json(const nlohmann::json& j, TypeSpecification& msg)
 {
-  // TODO(sauk): Add missing deserialization
+  vda5050_types::type_specification_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Factsheet& msg)
+{
+  vda5050_types::factsheet_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Factsheet& msg)
+{
+  vda5050_types::factsheet_detail::from_json(j, msg);
 }
 
 inline void to_json(nlohmann::json& /*j*/, const Visualization& /*msg*/)

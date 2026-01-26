@@ -30,6 +30,8 @@
 #include <utility>
 
 #include <vda5050_types/action_status.hpp>
+#include <vda5050_types/agv_class.hpp>
+#include <vda5050_types/agv_kinematic.hpp>
 #include <vda5050_types/blocking_type.hpp>
 #include <vda5050_types/connection.hpp>
 #include <vda5050_types/connection_state.hpp>
@@ -50,6 +52,7 @@
 #include <vda5050_interfaces/msg/info.hpp>
 #include <vda5050_interfaces/msg/safety_state.hpp>
 #include <vda5050_interfaces/msg/state.hpp>
+#include <vda5050_interfaces/msg/type_specification.hpp>
 #endif  // ENABLE_ROS2
 
 namespace vda5050_json_utils {
@@ -107,6 +110,7 @@ struct optional_field_traits<rosidl_runtime_cpp::BoundedVector<T, 1, Alloc>>
   }
 };
 
+//=============================================================================
 template <typename T, std::size_t Max, typename Alloc>
 struct optional_field_traits<rosidl_runtime_cpp::BoundedVector<T, Max, Alloc>>
 {
@@ -817,6 +821,153 @@ struct orientation_type_traits<std::string>
       return type;
     }
     throw std::runtime_error("Invalid orientationType string");
+  }
+};
+#endif  // ENABLE_ROS2
+
+//=============================================================================
+template <typename T>
+struct agv_kinematic_traits;
+
+//=============================================================================
+template <>
+struct agv_kinematic_traits<vda5050_types::AGVKinematic>
+{
+  static std::string to_string(const vda5050_types::AGVKinematic& type)
+  {
+    using vda5050_types::AGVKinematic;
+
+    switch (type)
+    {
+      case AGVKinematic::DIFF:
+        return "DIFF";
+      case AGVKinematic::OMNI:
+        return "OMNI";
+      case AGVKinematic::THREEWHEEL:
+        return "THREEWHEEL";
+      default:
+        throw std::runtime_error("Invalid AGVKinematic enum value");
+    }
+  }
+
+  static vda5050_types::AGVKinematic from_string(const std::string& type)
+  {
+    using vda5050_types::AGVKinematic;
+
+    if (type == "DIFF") return AGVKinematic::DIFF;
+    if (type == "OMNI") return AGVKinematic::OMNI;
+    if (type == "THREEWHEEL") return AGVKinematic::THREEWHEEL;
+    throw std::runtime_error("Invalid agvKinematic string");
+  }
+};
+
+//=============================================================================
+#ifdef ENABLE_ROS2
+template <>
+struct agv_kinematic_traits<std::string>
+{
+  static std::string to_string(const std::string& type)
+  {
+    using vda5050_interfaces::msg::TypeSpecification;
+
+    if (
+      type == TypeSpecification::AGV_KINEMATIC_DIFF ||
+      type == TypeSpecification::AGV_KINEMATIC_OMNI ||
+      type == TypeSpecification::AGV_KINEMATIC_THREEWHEEL)
+    {
+      return type;
+    }
+    throw std::runtime_error("Invalid agv_kinematic value");
+  }
+
+  static std::string from_string(const std::string& type)
+  {
+    using vda5050_interfaces::msg::TypeSpecification;
+
+    if (
+      type == TypeSpecification::AGV_KINEMATIC_DIFF ||
+      type == TypeSpecification::AGV_KINEMATIC_OMNI ||
+      type == TypeSpecification::AGV_KINEMATIC_THREEWHEEL)
+    {
+      return type;
+    }
+    throw std::runtime_error("Invalid agvKinematic string");
+  }
+};
+#endif  // ENABLE_ROS2
+
+//=============================================================================
+template <typename T>
+struct agv_class_traits;
+
+//=============================================================================
+template <>
+struct agv_class_traits<vda5050_types::AGVClass>
+{
+  static std::string to_string(const vda5050_types::AGVClass& type)
+  {
+    using vda5050_types::AGVClass;
+
+    switch (type)
+    {
+      case AGVClass::FORKLIFT:
+        return "FORKLIFT";
+      case AGVClass::CONVEYOR:
+        return "CONVEYOR";
+      case AGVClass::TUGGER:
+        return "TUGGER";
+      case AGVClass::CARRIER:
+        return "CARRIER";
+      default:
+        throw std::runtime_error("Invalid AGVClass enum value");
+    }
+  }
+
+  static vda5050_types::AGVClass from_string(const std::string& type)
+  {
+    using vda5050_types::AGVClass;
+
+    if (type == "FORKLIFT") return AGVClass::FORKLIFT;
+    if (type == "CONVEYOR") return AGVClass::CONVEYOR;
+    if (type == "TUGGER") return AGVClass::TUGGER;
+    if (type == "CARRIER") return AGVClass::CARRIER;
+    throw std::runtime_error("Invalid agvClass string");
+  }
+};
+
+//=============================================================================
+#ifdef ENABLE_ROS2
+template <>
+struct agv_class_traits<std::string>
+{
+  static std::string to_string(const std::string& type)
+  {
+    using vda5050_interfaces::msg::TypeSpecification;
+
+    if (
+      type == TypeSpecification::AGV_CLASS_FORKLIFT ||
+      type == TypeSpecification::AGV_CLASS_CONVEYOR ||
+      type == TypeSpecification::AGV_CLASS_TUGGER ||
+      type == TypeSpecification::AGV_CLASS_CARRIER)
+    {
+      return type;
+    }
+    throw std::runtime_error("Invalid agv_class value");
+  }
+
+  static std::string from_string(const std::string& type)
+  {
+    using vda5050_interfaces::msg::TypeSpecification;
+
+    if (
+      type == TypeSpecification::AGV_CLASS_FORKLIFT ||
+      type == TypeSpecification::AGV_CLASS_CONVEYOR ||
+      type == TypeSpecification::AGV_CLASS_TUGGER ||
+      type == TypeSpecification::AGV_CLASS_CARRIER)
+    {
+      return type;
+    }
+    throw std::runtime_error("Invalid agvClass string");
   }
 };
 #endif  // ENABLE_ROS2
