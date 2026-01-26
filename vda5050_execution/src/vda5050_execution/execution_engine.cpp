@@ -23,11 +23,8 @@ namespace vda5050_execution {
 
 void ExecutionEngine::step()
 {
-  if (!event_queue_.empty())
-  {
-    std::shared_ptr<EventBase> event = event_queue_.pop();
-    callback_registry_.dispatch(event);
-  }
+  std::shared_ptr<EventBase> event = event_queue_.pop();
+  if (event) callback_registry_.dispatch(event);
 }
 
 }  // namespace vda5050_execution
