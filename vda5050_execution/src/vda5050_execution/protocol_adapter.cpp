@@ -43,7 +43,7 @@ ProtocolAdapter::ProtocolAdapter(
   serial_number_(serial_number)
 {
   std::string topic_prefix = fmt::format(
-    "{}/{}/{}/{}", interface_, version_, manufacturer, serial_number_);
+    "{}/{}/{}/{}", interface_, version_, manufacturer_, serial_number_);
 
   topic_names_ = {
     {std::type_index(typeid(vda5050_types::Connection)),
