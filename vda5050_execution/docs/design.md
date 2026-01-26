@@ -60,31 +60,33 @@ update, battery status, order status, action status, etc.).
 - Both use a `get_type()` virtual function to return a `std::type_index`
 allowing for efficient routing without the need to perform a `dynamic_cast`.
 
-### 3. `CallbackRegistry`
-
-It holds type-erased callbacks and manages the lifecycle of all their function
-pointers mapped to specific types.
-
-- For events (objects derived from `EventBase`), the registry stores a
-`std::vector` of callbacks allowing multiple listeners to react to the same
-commands.
-
-- For updates (objects derived from `UpdateBase`), the registry maps a
-specific callback to a one update. Typically used to route robot state changes
-back to the execution system.
-
-- The registry uses an `std::unordered_map<std::type_index, ...>` to store
-lambda wrappers that reconstruct the original type before calling the user-
-defined callback.
-
-### 4. `EventQueue`
+### 3. `EventQueue`
 
 A thread-safe queue object for storage and retrieval of events.
 
 - It is thread-safe due to an internally managed mutex.
 
-- It uses variadic templates to construct events in-place and minimizing large
-copies of objects.
+- It acts an abstraction layer over a `std::unordered_map` by providing it
+thread safety.
+
+### 4. `ExecutionEngine`
+
+Acts as an orchestration layer to drive the execution system forward. It also
+holds type-erased callbacks and manages the lifecycle of all their function
+pointers mapped to specific types.
+
+- For events (objects derived from `EventBase`), a container stores a
+`std::vector` of callbacks allowing multiple listeners to react to the same
+commands.
+
+- Stepping the engine, causes it to fetch an event from the `EventQueue`
+
+- That event is then used to find a stored callback. The function pointer
+to the callback is extracted and the function executed.
+
+- It uses an `std::unordered_map<std::type_index, ...>` to store
+lambda wrappers that reconstruct the original type before calling the user-
+defined callback.
 
 ### 5. `Provider`
 
@@ -92,17 +94,15 @@ The public-facing API for application logic to report back states to the
 execution layer.
 
 - It allows asynchronous state updates and handles the internal construction
-and routing to the registry.
+and routing to the callbacks.
 
 - It can be used to register listeners in the form of function pointers, to
 observe specific updates from the application logic.
 
-### 6. `ExecutionEngine`
+- For updates (objects derived from `UpdateBase`), a container maps a
+specific callback to a one update. Typically used to route robot state changes
+back to the execution system.
 
-Acts as an orchestration layer to drive the execution system forward.
-
-- Stepping the engine, causes it to fetch an event from the `EventQueue`
-
-- That event is then used to find a registered callback in the
-`CallbackRegistry`. The function pointer to the callback is extracted and
-the function executed.
+- It uses an `std::unordered_map<std::type_index, ...>` to store
+lambda wrappers that reconstruct the original type before calling the user-
+defined callback.
