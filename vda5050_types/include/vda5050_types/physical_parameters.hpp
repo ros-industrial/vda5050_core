@@ -27,28 +27,28 @@ namespace vda5050_types {
 struct PhysicalParameters
 {
   /// \brief Minimal controlled continuous speed of the AGV [m/s]
-  double speed_min;
+  double speed_min = 0.0;
 
   /// \brief Maximum speed of the AGV [m/s]
-  double speed_max;
+  double speed_max = 0.0;
 
   /// \brief Maximum acceleration with maximum load [m/s²]
-  double acceleration_max;
+  double acceleration_max = 0.0;
 
   /// \brief Maximum deceleration with maximum load [m/s²]
-  double deceleration_max;
+  double deceleration_max = 0.0;
 
   /// \brief Minimum height of AGV [m]
-  double height_min;
+  double height_min = 0.0;
 
   /// \brief Maximum height of AGV [m]
-  double height_max;
+  double height_max = 0.0;
 
   /// \brief Width of AGV [m]
-  double width;
+  double width = 0.0;
 
   /// \brief Length of AGV [m]
-  double length;
+  double length = 0.0;
 
   /// \brief Minimal controlled continuous rotation speed of the AGV [rad/s]
   std::optional<double> angular_speed_min;
