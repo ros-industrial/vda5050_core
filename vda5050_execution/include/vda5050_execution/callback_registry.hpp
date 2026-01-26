@@ -27,7 +27,6 @@
 #include <vector>
 
 #include "vda5050_execution/event.hpp"
-#include "vda5050_execution/update.hpp"
 
 namespace vda5050_execution {
 
@@ -51,29 +50,9 @@ public:
 
   void dispatch(std::shared_ptr<EventBase> event) const;
 
-  template <typename UpdateT>
-  void register_provider(std::function<void(std::shared_ptr<UpdateT>)> provider)
-  {
-    static_assert(
-      std::is_base_of_v<UpdateBase, UpdateT>,
-      "Update must be derived from UpdateBase");
-
-    auto wrapper = [cb =
-                      std::move(provider)](std::shared_ptr<UpdateBase> update) {
-      cb(std::static_pointer_cast<UpdateT>(update));
-    };
-
-    providers_[std::type_index(typeid(UpdateT))] = std::move(wrapper);
-  }
-
-  void query(std::shared_ptr<UpdateBase> update) const;
-
 private:
   using ErasedCallback = std::function<void(std::shared_ptr<EventBase>)>;
   std::unordered_map<std::type_index, std::vector<ErasedCallback>> callbacks_;
-
-  using ErasedProvider = std::function<void(std::shared_ptr<UpdateBase>)>;
-  std::unordered_map<std::type_index, ErasedProvider> providers_;
 };
 
 }  // namespace vda5050_execution
