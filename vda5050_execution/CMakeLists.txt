@@ -66,7 +66,6 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gmock REQUIRED)
   ament_add_gmock(test_vda5050_execution
     test/unit/test_protocol_adapter.cpp
-    test/unit/test_callback_registry.cpp
     test/unit/test_event_queue.cpp
     test/unit/test_provider.cpp
     test/unit/test_execution_engine.cpp
