@@ -16,15 +16,15 @@
  * limitations under the License.
  */
 
-#include <functional>
-#include <memory>
-#include <utility>
-
-#include "vda5050_execution/callback_registry.hpp"
-#include "vda5050_execution/update.hpp"
-
 #ifndef VDA5050_EXECUTION__PROVIDER_HPP_
 #define VDA5050_EXECUTION__PROVIDER_HPP_
+
+#include <functional>
+#include <memory>
+#include <unordered_map>
+#include <utility>
+
+#include "vda5050_execution/update.hpp"
 
 namespace vda5050_execution {
 
@@ -37,18 +37,30 @@ public:
     static_assert(
       std::is_base_of_v<UpdateBase, UpdateT>,
       "Update must be derived from UpdateBase");
-    callback_registry_.query(
-      std::make_shared<UpdateT>(std::forward<Args>(args)...));
+
+    push_shared(std::make_shared<UpdateT>(std::forward<Args>(args)...));
   }
 
+  void push_shared(std::shared_ptr<UpdateBase> update) const;
+
   template <typename UpdateT>
-  void on(std::function<void(std::shared_ptr<UpdateT>)> callback)
+  void on(std::function<void(std::shared_ptr<UpdateT>)> provider)
   {
-    callback_registry_.register_provider<UpdateT>(std::move(callback));
+    static_assert(
+      std::is_base_of_v<UpdateBase, UpdateT>,
+      "Update must be derived from UpdateBase");
+
+    auto wrapper = [cb =
+                      std::move(provider)](std::shared_ptr<UpdateBase> update) {
+      cb(std::static_pointer_cast<UpdateT>(update));
+    };
+
+    providers_[std::type_index(typeid(UpdateT))] = std::move(wrapper);
   }
 
 private:
-  CallbackRegistry callback_registry_;
+  using ErasedProvider = std::function<void(std::shared_ptr<UpdateBase>)>;
+  std::unordered_map<std::type_index, ErasedProvider> providers_;
 };
 
 }  // namespace vda5050_execution
