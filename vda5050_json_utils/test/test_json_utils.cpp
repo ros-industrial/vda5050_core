@@ -30,6 +30,7 @@
 #include <vda5050_types/edge_state.hpp>
 #include <vda5050_types/error.hpp>
 #include <vda5050_types/error_reference.hpp>
+#include <vda5050_types/factsheet.hpp>
 #include <vda5050_types/header.hpp>
 #include <vda5050_types/info.hpp>
 #include <vda5050_types/info_reference.hpp>
@@ -43,6 +44,7 @@
 #include <vda5050_types/safety_state.hpp>
 #include <vda5050_types/state.hpp>
 #include <vda5050_types/trajectory.hpp>
+#include <vda5050_types/type_specification.hpp>
 #include <vda5050_types/velocity.hpp>
 
 #include "vda5050_json_utils/serialization.hpp"
@@ -61,6 +63,7 @@ using vda5050_types::Edge;
 using vda5050_types::EdgeState;
 using vda5050_types::Error;
 using vda5050_types::ErrorReference;
+using vda5050_types::Factsheet;
 using vda5050_types::Header;
 using vda5050_types::Info;
 using vda5050_types::InfoReference;
@@ -74,15 +77,16 @@ using vda5050_types::Order;
 using vda5050_types::SafetyState;
 using vda5050_types::State;
 using vda5050_types::Trajectory;
+using vda5050_types::TypeSpecification;
 using vda5050_types::Velocity;
 
 // List of types to be tested for serialization round-trip
 using SerializableTypes = ::testing::Types<
   Action, ActionParameter, ActionState, AGVPosition, BatteryState,
   BoundingBoxReference, Connection, ControlPoint, Edge, EdgeState, Error,
-  ErrorReference, Header, Info, InfoReference, InstantActions, Load,
+  ErrorReference, Factsheet, Header, Info, InfoReference, InstantActions, Load,
   LoadDimensions, Node, NodePosition, NodeState, Order, SafetyState, State,
-  Trajectory, Velocity>;
+  Trajectory, TypeSpecification, Velocity>;
 
 template <typename T>
 class SerializationTest : public ::testing::Test

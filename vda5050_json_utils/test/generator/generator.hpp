@@ -29,6 +29,8 @@
 #include <vda5050_types/action_parameter.hpp>
 #include <vda5050_types/action_state.hpp>
 #include <vda5050_types/action_status.hpp>
+#include <vda5050_types/agv_class.hpp>
+#include <vda5050_types/agv_kinematic.hpp>
 #include <vda5050_types/agv_position.hpp>
 #include <vda5050_types/battery_state.hpp>
 #include <vda5050_types/blocking_type.hpp>
@@ -42,6 +44,7 @@
 #include <vda5050_types/error.hpp>
 #include <vda5050_types/error_level.hpp>
 #include <vda5050_types/error_reference.hpp>
+#include <vda5050_types/factsheet.hpp>
 #include <vda5050_types/header.hpp>
 #include <vda5050_types/info.hpp>
 #include <vda5050_types/info_level.hpp>
@@ -58,12 +61,15 @@
 #include <vda5050_types/safety_state.hpp>
 #include <vda5050_types/state.hpp>
 #include <vda5050_types/trajectory.hpp>
+#include <vda5050_types/type_specification.hpp>
 #include <vda5050_types/velocity.hpp>
 
 using vda5050_types::Action;
 using vda5050_types::ActionParameter;
 using vda5050_types::ActionState;
 using vda5050_types::ActionStatus;
+using vda5050_types::AGVClass;
+using vda5050_types::AGVKinematic;
 using vda5050_types::AGVPosition;
 using vda5050_types::BatteryState;
 using vda5050_types::BlockingType;
@@ -77,6 +83,7 @@ using vda5050_types::Error;
 using vda5050_types::ErrorLevel;
 using vda5050_types::ErrorReference;
 using vda5050_types::EStop;
+using vda5050_types::Factsheet;
 using vda5050_types::Header;
 using vda5050_types::Info;
 using vda5050_types::InfoLevel;
@@ -93,6 +100,7 @@ using vda5050_types::OrientationType;
 using vda5050_types::SafetyState;
 using vda5050_types::State;
 using vda5050_types::Trajectory;
+using vda5050_types::TypeSpecification;
 using vda5050_types::Velocity;
 
 /// \brief Utility class to generate random instances of VDA 5050 message types
@@ -271,6 +279,25 @@ public:
     return types[type_idx];
   }
 
+  /// \brief Generate a random agv kinematic value
+  AGVKinematic generate_random_agv_kinematic()
+  {
+    std::vector<AGVKinematic> states = {
+      AGVKinematic::OMNI, AGVKinematic::DIFF, AGVKinematic::THREEWHEEL};
+    auto state_idx = generate_random_index(states.size());
+    return states[state_idx];
+  }
+
+  /// \brief Generate a random agv class value
+  AGVClass generate_random_agv_class()
+  {
+    std::vector<AGVClass> states = {
+      AGVClass::FORKLIFT, AGVClass::CONVEYOR, AGVClass::TUGGER,
+      AGVClass::CARRIER};
+    auto state_idx = generate_random_index(states.size());
+    return states[state_idx];
+  }
+
   /// \brief Generate a random vector of type float64
   std::vector<double> generate_random_float_vector(const uint8_t size)
   {
@@ -278,6 +305,17 @@ public:
     for (auto it = vec.begin(); it != vec.end(); ++it)
     {
       *it = generate_random_float();
+    }
+    return vec;
+  }
+
+  /// \brief Generate a random vector of type string
+  std::vector<std::string> generate_random_string_vector(const uint8_t size)
+  {
+    std::vector<std::string> vec(size);
+    for (auto it = vec.begin(); it != vec.end(); ++it)
+    {
+      *it = generate_random_string();
     }
     return vec;
   }
@@ -399,6 +437,17 @@ public:
       msg.reference_key = generate_random_string();
       msg.reference_value = generate_random_string();
     }
+    else if constexpr (std::is_same_v<T, Factsheet>)
+    {
+      msg.header = generate<Header>();
+      msg.type_specification = generate<TypeSpecification>();
+      // msg.physical_parameters = generate<PhysicalParameters>();
+      // msg.protocol_limits = generate<ProtocolLimits>();
+      // msg.protocol_features = generate<ProtocolFeatures>();
+      // msg.agv_geometry = generate<AGVGeometry>();
+      // msg.load_specification = generate<LoadSpecification>();
+      // msg.vehicle_config = generate<VehicleConfig>();
+    }
     else if constexpr (std::is_same_v<T, Header>)
     {
       msg.header_id = generate_random_uint();
@@ -513,6 +562,18 @@ public:
       msg.control_points =
         generate_random_vector<ControlPoint>(generate_random_size());
       msg.degree = 1.0;
+    }
+    else if constexpr (std::is_same_v<T, TypeSpecification>)
+    {
+      msg.series_name = generate_random_string();
+      msg.agv_kinematic = generate_random_agv_kinematic();
+      msg.agv_class = generate_random_agv_class();
+      msg.max_load_mass = generate_random_float();
+      msg.localization_types =
+        generate_random_string_vector(generate_random_size());
+      msg.navigation_types =
+        generate_random_string_vector(generate_random_size());
+      msg.series_description = generate_random_string();
     }
     else if constexpr (std::is_same_v<T, Velocity>)
     {
