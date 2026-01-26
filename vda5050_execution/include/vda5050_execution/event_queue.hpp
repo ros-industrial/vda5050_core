@@ -22,7 +22,6 @@
 #include <memory>
 #include <mutex>
 #include <queue>
-#include <utility>
 
 #include "vda5050_execution/event.hpp"
 
@@ -31,23 +30,14 @@ namespace vda5050_execution {
 class EventQueue
 {
 public:
-  template <typename EventT, typename... Args>
-  void push(Args&&... args)
-  {
-    static_assert(
-      std::is_base_of_v<EventBase, EventT>,
-      "Event must be derived from EventBase");
-
-    std::lock_guard<std::mutex> lock(mutex_);
-    queue_.push(std::make_unique<EventT>(std::forward<Args>(args)...));
-  }
+  void push(std::shared_ptr<EventBase> event);
 
   bool empty() const;
 
   std::shared_ptr<EventBase> pop();
 
 private:
-  std::queue<std::unique_ptr<EventBase>> queue_;
+  std::queue<std::shared_ptr<EventBase>> queue_;
   mutable std::mutex mutex_;
 };
 

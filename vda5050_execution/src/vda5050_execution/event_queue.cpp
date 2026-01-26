@@ -21,6 +21,13 @@
 namespace vda5050_execution {
 
 //=============================================================================
+void EventQueue::push(std::shared_ptr<EventBase> event)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  queue_.push(event);
+}
+
+//=============================================================================
 bool EventQueue::empty() const
 {
   std::lock_guard<std::mutex> lock(mutex_);
