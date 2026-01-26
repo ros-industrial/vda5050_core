@@ -21,9 +21,10 @@
 
 #include <functional>
 #include <memory>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 
-#include "vda5050_execution/callback_registry.hpp"
 #include "vda5050_execution/event_queue.hpp"
 
 namespace vda5050_execution {
@@ -34,20 +35,37 @@ public:
   template <typename EventT, typename... Args>
   void emit(Args&&... args)
   {
-    event_queue_.push<EventT>(std::forward<Args>(args)...);
+    static_assert(
+      std::is_base_of_v<EventBase, EventT>,
+      "Event must be derived from EventBase");
+
+    emit_shared(std::make_shared<EventT>(std::forward<Args>(args)...));
   }
+
+  void emit_shared(std::shared_ptr<EventBase> event);
 
   template <typename EventT>
   void on(std::function<void(std::shared_ptr<EventT>)> callback)
   {
-    callback_registry_.register_callback<EventT>(std::move(callback));
+    static_assert(
+      std::is_base_of_v<EventBase, EventT>,
+      "Event must be derived from EventBase");
+
+    auto wrapper = [cb =
+                      std::move(callback)](std::shared_ptr<EventBase> event) {
+      cb(std::static_pointer_cast<EventT>(event));
+    };
+
+    callbacks_[std::type_index(typeid(EventT))].push_back(std::move(wrapper));
   }
 
   void step();
 
 private:
   EventQueue event_queue_;
-  CallbackRegistry callback_registry_;
+
+  using ErasedCallback = std::function<void(std::shared_ptr<EventBase>)>;
+  std::unordered_map<std::type_index, std::vector<ErasedCallback>> callbacks_;
 };
 
 }  // namespace vda5050_execution

@@ -21,10 +21,26 @@
 
 namespace vda5050_execution {
 
+//=============================================================================
+void ExecutionEngine::emit_shared(std::shared_ptr<EventBase> event)
+{
+  event_queue_.push(event);
+}
+
+//=============================================================================
 void ExecutionEngine::step()
 {
   std::shared_ptr<EventBase> event = event_queue_.pop();
-  if (event) callback_registry_.dispatch(event);
+  if (!event) return;
+
+  auto it = callbacks_.find(event->get_type());
+  if (it != callbacks_.end())
+  {
+    for (const auto& cb : it->second)
+    {
+      cb(event);
+    }
+  }
 }
 
 }  // namespace vda5050_execution
