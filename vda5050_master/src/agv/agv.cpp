@@ -469,39 +469,52 @@ size_t AGV::get_pending_instant_actions_count() const
 
 void AGV::start_queue_processor()
 {
-  if (queue_processor_running_.load())
+  std::lock_guard<std::mutex> lock(thread_mutex_);
+
+  if (queue_processor_running_)
   {
     return;  // Already running
   }
 
   VDA5050_INFO("[AGV] Starting queue processor for {}", agv_id_);
 
-  stop_processing_ = false;
+  {
+    std::lock_guard<std::mutex> queue_lock(queue_mutex_);
+    stop_processing_ = false;
+  }
   queue_processor_running_ = true;
   queue_thread_ = std::thread(&AGV::process_queues, this);
 }
 
 void AGV::stop_queue_processor()
 {
-  if (!queue_processor_running_.load())
-  {
-    return;  // Not running
-  }
-
-  VDA5050_INFO("[AGV] Stopping queue processor for {}", agv_id_);
+  std::thread thread_to_join;
 
   {
-    std::lock_guard<std::mutex> lock(queue_mutex_);
-    stop_processing_ = true;
-  }
-  queue_cv_.notify_one();
+    std::lock_guard<std::mutex> lock(thread_mutex_);
 
-  if (queue_thread_.joinable())
+    if (!queue_processor_running_)
+    {
+      return;  // Not running
+    }
+
+    VDA5050_INFO("[AGV] Stopping queue processor for {}", agv_id_);
+
+    {
+      std::lock_guard<std::mutex> queue_lock(queue_mutex_);
+      stop_processing_ = true;
+    }
+    queue_cv_.notify_one();
+
+    thread_to_join = std::move(queue_thread_);
+    queue_processor_running_ = false;
+  }
+
+  if (thread_to_join.joinable())
   {
-    queue_thread_.join();
+    thread_to_join.join();
   }
 
-  queue_processor_running_ = false;
   VDA5050_INFO("[AGV] Queue processor stopped for {}", agv_id_);
 }
 
