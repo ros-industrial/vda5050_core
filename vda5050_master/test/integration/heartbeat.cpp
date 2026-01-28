@@ -23,6 +23,7 @@
 #include <atomic>
 #include <chrono>
 #include <thread>
+#include <vector>
 
 #include "vda5050_master/standard_names.hpp"
 
@@ -319,50 +320,93 @@ TEST(HeartbeatListenerTest, MultipleStopCallsSafe)
   ASSERT_NO_THROW(hb_listener.reset());
 }
 
-// TEST(HeartbeatListenerTest, HeartbeatReceivedNoTimeout)
-// {
-//   std::string broker = "tcp://test.mosquitto.org:1883";
-//   std::string topic = InterfaceName + "rmf2" + "/" + Version +
-//     "/test_manufacturer/test_serial_number/connection";
-//   std::string payload = "test";
-//   int qos = 0;
+TEST(HeartbeatListenerTest, MultipleStartCallsDoNotCreateMultipleThreads)
+{
+  std::atomic<int> callback_count{0};
+  vda5050_master::communication::HeartbeatListener hb_listener(
+    "test_listener", 1,  // 1 second interval
+    [&callback_count]() { callback_count.fetch_add(1); });
 
-//   std::atomic_bool received = false;
+  ASSERT_EQ(hb_listener.get_state(), HeartbeatState::STOPPED);
 
-//   std::atomic_bool heartbeat_received = false;
+  // Call start multiple times sequentially
+  hb_listener.start_connection_heartbeat();
+  ASSERT_EQ(hb_listener.get_state(), HeartbeatState::RUNNING);
 
-//   auto listener =
-//     vda5050_core::mqtt_client::create_default_client(broker, "listener");
-//   ASSERT_NO_THROW(listener->connect());
-//   ASSERT_NO_THROW(listener->subscribe(
-//     topic,
-//       [&](const std::string & topic_, const std::string & payload_) {
-//         received = true;
-//         ASSERT_EQ(topic, topic_);
-//         ASSERT_EQ(payload, payload_);
-//     },
-//     qos));
+  hb_listener.start_connection_heartbeat();  // Should be ignored
+  ASSERT_EQ(hb_listener.get_state(), HeartbeatState::RUNNING);
 
-//   auto hb_listener = HeartbeatListener(
-//     topic,
-//     ConnectionHeartbeatInterval,
-//     [&]() {
-//       // Timeout callback
-//       heartbeat_received = true;
-//     });
+  hb_listener.start_connection_heartbeat();  // Should be ignored
+  ASSERT_EQ(hb_listener.get_state(), HeartbeatState::RUNNING);
 
-//   std::this_thread::sleep_for(std::chrono::seconds(ConnectionHeartbeatInterval - 1));
-//   auto talker =
-//     vda5050_core::mqtt_client::create_default_client(broker, "talker");
-//   ASSERT_NO_THROW(talker->connect());
-//   auto talker_pub_time = std::chrono::steady_clock::now();
-//   ASSERT_NO_THROW(talker->publish(topic, payload, ConnectionQos));
+  // Wait for timeout to occur (need > 2 seconds for timeout with 1s interval)
+  std::this_thread::sleep_for(std::chrono::milliseconds(2500));
 
-//   ASSERT_TRUE(received);
-//   double time_diff = std::chrono::duration<double>(hb_listener.get_last_connection_report() -
-//     talker_pub_time).count();
-//   // ASSERT_TRUE(std::chrono::duration<long double, std::ratio<1, 1000000000>>(time_diff) < 1.0);
-//   ASSERT_NEAR(time_diff, 1, 0.01);
-//   ASSERT_NO_THROW(talker->disconnect());
-//   ASSERT_NO_THROW(listener->disconnect());
-// }
+  // Callback should be called exactly once (only one thread was created)
+  ASSERT_EQ(callback_count.load(), 1)
+    << "Callback should be called exactly once, not multiple times";
+
+  hb_listener.stop_connection_heartbeat();
+  ASSERT_EQ(hb_listener.get_state(), HeartbeatState::STOPPED);
+}
+
+TEST(HeartbeatListenerTest, ConcurrentStartCallsDoNotCreateMultipleThreads)
+{
+  std::atomic<int> callback_count{0};
+
+  vda5050_master::communication::HeartbeatListener hb_listener(
+    "test_listener", 1,  // 1 second interval
+    [&callback_count]() { callback_count.fetch_add(1); });
+
+  ASSERT_EQ(hb_listener.get_state(), HeartbeatState::STOPPED);
+
+  // Launch multiple threads trying to start concurrently
+  std::vector<std::thread> threads;
+  for (int i = 0; i < 10; ++i)
+  {
+    threads.emplace_back(
+      [&hb_listener]() { hb_listener.start_connection_heartbeat(); });
+  }
+
+  for (auto& t : threads)
+  {
+    t.join();
+  }
+
+  // Should still be running (only one successful start)
+  ASSERT_EQ(hb_listener.get_state(), HeartbeatState::RUNNING);
+
+  // Wait for timeout to occur (need > 2 seconds for timeout with 1s interval)
+  std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+
+  // Callback should be called exactly once (only one thread was created)
+  ASSERT_EQ(callback_count.load(), 1)
+    << "Callback should be called exactly once even with concurrent starts";
+
+  hb_listener.stop_connection_heartbeat();
+  ASSERT_EQ(hb_listener.get_state(), HeartbeatState::STOPPED);
+}
+
+TEST(HeartbeatListenerTest, ConcurrentStopCallsSafe)
+{
+  vda5050_master::communication::HeartbeatListener hb_listener(
+    "test_listener", 1, []() { /* No-op */ });
+
+  hb_listener.start_connection_heartbeat();
+  ASSERT_EQ(hb_listener.get_state(), HeartbeatState::RUNNING);
+
+  // Launch multiple threads trying to stop concurrently
+  std::vector<std::thread> threads;
+  for (int i = 0; i < 10; ++i)
+  {
+    threads.emplace_back(
+      [&hb_listener]() { hb_listener.stop_connection_heartbeat(); });
+  }
+
+  for (auto& t : threads)
+  {
+    t.join();
+  }
+
+  ASSERT_EQ(hb_listener.get_state(), HeartbeatState::STOPPED);
+}

@@ -22,6 +22,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <utility>
 
 #include "vda5050_core/logger/logger.hpp"
 
@@ -63,11 +64,17 @@ public:
 
   void start_connection_heartbeat()
   {
+    std::lock_guard<std::mutex> lock(state_mutex_);
+
+    if (state_ != HeartbeatState::STOPPED)
     {
-      std::lock_guard<std::mutex> lock(state_mutex_);
-      VDA5050_INFO("Starting Connection heartbeat listener");
-      state_ = HeartbeatState::RUNNING;
+      VDA5050_DEBUG(
+        "Connection heartbeat already running or stopping, ignored");
+      return;
     }
+
+    VDA5050_INFO("Starting Connection heartbeat listener");
+    state_ = HeartbeatState::RUNNING;
     connection_thread_ = std::thread(&HeartbeatListener::listen, this);
   }
 
@@ -110,27 +117,35 @@ public:
   // Stop the listener
   void stop_connection_heartbeat()
   {
-    VDA5050_INFO("Stopping Connection heartbeat listener");
+    std::thread conn_thread_to_join;
+    std::thread cb_thread_to_join;
 
     {
       std::lock_guard<std::mutex> lock(state_mutex_);
+
+      if (state_ == HeartbeatState::STOPPED)
+      {
+        VDA5050_DEBUG("Connection heartbeat already stopped");
+        return;
+      }
+
+      VDA5050_INFO("Stopping Connection heartbeat listener");
       state_ = HeartbeatState::STOPPING;
+
+      conn_thread_to_join = std::move(connection_thread_);
+      cb_thread_to_join = std::move(callback_thread_);
     }
 
     message_received_.notify_all();
 
-    if (connection_thread_.joinable())
+    if (conn_thread_to_join.joinable())
     {
-      connection_thread_.join();
-    }
-    else
-    {
-      VDA5050_INFO("Connection thread not joinable");
+      conn_thread_to_join.join();
     }
 
-    if (callback_thread_.joinable())
+    if (cb_thread_to_join.joinable())
     {
-      callback_thread_.join();
+      cb_thread_to_join.join();
     }
 
     {
