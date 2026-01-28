@@ -27,10 +27,10 @@ namespace vda5050_types {
 struct Timing
 {
   /// \brief Minimum interval sending order messages to the AGV [s]
-  float min_order_interval;
+  float min_order_interval = 0.0;
 
   /// \brief Minimum interval for sending state messages [s]
-  float min_state_interval;
+  float min_state_interval = 0.0;
 
   /// \brief Default interval for sending state messages. If not defined, the default value
   /// from the main document is used [s]
