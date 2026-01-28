@@ -451,6 +451,18 @@ bool AGV::send_instant_actions(const vda5050_types::InstantActions& actions)
   return true;
 }
 
+size_t AGV::get_pending_order_count() const
+{
+  std::lock_guard<std::mutex> lock(queue_mutex_);
+  return order_queue_.size();
+}
+
+size_t AGV::get_pending_instant_actions_count() const
+{
+  std::lock_guard<std::mutex> lock(queue_mutex_);
+  return instant_actions_queue_.size();
+}
+
 // ============================================================================
 // Queue Processing
 // ============================================================================
@@ -513,8 +525,8 @@ void AGV::process_queues()
 
       // Check if we should stop
       if (
-        stop_processing_ && order_queue_.empty() &&
-        instant_actions_queue_.empty())
+        stop_processing_ ||
+        (order_queue_.empty() && instant_actions_queue_.empty()))
       {
         break;
       }

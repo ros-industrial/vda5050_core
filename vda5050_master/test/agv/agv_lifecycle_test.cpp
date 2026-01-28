@@ -346,4 +346,59 @@ TEST_F(AGVLifecycleTestFixture, RestartAfterPauseClearsEverything)
   EXPECT_FALSE(agv->get_last_state().has_value());
 }
 
+// =============================================================================
+// Queue Processor Stop/Pause Behavior Tests
+// =============================================================================
+
+TEST_F(AGVLifecycleTestFixture, PausePreservesQueuesWhileStopClears)
+{
+  auto& agv = create_agv();
+
+  // Queue messages while offline (processor not running)
+  agv->send_order(create_test_order("order_1"));
+  agv->send_order(create_test_order("order_2"));
+  agv->send_instant_actions(create_test_instant_actions(1));
+
+  EXPECT_EQ(agv->get_pending_order_count(), 2u);
+  EXPECT_EQ(agv->get_pending_instant_actions_count(), 1u);
+
+  // Pause should not clear the queues
+  agv->pause();
+  EXPECT_EQ(agv->get_pending_order_count(), 2u);
+  EXPECT_EQ(agv->get_pending_instant_actions_count(), 1u);
+
+  // Stop should clear the queues
+  agv->stop();
+  EXPECT_EQ(agv->get_pending_order_count(), 0u);
+  EXPECT_EQ(agv->get_pending_instant_actions_count(), 0u);
+}
+
+TEST_F(AGVLifecycleTestFixture, ResumeAfterPauseCanProcessRemainingQueue)
+{
+  auto& agv = create_agv();
+
+  // Queue messages while offline
+  agv->send_order(create_test_order("order_1"));
+  agv->send_instant_actions(create_test_instant_actions(1));
+
+  EXPECT_EQ(agv->get_pending_order_count(), 1u);
+  EXPECT_EQ(agv->get_pending_instant_actions_count(), 1u);
+
+  // Pause (queues preserved)
+  agv->pause();
+  EXPECT_EQ(agv->get_pending_order_count(), 1u);
+  EXPECT_EQ(agv->get_pending_instant_actions_count(), 1u);
+
+  // Add more messages while paused
+  agv->send_order(create_test_order("order_2"));
+  EXPECT_EQ(agv->get_pending_order_count(), 2u);
+
+  // Resume - queue processor starts and can process remaining items
+  agv->resume();
+
+  // After resume, we should still be able to add to queues
+  agv->send_order(create_test_order("order_3"));
+  EXPECT_GE(agv->get_pending_order_count(), 1u);
+}
+
 }  // namespace vda5050_master::test

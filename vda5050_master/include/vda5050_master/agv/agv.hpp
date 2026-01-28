@@ -264,6 +264,18 @@ public:
    */
   bool send_instant_actions(const vda5050_types::InstantActions& actions);
 
+  /**
+   * @brief Get the number of pending orders in the queue
+   * @return Number of orders waiting to be sent
+   */
+  size_t get_pending_order_count() const;
+
+  /**
+   * @brief Get the number of pending instant actions in the queue
+   * @return Number of instant actions waiting to be sent
+   */
+  size_t get_pending_instant_actions_count() const;
+
   // ============================================================================
   // Message Handlers (called by VDA5050Master to route incoming messages)
   // ============================================================================
@@ -370,7 +382,7 @@ private:
   size_t max_queue_size_;
   bool drop_oldest_;
 
-  std::mutex queue_mutex_;
+  mutable std::mutex queue_mutex_;
   std::condition_variable queue_cv_;
   std::queue<vda5050_types::Order> order_queue_;
   std::queue<vda5050_types::InstantActions> instant_actions_queue_;
