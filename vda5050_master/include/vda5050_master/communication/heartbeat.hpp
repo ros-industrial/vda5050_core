@@ -118,7 +118,6 @@ public:
   void stop_connection_heartbeat()
   {
     std::thread conn_thread_to_join;
-    std::thread cb_thread_to_join;
 
     {
       std::lock_guard<std::mutex> lock(state_mutex_);
@@ -133,7 +132,6 @@ public:
       state_ = HeartbeatState::STOPPING;
 
       conn_thread_to_join = std::move(connection_thread_);
-      cb_thread_to_join = std::move(callback_thread_);
     }
 
     message_received_.notify_all();
@@ -141,11 +139,6 @@ public:
     if (conn_thread_to_join.joinable())
     {
       conn_thread_to_join.join();
-    }
-
-    if (cb_thread_to_join.joinable())
-    {
-      cb_thread_to_join.join();
     }
 
     {
@@ -219,13 +212,7 @@ private:
 
       if (is_timeout())
       {
-        // Copy callback by value to ensure safe invocation
-        auto callback_copy = disconnection_callback_;
-        callback_thread_ = std::thread([callback_copy]() { callback_copy(); });
-        if (callback_thread_.joinable())
-        {
-          callback_thread_.join();
-        }
+        disconnection_callback_();
         VDA5050_INFO(
           "[" + id_ + "] Heartbeat monitoring stopped after timeout");
         return;
@@ -236,8 +223,6 @@ private:
   std::string id_;
 
   std::thread connection_thread_;
-
-  std::thread callback_thread_;
 
   int heartbeat_interval_;
 
