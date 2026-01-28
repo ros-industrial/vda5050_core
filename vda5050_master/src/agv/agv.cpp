@@ -239,6 +239,8 @@ void AGV::on_state_heartbeat_timeout()
 
 void AGV::setup_heartbeat()
 {
+  std::lock_guard<std::mutex> lock(heartbeat_mutex_);
+
   if (state_heartbeat_)
   {
     return;  // Already set up
@@ -255,6 +257,8 @@ void AGV::setup_heartbeat()
 
 void AGV::cleanup_heartbeat()
 {
+  std::lock_guard<std::mutex> lock(heartbeat_mutex_);
+
   if (!state_heartbeat_)
   {
     return;  // Nothing to clean up
@@ -307,9 +311,12 @@ void AGV::handle_state(const vda5050_types::State& msg)
   }
 
   // Notify heartbeat listener
-  if (state_heartbeat_)
   {
-    state_heartbeat_->received_connection();
+    std::lock_guard<std::mutex> lock(heartbeat_mutex_);
+    if (state_heartbeat_)
+    {
+      state_heartbeat_->received_connection();
+    }
   }
 
   // Update operational state to AVAILABLE

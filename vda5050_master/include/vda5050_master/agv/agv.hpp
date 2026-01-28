@@ -336,7 +336,8 @@ private:
   std::string broker_address_;
   std::shared_ptr<vda5050_core::mqtt_client::MqttClientInterface> mqtt_client_;
 
-  // Heartbeat listener for state timeout detection
+  // Heartbeat listener for state timeout detection (protected by heartbeat_mutex_)
+  mutable std::mutex heartbeat_mutex_;
   std::unique_ptr<vda5050_master::communication::HeartbeatListener>
     state_heartbeat_;
   int state_heartbeat_interval_;
