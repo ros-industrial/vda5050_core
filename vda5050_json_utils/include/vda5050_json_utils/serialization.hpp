@@ -1677,6 +1677,530 @@ void from_json(const nlohmann::json& j, TypeSpecificationT& msg)
 
 }  // namespace type_specification_detail
 
+namespace physical_parameters_detail {
+
+//=============================================================================
+template <typename PhysicalParametersT>
+void to_json(nlohmann::json& j, const PhysicalParametersT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using angular_speed_min_trait =
+    optional_field_traits<decltype(msg.angular_speed_min)>;
+  using angular_speed_max_trait =
+    optional_field_traits<decltype(msg.angular_speed_max)>;
+
+  j["speedMin"] = msg.speed_min;
+  j["speedMax"] = msg.speed_max;
+  j["accelerationMax"] = msg.acceleration_max;
+  j["decelerationMax"] = msg.deceleration_max;
+  j["heightMin"] = msg.height_min;
+  j["heightMax"] = msg.height_max;
+  j["width"] = msg.width;
+  j["length"] = msg.length;
+
+  if (angular_speed_min_trait::has_value(msg.angular_speed_min))
+  {
+    j["angularSpeedMin"] = angular_speed_min_trait::get(msg.angular_speed_min);
+  }
+
+  if (angular_speed_max_trait::has_value(msg.angular_speed_max))
+  {
+    j["angularSpeedMax"] = angular_speed_max_trait::get(msg.angular_speed_max);
+  }
+}
+
+//=============================================================================
+template <typename PhysicalParametersT>
+void from_json(const nlohmann::json& j, PhysicalParametersT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using angular_speed_min_trait =
+    optional_field_traits<decltype(msg.angular_speed_min)>;
+  using angular_speed_max_trait =
+    optional_field_traits<decltype(msg.angular_speed_max)>;
+
+  msg.speed_min = j.at("speedMin").get<double>();
+  msg.speed_max = j.at("speedMax").get<double>();
+  msg.acceleration_max = j.at("accelerationMax").get<double>();
+  msg.deceleration_max = j.at("decelerationMax").get<double>();
+  msg.height_min = j.at("heightMin").get<double>();
+  msg.height_max = j.at("heightMax").get<double>();
+  msg.width = j.at("width").get<double>();
+  msg.length = j.at("length").get<double>();
+
+  if (j.contains("angularSpeedMin"))
+  {
+    angular_speed_min_trait::set(
+      msg.angular_speed_min, j.at("angularSpeedMin").get<double>());
+  }
+
+  if (j.contains("angularSpeedMax"))
+  {
+    angular_speed_max_trait::set(
+      msg.angular_speed_max, j.at("angularSpeedMax").get<double>());
+  }
+}
+
+}  // namespace physical_parameters_detail
+
+namespace max_string_lens_detail {
+
+//=============================================================================
+template <typename MaxStringLensT>
+void to_json(nlohmann::json& j, const MaxStringLensT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using msg_len_trait = optional_field_traits<decltype(msg.msg_len)>;
+  using topic_serial_len_trait =
+    optional_field_traits<decltype(msg.topic_serial_len)>;
+  using topic_elem_len_trait =
+    optional_field_traits<decltype(msg.topic_elem_len)>;
+  using id_len_trait = optional_field_traits<decltype(msg.id_len)>;
+  using enum_len_trait = optional_field_traits<decltype(msg.enum_len)>;
+  using load_id_len_trait = optional_field_traits<decltype(msg.load_id_len)>;
+  using id_numerical_only_trait =
+    optional_field_traits<decltype(msg.id_numerical_only)>;
+
+  if (msg_len_trait::has_value(msg.msg_len))
+  {
+    j["msgLen"] = msg_len_trait::get(msg.msg_len);
+  }
+
+  if (topic_serial_len_trait::has_value(msg.topic_serial_len))
+  {
+    j["topicSerialLen"] = topic_serial_len_trait::get(msg.topic_serial_len);
+  }
+
+  if (topic_elem_len_trait::has_value(msg.topic_elem_len))
+  {
+    j["topicElemLen"] = topic_elem_len_trait::get(msg.topic_elem_len);
+  }
+
+  if (id_len_trait::has_value(msg.id_len))
+  {
+    j["idLen"] = id_len_trait::get(msg.id_len);
+  }
+
+  if (enum_len_trait::has_value(msg.enum_len))
+  {
+    j["enumLen"] = enum_len_trait::get(msg.enum_len);
+  }
+
+  if (load_id_len_trait::has_value(msg.load_id_len))
+  {
+    j["loadIdLen"] = load_id_len_trait::get(msg.load_id_len);
+  }
+
+  if (id_numerical_only_trait::has_value(msg.id_numerical_only))
+  {
+    j["idNumericalOnly"] = id_numerical_only_trait::get(msg.id_numerical_only);
+  }
+}
+
+//=============================================================================
+template <typename MaxStringLensT>
+void from_json(const nlohmann::json& j, MaxStringLensT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using msg_len_trait = optional_field_traits<decltype(msg.msg_len)>;
+  using topic_serial_len_trait =
+    optional_field_traits<decltype(msg.topic_serial_len)>;
+  using topic_elem_len_trait =
+    optional_field_traits<decltype(msg.topic_elem_len)>;
+  using id_len_trait = optional_field_traits<decltype(msg.id_len)>;
+  using enum_len_trait = optional_field_traits<decltype(msg.enum_len)>;
+  using load_id_len_trait = optional_field_traits<decltype(msg.load_id_len)>;
+  using id_numerical_only_trait =
+    optional_field_traits<decltype(msg.id_numerical_only)>;
+
+  if (j.contains("msgLen"))
+  {
+    msg_len_trait::set(msg.msg_len, j.at("msgLen").get<uint32_t>());
+  }
+
+  if (j.contains("topicSerialLen"))
+  {
+    topic_serial_len_trait::set(
+      msg.topic_serial_len, j.at("topicSerialLen").get<uint32_t>());
+  }
+
+  if (j.contains("topicElemLen"))
+  {
+    topic_elem_len_trait::set(
+      msg.topic_elem_len, j.at("topicElemLen").get<uint32_t>());
+  }
+
+  if (j.contains("idLen"))
+  {
+    id_len_trait::set(msg.id_len, j.at("idLen").get<uint32_t>());
+  }
+
+  if (j.contains("enumLen"))
+  {
+    enum_len_trait::set(msg.enum_len, j.at("enumLen").get<uint32_t>());
+  }
+
+  if (j.contains("loadIdLen"))
+  {
+    load_id_len_trait::set(msg.load_id_len, j.at("loadIdLen").get<uint32_t>());
+  }
+
+  if (j.contains("idNumericalOnly"))
+  {
+    id_numerical_only_trait::set(
+      msg.id_numerical_only, j.at("idNumericalOnly").get<bool>());
+  }
+}
+
+}  // namespace max_string_lens_detail
+
+namespace max_array_lens_detail {
+
+//=============================================================================
+template <typename MaxArrayLensT>
+void to_json(nlohmann::json& j, const MaxArrayLensT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using order_nodes_trait = optional_field_traits<decltype(msg.order_nodes)>;
+  using order_edges_trait = optional_field_traits<decltype(msg.order_edges)>;
+  using node_actions_trait = optional_field_traits<decltype(msg.node_actions)>;
+  using edge_actions_trait = optional_field_traits<decltype(msg.edge_actions)>;
+  using actions_actions_parameters_trait =
+    optional_field_traits<decltype(msg.actions_actions_parameters)>;
+  using instant_actions_traits =
+    optional_field_traits<decltype(msg.instant_actions)>;
+  using trajectory_knot_vector_trait =
+    optional_field_traits<decltype(msg.trajectory_knot_vector)>;
+  using trajectory_control_points_trait =
+    optional_field_traits<decltype(msg.trajectory_control_points)>;
+  using state_node_states_traits =
+    optional_field_traits<decltype(msg.state_node_states)>;
+  using state_edge_states_trait =
+    optional_field_traits<decltype(msg.state_edge_states)>;
+  using state_loads_trait = optional_field_traits<decltype(msg.state_loads)>;
+  using state_action_states_trait =
+    optional_field_traits<decltype(msg.state_action_states)>;
+  using state_errors_trait = optional_field_traits<decltype(msg.state_errors)>;
+  using state_information_trait =
+    optional_field_traits<decltype(msg.state_information)>;
+  using error_error_references_trait =
+    optional_field_traits<decltype(msg.error_error_references)>;
+  using information_info_references_trait =
+    optional_field_traits<decltype(msg.information_info_references)>;
+
+  if (order_nodes_trait::has_value(msg.order_nodes))
+  {
+    j["order.nodes"] = order_nodes_trait::get(msg.order_nodes);
+  }
+
+  if (order_edges_trait::has_value(msg.order_edges))
+  {
+    j["order.edges"] = order_edges_trait::get(msg.order_edges);
+  }
+
+  if (node_actions_trait::has_value(msg.node_actions))
+  {
+    j["node.actions"] = node_actions_trait::get(msg.node_actions);
+  }
+
+  if (edge_actions_trait::has_value(msg.edge_actions))
+  {
+    j["edge.actions"] = edge_actions_trait::get(msg.edge_actions);
+  }
+
+  if (actions_actions_parameters_trait::has_value(
+        msg.actions_actions_parameters))
+  {
+    j["actions.actionsParameters"] =
+      actions_actions_parameters_trait::get(msg.actions_actions_parameters);
+  }
+
+  if (instant_actions_traits::has_value(msg.instant_actions))
+  {
+    j["instantActions"] = instant_actions_traits::get(msg.instant_actions);
+  }
+
+  if (trajectory_knot_vector_trait::has_value(msg.trajectory_knot_vector))
+  {
+    j["trajectory.knotVector"] =
+      trajectory_knot_vector_trait::get(msg.trajectory_knot_vector);
+  }
+
+  if (trajectory_control_points_trait::has_value(msg.trajectory_control_points))
+  {
+    j["trajectory.controlPoints"] =
+      trajectory_control_points_trait::get(msg.trajectory_control_points);
+  }
+
+  if (state_node_states_traits::has_value(msg.state_node_states))
+  {
+    j["state.nodeStates"] =
+      state_action_states_trait::get(msg.state_node_states);
+  }
+
+  if (state_edge_states_trait::has_value(msg.state_edge_states))
+  {
+    j["state.edgeStates"] = state_edge_states_trait::get(msg.state_edge_states);
+  }
+
+  if (state_loads_trait::has_value(msg.state_loads))
+  {
+    j["state.loads"] = state_loads_trait::get(msg.state_loads);
+  }
+
+  if (state_action_states_trait::has_value(msg.state_action_states))
+  {
+    j["state.actionStates"] =
+      state_action_states_trait::get(msg.state_action_states);
+  }
+
+  if (state_errors_trait::has_value(msg.state_errors))
+  {
+    j["state.errors"] = state_errors_trait::get(msg.state_errors);
+  }
+
+  if (state_information_trait::has_value(msg.state_information))
+  {
+    j["state.information"] =
+      state_information_trait::get(msg.state_information);
+  }
+
+  if (error_error_references_trait::has_value(msg.error_error_references))
+  {
+    j["error.errorReferences"] =
+      error_error_references_trait::get(msg.error_error_references);
+  }
+
+  if (information_info_references_trait::has_value(
+        msg.information_info_references))
+  {
+    j["information.infoReferences"] =
+      information_info_references_trait::get(msg.information_info_references);
+  }
+}
+
+//=============================================================================
+template <typename MaxArrayLensT>
+void from_json(const nlohmann::json& j, MaxArrayLensT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using order_nodes_trait = optional_field_traits<decltype(msg.order_nodes)>;
+  using order_edges_trait = optional_field_traits<decltype(msg.order_edges)>;
+  using node_actions_trait = optional_field_traits<decltype(msg.node_actions)>;
+  using edge_actions_trait = optional_field_traits<decltype(msg.edge_actions)>;
+  using actions_actions_parameters_trait =
+    optional_field_traits<decltype(msg.actions_actions_parameters)>;
+  using instant_actions_traits =
+    optional_field_traits<decltype(msg.instant_actions)>;
+  using trajectory_knot_vector_trait =
+    optional_field_traits<decltype(msg.trajectory_knot_vector)>;
+  using trajectory_control_points_trait =
+    optional_field_traits<decltype(msg.trajectory_control_points)>;
+  using state_node_states_traits =
+    optional_field_traits<decltype(msg.state_node_states)>;
+  using state_edge_states_trait =
+    optional_field_traits<decltype(msg.state_edge_states)>;
+  using state_loads_trait = optional_field_traits<decltype(msg.state_loads)>;
+  using state_action_states_trait =
+    optional_field_traits<decltype(msg.state_action_states)>;
+  using state_errors_trait = optional_field_traits<decltype(msg.state_errors)>;
+  using state_information_trait =
+    optional_field_traits<decltype(msg.state_information)>;
+  using error_error_references_trait =
+    optional_field_traits<decltype(msg.error_error_references)>;
+  using information_info_references_trait =
+    optional_field_traits<decltype(msg.information_info_references)>;
+
+  if (j.contains("order.nodes"))
+  {
+    order_nodes_trait::set(
+      msg.order_nodes, j.at("order.nodes").get<uint32_t>());
+  }
+
+  if (j.contains("order.edges"))
+  {
+    order_edges_trait::set(
+      msg.order_edges, j.at("order.edges").get<uint32_t>());
+  }
+
+  if (j.contains("node.actions"))
+  {
+    node_actions_trait::set(
+      msg.node_actions, j.at("node.actions").get<uint32_t>());
+  }
+
+  if (j.contains("edge.actions"))
+  {
+    edge_actions_trait::set(
+      msg.edge_actions, j.at("edge.actions").get<uint32_t>());
+  }
+
+  if (j.contains("actions.actionsParameters"))
+  {
+    actions_actions_parameters_trait::set(
+      msg.actions_actions_parameters,
+      j.at("actions.actionsParameters").get<uint32_t>());
+  }
+
+  if (j.contains("instantActions"))
+  {
+    instant_actions_traits::set(
+      msg.instant_actions, j.at("instantActions").get<uint32_t>());
+  }
+
+  if (j.contains("trajectory.knotVector"))
+  {
+    trajectory_knot_vector_trait::set(
+      msg.trajectory_knot_vector,
+      j.at("trajectory.knotVector").get<uint32_t>());
+  }
+
+  if (j.contains("trajectory.controlPoints"))
+  {
+    trajectory_control_points_trait::set(
+      msg.trajectory_control_points,
+      j.at("trajectory.controlPoints").get<uint32_t>());
+  }
+
+  if (j.contains("state.nodeStates"))
+  {
+    state_node_states_traits::set(
+      msg.state_node_states, j.at("state.nodeStates").get<uint32_t>());
+  }
+
+  if (j.contains("state.edgeStates"))
+  {
+    state_edge_states_trait::set(
+      msg.state_edge_states, j.at("state.edgeStates").get<uint32_t>());
+  }
+
+  if (j.contains("state.loads"))
+  {
+    state_loads_trait::set(
+      msg.state_loads, j.at("state.loads").get<uint32_t>());
+  }
+
+  if (j.contains("state.actionStates"))
+  {
+    state_action_states_trait::set(
+      msg.state_action_states, j.at("state.actionStates").get<uint32_t>());
+  }
+
+  if (j.contains("state.errors"))
+  {
+    state_errors_trait::set(
+      msg.state_errors, j.at("state.errors").get<uint32_t>());
+  }
+
+  if (j.contains("state.information"))
+  {
+    state_information_trait::set(
+      msg.state_information, j.at("state.information").get<uint32_t>());
+  }
+
+  if (j.contains("error.errorReferences"))
+  {
+    error_error_references_trait::set(
+      msg.error_error_references,
+      j.at("error.errorReferences").get<uint32_t>());
+  }
+
+  if (j.contains("information.infoReferences"))
+  {
+    information_info_references_trait::set(
+      msg.information_info_references,
+      j.at("information.infoReferences").get<uint32_t>());
+  }
+}
+
+}  // namespace max_array_lens_detail
+
+namespace timing_detail {
+
+//=============================================================================
+template <typename TimingT>
+void to_json(nlohmann::json& j, const TimingT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using default_state_interval_trait =
+    optional_field_traits<decltype(msg.default_state_interval)>;
+  using visualization_interval_trait =
+    optional_field_traits<decltype(msg.visualization_interval)>;
+
+  j["minOrderInterval"] = msg.min_order_interval;
+  j["minStateInterval"] = msg.min_state_interval;
+
+  if (default_state_interval_trait::has_value(msg.default_state_interval))
+  {
+    j["defaultStateInterval"] =
+      default_state_interval_trait::get(msg.default_state_interval);
+  }
+
+  if (visualization_interval_trait::has_value(msg.visualization_interval))
+  {
+    j["visualizationInterval"] =
+      visualization_interval_trait::get(msg.visualization_interval);
+  }
+}
+
+//=============================================================================
+template <typename TimingT>
+void from_json(const nlohmann::json& j, TimingT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using default_state_interval_trait =
+    optional_field_traits<decltype(msg.default_state_interval)>;
+  using visualization_interval_trait =
+    optional_field_traits<decltype(msg.visualization_interval)>;
+
+  msg.min_order_interval = j.at("minOrderInterval").get<double>();
+  msg.min_state_interval = j.at("minStateInterval").get<double>();
+
+  if (j.contains("defaultStateInterval"))
+  {
+    default_state_interval_trait::set(
+      msg.default_state_interval, j.at("defaultStateInterval").get<double>());
+  }
+
+  if (j.contains("visualizationInterval"))
+  {
+    visualization_interval_trait::set(
+      msg.visualization_interval, j.at("visualizationInterval").get<double>());
+  }
+}
+
+}  // namespace timing_detail
+
+namespace protocol_limits_detail {
+
+//=============================================================================
+template <typename ProtocolLimitsT>
+void to_json(nlohmann::json& j, const ProtocolLimitsT& msg)
+{
+  j["maxStringLens"] = msg.max_string_lens;
+  j["maxArrayLens"] = msg.max_array_lens;
+  j["timing"] = msg.timing;
+}
+
+//=============================================================================
+template <typename ProtocolLimitsT>
+void from_json(const nlohmann::json& j, ProtocolLimitsT& msg)
+{
+  msg.max_string_lens = j.at("maxStringLens");
+  msg.max_array_lens = j.at("maxArrayLens");
+  msg.timing = j.at("timing");
+}
+
+}  // namespace protocol_limits_detail
+
 namespace factsheet_detail {
 
 //=============================================================================
@@ -1686,6 +2210,8 @@ void to_json(nlohmann::json& j, const FactsheetT& msg)
   to_json(j, msg.header);
 
   j["typeSpecification"] = msg.type_specification;
+  j["physicalParameters"] = msg.physical_parameters;
+  j["protocolLimits"] = msg.protocol_limits;
 }
 
 //=============================================================================
@@ -1695,6 +2221,8 @@ void from_json(const nlohmann::json& j, FactsheetT& msg)
   from_json(j, msg.header);
 
   msg.type_specification = j.at("typeSpecification");
+  msg.physical_parameters = j.at("physicalParameters");
+  msg.protocol_limits = j.at("protocolLimits");
 }
 
 }  // namespace factsheet_detail
@@ -1972,6 +2500,56 @@ inline void to_json(nlohmann::json& j, const TypeSpecification& msg)
 inline void from_json(const nlohmann::json& j, TypeSpecification& msg)
 {
   vda5050_types::type_specification_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const PhysicalParameters& msg)
+{
+  vda5050_types::physical_parameters_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, PhysicalParameters& msg)
+{
+  vda5050_types::physical_parameters_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const MaxStringLens& msg)
+{
+  vda5050_types::max_string_lens_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, MaxStringLens& msg)
+{
+  vda5050_types::max_string_lens_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const MaxArrayLens& msg)
+{
+  vda5050_types::max_array_lens_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, MaxArrayLens& msg)
+{
+  vda5050_types::max_array_lens_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Timing& msg)
+{
+  vda5050_types::timing_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Timing& msg)
+{
+  vda5050_types::timing_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const ProtocolLimits& msg)
+{
+  vda5050_types::protocol_limits_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, ProtocolLimits& msg)
+{
+  vda5050_types::protocol_limits_detail::from_json(j, msg);
 }
 
 inline void to_json(nlohmann::json& j, const Factsheet& msg)
@@ -2270,6 +2848,56 @@ inline void to_json(nlohmann::json& j, const TypeSpecification& msg)
 inline void from_json(const nlohmann::json& j, TypeSpecification& msg)
 {
   vda5050_types::type_specification_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const PhysicalParameters& msg)
+{
+  vda5050_types::physical_parameters_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, PhysicalParameters& msg)
+{
+  vda5050_types::physical_parameters_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const MaxStringLens& msg)
+{
+  vda5050_types::max_string_lens_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, MaxStringLens& msg)
+{
+  vda5050_types::max_string_lens_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const MaxArrayLens& msg)
+{
+  vda5050_types::max_array_lens_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, MaxArrayLens& msg)
+{
+  vda5050_types::max_array_lens_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const Timing& msg)
+{
+  vda5050_types::timing_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Timing& msg)
+{
+  vda5050_types::timing_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const ProtocolLimits& msg)
+{
+  vda5050_types::protocol_limits_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, ProtocolLimits& msg)
+{
+  vda5050_types::protocol_limits_detail::from_json(j, msg);
 }
 
 inline void to_json(nlohmann::json& j, const Factsheet& msg)
