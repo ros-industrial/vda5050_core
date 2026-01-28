@@ -26,6 +26,8 @@
 #include "vda5050_json_utils/serialization.hpp"
 #include "vda5050_master/standard_names.hpp"
 
+namespace vda5050_master {
+
 // ============================================================================
 // Constructor / Destructor
 // ============================================================================
@@ -248,10 +250,9 @@ void AGV::setup_heartbeat()
 
   VDA5050_INFO("[AGV] Setting up heartbeat for {}", agv_id_);
 
-  state_heartbeat_ =
-    std::make_unique<vda5050_master::communication::HeartbeatListener>(
-      agv_id_ + "_state_heartbeat", state_heartbeat_interval_,
-      [this]() { on_state_heartbeat_timeout(); });
+  state_heartbeat_ = std::make_unique<communication::HeartbeatListener>(
+    agv_id_ + "_state_heartbeat", state_heartbeat_interval_,
+    [this]() { on_state_heartbeat_timeout(); });
   state_heartbeat_->start_connection_heartbeat();
 }
 
@@ -605,8 +606,7 @@ void AGV::publish_order(const vda5050_types::Order& order)
 {
   nlohmann::json j;
   vda5050_types::to_json(j, order);
-  publish_message(
-    vda5050_master::OrderTopic, j.dump(), vda5050_master::OrderQos, "order");
+  publish_message(OrderTopic, j.dump(), OrderQos, "order");
 }
 
 void AGV::publish_instant_actions(const vda5050_types::InstantActions& actions)
@@ -614,8 +614,7 @@ void AGV::publish_instant_actions(const vda5050_types::InstantActions& actions)
   nlohmann::json j;
   vda5050_types::to_json(j, actions);
   publish_message(
-    vda5050_master::InstantActionsTopic, j.dump(),
-    vda5050_master::InstantActionsQos, "instant actions");
+    InstantActionsTopic, j.dump(), InstantActionsQos, "instant actions");
 }
 
 // ============================================================================
@@ -624,6 +623,8 @@ void AGV::publish_instant_actions(const vda5050_types::InstantActions& actions)
 
 std::string AGV::build_topic(const std::string& topic_name) const
 {
-  return vda5050_master::InterfaceName + "/" + vda5050_master::Version + "/" +
-         manufacturer_ + "/" + serial_number_ + "/" + topic_name;
+  return InterfaceName + "/" + Version + "/" + manufacturer_ + "/" +
+         serial_number_ + "/" + topic_name;
 }
+
+}  // namespace vda5050_master

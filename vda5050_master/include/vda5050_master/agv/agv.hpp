@@ -35,6 +35,8 @@
 #include "vda5050_master/standard_names.hpp"
 #include "vda5050_master/vda5050_interfaces.hpp"
 
+namespace vda5050_master {
+
 // Forward declaration
 class VDA5050Master;
 
@@ -84,7 +86,7 @@ public:
     const std::string& manufacturer, const std::string& serial_number,
     const std::string& broker_address, size_t max_queue_size = 10,
     bool drop_oldest = true,
-    int state_heartbeat_interval = vda5050_master::StateHeartbeatInterval);
+    int state_heartbeat_interval = StateHeartbeatInterval);
 
   /**
    * @brief Destructor - stops the queue processing thread
@@ -350,8 +352,7 @@ private:
 
   // Heartbeat listener for state timeout detection (protected by heartbeat_mutex_)
   mutable std::mutex heartbeat_mutex_;
-  std::unique_ptr<vda5050_master::communication::HeartbeatListener>
-    state_heartbeat_;
+  std::unique_ptr<communication::HeartbeatListener> state_heartbeat_;
   int state_heartbeat_interval_;
 
   // AGV states (protected by state_mutex_)
@@ -393,5 +394,7 @@ private:
   bool queue_processor_running_{false};
   std::thread queue_thread_;
 };
+
+}  // namespace vda5050_master
 
 #endif  // VDA5050_MASTER__AGV__AGV_HPP_

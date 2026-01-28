@@ -26,6 +26,7 @@
 #include "vda5050_master/communication/mqtt.hpp"
 #include "vda5050_master/vda5050_master/master.hpp"
 
+using vda5050_master::VDA5050Master;
 using vda5050_master::test::mqtt::constants::is_broker_available;
 using vda5050_master::test::mqtt::constants::MQTT_BROKER;
 

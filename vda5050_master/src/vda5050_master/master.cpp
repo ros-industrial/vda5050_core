@@ -27,6 +27,8 @@
 #include "vda5050_json_utils/serialization.hpp"
 #include "vda5050_master/standard_names.hpp"
 
+namespace vda5050_master {
+
 // ============================================================================
 // Constructor / Destructor
 // ============================================================================
@@ -105,46 +107,43 @@ void VDA5050Master::setup_subscriptions()
   }
 
   // Subscribe to connection topic with wildcard
-  std::string connection_topic =
-    build_wildcard_topic(vda5050_master::ConnectionTopic);
+  std::string connection_topic = build_wildcard_topic(ConnectionTopic);
   mqtt_client_->subscribe(
     connection_topic,
     [this](const std::string& topic, const std::string& payload) {
       handle_connection_message(topic, payload);
     },
-    vda5050_master::ConnectionQos);
+    ConnectionQos);
   VDA5050_INFO("[VDA5050Master] Subscribed to: {}", connection_topic);
 
   // Subscribe to state topic with wildcard
-  std::string state_topic = build_wildcard_topic(vda5050_master::StateTopic);
+  std::string state_topic = build_wildcard_topic(StateTopic);
   mqtt_client_->subscribe(
     state_topic,
     [this](const std::string& topic, const std::string& payload) {
       handle_state_message(topic, payload);
     },
-    vda5050_master::StateQos);
+    StateQos);
   VDA5050_INFO("[VDA5050Master] Subscribed to: {}", state_topic);
 
   // Subscribe to factsheet topic with wildcard
-  std::string factsheet_topic =
-    build_wildcard_topic(vda5050_master::FactsheetTopic);
+  std::string factsheet_topic = build_wildcard_topic(FactsheetTopic);
   mqtt_client_->subscribe(
     factsheet_topic,
     [this](const std::string& topic, const std::string& payload) {
       handle_factsheet_message(topic, payload);
     },
-    vda5050_master::FactsheetQos);
+    FactsheetQos);
   VDA5050_INFO("[VDA5050Master] Subscribed to: {}", factsheet_topic);
 
   // Subscribe to visualization topic with wildcard
-  std::string visualization_topic =
-    build_wildcard_topic(vda5050_master::VisualizationTopic);
+  std::string visualization_topic = build_wildcard_topic(VisualizationTopic);
   mqtt_client_->subscribe(
     visualization_topic,
     [this](const std::string& topic, const std::string& payload) {
       handle_visualization_message(topic, payload);
     },
-    vda5050_master::VisualizationQos);
+    VisualizationQos);
   VDA5050_INFO("[VDA5050Master] Subscribed to: {}", visualization_topic);
 }
 
@@ -155,13 +154,10 @@ void VDA5050Master::cleanup_subscriptions()
     return;
   }
 
-  mqtt_client_->unsubscribe(
-    build_wildcard_topic(vda5050_master::ConnectionTopic));
-  mqtt_client_->unsubscribe(build_wildcard_topic(vda5050_master::StateTopic));
-  mqtt_client_->unsubscribe(
-    build_wildcard_topic(vda5050_master::FactsheetTopic));
-  mqtt_client_->unsubscribe(
-    build_wildcard_topic(vda5050_master::VisualizationTopic));
+  mqtt_client_->unsubscribe(build_wildcard_topic(ConnectionTopic));
+  mqtt_client_->unsubscribe(build_wildcard_topic(StateTopic));
+  mqtt_client_->unsubscribe(build_wildcard_topic(FactsheetTopic));
+  mqtt_client_->unsubscribe(build_wildcard_topic(VisualizationTopic));
 
   VDA5050_INFO("[VDA5050Master] Unsubscribed from wildcard topics");
 }
@@ -172,8 +168,7 @@ void VDA5050Master::cleanup_subscriptions()
 
 std::string VDA5050Master::build_wildcard_topic(const std::string& topic_name)
 {
-  return vda5050_master::InterfaceName + "/" + vda5050_master::Version +
-         "/+/+/" + topic_name;
+  return InterfaceName + "/" + Version + "/+/+/" + topic_name;
 }
 
 std::pair<std::string, std::string> VDA5050Master::parse_topic(
@@ -460,3 +455,5 @@ void VDA5050Master::on_visualization(
     "from AGV: {}",
     agv_id);
 }
+
+}  // namespace vda5050_master

@@ -30,6 +30,8 @@
 #include "vda5050_master/agv/agv.hpp"
 #include "vda5050_master/vda5050_interfaces.hpp"
 
+namespace vda5050_master {
+
 /**
  * @brief VDA5050 Master for multi-AGV fleet management
  *
@@ -314,5 +316,7 @@ private:
   mutable std::mutex agv_mutex_;
   std::unordered_map<std::string, std::shared_ptr<AGV>> agvs_;
 };
+
+}  // namespace vda5050_master
 
 #endif  // VDA5050_MASTER__VDA5050_MASTER__MASTER_HPP_
