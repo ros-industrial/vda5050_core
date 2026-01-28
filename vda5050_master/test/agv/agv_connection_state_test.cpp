@@ -196,7 +196,7 @@ TEST_F(
 TEST_F(AGVConnectionStateTestFixture, ConcurrentConnectionStateAccessIsSafe)
 {
   auto& agv = create_agv();
-  std::atomic<bool> stop{false};
+  std::atomic_bool stop{false};
 
   std::thread reader([&]() {
     while (!stop.load())

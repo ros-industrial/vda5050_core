@@ -68,11 +68,11 @@ public:
     start_connection_heartbeat();
   }
 
-  std::chrono::steady_clock::time_point get_current_time() override
+  std::chrono::system_clock::time_point get_current_time() override
   {
     VDA5050_INFO(
       "get_current_time with skip of " + std::to_string(time_to_skip_));
-    return std::chrono::steady_clock::now() +
+    return std::chrono::system_clock::now() +
            std::chrono::seconds(time_to_skip_);
   }
 
@@ -131,7 +131,7 @@ TEST(HeartbeatListenerTest, HeartbeatReceivedNoTimeout)
       hb_listener.get_last_connection_report().time_since_epoch())
       .count(),
     std::chrono::duration_cast<std::chrono::seconds>(
-      std::chrono::steady_clock::now().time_since_epoch())
+      std::chrono::system_clock::now().time_since_epoch())
       .count(),
     vda5050_master::ConnectionHeartbeatInterval - 1);
 
@@ -140,7 +140,7 @@ TEST(HeartbeatListenerTest, HeartbeatReceivedNoTimeout)
 
 TEST(HeartbeatListenerTest, HeartbeatNotReceivedTimeout)
 {
-  std::atomic<bool> heartbeat_failed{false};
+  std::atomic_bool heartbeat_failed{false};
   auto hb_listener = MockHeartbeatListener(
     "test_listener", vda5050_master::ConnectionHeartbeatInterval,
     [&heartbeat_failed]() {
@@ -164,7 +164,7 @@ TEST(HeartbeatListenerTest, HeartbeatNotReceivedTimeout)
 
 TEST(HeartbeatListenerTest, HeartbeatReceivedTimeout)
 {
-  std::atomic<bool> heartbeat_failed{false};
+  std::atomic_bool heartbeat_failed{false};
   auto hb_listener = MockHeartbeatListener(
     "test_listener", vda5050_master::ConnectionHeartbeatInterval,
     [&heartbeat_failed]() {
@@ -184,7 +184,7 @@ TEST(HeartbeatListenerTest, HeartbeatReceivedTimeout)
 
 TEST(HeartbeatListenerTest, GracefulShutdownDoesNotBlock)
 {
-  std::atomic<bool> callback_called{false};
+  std::atomic_bool callback_called{false};
 
   // Use a short interval but time_to_skip that won't cause immediate timeout
   auto hb_listener = std::make_unique<MockHeartbeatListener>(
@@ -211,9 +211,9 @@ TEST(HeartbeatListenerTest, GracefulShutdownDoesNotBlock)
 
 TEST(HeartbeatListenerTest, StateIsRunningWhileCallbackExecutes)
 {
-  std::atomic<bool> callback_started{false};
-  std::atomic<bool> callback_finished{false};
-  std::atomic<bool> was_running_during_callback{false};
+  std::atomic_bool callback_started{false};
+  std::atomic_bool callback_finished{false};
+  std::atomic_bool was_running_during_callback{false};
 
   // We need a raw pointer to check get_state() from within callback
   MockHeartbeatListener* listener_ptr = nullptr;
@@ -263,8 +263,8 @@ TEST(HeartbeatListenerTest, StateIsRunningWhileCallbackExecutes)
 
 TEST(HeartbeatListenerTest, StateIsStoppedOnlyAfterFullStop)
 {
-  std::atomic<bool> stop_initiated{false};
-  std::atomic<bool> stop_completed{false};
+  std::atomic_bool stop_initiated{false};
+  std::atomic_bool stop_completed{false};
   std::atomic<HeartbeatState> state_during_stop{HeartbeatState::RUNNING};
 
   auto hb_listener = std::make_unique<MockHeartbeatListener>(

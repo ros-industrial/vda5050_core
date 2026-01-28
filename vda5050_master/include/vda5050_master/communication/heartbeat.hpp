@@ -55,7 +55,7 @@ public:
   : id_(id),
     heartbeat_interval_(heartbeat_interval),
     state_(HeartbeatState::STOPPED),
-    last_connection_report_(std::chrono::steady_clock::now()),
+    last_connection_report_(std::chrono::system_clock::now()),
     disconnection_callback_(disconnection_callback)
   {
     // Nothing to do here ...
@@ -85,7 +85,7 @@ public:
     message_received_.notify_all();
   }
 
-  std::chrono::steady_clock::time_point get_last_connection_report()
+  std::chrono::system_clock::time_point get_last_connection_report()
   {
     std::lock_guard<std::mutex> lock(last_connection_report_mutex_);
     return last_connection_report_;
@@ -141,9 +141,9 @@ public:
     VDA5050_INFO("Stopped Connection heartbeat listener");
   }
 
-  virtual std::chrono::steady_clock::time_point get_current_time()
+  virtual std::chrono::system_clock::time_point get_current_time()
   {
-    return std::chrono::steady_clock::now();
+    return std::chrono::system_clock::now();
   }
 
   // Virtual method to allow overriding during tests.
@@ -164,7 +164,7 @@ private:
 
   bool is_timeout()
   {
-    std::chrono::steady_clock::time_point current_time = get_current_time();
+    std::chrono::system_clock::time_point current_time = get_current_time();
     int time_since_last_connection_report;
     {
       std::lock_guard<std::mutex> lock(last_connection_report_mutex_);
@@ -229,7 +229,7 @@ private:
   // Lifecycle state protected by state_mutex_
   HeartbeatState state_;
 
-  std::chrono::steady_clock::time_point last_connection_report_;
+  std::chrono::system_clock::time_point last_connection_report_;
 
   // Mutex for state variable
   mutable std::mutex state_mutex_;

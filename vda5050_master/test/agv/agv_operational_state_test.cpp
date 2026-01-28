@@ -239,7 +239,7 @@ TEST_F(AGVOperationalStateTestFixture, AGVStateEnumValues)
 TEST_F(AGVOperationalStateTestFixture, ConcurrentOperationalStateAccessIsSafe)
 {
   auto& agv = create_agv();
-  std::atomic<bool> stop{false};
+  std::atomic_bool stop{false};
 
   std::thread reader([&]() {
     while (!stop.load())

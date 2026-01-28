@@ -375,8 +375,8 @@ private:
   std::queue<vda5050_types::InstantActions> instant_actions_queue_;
 
   // Queue processing thread
-  std::atomic<bool> stop_processing_{false};
-  std::atomic<bool> queue_processor_running_{false};
+  std::atomic_bool stop_processing_{false};
+  std::atomic_bool queue_processor_running_{false};
   std::thread queue_thread_;
 };
 
