@@ -43,7 +43,7 @@ struct TypeSpecification
   AGVClass agv_class;
 
   /// \brief Maximum loadable mass [kg]
-  double max_load_mass;
+  double max_load_mass = 0.0;
 
   /// \brief Simplified description of localization types.
   /// Example values: NATURAL, REFLECTOR, RFID, DMC, SPOT, GRID
