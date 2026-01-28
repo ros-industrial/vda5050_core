@@ -234,15 +234,26 @@ void VDA5050Master::offboard_agv(
 {
   std::string agv_id = manufacturer + "/" + serial_number;
 
-  std::lock_guard<std::mutex> lock(agv_mutex_);
+  std::shared_ptr<AGV> agv;
+  {
+    std::lock_guard<std::mutex> lock(agv_mutex_);
+    agv = get_agv_by_id(agv_id);
+  }
 
-  if (!get_agv_by_id(agv_id))
+  if (!agv)
   {
     VDA5050_WARN("[VDA5050Master] Cannot offboard: AGV not found: {}", agv_id);
     return;
   }
+  else
+  {
+    agv->stop();
+  }
 
-  agvs_.erase(agv_id);
+  {
+    std::lock_guard<std::mutex> lock(agv_mutex_);
+    agvs_.erase(agv_id);
+  }
 
   VDA5050_INFO("[VDA5050Master] Offboarded AGV: {}", agv_id);
 }
