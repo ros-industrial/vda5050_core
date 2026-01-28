@@ -237,23 +237,19 @@ void VDA5050Master::offboard_agv(
   std::shared_ptr<AGV> agv;
   {
     std::lock_guard<std::mutex> lock(agv_mutex_);
-    agv = get_agv_by_id(agv_id);
+    auto it = agvs_.find(agv_id);
+    if (it == agvs_.end())
+    {
+      VDA5050_WARN(
+        "[VDA5050Master] Cannot offboard: AGV not found: {}", agv_id);
+      return;
+    }
+    agv = std::move(it->second);
+    agvs_.erase(it);
   }
 
-  if (!agv)
-  {
-    VDA5050_WARN("[VDA5050Master] Cannot offboard: AGV not found: {}", agv_id);
-    return;
-  }
-  else
-  {
-    agv->stop();
-  }
-
-  {
-    std::lock_guard<std::mutex> lock(agv_mutex_);
-    agvs_.erase(agv_id);
-  }
+  // Stop AGV after removing from map
+  agv->stop();
 
   VDA5050_INFO("[VDA5050Master] Offboarded AGV: {}", agv_id);
 }
