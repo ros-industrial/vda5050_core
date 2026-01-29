@@ -52,17 +52,18 @@ protected:
 
   std::unique_ptr<AGV>& create_agv()
   {
-    // Use empty broker address for unit tests
-    agv_ = std::make_unique<AGV>(manufacturer_, serial_number_, "");
+    // Use nullptr for ProtocolAdapter in unit tests
+    agv_ = std::make_unique<AGV>(nullptr, manufacturer_, serial_number_);
     return agv_;
   }
 
   std::unique_ptr<AGV>& create_agv_with_heartbeat_interval(
     int state_heartbeat_interval)
   {
-    // Use empty broker address for unit tests
+    // Use nullptr for ProtocolAdapter in unit tests
     agv_ = std::make_unique<AGV>(
-      manufacturer_, serial_number_, "", 10, true, state_heartbeat_interval);
+      nullptr, manufacturer_, serial_number_, 10, true,
+      state_heartbeat_interval);
     return agv_;
   }
 

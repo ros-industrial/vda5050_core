@@ -11,6 +11,7 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>vda5050_core</depend>
+  <depend>vda5050_execution</depend>
   <depend>vda5050_types</depend>
   <depend>vda5050_json_utils</depend>
   <depend>rclcpp</depend>

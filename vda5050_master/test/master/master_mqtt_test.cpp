@@ -68,7 +68,7 @@ protected:
   {
     auto client = vda5050_core::mqtt_client::create_default_client(
       MQTT_BROKER, "master_mqtt_test_" + std::to_string(test_id_++));
-    return std::make_unique<VDA5050Master>(client, MQTT_BROKER);
+    return std::make_unique<VDA5050Master>(client);
   }
 
   std::string manufacturer_;

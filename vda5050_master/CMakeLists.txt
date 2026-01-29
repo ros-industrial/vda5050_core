@@ -14,6 +14,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(vda5050_core REQUIRED)
+find_package(vda5050_execution REQUIRED)
 find_package(vda5050_types REQUIRED)
 find_package(vda5050_json_utils REQUIRED)
 find_package(fmt REQUIRED)
@@ -26,6 +27,7 @@ add_library(vda5050_master
 
 ament_target_dependencies(vda5050_master
   vda5050_core
+  vda5050_execution
   vda5050_types
   vda5050_json_utils
   fmt

@@ -22,7 +22,7 @@
 
 #include "nlohmann/json.hpp"
 #include "vda5050_core/logger/logger.hpp"
-#include "vda5050_core/mqtt_client/mqtt_client_interface.hpp"
+#include "vda5050_execution/protocol_adapter.hpp"
 #include "vda5050_json_utils/serialization.hpp"
 #include "vda5050_master/standard_names.hpp"
 
@@ -33,24 +33,20 @@ namespace vda5050_master {
 // ============================================================================
 
 AGV::AGV(
+  std::shared_ptr<vda5050_execution::ProtocolAdapter> protocol_adapter,
   const std::string& manufacturer, const std::string& serial_number,
-  const std::string& broker_address, size_t max_queue_size, bool drop_oldest,
-  int state_heartbeat_interval)
+  size_t max_queue_size, bool drop_oldest, int state_heartbeat_interval)
 : manufacturer_(manufacturer),
   serial_number_(serial_number),
   agv_id_(manufacturer + "/" + serial_number),
-  broker_address_(broker_address),
+  protocol_adapter_(protocol_adapter),
   state_heartbeat_interval_(state_heartbeat_interval),
   created_time_(Clock::now()),
   max_queue_size_(max_queue_size),
   drop_oldest_(drop_oldest)
 {
-  if (!broker_address_.empty())
-  {
-    mqtt_client_ = vda5050_core::mqtt_client::create_default_client(
-      broker_address_, agv_id_);
-  }
   VDA5050_INFO("[AGV] Created AGV instance: {}", agv_id_);
+  setup_subscriptions();
 }
 
 AGV::~AGV()
@@ -63,7 +59,53 @@ AGV::~AGV()
   // Cleanup heartbeat
   cleanup_heartbeat();
 
+  // TODO(tanjpg): additional cleanup protocol adapter.
+
   VDA5050_INFO("[AGV] AGV instance destroyed: {}", agv_id_);
+}
+
+template <typename MsgType>
+void AGV::create_subscription(void (AGV::*agv_handler)(const MsgType&), int qos)
+{
+  protocol_adapter_->subscribe<MsgType>(
+    [this, agv_handler](
+      MsgType msg, std::optional<vda5050_types::Error> error) {
+      if (error.has_value())
+      {
+        VDA5050_ERROR(
+          "[AGV] Failed to parse message for {}: {}", agv_id_,
+          error->error_description.value_or("unknown error"));
+        return;
+      }
+
+      try
+      {
+        (this->*agv_handler)(msg);
+      }
+      catch (const std::exception& e)
+      {
+        VDA5050_WARN(
+          "[AGV] Failed to handle message for {}: {}", agv_id_, e.what());
+      }
+    },
+    qos);
+}
+
+void AGV::setup_subscriptions()
+{
+  if (!protocol_adapter_)
+  {
+    return;
+  }
+
+  create_subscription<vda5050_types::Connection>(
+    &AGV::handle_connection, static_cast<int>(ConnectionQos));
+  create_subscription<vda5050_types::State>(
+    &AGV::handle_state, static_cast<int>(StateQos));
+  create_subscription<vda5050_types::Factsheet>(
+    &AGV::handle_factsheet, static_cast<int>(FactsheetQos));
+  create_subscription<vda5050_types::Visualization>(
+    &AGV::handle_visualization, static_cast<int>(VisualizationQos));
 }
 
 void AGV::stop()
@@ -587,45 +629,16 @@ void AGV::process_queues()
 // Publishing
 // ============================================================================
 
-void AGV::publish_message(
-  const std::string& topic, const std::string& payload, QosLevel qos,
-  const std::string& label)
-{
-  if (!mqtt_client_)
-  {
-    VDA5050_WARN(
-      "[AGV] Cannot publish {}: no MQTT client for {}", label, agv_id_);
-    return;
-  }
-
-  try
-  {
-    mqtt_client_->connect();
-    mqtt_client_->publish(build_topic(topic), payload, static_cast<int>(qos));
-    mqtt_client_->disconnect();
-
-    VDA5050_INFO("[AGV] Published {} to AGV: {}", label, agv_id_);
-  }
-  catch (const std::exception& e)
-  {
-    VDA5050_WARN(
-      "[AGV] Failed to publish {} for {}: {}", label, agv_id_, e.what());
-  }
-}
-
 void AGV::publish_order(const vda5050_types::Order& order)
 {
-  nlohmann::json j;
-  vda5050_types::to_json(j, order);
-  publish_message(OrderTopic, j.dump(), OrderQos, "order");
+  protocol_adapter_->publish<vda5050_types::Order>(
+    order, static_cast<int>(OrderQos));
 }
 
 void AGV::publish_instant_actions(const vda5050_types::InstantActions& actions)
 {
-  nlohmann::json j;
-  vda5050_types::to_json(j, actions);
-  publish_message(
-    InstantActionsTopic, j.dump(), InstantActionsQos, "instant actions");
+  protocol_adapter_->publish<vda5050_types::InstantActions>(
+    actions, static_cast<int>(InstantActionsQos));
 }
 
 // ============================================================================
