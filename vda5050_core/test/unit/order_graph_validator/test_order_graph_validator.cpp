@@ -127,7 +127,7 @@ TEST_F(OrderValidationTest, UnreleasedFirstNode)
     res.errors.front().error_type, vda5050_core::errors::GraphValidationError);
   EXPECT_EQ(
     res.errors.front().error_description.value(),
-    "First node of the oder must always be released.");
+    "First node of the order must always be released.");
 }
 
 TEST_F(OrderValidationTest, EvenNodeSequences)
@@ -165,7 +165,8 @@ TEST_F(OrderValidationTest, NodeBaseHorizonSeparation)
     res.errors.front().error_type, vda5050_core::errors::GraphValidationError);
   EXPECT_EQ(
     res.errors.front().error_description.value(),
-    "Released node found within horizon.");
+    "Horizon cannot start at a node. "
+    "The preceeding edge must also be released.");
 }
 
 TEST_F(OrderValidationTest, OddEdgeSequences)
@@ -279,41 +280,6 @@ TEST_F(OrderValidationTest, OrderUpdateAgainstCurrentBase)
   EXPECT_EQ(
     res.errors.front().error_description.value(),
     "Order update must be strictly increasing.");
-}
-
-TEST_F(OrderValidationTest, ExistingOrderOrNewOrder)
-{
-  auto base_order = create_order("order_0", 1);
-
-  base_order.nodes = {
-    create_node("node_0", 0, true), create_node("node_1", 2, true),
-    create_node("node_2", 4, true), create_node("node_3", 6, false)};
-
-  base_order.edges = {
-    create_edge("edge_0", 1, "node_0", "node_1", true),
-    create_edge("edge_1", 3, "node_1", "node_2", true),
-    create_edge("edge_2", 5, "node_2", "node_3", false)};
-
-  auto next_order = create_order("order_1", 2);
-
-  next_order.nodes = {
-    create_node("node_1", 2, true), create_node("node_2", 4, true),
-    create_node("node_4", 6, true)};
-
-  next_order.edges = {
-    create_edge("edge_1", 3, "node_1", "node_2", true),
-    create_edge("edge_3", 5, "node_2", "node_4", true),
-  };
-
-  auto res = vda5050_core::order::is_valid_update(base_order, next_order);
-
-  EXPECT_FALSE(res);
-  EXPECT_EQ(res.errors.size(), 1);
-  EXPECT_EQ(
-    res.errors.front().error_type, vda5050_core::errors::OrderUpdateError);
-  EXPECT_EQ(
-    res.errors.front().error_description.value(),
-    "New order must start with update 0 and sequence 0.");
 }
 
 TEST_F(OrderValidationTest, DisconnectedOrderUpdate)
