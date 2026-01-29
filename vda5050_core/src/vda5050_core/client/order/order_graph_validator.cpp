@@ -213,10 +213,7 @@ ValidationResult is_valid_update(
   // Look for a stitching node in the next order
   auto stitching_it = std::find_if(
     next_order.nodes.begin(), next_order.nodes.end(),
-    [&last_base_it](const auto& n) {
-      return n.node_id == last_base_it->node_id &&
-             n.sequence_id == last_base_it->sequence_id;
-    });
+    [&last_base_it](const auto& n) { return n == *last_base_it; });
 
   // Check if a stitching node exists
   if (stitching_it == next_order.nodes.end())
