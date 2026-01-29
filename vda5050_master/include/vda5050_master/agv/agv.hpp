@@ -30,7 +30,7 @@
 #include <string>
 #include <thread>
 
-#include "vda5050_core/mqtt_client/mqtt_client_interface.hpp"
+#include "vda5050_execution/protocol_adapter.hpp"
 #include "vda5050_master/communication/heartbeat.hpp"
 #include "vda5050_master/standard_names.hpp"
 #include "vda5050_master/vda5050_interfaces.hpp"
@@ -61,7 +61,7 @@ enum class AGVState
  * - Outgoing message queue for orders and instant actions
  *
  * The VDA5050Master routes incoming messages to AGV instances and the AGV
- * handles outgoing messages via transient MQTT clients.
+ * handles ingoing/outgoing messages via the VDA5050Execution ProtocolAdapter.
  *
  * Thread safety: Methods are thread-safe. Cached data access is protected
  * by mutexes.
@@ -75,17 +75,18 @@ public:
 
   /**
    * @brief Construct an AGV instance
+   * @param protocol_adapter Protocol adapter for pub/sub
    * @param manufacturer Manufacturer name
    * @param serial_number Serial number
-   * @param broker_address MQTT broker address for creating transient publish clients
    * @param max_queue_size Maximum number of outgoing messages to queue (default: 10)
    * @param drop_oldest If true, drop oldest message when queue full; if false, reject new (default: true)
    * @param state_heartbeat_interval State heartbeat timeout in seconds
    */
   AGV(
+    std::shared_ptr<vda5050_execution::ProtocolAdapter> protocol_adapter,
     const std::string& manufacturer, const std::string& serial_number,
-    const std::string& broker_address, size_t max_queue_size = 10,
-    bool drop_oldest = true,
+    size_t max_queue_size = 10, bool drop_oldest = true,
+
     int state_heartbeat_interval = StateHeartbeatInterval);
 
   /**
@@ -308,6 +309,19 @@ public:
 
 private:
   // ============================================================================
+  // Subscription Management
+  // ============================================================================
+
+  void setup_subscriptions();
+
+  // ============================================================================
+  // Message Handlers (from MQTT callbacks)
+  // ============================================================================
+
+  template <typename MsgType>
+  void create_subscription(void (AGV::*agv_handler)(const MsgType&), int qos);
+
+  // ============================================================================
   // Internal State Management
   // ============================================================================
 
@@ -328,9 +342,6 @@ private:
   void process_queues();
 
   // Publishing
-  void publish_message(
-    const std::string& topic, const std::string& payload, int qos,
-    const std::string& label);
   void publish_order(const vda5050_types::Order& order);
   void publish_instant_actions(const vda5050_types::InstantActions& actions);
 
@@ -346,9 +357,8 @@ private:
   std::string serial_number_;
   std::string agv_id_;
 
-  // MQTT client for publishing outgoing messages
-  std::string broker_address_;
-  std::shared_ptr<vda5050_core::mqtt_client::MqttClientInterface> mqtt_client_;
+  // Protocol Adapter for publishing/subscribing
+  std::shared_ptr<vda5050_execution::ProtocolAdapter> protocol_adapter_;
 
   // Heartbeat listener for state timeout detection (protected by heartbeat_mutex_)
   mutable std::mutex heartbeat_mutex_;
