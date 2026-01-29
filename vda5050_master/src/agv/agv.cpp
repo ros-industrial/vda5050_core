@@ -631,12 +631,25 @@ void AGV::process_queues()
 
 void AGV::publish_order(const vda5050_types::Order& order)
 {
+  if (!protocol_adapter_)
+  {
+    VDA5050_WARN(
+      "[AGV] Cannot publish order: no protocol adapter for {}", agv_id_);
+    return;
+  }
   protocol_adapter_->publish<vda5050_types::Order>(
     order, static_cast<int>(OrderQos));
 }
 
 void AGV::publish_instant_actions(const vda5050_types::InstantActions& actions)
 {
+  if (!protocol_adapter_)
+  {
+    VDA5050_WARN(
+      "[AGV] Cannot publish instant actions: no protocol adapter for {}",
+      agv_id_);
+    return;
+  }
   protocol_adapter_->publish<vda5050_types::InstantActions>(
     actions, static_cast<int>(InstantActionsQos));
 }
