@@ -75,10 +75,11 @@ ValidationResult is_valid_graph(const vda5050_types::Order& order)
   if (!order.nodes.front().released)
   {
     add_error(
-      "First node of the oder must always be released.",
+      "First node of the order must always be released.",
       {{errors::RefNodeId, order.nodes.front().node_id},
        {errors::RefSequenceId,
         std::to_string(order.nodes.front().sequence_id)}});
+    return res;
   }
 
   bool horizon_reached = false;
@@ -98,14 +99,17 @@ ValidationResult is_valid_graph(const vda5050_types::Order& order)
     }
 
     // Check for proper base and horizon separation
-    if (!node.released)
-    {
-      horizon_reached = true;
-    }
-    else if (horizon_reached)
+    if (node.released && horizon_reached)
     {
       add_error(
         "Released node found within horizon.",
+        {{errors::RefNodeId, node.node_id}});
+    }
+    else if (!node.released && !horizon_reached)
+    {
+      add_error(
+        "Horizon cannot start at a node. "
+        "The preceeding edge must also be released.",
         {{errors::RefNodeId, node.node_id}});
     }
 
@@ -165,8 +169,7 @@ ValidationResult is_valid_update(
   const vda5050_types::Order& base_order,
   const vda5050_types::Order& next_order)
 {
-  ValidationResult res = is_valid_graph(next_order);
-  if (!res) return res;
+  ValidationResult res;
 
   auto add_error = [&](
                      const std::string& description,
@@ -178,28 +181,19 @@ ValidationResult is_valid_update(
       errors::create_error(errors::OrderUpdateError, description, refs));
   };
 
+  // Check if it is an existing order
   if (next_order.order_id == base_order.order_id)
   {
     if (next_order.order_update_id <= base_order.order_update_id)
     {
       add_error("Order update must be strictly increasing.", {});
-    }
-  }
-
-  // Check if the order is brand new
-  if (next_order.order_id != base_order.order_id)
-  {
-    if (
-      next_order.order_update_id != 0 ||
-      next_order.nodes.front().sequence_id != 0)
-    {
-      add_error(
-        "New order must start with update 0 and sequence 0.",
-        {{errors::RefSequenceId,
-          std::to_string(next_order.nodes.front().sequence_id)}});
       return res;
     }
   }
+
+  // Check the validity of the graph before proceeding with stitching
+  res = is_valid_graph(next_order);
+  if (!res) return res;
 
   // Look for a last released node in the existing order
   auto last_base_it = std::find_if(
