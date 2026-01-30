@@ -7,7 +7,7 @@ on:
     branches:
       - main
       - develop
-      - feature/add-asan-tsan-rolling
+      - feature/add-asan-tsan
 
 jobs:
   industrial_ci:
@@ -22,6 +22,8 @@ jobs:
           - {distro: jazzy, test_type: gcc-tsan}
     env:
       ISOLATION: "shell"
+      UPSTREAM_WORKSPACE: 'github:sauk2/vda5050_interfaces#throwaway/temp github:eclipse-paho/paho.mqtt.cpp#v1.5.0'
+      ROS_DISTRO: ${{ matrix.distro }}
     runs-on: ubuntu-latest
     container:
       image: ros:${{ matrix.distro }}-ros-core
@@ -40,32 +42,24 @@ jobs:
       - if: ${{ matrix.test_type == 'gcc' }}
         uses: 'ros-industrial/industrial_ci@master'
         env:
-          ROS_DISTRO: ${{ matrix.distro }}
-          UPSTREAM_WORKSPACE: 'github:sauk2/vda5050_interfaces#throwaway/temp'
           TARGET_CMAKE_ARGS: '-DENABLE_ROS2=ON'
 
       # GCC with address sanitizer
       - if: ${{ matrix.test_type == 'gcc-asan' }}
         uses: 'ros-industrial/industrial_ci@master'
         env:
-          ROS_DISTRO: ${{ matrix.distro }}
-          UPSTREAM_WORKSPACE: 'github:sauk2/vda5050_interfaces#throwaway/temp'
           TARGET_CMAKE_ARGS: '-DENABLE_ROS2=ON -DCMAKE_C_FLAGS="-fsanitize=address" -DCMAKE_CXX_FLAGS="-fsanitize=address"'
 
       # GCC with thread sanitizer
       - if: ${{ matrix.test_type == 'gcc-tsan' }}
         uses: 'ros-industrial/industrial_ci@master'
         env:
-          ROS_DISTRO: ${{ matrix.distro }}
-          UPSTREAM_WORKSPACE: 'github:sauk2/vda5050_interfaces#throwaway/temp'
           TARGET_CMAKE_ARGS: '-DENABLE_ROS2=ON -DCMAKE_C_FLAGS="-fsanitize=thread -O2 -g -fno-omit-frame-pointer" -DCMAKE_CXX_FLAGS="-fsanitize=thread -O2 -g -fno-omit-frame-pointer"'
 
       # Clang
       - if: ${{ matrix.test_type == 'clang' }}
         uses: 'ros-industrial/industrial_ci@master'
         env:
-          ROS_DISTRO: ${{ matrix.distro }}
-          UPSTREAM_WORKSPACE: 'github:sauk2/vda5050_interfaces#throwaway/temp'
           ADDITIONAL_DEBS: clang lld
           CC: "clang"
           CXX: "clang++"
