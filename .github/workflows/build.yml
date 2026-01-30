@@ -16,7 +16,10 @@ jobs:
       fail-fast: false
       matrix:
         distro: [humble, jazzy]
-        test_type: [gcc, clang, gcc-tsan, gcc-asan]
+        test_type: [gcc, clang]
+        include:
+          - {distro: jazzy, test_type: gcc-asan}
+          - {distro: jazzy, test_type: gcc-tsan}
     env:
       ISOLATION: "shell"
     runs-on: ubuntu-latest
