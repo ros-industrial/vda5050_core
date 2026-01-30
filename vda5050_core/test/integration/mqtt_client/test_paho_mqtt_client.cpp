@@ -121,3 +121,21 @@ TEST(PahoMqttClient, LastWill)
 
   ASSERT_NO_THROW(client->disconnect());
 }
+
+TEST(PahoMqttClientTest, FailedConnectionRemainsDisconnected)
+{
+  // Use an invalid broker endpoint to simulate connection failure
+  std::string invalid_broker = "tcp://invalid.broker.address:1883";
+
+  auto client = vda5050_core::mqtt_client::PahoMqttClient::make(
+    invalid_broker, "test_failed_connection");
+
+  // Initial state should be disconnected
+  ASSERT_FALSE(client->connected());
+
+  // Attempt connection to invalid broker (should not throw)
+  ASSERT_NO_THROW(client->connect());
+
+  // connected() should return false after failed connection
+  ASSERT_FALSE(client->connected());
+}
