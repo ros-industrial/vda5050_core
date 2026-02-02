@@ -24,6 +24,8 @@
 #include "vda5050_execution/event.hpp"
 #include "vda5050_execution/execution_engine.hpp"
 
+namespace {
+
 struct EventA : public vda5050_execution::EventBase
 {
   std::type_index get_type() const override
@@ -39,6 +41,8 @@ struct EventB : public vda5050_execution::EventBase
     return typeid(EventB);
   }
 };
+
+}  // namespace
 
 TEST(ExecutionEngineTest, SingleEventDispatch)
 {
