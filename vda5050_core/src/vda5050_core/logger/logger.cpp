@@ -40,7 +40,8 @@ public:
   {
     auto now = std::chrono::system_clock::now();
     std::time_t now_t = std::chrono::system_clock::to_time_t(now);
-    std::tm localtime = *std::localtime(&now_t);
+    std::tm localtime;
+    localtime_r(&now_t, &localtime);
 
     std::cout << "[" << fmt::format("{:%Y-%m-%d %H:%M:%S}", localtime) << "]"
               << to_log_level_string(level) << ": " << message << std::endl;

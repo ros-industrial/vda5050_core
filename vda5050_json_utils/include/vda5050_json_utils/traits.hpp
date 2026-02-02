@@ -147,8 +147,11 @@ inline std::string to_iso8601(TimePoint time_point)
   auto duration = time_point.time_since_epoch();
   auto millisec = duration_cast<milliseconds>(duration).count() % 1000;
 
+  std::tm tm_buf;
+  gmtime_r(&time_sec, &tm_buf);
+
   std::ostringstream oss;
-  oss << std::put_time(std::gmtime(&time_sec), vda5050_types::ISO8601_FORMAT);
+  oss << std::put_time(&tm_buf, vda5050_types::ISO8601_FORMAT);
   oss << "." << std::setw(3) << std::setfill('0') << millisec << "Z";
   if (oss.fail())
   {
