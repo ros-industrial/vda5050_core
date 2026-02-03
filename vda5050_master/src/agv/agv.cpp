@@ -231,6 +231,13 @@ void AGV::set_operational_state(AGVState state)
 
 void AGV::on_state_heartbeat_timeout()
 {
+  {
+    std::lock_guard<std::mutex> lock(heartbeat_mutex_);
+    if (!state_heartbeat_)
+    {
+      return;
+    }
+  }
   set_operational_state(AGVState::STATE_UNKNOWN);
   VDA5050_WARN("[AGV] State heartbeat timeout for {}", agv_id_);
 }
@@ -258,17 +265,21 @@ void AGV::setup_heartbeat()
 
 void AGV::cleanup_heartbeat()
 {
-  std::lock_guard<std::mutex> lock(heartbeat_mutex_);
+  std::unique_ptr<communication::HeartbeatListener> heartbeat_to_stop;
 
-  if (!state_heartbeat_)
   {
-    return;  // Nothing to clean up
+    std::lock_guard<std::mutex> lock(heartbeat_mutex_);
+    if (!state_heartbeat_)
+    {
+      return;  // Nothing to clean up
+    }
+
+    VDA5050_INFO("[AGV] Cleaning up heartbeat for {}", agv_id_);
+
+    heartbeat_to_stop = std::move(state_heartbeat_);
   }
 
-  VDA5050_INFO("[AGV] Cleaning up heartbeat for {}", agv_id_);
-
-  state_heartbeat_->stop_connection_heartbeat();
-  state_heartbeat_.reset();
+  heartbeat_to_stop->stop_connection_heartbeat();
 }
 
 // ============================================================================
