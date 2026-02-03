@@ -227,10 +227,11 @@ TEST(HeartbeatListenerTest, StateIsRunningWhileCallbackExecutes)
       callback_started.store(true);
 
       // Check get_state() during callback execution
-      if (listener_ptr)
+      auto* ptr = listener_ptr.load();
+      if (ptr)
       {
         was_running_during_callback.store(
-          listener_ptr->get_state() == HeartbeatState::RUNNING);
+          ptr->get_state() == HeartbeatState::RUNNING);
       }
 
       // Simulate work
