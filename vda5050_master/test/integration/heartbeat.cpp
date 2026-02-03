@@ -217,7 +217,8 @@ TEST(HeartbeatListenerTest, StateIsRunningWhileCallbackExecutes)
   std::atomic_bool was_running_during_callback{false};
 
   // We need a raw pointer to check get_state() from within callback
-  MockHeartbeatListener* listener_ptr = nullptr;
+  // Must be atomic because the callback thread may read it while main thread writes
+  std::atomic<MockHeartbeatListener*> listener_ptr{nullptr};
 
   auto hb_listener = std::make_unique<MockHeartbeatListener>(
     "test_listener", vda5050_master::ConnectionHeartbeatInterval,
