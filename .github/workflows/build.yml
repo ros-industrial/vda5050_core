@@ -15,9 +15,14 @@ jobs:
       fail-fast: false
       matrix:
         distro: [humble, jazzy]
-        compiler: [gcc, clang]
+        test_type: [gcc, clang]
+        include:
+          - {distro: jazzy, test_type: gcc-asan}
+          - {distro: jazzy, test_type: gcc-tsan}
     env:
       ISOLATION: "shell"
+      UPSTREAM_WORKSPACE: 'github:sauk2/vda5050_interfaces#throwaway/temp github:eclipse-paho/paho.mqtt.cpp#v1.5.0'
+      ROS_DISTRO: ${{ matrix.distro }}
     runs-on: ubuntu-latest
     container:
       image: ros:${{ matrix.distro }}-ros-core
@@ -33,19 +38,27 @@ jobs:
           sleep 2  # Wait for broker to start
 
       # GCC
-      - if: ${{ matrix.compiler == 'gcc' }}
+      - if: ${{ matrix.test_type == 'gcc' }}
         uses: 'ros-industrial/industrial_ci@master'
         env:
-          ROS_DISTRO: ${{ matrix.distro }}
-          UPSTREAM_WORKSPACE: 'github:sauk2/vda5050_interfaces#throwaway/temp'
           TARGET_CMAKE_ARGS: '-DENABLE_ROS2=ON'
 
-      # Clang
-      - if: ${{ matrix.compiler == 'clang' }}
+      # GCC with address sanitizer
+      - if: ${{ matrix.test_type == 'gcc-asan' }}
         uses: 'ros-industrial/industrial_ci@master'
         env:
-          ROS_DISTRO: ${{ matrix.distro }}
-          UPSTREAM_WORKSPACE: 'github:sauk2/vda5050_interfaces#throwaway/temp'
+          TARGET_CMAKE_ARGS: '-DENABLE_ROS2=ON -DCMAKE_C_FLAGS="-fsanitize=address" -DCMAKE_CXX_FLAGS="-fsanitize=address"'
+
+      # GCC with thread sanitizer
+      - if: ${{ matrix.test_type == 'gcc-tsan' }}
+        uses: 'ros-industrial/industrial_ci@master'
+        env:
+          TARGET_CMAKE_ARGS: '-DENABLE_ROS2=ON -DCMAKE_C_FLAGS="-fsanitize=thread -O2 -g -fno-omit-frame-pointer" -DCMAKE_CXX_FLAGS="-fsanitize=thread -O2 -g -fno-omit-frame-pointer"'
+
+      # Clang
+      - if: ${{ matrix.test_type == 'clang' }}
+        uses: 'ros-industrial/industrial_ci@master'
+        env:
           ADDITIONAL_DEBS: clang lld
           CC: "clang"
           CXX: "clang++"
