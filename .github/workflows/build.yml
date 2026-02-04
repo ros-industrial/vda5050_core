@@ -47,7 +47,7 @@ jobs:
       - if: ${{ matrix.test_type == 'gcc-asan' }}
         uses: 'ros-industrial/industrial_ci@master'
         env:
-          TARGET_CMAKE_ARGS: '-DENABLE_ROS2=ON -DCMAKE_C_FLAGS="-fsanitize=address" -DCMAKE_CXX_FLAGS="-fsanitize=address"'
+          TARGET_CMAKE_ARGS: '-DENABLE_ROS2=ON -DCMAKE_C_FLAGS="-fsanitize=address -O1 -g -fno-omit-frame-pointer" -DCMAKE_CXX_FLAGS="-fsanitize=address -O1 -g -fno-omit-frame-pointer"'
 
       # GCC with thread sanitizer
       - if: ${{ matrix.test_type == 'gcc-tsan' }}
