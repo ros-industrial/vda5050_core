@@ -200,25 +200,16 @@ ValidationResult is_valid_update(
     base_order.nodes.rbegin(), base_order.nodes.rend(),
     [](const auto& n) { return n.released; });
 
-  // Check if the update starts with a greater sequence than the last base
-  if (next_order.nodes.front().sequence_id > last_base_it->sequence_id)
+  if (last_base_it == base_order.nodes.rend()) return res;
+
+  // Check if the update starts with the last base
+  if (next_order.nodes.front() != *last_base_it)
   {
     add_error(
-      "Updated order starts with a disconnected sequence.",
+      "Stitching failure. The update must start exactly at the "
+      "last released node of the base",
       {{errors::RefSequenceId,
         std::to_string(next_order.nodes.front().sequence_id)}});
-    return res;
-  }
-
-  // Look for a stitching node in the next order
-  auto stitching_it = std::find_if(
-    next_order.nodes.begin(), next_order.nodes.end(),
-    [&last_base_it](const auto& n) { return n == *last_base_it; });
-
-  // Check if a stitching node exists
-  if (stitching_it == next_order.nodes.end())
-  {
-    add_error("Last released node not found in new message.", {});
     return res;
   }
 
