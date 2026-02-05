@@ -307,7 +307,8 @@ TEST_F(OrderValidationTest, DisconnectedOrderUpdate)
     res.errors.front().error_type, vda5050_core::errors::OrderUpdateError);
   EXPECT_EQ(
     res.errors.front().error_description.value(),
-    "Updated order starts with a disconnected sequence.");
+    "Stitching failure. The update must start exactly at the "
+    "last released node of the base");
 }
 
 TEST_F(OrderValidationTest, StitchingNewOrder)
@@ -335,7 +336,8 @@ TEST_F(OrderValidationTest, StitchingNewOrder)
     res.errors.front().error_type, vda5050_core::errors::OrderUpdateError);
   EXPECT_EQ(
     res.errors.front().error_description.value(),
-    "Last released node not found in new message.");
+    "Stitching failure. The update must start exactly at the "
+    "last released node of the base");
 }
 
 TEST_F(OrderValidationTest, OrderValidationSuccess)
@@ -354,11 +356,9 @@ TEST_F(OrderValidationTest, OrderValidationSuccess)
   auto next_order = create_order("order_0", 1);
 
   next_order.nodes = {
-    create_node("node_1", 2, true), create_node("node_2", 4, true),
-    create_node("node_4", 6, true)};
+    create_node("node_2", 4, true), create_node("node_4", 6, true)};
 
   next_order.edges = {
-    create_edge("edge_1", 3, "node_1", "node_2", true),
     create_edge("edge_3", 5, "node_2", "node_4", true),
   };
 
