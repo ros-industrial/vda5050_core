@@ -22,6 +22,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <memory>
 #include <thread>
 #include <vector>
 
@@ -142,7 +143,7 @@ TEST(HeartbeatListenerTest, HeartbeatReceivedNoTimeout)
 TEST(HeartbeatListenerTest, HeartbeatNotReceivedTimeout)
 {
   std::atomic_bool heartbeat_failed{false};
-  auto hb_listener = MockHeartbeatListener(
+  auto hb_listener = std::make_unique<MockHeartbeatListener>(
     "test_listener", vda5050_master::ConnectionHeartbeatInterval,
     [&heartbeat_failed]() {
       // Timeout callback
@@ -157,16 +158,16 @@ TEST(HeartbeatListenerTest, HeartbeatNotReceivedTimeout)
       // ASSERT_TRUE(heartbeat_failed->load());
     },
     vda5050_master::ConnectionHeartbeatInterval + 1);
-  hb_listener.trigger_timeout();
+  hb_listener->trigger_timeout();
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  ASSERT_NO_THROW(hb_listener.~MockHeartbeatListener());
+  ASSERT_NO_THROW(hb_listener.reset());
   ASSERT_TRUE(heartbeat_failed.load());
 }
 
 TEST(HeartbeatListenerTest, HeartbeatReceivedTimeout)
 {
   std::atomic_bool heartbeat_failed{false};
-  auto hb_listener = MockHeartbeatListener(
+  auto hb_listener = std::make_unique<MockHeartbeatListener>(
     "test_listener", vda5050_master::ConnectionHeartbeatInterval,
     [&heartbeat_failed]() {
       // Timeout callback
@@ -175,11 +176,11 @@ TEST(HeartbeatListenerTest, HeartbeatReceivedTimeout)
     },
     vda5050_master::ConnectionHeartbeatInterval + 1);
 
-  hb_listener.trigger_timeout();
+  hb_listener->trigger_timeout();
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  hb_listener.received_connection();
+  hb_listener->received_connection();
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  ASSERT_NO_THROW(hb_listener.~MockHeartbeatListener());
+  ASSERT_NO_THROW(hb_listener.reset());
   ASSERT_TRUE(heartbeat_failed.load());
 }
 
