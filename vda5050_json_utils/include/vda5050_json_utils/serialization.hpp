@@ -27,6 +27,7 @@
 #include <vda5050_types/action.hpp>
 #include <vda5050_types/action_parameter.hpp>
 #include <vda5050_types/action_state.hpp>
+#include <vda5050_types/agv_action.hpp>
 #include <vda5050_types/agv_position.hpp>
 #include <vda5050_types/battery_state.hpp>
 #include <vda5050_types/bounding_box_reference.hpp>
@@ -45,7 +46,9 @@
 #include <vda5050_types/node.hpp>
 #include <vda5050_types/node_position.hpp>
 #include <vda5050_types/node_state.hpp>
+#include <vda5050_types/optional_parameter.hpp>
 #include <vda5050_types/order.hpp>
+#include <vda5050_types/protocol_features.hpp>
 #include <vda5050_types/safety_state.hpp>
 #include <vda5050_types/state.hpp>
 #include <vda5050_types/trajectory.hpp>
@@ -55,6 +58,7 @@
 
 #ifdef ENABLE_ROS2
 #include <vda5050_interfaces/msg/action_state.hpp>
+#include <vda5050_interfaces/msg/agv_action.hpp>
 #include <vda5050_interfaces/msg/agv_position.hpp>
 #include <vda5050_interfaces/msg/battery_state.hpp>
 #include <vda5050_interfaces/msg/bounding_box_reference.hpp>
@@ -70,7 +74,9 @@
 #include <vda5050_interfaces/msg/load.hpp>
 #include <vda5050_interfaces/msg/node_position.hpp>
 #include <vda5050_interfaces/msg/node_state.hpp>
+#include <vda5050_interfaces/msg/optional_parameter.hpp>
 #include <vda5050_interfaces/msg/order.hpp>
+#include <vda5050_interfaces/msg/protocol_features.hpp>
 #include <vda5050_interfaces/msg/safety_state.hpp>
 #include <vda5050_interfaces/msg/state.hpp>
 #include <vda5050_interfaces/msg/trajectory.hpp>
@@ -2201,6 +2207,58 @@ void from_json(const nlohmann::json& j, ProtocolLimitsT& msg)
 
 }  // namespace protocol_limits_detail
 
+namespace optional_parameter_detail {
+
+//=============================================================================
+template <typename OptionalParametersT>
+void to_json(nlohmann::json& j, const OptionalParametersT& msg)
+{
+}
+
+//=============================================================================
+template <typename OptionalParametersT>
+void from_json(const nlohmann::json& j, OptionalParametersT& msg)
+{
+}
+
+}  // namespace optional_parameter_detail
+
+namespace agv_action_detail {
+
+//=============================================================================
+template <typename AGVActionT>
+void to_json(nlohmann::json& j, const AGVActionT& msg)
+{
+}
+
+//=============================================================================
+template <typename AGVActionT>
+void from_json(const nlohmann::json& j, AGVActionT& msg)
+{
+}
+
+}  // namespace agv_action_detail
+
+namespace protocol_features_detail {
+
+//=============================================================================
+template <typename ProtocolFeaturesT>
+void to_json(nlohmann::json& j, const ProtocolFeaturesT& msg)
+{
+  j["optionalParameters"] = msg.optional_parameters;
+  j["agvActions"] = msg.agv_actions;
+}
+
+//=============================================================================
+template <typename ProtocolFeaturesT>
+void from_json(const nlohmann::json& j, ProtocolFeaturesT& msg)
+{
+  msg.optional_parameters = j.at("optionalParameters");
+  msg.agv_actions = j.at("agvActions");
+}
+
+}  // namespace protocol_features_detail
+
 namespace factsheet_detail {
 
 //=============================================================================
@@ -2212,6 +2270,7 @@ void to_json(nlohmann::json& j, const FactsheetT& msg)
   j["typeSpecification"] = msg.type_specification;
   j["physicalParameters"] = msg.physical_parameters;
   j["protocolLimits"] = msg.protocol_limits;
+  j["protocolFeatures"] = msg.protocol_features;
 }
 
 //=============================================================================
@@ -2223,6 +2282,7 @@ void from_json(const nlohmann::json& j, FactsheetT& msg)
   msg.type_specification = j.at("typeSpecification");
   msg.physical_parameters = j.at("physicalParameters");
   msg.protocol_limits = j.at("protocolLimits");
+  msg.protocol_features = j.at("protocolFeatures");
 }
 
 }  // namespace factsheet_detail
@@ -2550,6 +2610,36 @@ inline void to_json(nlohmann::json& j, const ProtocolLimits& msg)
 inline void from_json(const nlohmann::json& j, ProtocolLimits& msg)
 {
   vda5050_types::protocol_limits_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const OptionalParameter& msg)
+{
+  vda5050_types::optional_parameter_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, OptionalParameter& msg)
+{
+  vda5050_types::optional_parameter_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const AGVAction& msg)
+{
+  vda5050_types::agv_action_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, AGVAction& msg)
+{
+  vda5050_types::agv_action_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const ProtocolFeatures& msg)
+{
+  vda5050_types::protocol_features_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, ProtocolFeatures& msg)
+{
+  vda5050_types::protocol_features_detail::from_json(j, msg);
 }
 
 inline void to_json(nlohmann::json& j, const Factsheet& msg)
@@ -2898,6 +2988,36 @@ inline void to_json(nlohmann::json& j, const ProtocolLimits& msg)
 inline void from_json(const nlohmann::json& j, ProtocolLimits& msg)
 {
   vda5050_types::protocol_limits_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const OptionalParameter& msg)
+{
+  vda5050_types::optional_parameter_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, OptionalParameter& msg)
+{
+  vda5050_types::optional_parameter_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const AGVAction& msg)
+{
+  vda5050_types::agv_action_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, AGVAction& msg)
+{
+  vda5050_types::agv_action_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const ProtocolFeatures& msg)
+{
+  vda5050_types::protocol_features_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, ProtocolFeatures& msg)
+{
+  vda5050_types::protocol_features_detail::from_json(j, msg);
 }
 
 inline void to_json(nlohmann::json& j, const Factsheet& msg)
