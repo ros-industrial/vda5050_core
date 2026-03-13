@@ -452,7 +452,7 @@ public:
       msg.header = generate<Header>();
       msg.type_specification = generate<TypeSpecification>();
       msg.physical_parameters = generate<PhysicalParameters>();
-      // msg.protocol_limits = generate<ProtocolLimits>();
+      msg.protocol_limits = generate<ProtocolLimits>();
       // msg.protocol_features = generate<ProtocolFeatures>();
       // msg.agv_geometry = generate<AGVGeometry>();
       // msg.load_specification = generate<LoadSpecification>();
