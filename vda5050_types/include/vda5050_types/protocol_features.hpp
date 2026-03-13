@@ -21,7 +21,7 @@
 
 #include <vector>
 #include "vda5050_types/agv_action.hpp"
-#include "vda5050_types/optional_parameters.hpp"
+#include "vda5050_types/optional_parameter.hpp"
 
 namespace vda5050_types {
 
@@ -31,7 +31,7 @@ struct ProtocolFeatures
   /// \brief Array of supported and/or required optional parameters.
   /// Optional parameters that are not listed here are assumed to be not supported
   /// by the AGV
-  std::vector<OptionalParameters> optional_parameters;
+  std::vector<OptionalParameter> optional_parameters;
 
   /// \brief Array of actions with parameters supported by this AGV. This includes
   /// standard actions specified in VDA5050 and manufacturer-specific actions.

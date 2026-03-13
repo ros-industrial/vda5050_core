@@ -26,7 +26,7 @@
 namespace vda5050_types {
 
 /// \brief Supported or required optional parameters.
-struct OptionalParameters
+struct OptionalParameter
 {
   /// \brief Full name of optional parameter.
   /// eg: "order.nodes.nodePosition.allowedDeviationTheta".
@@ -47,7 +47,7 @@ struct OptionalParameters
   /// \param other The other object to compare to
   ///
   /// \return is equal?
-  inline bool operator==(const OptionalParameters& other) const
+  inline bool operator==(const OptionalParameter& other) const
   {
     if (this->parameter != other.parameter) return false;
     if (this->support != other.support) return false;
@@ -60,7 +60,7 @@ struct OptionalParameters
   /// \param other The other object to compare to
   ///
   /// \return is not equal?
-  inline bool operator!=(const OptionalParameters& other) const
+  inline bool operator!=(const OptionalParameter& other) const
   {
     return !(this->operator==(other));
   }
