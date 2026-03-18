@@ -41,6 +41,7 @@
 #include <vda5050_types/info_level.hpp>
 #include <vda5050_types/operating_mode.hpp>
 #include <vda5050_types/orientation_type.hpp>
+#include <vda5050_types/support.hpp>
 
 #ifdef ENABLE_ROS2
 #include <rosidl_runtime_cpp/bounded_vector.hpp>
@@ -50,6 +51,7 @@
 #include <vda5050_interfaces/msg/edge.hpp>
 #include <vda5050_interfaces/msg/error.hpp>
 #include <vda5050_interfaces/msg/info.hpp>
+#include <vda5050_interfaces/msg/optional_parameter.hpp>
 #include <vda5050_interfaces/msg/safety_state.hpp>
 #include <vda5050_interfaces/msg/state.hpp>
 #include <vda5050_interfaces/msg/type_specification.hpp>
@@ -968,6 +970,72 @@ struct agv_class_traits<std::string>
       return type;
     }
     throw std::runtime_error("Invalid agvClass string");
+  }
+};
+#endif  // ENABLE_ROS2
+
+//=============================================================================
+template <typename T>
+struct support_traits;
+
+//=============================================================================
+template <>
+struct support_traits<vda5050_types::Support>
+{
+  static std::string to_string(const vda5050_types::Support& type)
+  {
+    using vda5050_types::Support;
+
+    switch (type)
+    {
+      case Support::SUPPORTED:
+        return "SUPPORTED";
+      case Support::REQUIRED:
+        return "REQUIRED";
+      default:
+        throw std::runtime_error("Invalid Support enum value");
+    }
+  }
+
+  static vda5050_types::Support from_string(const std::string& type)
+  {
+    using vda5050_types::Support;
+
+    if (type == "SUPPORTED") return Support::SUPPORTED;
+    if (type == "REQUIRED") return Support::REQUIRED;
+    throw std::runtime_error("Invalid support string");
+  }
+};
+
+//=============================================================================
+#ifdef ENABLE_ROS2
+template <>
+struct support_traits<std::string>
+{
+  static std::string to_string(const std::string& type)
+  {
+    using vda5050_interfaces::msg::OptionalParameter;
+
+    if (
+      type == OptionalParameter::SUPPORT_SUPPORTED ||
+      type == OptionalParameter::SUPPORT_REQUIRED)
+    {
+      return type;
+    }
+    throw std::runtime_error("Invalid support value");
+  }
+
+  static std::string from_string(const std::string& type)
+  {
+    using vda5050_interfaces::msg::OptionalParameter;
+
+    if (
+      type == OptionalParameter::SUPPORT_SUPPORTED ||
+      type == OptionalParameter::SUPPORT_REQUIRED)
+    {
+      return type;
+    }
+    throw std::runtime_error("Invalid support string");
   }
 };
 #endif  // ENABLE_ROS2

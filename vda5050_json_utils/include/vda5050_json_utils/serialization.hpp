@@ -2207,22 +2207,6 @@ void from_json(const nlohmann::json& j, ProtocolLimitsT& msg)
 
 }  // namespace protocol_limits_detail
 
-namespace optional_parameter_detail {
-
-//=============================================================================
-template <typename OptionalParametersT>
-void to_json(nlohmann::json& j, const OptionalParametersT& msg)
-{
-}
-
-//=============================================================================
-template <typename OptionalParametersT>
-void from_json(const nlohmann::json& j, OptionalParametersT& msg)
-{
-}
-
-}  // namespace optional_parameter_detail
-
 namespace agv_action_detail {
 
 //=============================================================================
@@ -2259,6 +2243,74 @@ void from_json(const nlohmann::json& j, ProtocolFeaturesT& msg)
 
 }  // namespace protocol_features_detail
 
+namespace optional_parameter_detail {
+
+//=============================================================================
+template <typename OptionalParameterT>
+void to_json(nlohmann::json& j, const OptionalParameterT& msg)
+{
+  using vda5050_json_utils::support_traits;
+
+  j["parameter"] = msg.parameter;
+  j["support"] = support_traits<decltype(msg.support)>::to_string(msg.support);
+}
+
+//=============================================================================
+template <typename OptionalParameterT>
+void from_json(const nlohmann::json& j, OptionalParameterT& msg)
+{
+}
+
+}  // namespace optional_parameter_detail
+
+namespace agv_geometry_detail {
+
+//=============================================================================
+template <typename AGVGeometryT>
+void to_json(nlohmann::json& j, const AGVGeometryT& msg)
+{
+}
+
+//=============================================================================
+template <typename AGVGeometryT>
+void from_json(const nlohmann::json& j, AGVGeometryT& msg)
+{
+}
+
+}  // namespace agv_geometry_detail
+
+namespace load_specification_detail {
+
+//=============================================================================
+template <typename LoadSpecificationT>
+void to_json(nlohmann::json& j, const LoadSpecificationT& msg)
+{
+}
+
+//=============================================================================
+template <typename LoadSpecificationT>
+void from_json(const nlohmann::json& j, LoadSpecificationT& msg)
+{
+}
+
+}  // namespace load_specification_detail
+
+namespace vehicle_config_detail {
+
+//=============================================================================
+template <typename VehicleConfigT>
+void to_json(nlohmann::json& j, const VehicleConfigT& msg)
+{
+}
+
+//=============================================================================
+template <typename VehicleConfigT>
+void from_json(const nlohmann::json& j, VehicleConfigT& msg)
+{
+}
+
+}  // namespace vehicle_config_detail
+
 namespace factsheet_detail {
 
 //=============================================================================
@@ -2271,6 +2323,9 @@ void to_json(nlohmann::json& j, const FactsheetT& msg)
   j["physicalParameters"] = msg.physical_parameters;
   j["protocolLimits"] = msg.protocol_limits;
   j["protocolFeatures"] = msg.protocol_features;
+  j["agvGeometry"] = msg.agv_geometry;
+  j["loadSpecification"] = msg.load_specification;
+  j["vehicleConfig"] = msg.vehicle_config;
 }
 
 //=============================================================================
@@ -2283,6 +2338,9 @@ void from_json(const nlohmann::json& j, FactsheetT& msg)
   msg.physical_parameters = j.at("physicalParameters");
   msg.protocol_limits = j.at("protocolLimits");
   msg.protocol_features = j.at("protocolFeatures");
+  msg.agv_geometry = j.at("agvGeometry");
+  msg.load_specification = j.at("loadSpecification");
+  msg.vehicle_config = j.at("vehicleConfig");
 }
 
 }  // namespace factsheet_detail
@@ -2640,6 +2698,36 @@ inline void to_json(nlohmann::json& j, const ProtocolFeatures& msg)
 inline void from_json(const nlohmann::json& j, ProtocolFeatures& msg)
 {
   vda5050_types::protocol_features_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const AGVGeometry& msg)
+{
+  vda5050_types::agv_geometry_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, AGVGeometry& msg)
+{
+  vda5050_types::agv_geometry_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const LoadSpecification& msg)
+{
+  vda5050_types::load_specification_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, LoadSpecification& msg)
+{
+  vda5050_types::load_specification_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const VehicleConfig& msg)
+{
+  vda5050_types::vehicle_config_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, VehicleConfig& msg)
+{
+  vda5050_types::vehicle_config_detail::from_json(j, msg);
 }
 
 inline void to_json(nlohmann::json& j, const Factsheet& msg)
@@ -3018,6 +3106,36 @@ inline void to_json(nlohmann::json& j, const ProtocolFeatures& msg)
 inline void from_json(const nlohmann::json& j, ProtocolFeatures& msg)
 {
   vda5050_types::protocol_features_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const AGVGeometry& msg)
+{
+  vda5050_types::agv_geometry_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, AGVGeometry& msg)
+{
+  vda5050_types::agv_geometry_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const LoadSpecification& msg)
+{
+  vda5050_types::load_specification_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, LoadSpecification& msg)
+{
+  vda5050_types::load_specification_detail::from_json(j, msg);
+}
+
+inline void to_json(nlohmann::json& j, const VehicleConfig& msg)
+{
+  vda5050_types::vehicle_config_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, VehicleConfig& msg)
+{
+  vda5050_types::vehicle_config_detail::from_json(j, msg);
 }
 
 inline void to_json(nlohmann::json& j, const Factsheet& msg)
