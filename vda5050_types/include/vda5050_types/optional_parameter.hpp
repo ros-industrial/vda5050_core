@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_TYPES__OPTIONAL_PARAMETERS_HPP_
-#define VDA5050_TYPES__OPTIONAL_PARAMETERS_HPP_
+#ifndef VDA5050_TYPES__OPTIONAL_PARAMETER_HPP_
+#define VDA5050_TYPES__OPTIONAL_PARAMETER_HPP_
 
 #include <optional>
 #include <string>
-#include "vda5050_types/support_type.hpp"
+#include "vda5050_types/support.hpp"
 
 namespace vda5050_types {
 
@@ -33,7 +33,7 @@ struct OptionalParameter
   std::string parameter;
 
   /// \brief Type of support for the optional parameter.
-  SupportType support;
+  Support support;
 
   /// \brief Free-form text: description of optional parameter.
   /// eg:
@@ -68,4 +68,4 @@ struct OptionalParameter
 
 }  // namespace vda5050_types
 
-#endif  // VDA5050_TYPES__OPTIONAL_PARAMETERS_HPP_
+#endif  // VDA5050_TYPES__OPTIONAL_PARAMETER_HPP_

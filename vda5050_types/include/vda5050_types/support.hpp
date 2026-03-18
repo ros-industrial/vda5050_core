@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_TYPES__SUPPORT_TYPE_HPP_
-#define VDA5050_TYPES__SUPPORT_TYPE_HPP_
+#ifndef VDA5050_TYPES__SUPPORT_HPP_
+#define VDA5050_TYPES__SUPPORT_HPP_
 
 namespace vda5050_types {
 
-/// \brief Type of support for OptionalParameters.
-enum class SupportType
+/// \brief Type of support for OptionalParameter.
+enum class Support
 {
   /// \brief Optional parameter is supported as specified.
   SUPPORTED,
@@ -33,4 +33,4 @@ enum class SupportType
 
 }  // namespace vda5050_types
 
-#endif  // VDA5050_TYPES__SUPPORT_TYPE_HPP_
+#endif  // VDA5050_TYPES__SUPPORT_HPP_
