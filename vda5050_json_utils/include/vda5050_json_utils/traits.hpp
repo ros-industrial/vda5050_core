@@ -29,6 +29,7 @@
 #include <string>
 #include <utility>
 
+#include <vda5050_types/action_scope.hpp>
 #include <vda5050_types/action_status.hpp>
 #include <vda5050_types/agv_class.hpp>
 #include <vda5050_types/agv_kinematic.hpp>
@@ -47,6 +48,7 @@
 #include <rosidl_runtime_cpp/bounded_vector.hpp>
 #include <vda5050_interfaces/msg/action.hpp>
 #include <vda5050_interfaces/msg/action_state.hpp>
+#include <vda5050_interfaces/msg/agv_action.hpp>
 #include <vda5050_interfaces/msg/connection.hpp>
 #include <vda5050_interfaces/msg/edge.hpp>
 #include <vda5050_interfaces/msg/error.hpp>
@@ -1036,6 +1038,103 @@ struct support_traits<std::string>
       return type;
     }
     throw std::runtime_error("Invalid support string");
+  }
+};
+#endif  // ENABLE_ROS2
+
+//=============================================================================
+template <typename T>
+struct action_scopes_traits;
+
+//=============================================================================
+template <>
+struct action_scopes_traits<std::vector<vda5050_types::ActionScope>>
+{
+  static std::vector<std::string> to_string(
+    std::vector<vda5050_types::ActionScope> types)
+  {
+    using vda5050_types::ActionScope;
+
+    std::vector<std::string> output;
+    for (auto type : types)
+    {
+      switch (type)
+      {
+        case ActionScope::INSTANT:
+          output.push_back("INSTANT");
+          break;
+        case ActionScope::NODE:
+          output.push_back("NODE");
+          break;
+        case ActionScope::EDGE:
+          output.push_back("EDGE");
+          break;
+        default:
+          throw std::runtime_error("Invalid ActionScope enum value");
+      }
+    }
+    return output;
+  }
+
+  static std::vector<vda5050_types::ActionScope> from_string(
+    std::vector<std::string> types)
+  {
+    using vda5050_types::ActionScope;
+
+    std::vector<vda5050_types::ActionScope> output;
+
+    for (auto type : types)
+    {
+      if (type == "INSTANT")
+        output.push_back(ActionScope::INSTANT);
+      else if (type == "NODE")
+        output.push_back(ActionScope::NODE);
+      else if (type == "EDGE")
+        output.push_back(ActionScope::EDGE);
+      else
+        throw std::runtime_error("Invalid actionScope string");
+    }
+    return output;
+  }
+};
+
+//=============================================================================
+#ifdef ENABLE_ROS2
+template <>
+struct action_scopes_traits<std::vector<std::string>>
+{
+  static std::vector<std::string> to_string(std::vector<std::string> types)
+  {
+    using vda5050_interfaces::msg::AGVAction;
+
+    for (auto type : types)
+    {
+      if (
+        type != AGVAction::ACTION_SCOPE_INSTANT ||
+        type != AGVAction::ACTION_SCOPE_NODE ||
+        type != AGVAction::ACTION_SCOPE_EDGE)
+      {
+        throw std::runtime_error("Invalid action_scopes value");
+      }
+    }
+    return types;
+  }
+
+  static std::vector<std::string> from_string(std::vector<std::string> types)
+  {
+    using vda5050_interfaces::msg::AGVAction;
+
+    for (auto type : types)
+    {
+      if (
+        type != AGVAction::ACTION_SCOPE_INSTANT ||
+        type != AGVAction::ACTION_SCOPE_NODE ||
+        type != AGVAction::ACTION_SCOPE_EDGE)
+      {
+        throw std::runtime_error("Invalid action_scopes value");
+      }
+    }
+    return types;
   }
 };
 #endif  // ENABLE_ROS2

@@ -283,6 +283,14 @@ namespace agv_action_detail {
 template <typename AGVActionT>
 void to_json(nlohmann::json& j, const AGVActionT& msg)
 {
+  using vda5050_json_utils::action_scopes_traits;
+  using vda5050_json_utils::optional_field_traits;
+
+  j["actionType"] = msg.action_type;
+
+  j["actionScopes"] =
+    action_scopes_traits<decltype(msg.action_scopes)>::to_string(
+      msg.action_scopes);
 }
 
 //=============================================================================
