@@ -26,6 +26,7 @@
 
 #include <vda5050_types/action.hpp>
 #include <vda5050_types/action_parameter.hpp>
+#include <vda5050_types/action_parameter_factsheet.hpp>
 #include <vda5050_types/action_state.hpp>
 #include <vda5050_types/agv_action.hpp>
 #include <vda5050_types/agv_geometry.hpp>
@@ -68,6 +69,7 @@
 #ifdef ENABLE_ROS2
 #include <vda5050_interfaces/msg/action.hpp>
 #include <vda5050_interfaces/msg/action_parameter.hpp>
+#include <vda5050_interfaces/msg/action_parameter_factsheet.hpp>
 #include <vda5050_interfaces/msg/action_state.hpp>
 #include <vda5050_interfaces/msg/agv_action.hpp>
 #include <vda5050_interfaces/msg/agv_geometry.hpp>
@@ -198,6 +200,65 @@ void from_json(const nlohmann::json& j, ActionParameterT& msg)
 
 }  // namespace action_parameter_detail
 
+namespace action_parameter_factsheet_detail {
+
+//=============================================================================
+template <typename ActionParameterFactsheetT>
+void to_json(nlohmann::json& j, const ActionParameterFactsheetT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+  using vda5050_json_utils::value_data_type_traits;
+
+  using description_trait = optional_field_traits<decltype(msg.description)>;
+  using is_optional_trait = optional_field_traits<decltype(msg.is_optional)>;
+
+  j["key"] = msg.key;
+
+  j["valueDataType"] =
+    value_data_type_traits<decltype(msg.value_data_type)>::to_string(
+      msg.value_data_type);
+
+  if (description_trait::has_value(msg.description))
+  {
+    j["description"] = description_trait::get(msg.description);
+  }
+
+  if (is_optional_trait::has_value(msg.is_optional))
+  {
+    j["isOptional"] = is_optional_trait::get(msg.is_optional);
+  }
+}
+
+//=============================================================================
+template <typename ActionParameterFactsheetT>
+void from_json(const nlohmann::json& j, ActionParameterFactsheetT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+  using vda5050_json_utils::value_data_type_traits;
+
+  using description_trait = optional_field_traits<decltype(msg.description)>;
+  using is_optional_trait = optional_field_traits<decltype(msg.is_optional)>;
+
+  msg.key = j.at("key").get<std::string>();
+
+  msg.value_data_type =
+    value_data_type_traits<decltype(msg.value_data_type)>::from_string(
+      j.at("valueDataType").get<std::string>());
+
+  if (j.contains("description"))
+  {
+    description_trait::set(
+      msg.description, j.at("description").get<std::string>());
+  }
+
+  if (j.contains("isOptional"))
+  {
+    is_optional_trait::set(msg.is_optional, j.at("isOptional").get<bool>());
+  }
+}
+
+}  // namespace action_parameter_factsheet_detail
+
 namespace action_state_detail {
 
 //=============================================================================
@@ -284,19 +345,100 @@ template <typename AGVActionT>
 void to_json(nlohmann::json& j, const AGVActionT& msg)
 {
   using vda5050_json_utils::action_scopes_traits;
+  using vda5050_json_utils::blocking_types_traits;
   using vda5050_json_utils::optional_field_traits;
+
+  using action_parameters_trait =
+    optional_field_traits<decltype(msg.action_parameters)>;
+  using result_description_trait =
+    optional_field_traits<decltype(msg.result_description)>;
+  using action_description_trait =
+    optional_field_traits<decltype(msg.action_description)>;
+  using blocking_types_optional_trait =
+    optional_field_traits<decltype(msg.blocking_types)>;
 
   j["actionType"] = msg.action_type;
 
   j["actionScopes"] =
     action_scopes_traits<decltype(msg.action_scopes)>::to_string(
       msg.action_scopes);
+
+  if (action_parameters_trait::has_value(msg.action_parameters))
+  {
+    j["actionParameters"] = action_parameters_trait::get(msg.action_parameters);
+  }
+
+  if (result_description_trait::has_value(msg.result_description))
+  {
+    j["resultDescription"] =
+      result_description_trait::get(msg.result_description);
+  }
+
+  if (action_description_trait::has_value(msg.action_description))
+  {
+    j["actionDescription"] =
+      action_description_trait::get(msg.action_description);
+  }
+
+  if (blocking_types_optional_trait::has_value(msg.blocking_types))
+  {
+    using inner_t = typename blocking_types_optional_trait::value_type;
+
+    inner_t value = blocking_types_optional_trait::get(msg.blocking_types);
+    j["blockingtypes"] =
+      blocking_types_traits<decltype(value)>::to_string(value);
+  }
 }
 
 //=============================================================================
 template <typename AGVActionT>
 void from_json(const nlohmann::json& j, AGVActionT& msg)
 {
+  using vda5050_json_utils::action_scopes_traits;
+  using vda5050_json_utils::blocking_types_traits;
+  using vda5050_json_utils::optional_field_traits;
+
+  using action_parameters_trait =
+    optional_field_traits<decltype(msg.action_parameters)>;
+  using result_description_trait =
+    optional_field_traits<decltype(msg.result_description)>;
+  using action_description_trait =
+    optional_field_traits<decltype(msg.action_description)>;
+  using blocking_types_optional_trait =
+    optional_field_traits<decltype(msg.blocking_types)>;
+
+  msg.action_type = j.at("actionType").get<std::string>();
+
+  msg.action_scopes =
+    action_scopes_traits<decltype(msg.action_scopes)>::from_string(
+      j.at("actionScopes"));
+
+  if (j.contains("actionParameters"))
+  {
+    action_parameters_trait::set(
+      msg.action_parameters, j.at("actionParameters"));
+  }
+
+  if (j.contains("resultDescription"))
+  {
+    result_description_trait::set(
+      msg.result_description, j.at("resultDescription"));
+  }
+
+  if (j.contains("actionDescription"))
+  {
+    action_description_trait::set(
+      msg.action_description, j.at("actionDescription"));
+  }
+
+  if (j.contains("blockingTypes"))
+  {
+    using inner_t = typename blocking_types_optional_trait::value_type;
+
+    inner_t value =
+      blocking_types_traits<inner_t>::from_string(j.at("blockingTypes"));
+    blocking_types_optional_trait::set(msg.blocking_types, value);
+  }
 }
 
 }  // namespace agv_action_detail
@@ -895,9 +1037,9 @@ void to_json(nlohmann::json& j, const FactsheetT& msg)
   j["physicalParameters"] = msg.physical_parameters;
   j["protocolLimits"] = msg.protocol_limits;
   j["protocolFeatures"] = msg.protocol_features;
-  j["agvGeometry"] = msg.agv_geometry;
-  j["loadSpecification"] = msg.load_specification;
-  j["vehicleConfig"] = msg.vehicle_config;
+  // j["agvGeometry"] = msg.agv_geometry;
+  // j["loadSpecification"] = msg.load_specification;
+  // j["vehicleConfig"] = msg.vehicle_config;
 }
 
 //=============================================================================
@@ -910,9 +1052,9 @@ void from_json(const nlohmann::json& j, FactsheetT& msg)
   msg.physical_parameters = j.at("physicalParameters");
   msg.protocol_limits = j.at("protocolLimits");
   msg.protocol_features = j.at("protocolFeatures");
-  msg.agv_geometry = j.at("agvGeometry");
-  msg.load_specification = j.at("loadSpecification");
-  msg.vehicle_config = j.at("vehicleConfig");
+  // msg.agv_geometry = j.at("agvGeometry");
+  // msg.load_specification = j.at("loadSpecification");
+  // msg.vehicle_config = j.at("vehicleConfig");
 }
 
 }  // namespace factsheet_detail
@@ -2426,6 +2568,17 @@ inline void from_json(const nlohmann::json& j, ActionParameter& msg)
 }
 
 //=============================================================================
+inline void to_json(nlohmann::json& j, const ActionParameterFactsheet& msg)
+{
+  vda5050_types::action_parameter_factsheet_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, ActionParameterFactsheet& msg)
+{
+  vda5050_types::action_parameter_factsheet_detail::from_json(j, msg);
+}
+
+//=============================================================================
 inline void to_json(nlohmann::json& j, const ActionState& msg)
 {
   vda5050_types::action_state_detail::to_json(j, msg);
@@ -2871,6 +3024,17 @@ inline void to_json(nlohmann::json& j, const ActionParameter& msg)
 inline void from_json(const nlohmann::json& j, ActionParameter& msg)
 {
   vda5050_types::action_parameter_detail::from_json(j, msg);
+}
+
+//=============================================================================
+inline void to_json(nlohmann::json& j, const ActionParameterFactsheet& msg)
+{
+  vda5050_types::action_parameter_factsheet_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, ActionParameterFactsheet& msg)
+{
+  vda5050_types::action_parameter_factsheet_detail::from_json(j, msg);
 }
 
 //=============================================================================
