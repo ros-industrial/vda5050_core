@@ -36,6 +36,9 @@ enum class ValueDataType
   /// \brief Float data type
   FLOAT,
 
+  /// \brief String data type
+  STRING,
+
   /// \brief Object data type
   OBJECT,
 
