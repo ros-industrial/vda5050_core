@@ -27,8 +27,11 @@
 
 #include <vda5050_types/action.hpp>
 #include <vda5050_types/action_parameter.hpp>
+#include <vda5050_types/action_parameter_factsheet.hpp>
+#include <vda5050_types/action_scope.hpp>
 #include <vda5050_types/action_state.hpp>
 #include <vda5050_types/action_status.hpp>
+#include <vda5050_types/agv_action.hpp>
 #include <vda5050_types/agv_class.hpp>
 #include <vda5050_types/agv_kinematic.hpp>
 #include <vda5050_types/agv_position.hpp>
@@ -58,12 +61,15 @@
 #include <vda5050_types/node_position.hpp>
 #include <vda5050_types/node_state.hpp>
 #include <vda5050_types/operating_mode.hpp>
+#include <vda5050_types/optional_parameter.hpp>
 #include <vda5050_types/order.hpp>
 #include <vda5050_types/orientation_type.hpp>
 #include <vda5050_types/physical_parameters.hpp>
+#include <vda5050_types/protocol_features.hpp>
 #include <vda5050_types/protocol_limits.hpp>
 #include <vda5050_types/safety_state.hpp>
 #include <vda5050_types/state.hpp>
+#include <vda5050_types/support.hpp>
 #include <vda5050_types/timing.hpp>
 #include <vda5050_types/trajectory.hpp>
 #include <vda5050_types/type_specification.hpp>
@@ -71,8 +77,11 @@
 
 using vda5050_types::Action;
 using vda5050_types::ActionParameter;
+using vda5050_types::ActionParameterFactsheet;
+using vda5050_types::ActionScope;
 using vda5050_types::ActionState;
 using vda5050_types::ActionStatus;
+using vda5050_types::AGVAction;
 using vda5050_types::AGVClass;
 using vda5050_types::AGVKinematic;
 using vda5050_types::AGVPosition;
@@ -102,12 +111,15 @@ using vda5050_types::Node;
 using vda5050_types::NodePosition;
 using vda5050_types::NodeState;
 using vda5050_types::OperatingMode;
+using vda5050_types::OptionalParameter;
 using vda5050_types::Order;
 using vda5050_types::OrientationType;
 using vda5050_types::PhysicalParameters;
+using vda5050_types::ProtocolFeatures;
 using vda5050_types::ProtocolLimits;
 using vda5050_types::SafetyState;
 using vda5050_types::State;
+using vda5050_types::Support;
 using vda5050_types::Timing;
 using vda5050_types::Trajectory;
 using vda5050_types::TypeSpecification;
@@ -289,6 +301,8 @@ public:
     return types[type_idx];
   }
 
+  std::vector<BlockingType> generate_random_blocking_types() {}
+
   /// \brief Generate a random agv kinematic value
   AGVKinematic generate_random_agv_kinematic()
   {
@@ -306,6 +320,34 @@ public:
       AGVClass::CARRIER};
     auto state_idx = generate_random_index(states.size());
     return states[state_idx];
+  }
+
+  /// \brief Generate a random support value
+  Support generate_random_support()
+  {
+    std::vector<Support> states = {Support::SUPPORTED, Support::REQUIRED};
+    auto state_idx = generate_random_index(states.size());
+    return states[state_idx];
+  }
+
+  /// \brief Generate a random action scope value
+  ActionScope generate_random_action_scope()
+  {
+    std::vector<ActionScope> states = {
+      ActionScope::INSTANT, ActionScope::NODE, ActionScope::EDGE};
+    auto state_idx = generate_random_index(states.size());
+    return states[state_idx];
+  }
+
+  /// \brief Generate a random action scope vector
+  std::vector<ActionScope> generate_random_action_scopes()
+  {
+    std::vector<ActionScope> scopes(generate_random_size());
+    for (auto it = scopes.begin(); it != scopes.end(); ++it)
+    {
+      *it = generate_random_action_scope();
+    }
+    return scopes;
   }
 
   /// \brief Generate a random vector of type float64
@@ -380,6 +422,16 @@ public:
       msg.localization_score = generate_random_float();
       msg.deviation_range = generate_random_float();
     }
+    else if constexpr (std::is_same_v<T, AGVAction>)
+    {
+      msg.action_type = generate_random_string();
+      msg.action_scopes = generate_random_action_scopes();
+      msg.action_parameters = generate_random_vector<ActionParameterFactsheet>(
+        generate_random_size());
+      msg.result_description = generate_random_string();
+      msg.action_description = generate_random_string();
+      msg.blocking_types = generate_random_blocking_types();
+    }
     else if constexpr (std::is_same_v<T, BatteryState>)
     {
       msg.battery_charge = generate_random_percentage();
@@ -453,7 +505,7 @@ public:
       msg.type_specification = generate<TypeSpecification>();
       msg.physical_parameters = generate<PhysicalParameters>();
       msg.protocol_limits = generate<ProtocolLimits>();
-      // msg.protocol_features = generate<ProtocolFeatures>();
+      msg.protocol_features = generate<ProtocolFeatures>();
       // msg.agv_geometry = generate<AGVGeometry>();
       // msg.load_specification = generate<LoadSpecification>();
       // msg.vehicle_config = generate<VehicleConfig>();
@@ -554,6 +606,12 @@ public:
       msg.node_position = generate<NodePosition>();
       msg.released = generate_random_bool();
     }
+    else if constexpr (std::is_same_v<T, OptionalParameter>)
+    {
+      msg.parameter = generate_random_string();
+      msg.support = generate_random_support();
+      msg.description.push_back(generate_random_string());
+    }
     else if constexpr (std::is_same_v<T, Order>)
     {
       msg.header = generate<Header>();
@@ -575,6 +633,13 @@ public:
       msg.length = generate_random_float();
       msg.angular_speed_min = generate_random_float();
       msg.angular_speed_max = generate_random_float();
+    }
+    else if constexpr (std::is_same_v<T, ProtocolFeatures>)
+    {
+      msg.optional_parameters =
+        generate_random_vector<OptionalParameter>(generate_random_size());
+      msg.agv_actions =
+        generate_random_vector<AGVAction>(generate_random_size());
     }
     else if constexpr (std::is_same_v<T, ProtocolLimits>)
     {

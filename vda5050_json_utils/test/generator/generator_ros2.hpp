@@ -29,6 +29,7 @@
 #include <vda5050_interfaces/msg/action_state.hpp>
 #include <vda5050_interfaces/msg/agv_position.hpp>
 #include <vda5050_interfaces/msg/battery_state.hpp>
+#include <vda5050_interfaces/msg/blocking_type.hpp>
 #include <vda5050_interfaces/msg/bounding_box_reference.hpp>
 #include <vda5050_interfaces/msg/connection.hpp>
 #include <vda5050_interfaces/msg/control_point.hpp>
@@ -63,6 +64,7 @@ using vda5050_interfaces::msg::ActionParameter;
 using vda5050_interfaces::msg::ActionState;
 using vda5050_interfaces::msg::AGVPosition;
 using vda5050_interfaces::msg::BatteryState;
+using vda5050_interfaces::msg::BlockingType;
 using vda5050_interfaces::msg::BoundingBoxReference;
 using vda5050_interfaces::msg::Connection;
 using vda5050_interfaces::msg::ControlPoint;
@@ -270,8 +272,8 @@ public:
   std::string generate_random_blocking_type()
   {
     std::vector<std::string> types = {
-      Action::BLOCKING_TYPE_NONE, Action::BLOCKING_TYPE_SOFT,
-      Action::BLOCKING_TYPE_HARD};
+      BlockingType::BLOCKING_TYPE_NONE, BlockingType::BLOCKING_TYPE_SOFT,
+      BlockingType::BLOCKING_TYPE_HARD};
     auto type_idx = generate_random_index(types.size());
     return types[type_idx];
   }
