@@ -31,7 +31,7 @@ namespace vda5050_types {
 struct WheelDefinition
 {
   /// \brief The type of the wheel
-  wheelDefinitionType type;
+  WheelDefinitionType type;
 
   /// \brief If set to "true", the wheel is actively driven.
   bool is_active_driven;

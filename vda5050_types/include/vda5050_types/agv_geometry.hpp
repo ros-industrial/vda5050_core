@@ -37,10 +37,10 @@ struct AGVGeometry
   /// \brief Array of AGV envelope curves in 2D. eg: the mechanical envelopes
   /// for unloaded and loaded state, the safety fields for different speed
   /// cases.
-  std::optional<std::vector<Envelope2d>> envelopes_2d;
+  std::optional<std::vector<Envelope2d>> envelopes2d;
 
   /// \brief Array of AGV envelope curves in 3D.
-  std::optional<std::vector<Envelope3d>> envelopes_3d;
+  std::optional<std::vector<Envelope3d>> envelopes3d;
 
   /// \brief Equality operator
   ///

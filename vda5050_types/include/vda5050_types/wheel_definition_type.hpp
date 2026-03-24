@@ -22,7 +22,7 @@
 namespace vda5050_types {
 
 /// \brief Enum values for wheel definition
-enum class wheelDefinitionType
+enum class WheelDefinitionType
 {
   DRIVE,
   CASTER,
