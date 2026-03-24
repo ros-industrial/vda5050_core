@@ -385,7 +385,7 @@ void to_json(nlohmann::json& j, const AGVActionT& msg)
     using inner_t = typename blocking_types_optional_trait::value_type;
 
     inner_t value = blocking_types_optional_trait::get(msg.blocking_types);
-    j["blockingtypes"] =
+    j["blockingTypes"] =
       blocking_types_traits<decltype(value)>::to_string(value);
   }
 }
