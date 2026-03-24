@@ -37,6 +37,8 @@
 #include <vda5050_types/control_point.hpp>
 #include <vda5050_types/edge.hpp>
 #include <vda5050_types/edge_state.hpp>
+#include <vda5050_types/envelope2d.hpp>
+#include <vda5050_types/envelope3d.hpp>
 #include <vda5050_types/error.hpp>
 #include <vda5050_types/error_reference.hpp>
 #include <vda5050_types/factsheet.hpp>
@@ -55,6 +57,8 @@
 #include <vda5050_types/optional_parameter.hpp>
 #include <vda5050_types/order.hpp>
 #include <vda5050_types/physical_parameters.hpp>
+#include <vda5050_types/polygon_point.hpp>
+#include <vda5050_types/position.hpp>
 #include <vda5050_types/protocol_features.hpp>
 #include <vda5050_types/protocol_limits.hpp>
 #include <vda5050_types/safety_state.hpp>
@@ -65,6 +69,7 @@
 #include <vda5050_types/vehicle_config.hpp>
 #include <vda5050_types/velocity.hpp>
 #include <vda5050_types/visualization.hpp>
+#include <vda5050_types/wheel_definition.hpp>
 
 #ifdef ENABLE_ROS2
 #include <vda5050_interfaces/msg/action.hpp>
@@ -80,6 +85,8 @@
 #include <vda5050_interfaces/msg/control_point.hpp>
 #include <vda5050_interfaces/msg/edge.hpp>
 #include <vda5050_interfaces/msg/edge_state.hpp>
+#include <vda5050_interfaces/msg/envelope2d.hpp>
+#include <vda5050_interfaces/msg/envelope3d.hpp>
 #include <vda5050_interfaces/msg/error.hpp>
 #include <vda5050_interfaces/msg/error_reference.hpp>
 #include <vda5050_interfaces/msg/factsheet.hpp>
@@ -98,6 +105,8 @@
 #include <vda5050_interfaces/msg/optional_parameter.hpp>
 #include <vda5050_interfaces/msg/order.hpp>
 #include <vda5050_interfaces/msg/physical_parameters.hpp>
+#include <vda5050_interfaces/msg/polygon_point.hpp>
+#include <vda5050_interfaces/msg/position.hpp>
 #include <vda5050_interfaces/msg/protocol_features.hpp>
 #include <vda5050_interfaces/msg/protocol_limits.hpp>
 #include <vda5050_interfaces/msg/safety_state.hpp>
@@ -108,6 +117,7 @@
 #include <vda5050_interfaces/msg/vehicle_config.hpp>
 #include <vda5050_interfaces/msg/velocity.hpp>
 #include <vda5050_interfaces/msg/visualization.hpp>
+#include <vda5050_interfaces/msg/wheel_definition.hpp>
 #endif  // ENABLE_ROS2
 
 #include "traits.hpp"
@@ -449,12 +459,55 @@ namespace agv_geometry_detail {
 template <typename AGVGeometryT>
 void to_json(nlohmann::json& j, const AGVGeometryT& msg)
 {
+  using vda5050_json_utils::optional_field_traits;
+
+  using wheel_definitions_trait =
+    optional_field_traits<decltype(msg.wheel_definitions)>;
+  using envelopes2d_trait = optional_field_traits<decltype(msg.envelopes2d)>;
+  using envelopes3d_trait = optional_field_traits<decltype(msg.envelopes3d)>;
+
+  if (wheel_definitions_trait::has_value(msg.wheel_definitions))
+  {
+    j["wheelDefinitions"] = wheel_definitions_trait::get(msg.wheel_definitions);
+  }
+
+  if (envelopes2d_trait::has_value(msg.envelopes2d))
+  {
+    j["envelopes2d"] = envelopes2d_trait::get(msg.envelopes2d);
+  }
+
+  if (envelopes3d_trait::has_value(msg.envelopes3d))
+  {
+    j["envelopes3d"] = envelopes3d_trait::get(msg.envelopes3d);
+  }
 }
 
 //=============================================================================
 template <typename AGVGeometryT>
 void from_json(const nlohmann::json& j, AGVGeometryT& msg)
 {
+  using vda5050_json_utils::optional_field_traits;
+
+  using wheel_definitions_trait =
+    optional_field_traits<decltype(msg.wheel_definitions)>;
+  using envelopes2d_trait = optional_field_traits<decltype(msg.envelopes2d)>;
+  using envelopes3d_trait = optional_field_traits<decltype(msg.envelopes3d)>;
+
+  if (j.contains("wheelDefinitions"))
+  {
+    wheel_definitions_trait::set(
+      msg.wheel_definitions, j.at("wheelDefinitions"));
+  }
+
+  if (j.contains("envelopes2d"))
+  {
+    envelopes2d_trait::set(msg.envelopes2d, j.at("envelopes2d"));
+  }
+
+  if (j.contains("envelopes3d"))
+  {
+    envelopes3d_trait::set(msg.envelopes3d, j.at("envelopes3d"));
+  }
 }
 
 }  // namespace agv_geometry_detail
@@ -943,6 +996,45 @@ void from_json(const nlohmann::json& j, EdgeStateT& msg)
 }
 
 }  // namespace edge_state_detail
+
+namespace envelope2d_detail {
+
+//=============================================================================
+template <typename Envelope2dT>
+void to_json(nlohmann::json& j, const Envelope2dT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using description_trait = optional_field_traits<decltype(msg.description)>;
+
+  j["set"] = msg.set;
+  j["polygonPoints"] = msg.polygon_points;
+
+  if (description_trait::has_value(msg.description))
+  {
+    j["description"] = description_trait::get(msg.description);
+  }
+}
+
+//=============================================================================
+template <typename Envelope2dT>
+void from_json(const nlohmann::json& j, Envelope2dT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using description_trait = optional_field_traits<decltype(msg.description)>;
+
+  msg.set = j.at("set").get<std::string>();
+  msg.polygon_points = j.at("polygonPoints");
+
+  if (j.contains("description"))
+  {
+    description_trait::set(
+      msg.description, j.at("description").get<std::string>());
+  }
+}
+
+}  // namespace envelope2d_detail
 
 namespace error_detail {
 
@@ -2086,6 +2178,60 @@ void from_json(const nlohmann::json& j, PhysicalParametersT& msg)
 
 }  // namespace physical_parameters_detail
 
+namespace polygon_point_detail {
+
+//=============================================================================
+template <typename PolygonPointT>
+void to_json(nlohmann::json& j, const PolygonPointT& msg)
+{
+}
+
+//=============================================================================
+template <typename PolygonPointT>
+void from_json(const nlohmann::json& j, PolygonPointT& msg)
+{
+}
+
+}  // namespace polygon_point_detail
+
+namespace position_detail {
+
+//=============================================================================
+template <typename PositionT>
+void to_json(nlohmann::json& j, const PositionT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using theta_trait = optional_field_traits<decltype(msg.theta)>;
+
+  j["x"] = msg.x;
+  j["y"] = msg.y;
+
+  if (theta_trait::has_value(msg.theta))
+  {
+    j["theta"] = theta_trait::get(msg.theta);
+  }
+}
+
+//=============================================================================
+template <typename PositionT>
+void from_json(const nlohmann::json& j, PositionT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using theta_trait = optional_field_traits<decltype(msg.theta)>;
+
+  msg.x = j.at("x").get<double>();
+  msg.y = j.at("y").get<double>();
+
+  if (j.contains("theta"))
+  {
+    theta_trait::set(msg.theta, j.at("theta").get<double>());
+  }
+}
+
+}  // namespace position_detail
+
 namespace protocol_features_detail {
 
 //=============================================================================
@@ -2540,6 +2686,59 @@ void from_json(const nlohmann::json& j, VelocityT& msg)
 
 }  // namespace velocity_detail
 
+namespace wheel_definition_detail {
+
+//=============================================================================
+template <typename WheelDefinitionT>
+void to_json(nlohmann::json& j, const WheelDefinitionT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+  using vda5050_json_utils::wheel_definition_type_traits;
+
+  using constraints_trait = optional_field_traits<decltype(msg.constraints)>;
+
+  j["type"] =
+    wheel_definition_type_traits<decltype(msg.type)>::to_string(msg.type);
+  j["isActiveDriven"] = msg.is_active_driven;
+  j["isActiveSteered"] = msg.is_active_steered;
+  j["position"] = msg.position;
+  j["diameter"] = msg.diameter;
+  j["width"] = msg.width;
+  j["centerDisplacement"] = msg.center_displacement;
+
+  if (constraints_trait::has_value(msg.constraints))
+  {
+    j["constraints"] = constraints_trait::get(msg.constraints);
+  }
+}
+
+//=============================================================================
+template <typename WheelDefinitionT>
+void from_json(const nlohmann::json& j, WheelDefinitionT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+  using vda5050_json_utils::wheel_definition_type_traits;
+
+  using constraints_trait = optional_field_traits<decltype(msg.constraints)>;
+
+  msg.type = wheel_definition_type_traits<decltype(msg.type)>::from_string(
+    j.at("type").get<std::string>());
+  msg.is_active_driven = j.at("isActiveDriven").get<bool>();
+  msg.is_active_steered = j.at("isActiveSteered").get<bool>();
+  msg.position = j.at("position");
+  msg.diameter = j.at("diameter").get<double>();
+  msg.width = j.at("width").get<double>();
+  msg.center_displacement = j.at("centerDisplacement").get<double>();
+
+  if (j.contains("constraints"))
+  {
+    constraints_trait::set(
+      msg.constraints, j.at("constraints").get<std::string>());
+  }
+}
+
+}  // namespace wheel_definition_detail
+
 }  // namespace vda5050_types
 
 //=============================================================================
@@ -2887,6 +3086,17 @@ inline void from_json(const nlohmann::json& j, PhysicalParameters& msg)
 }
 
 //=============================================================================
+inline void to_json(nlohmann::json& j, const Position& msg)
+{
+  vda5050_types::position_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Position& msg)
+{
+  vda5050_types::position_detail::from_json(j, msg);
+}
+
+//=============================================================================
 inline void to_json(nlohmann::json& j, const ProtocolFeatures& msg)
 {
   vda5050_types::protocol_features_detail::to_json(j, msg);
@@ -2994,6 +3204,17 @@ inline void to_json(nlohmann::json& /*j*/, const Visualization& /*msg*/)
 inline void from_json(const nlohmann::json& /*j*/, Visualization& /*msg*/)
 {
   // TODO(sauk): Add missing deserialization
+}
+
+//=============================================================================
+inline void to_json(nlohmann::json& j, const WheelDefinition& msg)
+{
+  vda5050_types::wheel_definition_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, WheelDefinition& msg)
+{
+  vda5050_types::wheel_definition_detail::from_json(j, msg);
 }
 
 }  // namespace vda5050_types
@@ -3346,6 +3567,17 @@ inline void from_json(const nlohmann::json& j, PhysicalParameters& msg)
 }
 
 //=============================================================================
+inline void to_json(nlohmann::json& j, const Position& msg)
+{
+  vda5050_types::position_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Position& msg)
+{
+  vda5050_types::position_detail::from_json(j, msg);
+}
+
+//=============================================================================
 inline void to_json(nlohmann::json& j, const ProtocolFeatures& msg)
 {
   vda5050_types::protocol_features_detail::to_json(j, msg);
@@ -3453,6 +3685,17 @@ inline void to_json(nlohmann::json& /*j*/, const Visualization& /*msg*/)
 inline void from_json(const nlohmann::json& /*j*/, Visualization& /*msg*/)
 {
   // TODO(sauk): Add missing deserialization
+}
+
+//=============================================================================
+inline void to_json(nlohmann::json& j, const WheelDefinition& msg)
+{
+  vda5050_types::wheel_definition_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, WheelDefinition& msg)
+{
+  vda5050_types::wheel_definition_detail::from_json(j, msg);
 }
 
 }  // namespace msg

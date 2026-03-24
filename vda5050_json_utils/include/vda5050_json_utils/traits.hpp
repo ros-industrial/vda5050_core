@@ -45,6 +45,7 @@
 #include <vda5050_types/orientation_type.hpp>
 #include <vda5050_types/support.hpp>
 #include <vda5050_types/value_data_type.hpp>
+#include <vda5050_types/wheel_definition_type.hpp>
 
 #ifdef ENABLE_ROS2
 #include <rosidl_runtime_cpp/bounded_vector.hpp>
@@ -61,6 +62,7 @@
 #include <vda5050_interfaces/msg/safety_state.hpp>
 #include <vda5050_interfaces/msg/state.hpp>
 #include <vda5050_interfaces/msg/type_specification.hpp>
+#include <vda5050_interfaces/msg/wheel_definition.hpp>
 #endif  // ENABLE_ROS2
 
 namespace vda5050_json_utils {
@@ -1348,6 +1350,82 @@ struct blocking_types_traits<std::vector<std::string>>
       }
     }
     return types;
+  }
+};
+#endif  // ENABLE_ROS2
+
+//=============================================================================
+template <typename T>
+struct wheel_definition_type_traits;
+
+//=============================================================================
+template <>
+struct wheel_definition_type_traits<vda5050_types::WheelDefinitionType>
+{
+  static std::string to_string(const vda5050_types::WheelDefinitionType& type)
+  {
+    using vda5050_types::WheelDefinitionType;
+
+    switch (type)
+    {
+      case WheelDefinitionType::DRIVE:
+        return "DRIVE";
+      case WheelDefinitionType::CASTER:
+        return "CASTER";
+      case WheelDefinitionType::FIXED:
+        return "FIXED";
+      case WheelDefinitionType::MECANUM:
+        return "MECANUM";
+      default:
+        throw std::runtime_error("Invalid WheelDefinitionType enum value");
+    }
+  }
+
+  static vda5050_types::WheelDefinitionType from_string(const std::string& type)
+  {
+    using vda5050_types::WheelDefinitionType;
+
+    if (type == "DRIVE") return WheelDefinitionType::DRIVE;
+    if (type == "CASTER") return WheelDefinitionType::CASTER;
+    if (type == "FIXED") return WheelDefinitionType::FIXED;
+    if (type == "MECANUM") return WheelDefinitionType::MECANUM;
+    throw std::runtime_error("Invalid wheelDefinitionType string");
+  }
+};
+
+//=============================================================================
+#ifdef ENABLE_ROS2
+template <>
+struct wheel_definition_type_traits<std::string>
+{
+  static std::string to_string(const std::string& type)
+  {
+    using vda5050_interfaces::msg::WheelDefinition;
+
+    if (
+      type == WheelDefinition::TYPE_DRIVE ||
+      type == WheelDefinition::TYPE_CASTER ||
+      type == WheelDefinition::TYPE_FIXED ||
+      type == WheelDefinition::TYPE_MECANUM)
+    {
+      return type;
+    }
+    throw std::runtime_error("Invalid wheel_definition_type value");
+  }
+
+  static std::string from_string(const std::string& type)
+  {
+    using vda5050_interfaces::msg::WheelDefinition;
+
+    if (
+      type == WheelDefinition::TYPE_DRIVE ||
+      type == WheelDefinition::TYPE_CASTER ||
+      type == WheelDefinition::TYPE_FIXED ||
+      type == WheelDefinition::TYPE_MECANUM)
+    {
+      return type;
+    }
+    throw std::runtime_error("Invalid wheelDefinitionType string");
   }
 };
 #endif  // ENABLE_ROS2
