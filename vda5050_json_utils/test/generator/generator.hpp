@@ -73,6 +73,7 @@
 #include <vda5050_types/timing.hpp>
 #include <vda5050_types/trajectory.hpp>
 #include <vda5050_types/type_specification.hpp>
+#include <vda5050_types/value_data_type.hpp>
 #include <vda5050_types/velocity.hpp>
 
 using vda5050_types::Action;
@@ -123,6 +124,7 @@ using vda5050_types::Support;
 using vda5050_types::Timing;
 using vda5050_types::Trajectory;
 using vda5050_types::TypeSpecification;
+using vda5050_types::ValueDataType;
 using vda5050_types::Velocity;
 
 /// \brief Utility class to generate random instances of VDA 5050 message types
@@ -301,7 +303,15 @@ public:
     return types[type_idx];
   }
 
-  std::vector<BlockingType> generate_random_blocking_types() {}
+  std::vector<BlockingType> generate_random_blocking_types()
+  {
+    std::vector<BlockingType> types(generate_random_size());
+    for (auto it = types.begin(); it != types.end(); ++it)
+    {
+      *it = generate_random_blocking_type();
+    }
+    return types;
+  }
 
   /// \brief Generate a random agv kinematic value
   AGVKinematic generate_random_agv_kinematic()
@@ -348,6 +358,15 @@ public:
       *it = generate_random_action_scope();
     }
     return scopes;
+  }
+  /// \brief Generate a random valueDataType value
+  ValueDataType generate_random_value_data_type()
+  {
+    std::vector<ValueDataType> states = {
+      ValueDataType::ARRAY,   ValueDataType::BOOL,   ValueDataType::FLOAT,
+      ValueDataType::INTEGER, ValueDataType::NUMBER, ValueDataType::OBJECT};
+    auto state_idx = generate_random_index(states.size());
+    return states[state_idx];
   }
 
   /// \brief Generate a random vector of type float64
@@ -402,6 +421,13 @@ public:
     {
       msg.key = generate_random_string();
       msg.value = generate_random_string();
+    }
+    else if constexpr (std::is_same_v<T, ActionParameterFactsheet>)
+    {
+      msg.key = generate_random_string();
+      msg.value_data_type = generate_random_value_data_type();
+      msg.description = generate_random_string();
+      msg.is_optional = generate_random_bool();
     }
     else if constexpr (std::is_same_v<T, ActionState>)
     {
@@ -610,7 +636,7 @@ public:
     {
       msg.parameter = generate_random_string();
       msg.support = generate_random_support();
-      msg.description.push_back(generate_random_string());
+      msg.description = generate_random_string();
     }
     else if constexpr (std::is_same_v<T, Order>)
     {

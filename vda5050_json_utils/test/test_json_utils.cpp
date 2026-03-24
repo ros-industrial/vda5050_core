@@ -20,7 +20,9 @@
 
 #include <vda5050_types/action.hpp>
 #include <vda5050_types/action_parameter.hpp>
+#include <vda5050_types/action_parameter_factsheet.hpp>
 #include <vda5050_types/action_state.hpp>
+#include <vda5050_types/agv_action.hpp>
 #include <vda5050_types/agv_position.hpp>
 #include <vda5050_types/battery_state.hpp>
 #include <vda5050_types/bounding_box_reference.hpp>
@@ -42,8 +44,10 @@
 #include <vda5050_types/node.hpp>
 #include <vda5050_types/node_position.hpp>
 #include <vda5050_types/node_state.hpp>
+#include <vda5050_types/optional_parameter.hpp>
 #include <vda5050_types/order.hpp>
 #include <vda5050_types/physical_parameters.hpp>
+#include <vda5050_types/protocol_features.hpp>
 #include <vda5050_types/protocol_limits.hpp>
 #include <vda5050_types/safety_state.hpp>
 #include <vda5050_types/state.hpp>
@@ -58,7 +62,9 @@
 
 using vda5050_types::Action;
 using vda5050_types::ActionParameter;
+using vda5050_types::ActionParameterFactsheet;
 using vda5050_types::ActionState;
+using vda5050_types::AGVAction;
 using vda5050_types::AGVPosition;
 using vda5050_types::BatteryState;
 using vda5050_types::BoundingBoxReference;
@@ -80,8 +86,10 @@ using vda5050_types::MaxStringLens;
 using vda5050_types::Node;
 using vda5050_types::NodePosition;
 using vda5050_types::NodeState;
+using vda5050_types::OptionalParameter;
 using vda5050_types::Order;
 using vda5050_types::PhysicalParameters;
+using vda5050_types::ProtocolFeatures;
 using vda5050_types::ProtocolLimits;
 using vda5050_types::SafetyState;
 using vda5050_types::State;
@@ -92,12 +100,13 @@ using vda5050_types::Velocity;
 
 // List of types to be tested for serialization round-trip
 using SerializableTypes = ::testing::Types<
-  Action, ActionParameter, ActionState, AGVPosition, BatteryState,
-  BoundingBoxReference, Connection, ControlPoint, Edge, EdgeState, Error,
-  ErrorReference, Factsheet, Header, Info, InfoReference, InstantActions, Load,
-  LoadDimensions, MaxArrayLens, MaxStringLens, Node, NodePosition, NodeState,
-  Order, PhysicalParameters, ProtocolLimits, SafetyState, State, Timing,
-  Trajectory, TypeSpecification, Velocity>;
+  Action, ActionParameter, ActionParameterFactsheet, ActionState, AGVAction,
+  AGVPosition, BatteryState, BoundingBoxReference, Connection, ControlPoint,
+  Edge, EdgeState, Error, ErrorReference, Factsheet, Header, Info,
+  InfoReference, InstantActions, Load, LoadDimensions, MaxArrayLens,
+  MaxStringLens, Node, NodePosition, NodeState, OptionalParameter, Order,
+  PhysicalParameters, ProtocolFeatures, ProtocolLimits, SafetyState, State,
+  Timing, Trajectory, TypeSpecification, Velocity>;
 
 template <typename T>
 class SerializationTest : public ::testing::Test
