@@ -62,6 +62,7 @@
 #include <vda5050_types/trajectory.hpp>
 #include <vda5050_types/type_specification.hpp>
 #include <vda5050_types/velocity.hpp>
+#include <vda5050_types/visualization.hpp>
 #include <vda5050_types/wheel_definition.hpp>
 
 #include "vda5050_json_utils/serialization.hpp"
@@ -112,6 +113,7 @@ using vda5050_types::Timing;
 using vda5050_types::Trajectory;
 using vda5050_types::TypeSpecification;
 using vda5050_types::Velocity;
+using vda5050_types::Visualization;
 using vda5050_types::WheelDefinition;
 
 // List of types to be tested for serialization round-trip
@@ -123,7 +125,7 @@ using SerializableTypes = ::testing::Types<
   LoadSet, LoadSpecification, MaxArrayLens, MaxStringLens, Node, NodePosition,
   NodeState, OptionalParameter, Order, PhysicalParameters, PolygonPoint,
   Position, ProtocolFeatures, ProtocolLimits, SafetyState, State, Timing,
-  Trajectory, TypeSpecification, Velocity, WheelDefinition>;
+  Trajectory, TypeSpecification, Velocity, Visualization, WheelDefinition>;
 
 template <typename T>
 class SerializationTest : public ::testing::Test

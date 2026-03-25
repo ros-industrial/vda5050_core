@@ -82,6 +82,7 @@
 #include <vda5050_types/type_specification.hpp>
 #include <vda5050_types/value_data_type.hpp>
 #include <vda5050_types/velocity.hpp>
+#include <vda5050_types/visualization.hpp>
 #include <vda5050_types/wheel_definition.hpp>
 #include <vda5050_types/wheel_definition_type.hpp>
 
@@ -142,6 +143,7 @@ using vda5050_types::Trajectory;
 using vda5050_types::TypeSpecification;
 using vda5050_types::ValueDataType;
 using vda5050_types::Velocity;
+using vda5050_types::Visualization;
 using vda5050_types::WheelDefinition;
 using vda5050_types::WheelDefinitionType;
 
@@ -828,6 +830,12 @@ public:
       msg.vx = generate_random_float();
       msg.vy = generate_random_float();
       msg.omega = generate_random_float();
+    }
+    else if constexpr (std::is_same_v<T, Visualization>)
+    {
+      msg.header = generate<Header>();
+      msg.agv_position = generate<AGVPosition>();
+      msg.velocity = generate<Velocity>();
     }
     else if constexpr (std::is_same_v<T, WheelDefinition>)
     {
