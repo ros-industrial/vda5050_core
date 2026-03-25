@@ -3056,6 +3056,54 @@ void from_json(const nlohmann::json& j, VelocityT& msg)
 
 }  // namespace velocity_detail
 
+namespace visualization_detail {
+
+//=============================================================================
+template <typename VisualizationT>
+void to_json(nlohmann::json& j, const VisualizationT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using agv_position_trait = optional_field_traits<decltype(msg.agv_position)>;
+  using velocity_trait = optional_field_traits<decltype(msg.velocity)>;
+
+  to_json(j, msg.header);
+
+  if (agv_position_trait::has_value(msg.agv_position))
+  {
+    j["agvPosition"] = agv_position_trait::get(msg.agv_position);
+  }
+
+  if (velocity_trait::has_value(msg.velocity))
+  {
+    j["velocity"] = velocity_trait::get(msg.velocity);
+  }
+}
+
+//=============================================================================
+template <typename VisualizationT>
+void from_json(const nlohmann::json& j, VisualizationT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using agv_position_trait = optional_field_traits<decltype(msg.agv_position)>;
+  using velocity_trait = optional_field_traits<decltype(msg.velocity)>;
+
+  from_json(j, msg.header);
+
+  if (j.contains("agvPosition"))
+  {
+    agv_position_trait::set(msg.agv_position, j.at("agvPosition"));
+  }
+
+  if (j.contains("velocity"))
+  {
+    velocity_trait::set(msg.velocity, j.at("velocity"));
+  }
+}
+
+}  // namespace visualization_detail
+
 namespace wheel_definition_detail {
 
 //=============================================================================
@@ -3599,14 +3647,14 @@ inline void from_json(const nlohmann::json& j, Velocity& msg)
 }
 
 //=============================================================================
-inline void to_json(nlohmann::json& /*j*/, const Visualization& /*msg*/)
+inline void to_json(nlohmann::json& j, const Visualization& msg)
 {
-  // TODO(sauk): Add missing serialization
+  vda5050_types::visualization_detail::to_json(j, msg);
 }
 
-inline void from_json(const nlohmann::json& /*j*/, Visualization& /*msg*/)
+inline void from_json(const nlohmann::json& j, Visualization& msg)
 {
-  // TODO(sauk): Add missing deserialization
+  vda5050_types::visualization_detail::from_json(j, msg);
 }
 
 //=============================================================================
@@ -4113,14 +4161,14 @@ inline void from_json(const nlohmann::json& j, Velocity& msg)
 }
 
 //=============================================================================
-inline void to_json(nlohmann::json& /*j*/, const Visualization& /*msg*/)
+inline void to_json(nlohmann::json& j, const Visualization& msg)
 {
-  // TODO(sauk): Add missing serialization
+  vda5050_types::visualization_detail::to_json(j, msg);
 }
 
-inline void from_json(const nlohmann::json& /*j*/, Visualization& /*msg*/)
+inline void from_json(const nlohmann::json& j, Visualization& msg)
 {
-  // TODO(sauk): Add missing deserialization
+  vda5050_types::visualization_detail::from_json(j, msg);
 }
 
 //=============================================================================
