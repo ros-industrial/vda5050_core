@@ -23,6 +23,7 @@
 #include <vda5050_types/action_parameter_factsheet.hpp>
 #include <vda5050_types/action_state.hpp>
 #include <vda5050_types/agv_action.hpp>
+#include <vda5050_types/agv_geometry.hpp>
 #include <vda5050_types/agv_position.hpp>
 #include <vda5050_types/battery_state.hpp>
 #include <vda5050_types/bounding_box_reference.hpp>
@@ -30,6 +31,8 @@
 #include <vda5050_types/control_point.hpp>
 #include <vda5050_types/edge.hpp>
 #include <vda5050_types/edge_state.hpp>
+#include <vda5050_types/envelope2d.hpp>
+#include <vda5050_types/envelope3d.hpp>
 #include <vda5050_types/error.hpp>
 #include <vda5050_types/error_reference.hpp>
 #include <vda5050_types/factsheet.hpp>
@@ -39,6 +42,8 @@
 #include <vda5050_types/instant_actions.hpp>
 #include <vda5050_types/load.hpp>
 #include <vda5050_types/load_dimensions.hpp>
+#include <vda5050_types/load_set.hpp>
+#include <vda5050_types/load_specification.hpp>
 #include <vda5050_types/max_array_lens.hpp>
 #include <vda5050_types/max_string_lens.hpp>
 #include <vda5050_types/node.hpp>
@@ -47,6 +52,8 @@
 #include <vda5050_types/optional_parameter.hpp>
 #include <vda5050_types/order.hpp>
 #include <vda5050_types/physical_parameters.hpp>
+#include <vda5050_types/polygon_point.hpp>
+#include <vda5050_types/position.hpp>
 #include <vda5050_types/protocol_features.hpp>
 #include <vda5050_types/protocol_limits.hpp>
 #include <vda5050_types/safety_state.hpp>
@@ -55,6 +62,7 @@
 #include <vda5050_types/trajectory.hpp>
 #include <vda5050_types/type_specification.hpp>
 #include <vda5050_types/velocity.hpp>
+#include <vda5050_types/wheel_definition.hpp>
 
 #include "vda5050_json_utils/serialization.hpp"
 
@@ -65,6 +73,7 @@ using vda5050_types::ActionParameter;
 using vda5050_types::ActionParameterFactsheet;
 using vda5050_types::ActionState;
 using vda5050_types::AGVAction;
+using vda5050_types::AGVGeometry;
 using vda5050_types::AGVPosition;
 using vda5050_types::BatteryState;
 using vda5050_types::BoundingBoxReference;
@@ -72,6 +81,8 @@ using vda5050_types::Connection;
 using vda5050_types::ControlPoint;
 using vda5050_types::Edge;
 using vda5050_types::EdgeState;
+using vda5050_types::Envelope2d;
+using vda5050_types::Envelope3d;
 using vda5050_types::Error;
 using vda5050_types::ErrorReference;
 using vda5050_types::Factsheet;
@@ -81,6 +92,8 @@ using vda5050_types::InfoReference;
 using vda5050_types::InstantActions;
 using vda5050_types::Load;
 using vda5050_types::LoadDimensions;
+using vda5050_types::LoadSet;
+using vda5050_types::LoadSpecification;
 using vda5050_types::MaxArrayLens;
 using vda5050_types::MaxStringLens;
 using vda5050_types::Node;
@@ -89,6 +102,8 @@ using vda5050_types::NodeState;
 using vda5050_types::OptionalParameter;
 using vda5050_types::Order;
 using vda5050_types::PhysicalParameters;
+using vda5050_types::PolygonPoint;
+using vda5050_types::Position;
 using vda5050_types::ProtocolFeatures;
 using vda5050_types::ProtocolLimits;
 using vda5050_types::SafetyState;
@@ -97,16 +112,18 @@ using vda5050_types::Timing;
 using vda5050_types::Trajectory;
 using vda5050_types::TypeSpecification;
 using vda5050_types::Velocity;
+using vda5050_types::WheelDefinition;
 
 // List of types to be tested for serialization round-trip
 using SerializableTypes = ::testing::Types<
   Action, ActionParameter, ActionParameterFactsheet, ActionState, AGVAction,
-  AGVPosition, BatteryState, BoundingBoxReference, Connection, ControlPoint,
-  Edge, EdgeState, Error, ErrorReference, Factsheet, Header, Info,
-  InfoReference, InstantActions, Load, LoadDimensions, MaxArrayLens,
-  MaxStringLens, Node, NodePosition, NodeState, OptionalParameter, Order,
-  PhysicalParameters, ProtocolFeatures, ProtocolLimits, SafetyState, State,
-  Timing, Trajectory, TypeSpecification, Velocity>;
+  AGVGeometry, AGVPosition, BatteryState, BoundingBoxReference, Connection,
+  ControlPoint, Edge, EdgeState, Envelope2d, Envelope3d, Error, ErrorReference,
+  Factsheet, Header, Info, InfoReference, InstantActions, Load, LoadDimensions,
+  LoadSet, LoadSpecification, MaxArrayLens, MaxStringLens, Node, NodePosition,
+  NodeState, OptionalParameter, Order, PhysicalParameters, PolygonPoint,
+  Position, ProtocolFeatures, ProtocolLimits, SafetyState, State, Timing,
+  Trajectory, TypeSpecification, Velocity, WheelDefinition>;
 
 template <typename T>
 class SerializationTest : public ::testing::Test

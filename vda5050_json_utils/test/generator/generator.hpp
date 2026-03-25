@@ -33,6 +33,7 @@
 #include <vda5050_types/action_status.hpp>
 #include <vda5050_types/agv_action.hpp>
 #include <vda5050_types/agv_class.hpp>
+#include <vda5050_types/agv_geometry.hpp>
 #include <vda5050_types/agv_kinematic.hpp>
 #include <vda5050_types/agv_position.hpp>
 #include <vda5050_types/battery_state.hpp>
@@ -44,6 +45,8 @@
 #include <vda5050_types/e_stop.hpp>
 #include <vda5050_types/edge.hpp>
 #include <vda5050_types/edge_state.hpp>
+#include <vda5050_types/envelope2d.hpp>
+#include <vda5050_types/envelope3d.hpp>
 #include <vda5050_types/error.hpp>
 #include <vda5050_types/error_level.hpp>
 #include <vda5050_types/error_reference.hpp>
@@ -55,6 +58,8 @@
 #include <vda5050_types/instant_actions.hpp>
 #include <vda5050_types/load.hpp>
 #include <vda5050_types/load_dimensions.hpp>
+#include <vda5050_types/load_set.hpp>
+#include <vda5050_types/load_specification.hpp>
 #include <vda5050_types/max_array_lens.hpp>
 #include <vda5050_types/max_string_lens.hpp>
 #include <vda5050_types/node.hpp>
@@ -65,6 +70,8 @@
 #include <vda5050_types/order.hpp>
 #include <vda5050_types/orientation_type.hpp>
 #include <vda5050_types/physical_parameters.hpp>
+#include <vda5050_types/polygon_point.hpp>
+#include <vda5050_types/position.hpp>
 #include <vda5050_types/protocol_features.hpp>
 #include <vda5050_types/protocol_limits.hpp>
 #include <vda5050_types/safety_state.hpp>
@@ -75,6 +82,8 @@
 #include <vda5050_types/type_specification.hpp>
 #include <vda5050_types/value_data_type.hpp>
 #include <vda5050_types/velocity.hpp>
+#include <vda5050_types/wheel_definition.hpp>
+#include <vda5050_types/wheel_definition_type.hpp>
 
 using vda5050_types::Action;
 using vda5050_types::ActionParameter;
@@ -84,6 +93,7 @@ using vda5050_types::ActionState;
 using vda5050_types::ActionStatus;
 using vda5050_types::AGVAction;
 using vda5050_types::AGVClass;
+using vda5050_types::AGVGeometry;
 using vda5050_types::AGVKinematic;
 using vda5050_types::AGVPosition;
 using vda5050_types::BatteryState;
@@ -94,6 +104,8 @@ using vda5050_types::ConnectionState;
 using vda5050_types::ControlPoint;
 using vda5050_types::Edge;
 using vda5050_types::EdgeState;
+using vda5050_types::Envelope2d;
+using vda5050_types::Envelope3d;
 using vda5050_types::Error;
 using vda5050_types::ErrorLevel;
 using vda5050_types::ErrorReference;
@@ -106,6 +118,8 @@ using vda5050_types::InfoReference;
 using vda5050_types::InstantActions;
 using vda5050_types::Load;
 using vda5050_types::LoadDimensions;
+using vda5050_types::LoadSet;
+using vda5050_types::LoadSpecification;
 using vda5050_types::MaxArrayLens;
 using vda5050_types::MaxStringLens;
 using vda5050_types::Node;
@@ -116,6 +130,8 @@ using vda5050_types::OptionalParameter;
 using vda5050_types::Order;
 using vda5050_types::OrientationType;
 using vda5050_types::PhysicalParameters;
+using vda5050_types::PolygonPoint;
+using vda5050_types::Position;
 using vda5050_types::ProtocolFeatures;
 using vda5050_types::ProtocolLimits;
 using vda5050_types::SafetyState;
@@ -126,6 +142,8 @@ using vda5050_types::Trajectory;
 using vda5050_types::TypeSpecification;
 using vda5050_types::ValueDataType;
 using vda5050_types::Velocity;
+using vda5050_types::WheelDefinition;
+using vda5050_types::WheelDefinitionType;
 
 /// \brief Utility class to generate random instances of VDA 5050 message types
 class RandomDataGenerator
@@ -303,6 +321,7 @@ public:
     return types[type_idx];
   }
 
+  /// \brief Generate a random blocking types vector
   std::vector<BlockingType> generate_random_blocking_types()
   {
     std::vector<BlockingType> types(generate_random_size());
@@ -365,6 +384,16 @@ public:
     std::vector<ValueDataType> states = {
       ValueDataType::ARRAY,   ValueDataType::BOOL,   ValueDataType::FLOAT,
       ValueDataType::INTEGER, ValueDataType::NUMBER, ValueDataType::OBJECT};
+    auto state_idx = generate_random_index(states.size());
+    return states[state_idx];
+  }
+
+  /// \brief Generate a random wheelDefinition type
+  WheelDefinitionType generate_random_wheel_definition_type()
+  {
+    std::vector<WheelDefinitionType> states = {
+      WheelDefinitionType::DRIVE, WheelDefinitionType::CASTER,
+      WheelDefinitionType::FIXED, WheelDefinitionType::MECANUM};
     auto state_idx = generate_random_index(states.size());
     return states[state_idx];
   }
@@ -458,6 +487,15 @@ public:
       msg.action_description = generate_random_string();
       msg.blocking_types = generate_random_blocking_types();
     }
+    else if constexpr (std::is_same_v<T, AGVGeometry>)
+    {
+      msg.wheel_definitions =
+        generate_random_vector<WheelDefinition>(generate_random_size());
+      msg.envelopes2d =
+        generate_random_vector<Envelope2d>(generate_random_size());
+      msg.envelopes3d =
+        generate_random_vector<Envelope3d>(generate_random_size());
+    }
     else if constexpr (std::is_same_v<T, BatteryState>)
     {
       msg.battery_charge = generate_random_percentage();
@@ -512,6 +550,21 @@ public:
       msg.released = generate_random_bool();
       msg.trajectory = generate<Trajectory>();
     }
+    else if constexpr (std::is_same_v<T, Envelope2d>)
+    {
+      msg.set = generate_random_string();
+      msg.polygon_points =
+        generate_random_vector<PolygonPoint>(generate_random_size());
+      msg.description = generate_random_string();
+    }
+    else if constexpr (std::is_same_v<T, Envelope3d>)
+    {
+      msg.set = generate_random_string();
+      msg.format = generate_random_string();
+      msg.data = generate_random_string();
+      msg.url = generate_random_string();
+      msg.description = generate_random_string();
+    }
     else if constexpr (std::is_same_v<T, Error>)
     {
       msg.error_type = generate_random_string();
@@ -532,9 +585,9 @@ public:
       msg.physical_parameters = generate<PhysicalParameters>();
       msg.protocol_limits = generate<ProtocolLimits>();
       msg.protocol_features = generate<ProtocolFeatures>();
-      // msg.agv_geometry = generate<AGVGeometry>();
-      // msg.load_specification = generate<LoadSpecification>();
-      // msg.vehicle_config = generate<VehicleConfig>();
+      msg.agv_geometry = generate<AGVGeometry>();
+      msg.load_specification = generate<LoadSpecification>();
+      msg.localization_parameters = generate_random_string();
     }
     else if constexpr (std::is_same_v<T, Header>)
     {
@@ -575,6 +628,34 @@ public:
       msg.length = generate_random_float();
       msg.width = generate_random_float();
       msg.height = generate_random_float();
+    }
+    else if constexpr (std::is_same_v<T, LoadSet>)
+    {
+      msg.set_name = generate_random_string();
+      msg.load_type = generate_random_string();
+      msg.load_positions =
+        generate_random_string_vector(generate_random_size());
+      msg.bounding_box_reference = generate<BoundingBoxReference>();
+      msg.load_dimensions = generate<LoadDimensions>();
+      msg.max_weight = generate_random_float();
+      msg.min_load_handling_height = generate_random_float();
+      msg.max_load_handling_height = generate_random_float();
+      msg.min_load_handling_depth = generate_random_float();
+      msg.max_load_handling_depth = generate_random_float();
+      msg.min_load_handling_tilt = generate_random_float();
+      msg.max_load_handling_tilt = generate_random_float();
+      msg.agv_speed_limit = generate_random_float();
+      msg.agv_acceleration_limit = generate_random_float();
+      msg.agv_deceleration_limit = generate_random_float();
+      msg.pick_time = generate_random_float();
+      msg.drop_time = generate_random_float();
+      msg.description = generate_random_string();
+    }
+    else if constexpr (std::is_same_v<T, LoadSpecification>)
+    {
+      msg.load_positions =
+        generate_random_string_vector(generate_random_size());
+      msg.load_sets = generate_random_vector<LoadSet>(generate_random_size());
     }
     else if constexpr (std::is_same_v<T, MaxArrayLens>)
     {
@@ -660,6 +741,17 @@ public:
       msg.angular_speed_min = generate_random_float();
       msg.angular_speed_max = generate_random_float();
     }
+    else if constexpr (std::is_same_v<T, PolygonPoint>)
+    {
+      msg.x = generate_random_float();
+      msg.y = generate_random_float();
+    }
+    else if constexpr (std::is_same_v<T, Position>)
+    {
+      msg.x = generate_random_float();
+      msg.y = generate_random_float();
+      msg.theta = generate_random_float();
+    }
     else if constexpr (std::is_same_v<T, ProtocolFeatures>)
     {
       msg.optional_parameters =
@@ -736,6 +828,17 @@ public:
       msg.vx = generate_random_float();
       msg.vy = generate_random_float();
       msg.omega = generate_random_float();
+    }
+    else if constexpr (std::is_same_v<T, WheelDefinition>)
+    {
+      msg.type = generate_random_wheel_definition_type();
+      msg.is_active_driven = generate_random_bool();
+      msg.is_active_steered = generate_random_bool();
+      msg.position = generate<Position>();
+      msg.diameter = generate_random_float();
+      msg.width = generate_random_float();
+      msg.center_displacement = generate_random_float();
+      msg.constraints = generate_random_string();
     }
     else
     {
