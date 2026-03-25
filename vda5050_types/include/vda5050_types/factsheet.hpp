@@ -19,6 +19,9 @@
 #ifndef VDA5050_TYPES__FACTSHEET_HPP_
 #define VDA5050_TYPES__FACTSHEET_HPP_
 
+#include <optional>
+#include <string>
+
 #include "vda5050_types/agv_geometry.hpp"
 #include "vda5050_types/header.hpp"
 #include "vda5050_types/load_specification.hpp"
@@ -26,7 +29,6 @@
 #include "vda5050_types/protocol_features.hpp"
 #include "vda5050_types/protocol_limits.hpp"
 #include "vda5050_types/type_specification.hpp"
-#include "vda5050_types/vehicle_config.hpp"
 
 namespace vda5050_types {
 
@@ -58,9 +60,8 @@ struct Factsheet
   /// \brief Abstract specification of load capabilities
   LoadSpecification load_specification;
 
-  /// \brief Summary of current software and hardware versions on the vehicle
-  /// and optional network information
-  VehicleConfig vehicle_config;
+  /// \brief Detailed specification of localization
+  std::optional<std::string> localization_parameters;
 
   /// \brief Equality operator
   ///
@@ -76,7 +77,8 @@ struct Factsheet
     if (this->protocol_features != other.protocol_features) return false;
     if (this->agv_geometry != other.agv_geometry) return false;
     if (this->load_specification != other.load_specification) return false;
-    if (this->vehicle_config != other.vehicle_config) return false;
+    if (this->localization_parameters != other.localization_parameters)
+      return false;
     return true;
   }
 
