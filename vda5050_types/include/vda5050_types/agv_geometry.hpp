@@ -50,8 +50,8 @@ struct AGVGeometry
   inline bool operator==(const AGVGeometry& other) const
   {
     if (this->wheel_definitions != other.wheel_definitions) return false;
-    if (this->envelopes_2d != other.envelopes_2d) return false;
-    if (this->envelopes_3d != other.envelopes_3d) return false;
+    if (this->envelopes2d != other.envelopes2d) return false;
+    if (this->envelopes3d != other.envelopes3d) return false;
     return true;
   }
 
