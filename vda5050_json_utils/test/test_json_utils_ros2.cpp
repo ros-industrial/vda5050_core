@@ -22,14 +22,20 @@
 
 #include <vda5050_interfaces/msg/action.hpp>
 #include <vda5050_interfaces/msg/action_parameter.hpp>
+#include <vda5050_interfaces/msg/action_parameter_factsheet.hpp>
 #include <vda5050_interfaces/msg/action_state.hpp>
+#include <vda5050_interfaces/msg/agv_action.hpp>
+#include <vda5050_interfaces/msg/agv_geometry.hpp>
 #include <vda5050_interfaces/msg/agv_position.hpp>
 #include <vda5050_interfaces/msg/battery_state.hpp>
+#include <vda5050_interfaces/msg/blocking_type.hpp>
 #include <vda5050_interfaces/msg/bounding_box_reference.hpp>
 #include <vda5050_interfaces/msg/connection.hpp>
 #include <vda5050_interfaces/msg/control_point.hpp>
 #include <vda5050_interfaces/msg/edge.hpp>
 #include <vda5050_interfaces/msg/edge_state.hpp>
+#include <vda5050_interfaces/msg/envelope2d.hpp>
+#include <vda5050_interfaces/msg/envelope3d.hpp>
 #include <vda5050_interfaces/msg/error.hpp>
 #include <vda5050_interfaces/msg/error_reference.hpp>
 #include <vda5050_interfaces/msg/factsheet.hpp>
@@ -39,13 +45,19 @@
 #include <vda5050_interfaces/msg/instant_actions.hpp>
 #include <vda5050_interfaces/msg/load.hpp>
 #include <vda5050_interfaces/msg/load_dimensions.hpp>
+#include <vda5050_interfaces/msg/load_set.hpp>
+#include <vda5050_interfaces/msg/load_specification.hpp>
 #include <vda5050_interfaces/msg/max_array_lens.hpp>
 #include <vda5050_interfaces/msg/max_string_lens.hpp>
 #include <vda5050_interfaces/msg/node.hpp>
 #include <vda5050_interfaces/msg/node_position.hpp>
 #include <vda5050_interfaces/msg/node_state.hpp>
+#include <vda5050_interfaces/msg/optional_parameter.hpp>
 #include <vda5050_interfaces/msg/order.hpp>
 #include <vda5050_interfaces/msg/physical_parameters.hpp>
+#include <vda5050_interfaces/msg/polygon_point.hpp>
+#include <vda5050_interfaces/msg/position.hpp>
+#include <vda5050_interfaces/msg/protocol_features.hpp>
 #include <vda5050_interfaces/msg/protocol_limits.hpp>
 #include <vda5050_interfaces/msg/safety_state.hpp>
 #include <vda5050_interfaces/msg/state.hpp>
@@ -53,6 +65,7 @@
 #include <vda5050_interfaces/msg/trajectory.hpp>
 #include <vda5050_interfaces/msg/type_specification.hpp>
 #include <vda5050_interfaces/msg/velocity.hpp>
+#include <vda5050_interfaces/msg/wheel_definition.hpp>
 
 #include "vda5050_json_utils/serialization.hpp"
 
@@ -60,7 +73,10 @@
 
 using vda5050_interfaces::msg::Action;
 using vda5050_interfaces::msg::ActionParameter;
+using vda5050_interfaces::msg::ActionParameterFactsheet;
 using vda5050_interfaces::msg::ActionState;
+using vda5050_interfaces::msg::AGVAction;
+using vda5050_interfaces::msg::AGVGeometry;
 using vda5050_interfaces::msg::AGVPosition;
 using vda5050_interfaces::msg::BatteryState;
 using vda5050_interfaces::msg::BoundingBoxReference;
@@ -68,6 +84,8 @@ using vda5050_interfaces::msg::Connection;
 using vda5050_interfaces::msg::ControlPoint;
 using vda5050_interfaces::msg::Edge;
 using vda5050_interfaces::msg::EdgeState;
+using vda5050_interfaces::msg::Envelope2d;
+using vda5050_interfaces::msg::Envelope3d;
 using vda5050_interfaces::msg::Error;
 using vda5050_interfaces::msg::ErrorReference;
 using vda5050_interfaces::msg::Factsheet;
@@ -77,13 +95,19 @@ using vda5050_interfaces::msg::InfoReference;
 using vda5050_interfaces::msg::InstantActions;
 using vda5050_interfaces::msg::Load;
 using vda5050_interfaces::msg::LoadDimensions;
+using vda5050_interfaces::msg::LoadSet;
+using vda5050_interfaces::msg::LoadSpecification;
 using vda5050_interfaces::msg::MaxArrayLens;
 using vda5050_interfaces::msg::MaxStringLens;
 using vda5050_interfaces::msg::Node;
 using vda5050_interfaces::msg::NodePosition;
 using vda5050_interfaces::msg::NodeState;
+using vda5050_interfaces::msg::OptionalParameter;
 using vda5050_interfaces::msg::Order;
 using vda5050_interfaces::msg::PhysicalParameters;
+using vda5050_interfaces::msg::PolygonPoint;
+using vda5050_interfaces::msg::Position;
+using vda5050_interfaces::msg::ProtocolFeatures;
 using vda5050_interfaces::msg::ProtocolLimits;
 using vda5050_interfaces::msg::SafetyState;
 using vda5050_interfaces::msg::State;
@@ -91,15 +115,18 @@ using vda5050_interfaces::msg::Timing;
 using vda5050_interfaces::msg::Trajectory;
 using vda5050_interfaces::msg::TypeSpecification;
 using vda5050_interfaces::msg::Velocity;
+using vda5050_interfaces::msg::WheelDefinition;
 
 // List of types to be tested for serialization round-trip
 using SerializableTypesROS2 = ::testing::Types<
-  Action, ActionParameter, ActionState, AGVPosition, BatteryState,
-  BoundingBoxReference, Connection, ControlPoint, Edge, EdgeState, Error,
-  ErrorReference, Factsheet, Header, Info, InfoReference, InstantActions, Load,
-  LoadDimensions, MaxArrayLens, MaxStringLens, Node, NodePosition, NodeState,
-  Order, PhysicalParameters, ProtocolLimits, SafetyState, State, Timing,
-  Trajectory, TypeSpecification, Velocity>;
+  Action, ActionParameter, ActionParameterFactsheet, ActionState, AGVAction,
+  AGVGeometry, AGVPosition, BatteryState, BoundingBoxReference, Connection,
+  ControlPoint, Edge, EdgeState, Envelope2d, Envelope3d, Error, ErrorReference,
+  Factsheet, Header, Info, InfoReference, InstantActions, Load, LoadDimensions,
+  LoadSet, LoadSpecification, MaxArrayLens, MaxStringLens, Node, NodePosition,
+  NodeState, OptionalParameter, Order, PhysicalParameters, PolygonPoint,
+  Position, ProtocolFeatures, ProtocolLimits, SafetyState, State, Timing,
+  Trajectory, TypeSpecification, Velocity, WheelDefinition>;
 
 template <typename T>
 class SerializationTestROS2 : public ::testing::Test
