@@ -48,6 +48,7 @@
 #include <vda5050_types/instant_actions.hpp>
 #include <vda5050_types/load.hpp>
 #include <vda5050_types/load_dimensions.hpp>
+#include <vda5050_types/load_set.hpp>
 #include <vda5050_types/load_specification.hpp>
 #include <vda5050_types/max_array_lens.hpp>
 #include <vda5050_types/max_string_lens.hpp>
@@ -66,7 +67,6 @@
 #include <vda5050_types/timing.hpp>
 #include <vda5050_types/trajectory.hpp>
 #include <vda5050_types/type_specification.hpp>
-#include <vda5050_types/vehicle_config.hpp>
 #include <vda5050_types/velocity.hpp>
 #include <vda5050_types/visualization.hpp>
 #include <vda5050_types/wheel_definition.hpp>
@@ -96,6 +96,7 @@
 #include <vda5050_interfaces/msg/instant_actions.hpp>
 #include <vda5050_interfaces/msg/load.hpp>
 #include <vda5050_interfaces/msg/load_dimensions.hpp>
+#include <vda5050_interfaces/msg/load_set.hpp>
 #include <vda5050_interfaces/msg/load_specification.hpp>
 #include <vda5050_interfaces/msg/max_array_lens.hpp>
 #include <vda5050_interfaces/msg/max_string_lens.hpp>
@@ -114,7 +115,6 @@
 #include <vda5050_interfaces/msg/timing.hpp>
 #include <vda5050_interfaces/msg/trajectory.hpp>
 #include <vda5050_interfaces/msg/type_specification.hpp>
-#include <vda5050_interfaces/msg/vehicle_config.hpp>
 #include <vda5050_interfaces/msg/velocity.hpp>
 #include <vda5050_interfaces/msg/visualization.hpp>
 #include <vda5050_interfaces/msg/wheel_definition.hpp>
@@ -1036,6 +1036,69 @@ void from_json(const nlohmann::json& j, Envelope2dT& msg)
 
 }  // namespace envelope2d_detail
 
+namespace envelope3d_detail {
+
+//=============================================================================
+template <typename Envelope3dT>
+void to_json(nlohmann::json& j, const Envelope3dT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using data_trait = optional_field_traits<decltype(msg.data)>;
+  using url_trait = optional_field_traits<decltype(msg.url)>;
+  using description_trait = optional_field_traits<decltype(msg.description)>;
+
+  j["set"] = msg.set;
+  j["format"] = msg.format;
+
+  if (data_trait::has_value(msg.data))
+  {
+    j["data"] = data_trait::get(msg.data);
+  }
+
+  if (url_trait::has_value(msg.url))
+  {
+    j["url"] = url_trait::get(msg.url);
+  }
+
+  if (description_trait::has_value(msg.description))
+  {
+    j["description"] = description_trait::get(msg.description);
+  }
+}
+
+//=============================================================================
+template <typename Envelope3dT>
+void from_json(const nlohmann::json& j, Envelope3dT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using data_trait = optional_field_traits<decltype(msg.data)>;
+  using url_trait = optional_field_traits<decltype(msg.url)>;
+  using description_trait = optional_field_traits<decltype(msg.description)>;
+
+  msg.set = j.at("set").get<std::string>();
+  msg.format = j.at("format").get<std::string>();
+
+  if (j.contains("data"))
+  {
+    data_trait::set(msg.data, j.at("data").get<std::string>());
+  }
+
+  if (j.contains("url"))
+  {
+    url_trait::set(msg.url, j.at("url").get<std::string>());
+  }
+
+  if (j.contains("description"))
+  {
+    description_trait::set(
+      msg.description, j.at("description").get<std::string>());
+  }
+}
+
+}  // namespace envelope3d_detail
+
 namespace error_detail {
 
 //=============================================================================
@@ -1123,30 +1186,51 @@ namespace factsheet_detail {
 template <typename FactsheetT>
 void to_json(nlohmann::json& j, const FactsheetT& msg)
 {
+  using vda5050_json_utils::optional_field_traits;
+
+  using localization_parameter_trait =
+    optional_field_traits<decltype(msg.localization_parameters)>;
+
   to_json(j, msg.header);
 
   j["typeSpecification"] = msg.type_specification;
   j["physicalParameters"] = msg.physical_parameters;
   j["protocolLimits"] = msg.protocol_limits;
   j["protocolFeatures"] = msg.protocol_features;
-  // j["agvGeometry"] = msg.agv_geometry;
-  // j["loadSpecification"] = msg.load_specification;
-  // j["vehicleConfig"] = msg.vehicle_config;
+  j["agvGeometry"] = msg.agv_geometry;
+  j["loadSpecification"] = msg.load_specification;
+
+  if (localization_parameter_trait::has_value(msg.localization_parameters))
+  {
+    j["localizationParameters"] =
+      localization_parameter_trait::get(msg.localization_parameters);
+  }
 }
 
 //=============================================================================
 template <typename FactsheetT>
 void from_json(const nlohmann::json& j, FactsheetT& msg)
 {
+  using vda5050_json_utils::optional_field_traits;
+
+  using localization_parameter_trait =
+    optional_field_traits<decltype(msg.localization_parameters)>;
+
   from_json(j, msg.header);
 
   msg.type_specification = j.at("typeSpecification");
   msg.physical_parameters = j.at("physicalParameters");
   msg.protocol_limits = j.at("protocolLimits");
   msg.protocol_features = j.at("protocolFeatures");
-  // msg.agv_geometry = j.at("agvGeometry");
-  // msg.load_specification = j.at("loadSpecification");
-  // msg.vehicle_config = j.at("vehicleConfig");
+  msg.agv_geometry = j.at("agvGeometry");
+  msg.load_specification = j.at("loadSpecification");
+
+  if (j.contains("localizationParameters"))
+  {
+    localization_parameter_trait::set(
+      msg.localization_parameters,
+      j.at("localizationParameters").get<std::string>());
+  }
 }
 
 }  // namespace factsheet_detail
@@ -1426,18 +1510,316 @@ void from_json(const nlohmann::json& j, LoadDimensionsT& msg)
 
 }  // namespace load_dimensions_detail
 
+namespace load_set_detail {
+
+//=============================================================================
+template <typename LoadSetT>
+void to_json(nlohmann::json& j, const LoadSetT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using load_positions_trait =
+    optional_field_traits<decltype(msg.load_positions)>;
+  using bounding_box_reference_trait =
+    optional_field_traits<decltype(msg.bounding_box_reference)>;
+  using load_dimensions_trait =
+    optional_field_traits<decltype(msg.load_dimensions)>;
+  using max_weight_trait = optional_field_traits<decltype(msg.max_weight)>;
+  using min_load_handling_height_trait =
+    optional_field_traits<decltype(msg.min_load_handling_height)>;
+  using max_load_handling_height_trait =
+    optional_field_traits<decltype(msg.max_load_handling_height)>;
+  using min_load_handling_depth_trait =
+    optional_field_traits<decltype(msg.min_load_handling_depth)>;
+  using max_load_handling_depth_trait =
+    optional_field_traits<decltype(msg.max_load_handling_depth)>;
+  using min_load_handling_tilt_trait =
+    optional_field_traits<decltype(msg.min_load_handling_tilt)>;
+  using max_load_handling_tilt_trait =
+    optional_field_traits<decltype(msg.max_load_handling_tilt)>;
+  using agv_speed_limit_trait =
+    optional_field_traits<decltype(msg.agv_speed_limit)>;
+  using agv_acceleration_limit_trait =
+    optional_field_traits<decltype(msg.agv_acceleration_limit)>;
+  using agv_deceleration_limit_trait =
+    optional_field_traits<decltype(msg.agv_deceleration_limit)>;
+  using pick_time_trait = optional_field_traits<decltype(msg.pick_time)>;
+  using drop_time_trait = optional_field_traits<decltype(msg.drop_time)>;
+  using description_trait = optional_field_traits<decltype(msg.description)>;
+
+  j["setName"] = msg.set_name;
+  j["loadType"] = msg.load_type;
+
+  if (load_positions_trait::has_value(msg.load_positions))
+  {
+    j["loadPositions"] = load_positions_trait::get(msg.load_positions);
+  }
+
+  if (bounding_box_reference_trait::has_value(msg.bounding_box_reference))
+  {
+    j["boundingBoxReference"] =
+      bounding_box_reference_trait::get(msg.bounding_box_reference);
+  }
+
+  if (load_dimensions_trait::has_value(msg.load_dimensions))
+  {
+    j["loadDimensions"] = load_dimensions_trait::get(msg.load_dimensions);
+  }
+
+  if (max_weight_trait::has_value(msg.max_weight))
+  {
+    j["maxWeight"] = max_weight_trait::get(msg.max_weight);
+  }
+
+  if (min_load_handling_height_trait::has_value(msg.min_load_handling_height))
+  {
+    j["minLoadHandlingHeight"] =
+      min_load_handling_height_trait::get(msg.min_load_handling_height);
+  }
+
+  if (max_load_handling_height_trait::has_value(msg.max_load_handling_height))
+  {
+    j["maxLoadHandlingHeight"] =
+      max_load_handling_height_trait::get(msg.max_load_handling_height);
+  }
+
+  if (min_load_handling_depth_trait::has_value(msg.min_load_handling_depth))
+  {
+    j["minLoadHandlingDepth"] =
+      min_load_handling_depth_trait::get(msg.min_load_handling_depth);
+  }
+
+  if (max_load_handling_depth_trait::has_value(msg.max_load_handling_depth))
+  {
+    j["maxLoadHandlingDepth"] =
+      max_load_handling_depth_trait::get(msg.max_load_handling_depth);
+  }
+
+  if (min_load_handling_tilt_trait::has_value(msg.min_load_handling_tilt))
+  {
+    j["minLoadHandlingTilt"] =
+      min_load_handling_tilt_trait::get(msg.min_load_handling_tilt);
+  }
+
+  if (max_load_handling_tilt_trait::has_value(msg.max_load_handling_tilt))
+  {
+    j["maxLoadHandlingTilt"] =
+      max_load_handling_tilt_trait::get(msg.max_load_handling_tilt);
+  }
+
+  if (agv_speed_limit_trait::has_value(msg.agv_speed_limit))
+  {
+    j["agvSpeedLimit"] = agv_speed_limit_trait::get(msg.agv_speed_limit);
+  }
+
+  if (agv_acceleration_limit_trait::has_value(msg.agv_acceleration_limit))
+  {
+    j["agvAccelerationLimit"] =
+      agv_acceleration_limit_trait::get(msg.agv_acceleration_limit);
+  }
+
+  if (agv_deceleration_limit_trait::has_value(msg.agv_deceleration_limit))
+  {
+    j["agvDecelerationLimit"] =
+      agv_deceleration_limit_trait::get(msg.agv_deceleration_limit);
+  }
+
+  if (pick_time_trait::has_value(msg.pick_time))
+  {
+    j["pickTime"] = pick_time_trait::get(msg.pick_time);
+  }
+
+  if (drop_time_trait::has_value(msg.drop_time))
+  {
+    j["dropTime"] = drop_time_trait::get(msg.drop_time);
+  }
+
+  if (description_trait::has_value(msg.description))
+  {
+    j["description"] = description_trait::get(msg.description);
+  }
+}
+
+//=============================================================================
+template <typename LoadSetT>
+void from_json(const nlohmann::json& j, LoadSetT& msg)
+{
+  using vda5050_json_utils::optional_field_traits;
+
+  using load_positions_trait =
+    optional_field_traits<decltype(msg.load_positions)>;
+  using bounding_box_reference_trait =
+    optional_field_traits<decltype(msg.bounding_box_reference)>;
+  using load_dimensions_trait =
+    optional_field_traits<decltype(msg.load_dimensions)>;
+  using max_weight_trait = optional_field_traits<decltype(msg.max_weight)>;
+  using min_load_handling_height_trait =
+    optional_field_traits<decltype(msg.min_load_handling_height)>;
+  using max_load_handling_height_trait =
+    optional_field_traits<decltype(msg.max_load_handling_height)>;
+  using min_load_handling_depth_trait =
+    optional_field_traits<decltype(msg.min_load_handling_depth)>;
+  using max_load_handling_depth_trait =
+    optional_field_traits<decltype(msg.max_load_handling_depth)>;
+  using min_load_handling_tilt_trait =
+    optional_field_traits<decltype(msg.min_load_handling_tilt)>;
+  using max_load_handling_tilt_trait =
+    optional_field_traits<decltype(msg.max_load_handling_tilt)>;
+  using agv_speed_limit_trait =
+    optional_field_traits<decltype(msg.agv_speed_limit)>;
+  using agv_acceleration_limit_trait =
+    optional_field_traits<decltype(msg.agv_acceleration_limit)>;
+  using agv_deceleration_limit_trait =
+    optional_field_traits<decltype(msg.agv_deceleration_limit)>;
+  using pick_time_trait = optional_field_traits<decltype(msg.pick_time)>;
+  using drop_time_trait = optional_field_traits<decltype(msg.drop_time)>;
+  using description_trait = optional_field_traits<decltype(msg.description)>;
+
+  msg.set_name = j.at("setName").get<std::string>();
+  msg.load_type = j.at("loadType").get<std::string>();
+
+  if (j.contains("loadPositions"))
+  {
+    load_positions_trait::set(
+      msg.load_positions,
+      j.at("loadPositions").get<std::vector<std::string>>());
+  }
+
+  if (j.contains("boundingBoxReference"))
+  {
+    bounding_box_reference_trait::set(
+      msg.bounding_box_reference, j.at("boundingBoxReference"));
+  }
+
+  if (j.contains("loadDimensions"))
+  {
+    load_dimensions_trait::set(msg.load_dimensions, j.at("loadDimensions"));
+  }
+
+  if (j.contains("maxWeight"))
+  {
+    max_weight_trait::set(msg.max_weight, j.at("maxWeight").get<double>());
+  }
+
+  if (j.contains("minLoadHandlingHeight"))
+  {
+    min_load_handling_height_trait::set(
+      msg.min_load_handling_height,
+      j.at("minLoadHandlingHeight").get<double>());
+  }
+
+  if (j.contains("maxLoadHandlingHeight"))
+  {
+    max_load_handling_height_trait::set(
+      msg.max_load_handling_height,
+      j.at("maxLoadHandlingHeight").get<double>());
+  }
+
+  if (j.contains("minLoadHandlingDepth"))
+  {
+    min_load_handling_depth_trait::set(
+      msg.min_load_handling_depth, j.at("minLoadHandlingDepth").get<double>());
+  }
+
+  if (j.contains("maxLoadHandlingDepth"))
+  {
+    max_load_handling_depth_trait::set(
+      msg.max_load_handling_depth, j.at("maxLoadHandlingDepth").get<double>());
+  }
+
+  if (j.contains("minLoadHandlingTilt"))
+  {
+    min_load_handling_tilt_trait::set(
+      msg.min_load_handling_tilt, j.at("minLoadHandlingTilt").get<double>());
+  }
+
+  if (j.contains("maxLoadHandlingTilt"))
+  {
+    max_load_handling_tilt_trait::set(
+      msg.max_load_handling_tilt, j.at("maxLoadHandlingTilt").get<double>());
+  }
+
+  if (j.contains("agvSpeedLimit"))
+  {
+    agv_speed_limit_trait::set(
+      msg.agv_speed_limit, j.at("agvSpeedLimit").get<double>());
+  }
+
+  if (j.contains("agvAccelerationLimit"))
+  {
+    agv_acceleration_limit_trait::set(
+      msg.agv_acceleration_limit, j.at("agvAccelerationLimit").get<double>());
+  }
+
+  if (j.contains("agvDecelerationLimit"))
+  {
+    agv_deceleration_limit_trait::set(
+      msg.agv_deceleration_limit, j.at("agvDecelerationLimit").get<double>());
+  }
+
+  if (j.contains("pickTime"))
+  {
+    pick_time_trait::set(msg.pick_time, j.at("pickTime").get<double>());
+  }
+
+  if (j.contains("dropTime"))
+  {
+    drop_time_trait::set(msg.drop_time, j.at("dropTime").get<double>());
+  }
+
+  if (j.contains("description"))
+  {
+    description_trait::set(
+      msg.description, j.at("description").get<std::string>());
+  }
+}
+
+}  // namespace load_set_detail
+
 namespace load_specification_detail {
 
 //=============================================================================
 template <typename LoadSpecificationT>
 void to_json(nlohmann::json& j, const LoadSpecificationT& msg)
 {
+  using vda5050_json_utils::optional_field_traits;
+
+  using load_positions_trait =
+    optional_field_traits<decltype(msg.load_positions)>;
+  using load_sets_trait = optional_field_traits<decltype(msg.load_sets)>;
+
+  if (load_positions_trait::has_value(msg.load_positions))
+  {
+    j["loadPositions"] = load_positions_trait::get(msg.load_positions);
+  }
+
+  if (load_sets_trait::has_value(msg.load_sets))
+  {
+    j["loadSets"] = load_sets_trait::get(msg.load_sets);
+  }
 }
 
 //=============================================================================
 template <typename LoadSpecificationT>
 void from_json(const nlohmann::json& j, LoadSpecificationT& msg)
 {
+  using vda5050_json_utils::optional_field_traits;
+
+  using load_positions_trait =
+    optional_field_traits<decltype(msg.load_positions)>;
+  using load_sets_trait = optional_field_traits<decltype(msg.load_sets)>;
+
+  if (j.contains("loadPositions"))
+  {
+    load_positions_trait::set(
+      msg.load_positions,
+      j.at("loadPositions").get<std::vector<std::string>>());
+  }
+
+  if (j.contains("loadSets"))
+  {
+    load_sets_trait::set(msg.load_sets, j.at("loadSets"));
+  }
 }
 
 }  // namespace load_specification_detail
@@ -2184,12 +2566,16 @@ namespace polygon_point_detail {
 template <typename PolygonPointT>
 void to_json(nlohmann::json& j, const PolygonPointT& msg)
 {
+  j["x"] = msg.x;
+  j["y"] = msg.y;
 }
 
 //=============================================================================
 template <typename PolygonPointT>
 void from_json(const nlohmann::json& j, PolygonPointT& msg)
 {
+  msg.x = j.at("x").get<double>();
+  msg.y = j.at("y").get<double>();
 }
 
 }  // namespace polygon_point_detail
@@ -2614,22 +3000,6 @@ void from_json(const nlohmann::json& j, TypeSpecificationT& msg)
 
 }  // namespace type_specification_detail
 
-namespace vehicle_config_detail {
-
-//=============================================================================
-template <typename VehicleConfigT>
-void to_json(nlohmann::json& j, const VehicleConfigT& msg)
-{
-}
-
-//=============================================================================
-template <typename VehicleConfigT>
-void from_json(const nlohmann::json& j, VehicleConfigT& msg)
-{
-}
-
-}  // namespace vehicle_config_detail
-
 namespace velocity_detail {
 
 //=============================================================================
@@ -2888,6 +3258,28 @@ inline void from_json(const nlohmann::json& j, EdgeState& msg)
 }
 
 //=============================================================================
+inline void to_json(nlohmann::json& j, const Envelope2d& msg)
+{
+  vda5050_types::envelope2d_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Envelope2d& msg)
+{
+  vda5050_types::envelope2d_detail::from_json(j, msg);
+}
+
+//=============================================================================
+inline void to_json(nlohmann::json& j, const Envelope3d& msg)
+{
+  vda5050_types::envelope3d_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Envelope3d& msg)
+{
+  vda5050_types::envelope3d_detail::from_json(j, msg);
+}
+
+//=============================================================================
 inline void to_json(nlohmann::json& j, const Error& msg)
 {
   vda5050_types::error_detail::to_json(j, msg);
@@ -2984,6 +3376,17 @@ inline void to_json(nlohmann::json& j, const LoadDimensions& msg)
 inline void from_json(const nlohmann::json& j, LoadDimensions& msg)
 {
   vda5050_types::load_dimensions_detail::from_json(j, msg);
+}
+
+//=============================================================================
+inline void to_json(nlohmann::json& j, const LoadSet& msg)
+{
+  vda5050_types::load_set_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, LoadSet& msg)
+{
+  vda5050_types::load_set_detail::from_json(j, msg);
 }
 
 //=============================================================================
@@ -3086,6 +3489,17 @@ inline void from_json(const nlohmann::json& j, PhysicalParameters& msg)
 }
 
 //=============================================================================
+inline void to_json(nlohmann::json& j, const PolygonPoint& msg)
+{
+  vda5050_types::polygon_point_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, PolygonPoint& msg)
+{
+  vda5050_types::polygon_point_detail::from_json(j, msg);
+}
+
+//=============================================================================
 inline void to_json(nlohmann::json& j, const Position& msg)
 {
   vda5050_types::position_detail::to_json(j, msg);
@@ -3171,17 +3585,6 @@ inline void to_json(nlohmann::json& j, const TypeSpecification& msg)
 inline void from_json(const nlohmann::json& j, TypeSpecification& msg)
 {
   vda5050_types::type_specification_detail::from_json(j, msg);
-}
-
-//=============================================================================
-inline void to_json(nlohmann::json& j, const VehicleConfig& msg)
-{
-  vda5050_types::vehicle_config_detail::to_json(j, msg);
-}
-
-inline void from_json(const nlohmann::json& j, VehicleConfig& msg)
-{
-  vda5050_types::vehicle_config_detail::from_json(j, msg);
 }
 
 //=============================================================================
@@ -3369,6 +3772,28 @@ inline void from_json(const nlohmann::json& j, EdgeState& msg)
 }
 
 //=============================================================================
+inline void to_json(nlohmann::json& j, const Envelope2d& msg)
+{
+  vda5050_types::envelope2d_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Envelope2d& msg)
+{
+  vda5050_types::envelope2d_detail::from_json(j, msg);
+}
+
+//=============================================================================
+inline void to_json(nlohmann::json& j, const Envelope3d& msg)
+{
+  vda5050_types::envelope3d_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, Envelope3d& msg)
+{
+  vda5050_types::envelope3d_detail::from_json(j, msg);
+}
+
+//=============================================================================
 inline void to_json(nlohmann::json& j, const Error& msg)
 {
   vda5050_types::error_detail::to_json(j, msg);
@@ -3465,6 +3890,17 @@ inline void to_json(nlohmann::json& j, const LoadDimensions& msg)
 inline void from_json(const nlohmann::json& j, LoadDimensions& msg)
 {
   vda5050_types::load_dimensions_detail::from_json(j, msg);
+}
+
+//=============================================================================
+inline void to_json(nlohmann::json& j, const LoadSet& msg)
+{
+  vda5050_types::load_set_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, LoadSet& msg)
+{
+  vda5050_types::load_set_detail::from_json(j, msg);
 }
 
 //=============================================================================
@@ -3567,6 +4003,17 @@ inline void from_json(const nlohmann::json& j, PhysicalParameters& msg)
 }
 
 //=============================================================================
+inline void to_json(nlohmann::json& j, const PolygonPoint& msg)
+{
+  vda5050_types::polygon_point_detail::to_json(j, msg);
+}
+
+inline void from_json(const nlohmann::json& j, PolygonPoint& msg)
+{
+  vda5050_types::polygon_point_detail::from_json(j, msg);
+}
+
+//=============================================================================
 inline void to_json(nlohmann::json& j, const Position& msg)
 {
   vda5050_types::position_detail::to_json(j, msg);
@@ -3652,17 +4099,6 @@ inline void to_json(nlohmann::json& j, const TypeSpecification& msg)
 inline void from_json(const nlohmann::json& j, TypeSpecification& msg)
 {
   vda5050_types::type_specification_detail::from_json(j, msg);
-}
-
-//=============================================================================
-inline void to_json(nlohmann::json& j, const VehicleConfig& msg)
-{
-  vda5050_types::vehicle_config_detail::to_json(j, msg);
-}
-
-inline void from_json(const nlohmann::json& j, VehicleConfig& msg)
-{
-  vda5050_types::vehicle_config_detail::from_json(j, msg);
 }
 
 //=============================================================================

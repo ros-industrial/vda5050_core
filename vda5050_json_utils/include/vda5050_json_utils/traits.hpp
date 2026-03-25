@@ -1140,8 +1140,8 @@ struct action_scopes_traits<std::vector<std::string>>
     for (auto type : types)
     {
       if (
-        type != AGVAction::ACTION_SCOPE_INSTANT ||
-        type != AGVAction::ACTION_SCOPE_NODE ||
+        type != AGVAction::ACTION_SCOPE_INSTANT &&
+        type != AGVAction::ACTION_SCOPE_NODE &&
         type != AGVAction::ACTION_SCOPE_EDGE)
       {
         throw std::runtime_error("Invalid action_scopes value");
@@ -1157,8 +1157,8 @@ struct action_scopes_traits<std::vector<std::string>>
     for (auto type : types)
     {
       if (
-        type != AGVAction::ACTION_SCOPE_INSTANT ||
-        type != AGVAction::ACTION_SCOPE_NODE ||
+        type != AGVAction::ACTION_SCOPE_INSTANT &&
+        type != AGVAction::ACTION_SCOPE_NODE &&
         type != AGVAction::ACTION_SCOPE_EDGE)
       {
         throw std::runtime_error("Invalid actionScopes value");
@@ -1325,8 +1325,8 @@ struct blocking_types_traits<std::vector<std::string>>
     for (auto type : types)
     {
       if (
-        type != BlockingType::BLOCKING_TYPE_NONE ||
-        type != BlockingType::BLOCKING_TYPE_SOFT ||
+        type != BlockingType::BLOCKING_TYPE_NONE &&
+        type != BlockingType::BLOCKING_TYPE_SOFT &&
         type != BlockingType::BLOCKING_TYPE_HARD)
       {
         throw std::runtime_error("Invalid blocking_types value");
@@ -1342,8 +1342,8 @@ struct blocking_types_traits<std::vector<std::string>>
     for (auto type : types)
     {
       if (
-        type != BlockingType::BLOCKING_TYPE_NONE ||
-        type != BlockingType::BLOCKING_TYPE_SOFT ||
+        type != BlockingType::BLOCKING_TYPE_NONE &&
+        type != BlockingType::BLOCKING_TYPE_SOFT &&
         type != BlockingType::BLOCKING_TYPE_HARD)
       {
         throw std::runtime_error("Invalid blockingTypes value");
