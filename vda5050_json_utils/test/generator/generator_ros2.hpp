@@ -69,6 +69,7 @@
 #include <vda5050_interfaces/msg/trajectory.hpp>
 #include <vda5050_interfaces/msg/type_specification.hpp>
 #include <vda5050_interfaces/msg/velocity.hpp>
+#include <vda5050_interfaces/msg/visualization.hpp>
 #include <vda5050_interfaces/msg/wheel_definition.hpp>
 
 using vda5050_interfaces::msg::Action;
@@ -116,6 +117,7 @@ using vda5050_interfaces::msg::Timing;
 using vda5050_interfaces::msg::Trajectory;
 using vda5050_interfaces::msg::TypeSpecification;
 using vda5050_interfaces::msg::Velocity;
+using vda5050_interfaces::msg::Visualization;
 using vda5050_interfaces::msg::WheelDefinition;
 
 /// \brief Utility class to generate random instances of VDA 5050 message types
@@ -843,6 +845,12 @@ public:
       msg.vx.push_back(generate_random_float());
       msg.vy.push_back(generate_random_float());
       msg.omega.push_back(generate_random_float());
+    }
+    else if constexpr (std::is_same_v<T, Visualization>)
+    {
+      msg.header = generate<Header>();
+      msg.agv_position.push_back(generate<AGVPosition>());
+      msg.velocity.push_back(generate<Velocity>());
     }
     else if constexpr (std::is_same_v<T, WheelDefinition>)
     {
