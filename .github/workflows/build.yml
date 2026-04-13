@@ -21,7 +21,7 @@ jobs:
           - {distro: jazzy, test_type: gcc-tsan}
     env:
       ISOLATION: "shell"
-      UPSTREAM_WORKSPACE: 'github:sauk2/vda5050_interfaces#cef1f2319742fd2692021f3c2187c59f2ffc9324 github:eclipse-paho/paho.mqtt.cpp#v1.5.0'
+      UPSTREAM_WORKSPACE: 'github:sauk2/vda5050_interfaces#main github:eclipse-paho/paho.mqtt.cpp#v1.5.0'
       ROS_DISTRO: ${{ matrix.distro }}
     runs-on: ubuntu-latest
     container:
