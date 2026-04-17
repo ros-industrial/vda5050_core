@@ -1082,12 +1082,12 @@ template <>
 struct action_scopes_traits<std::vector<vda5050_types::ActionScope>>
 {
   static std::vector<std::string> to_string(
-    std::vector<vda5050_types::ActionScope> types)
+    const std::vector<vda5050_types::ActionScope>& types)
   {
     using vda5050_types::ActionScope;
 
     std::vector<std::string> output;
-    for (auto type : types)
+    for (const auto& type : types)
     {
       switch (type)
       {
@@ -1108,12 +1108,12 @@ struct action_scopes_traits<std::vector<vda5050_types::ActionScope>>
   }
 
   static std::vector<vda5050_types::ActionScope> from_string(
-    std::vector<std::string> types)
+    const std::vector<std::string>& types)
   {
     using vda5050_types::ActionScope;
 
     std::vector<vda5050_types::ActionScope> output;
-    for (auto type : types)
+    for (const auto& type : types)
     {
       if (type == "INSTANT")
         output.push_back(ActionScope::INSTANT);
@@ -1133,11 +1133,12 @@ struct action_scopes_traits<std::vector<vda5050_types::ActionScope>>
 template <>
 struct action_scopes_traits<std::vector<std::string>>
 {
-  static std::vector<std::string> to_string(std::vector<std::string> types)
+  static std::vector<std::string> to_string(
+    const std::vector<std::string>& types)
   {
     using vda5050_interfaces::msg::AGVAction;
 
-    for (auto type : types)
+    for (const auto& type : types)
     {
       if (
         type != AGVAction::ACTION_SCOPE_INSTANT &&
@@ -1150,11 +1151,12 @@ struct action_scopes_traits<std::vector<std::string>>
     return types;
   }
 
-  static std::vector<std::string> from_string(std::vector<std::string> types)
+  static std::vector<std::string> from_string(
+    const std::vector<std::string>& types)
   {
     using vda5050_interfaces::msg::AGVAction;
 
-    for (auto type : types)
+    for (const auto& type : types)
     {
       if (
         type != AGVAction::ACTION_SCOPE_INSTANT &&
@@ -1231,6 +1233,7 @@ struct value_data_type_traits<std::string>
       type == ActionParameterFactsheet::VALUE_DATA_TYPE_NUMBER ||
       type == ActionParameterFactsheet::VALUE_DATA_TYPE_INTEGER ||
       type == ActionParameterFactsheet::VALUE_DATA_TYPE_FLOAT ||
+      type == ActionParameterFactsheet::VALUE_DATA_TYPE_STRING ||
       type == ActionParameterFactsheet::VALUE_DATA_TYPE_OBJECT ||
       type == ActionParameterFactsheet::VALUE_DATA_TYPE_ARRAY)
     {
@@ -1248,6 +1251,7 @@ struct value_data_type_traits<std::string>
       type == ActionParameterFactsheet::VALUE_DATA_TYPE_NUMBER ||
       type == ActionParameterFactsheet::VALUE_DATA_TYPE_INTEGER ||
       type == ActionParameterFactsheet::VALUE_DATA_TYPE_FLOAT ||
+      type == ActionParameterFactsheet::VALUE_DATA_TYPE_STRING ||
       type == ActionParameterFactsheet::VALUE_DATA_TYPE_OBJECT ||
       type == ActionParameterFactsheet::VALUE_DATA_TYPE_ARRAY)
     {
@@ -1267,12 +1271,12 @@ template <>
 struct blocking_types_traits<std::vector<vda5050_types::BlockingType>>
 {
   static std::vector<std::string> to_string(
-    std::vector<vda5050_types::BlockingType> types)
+    const std::vector<vda5050_types::BlockingType>& types)
   {
     using vda5050_types::BlockingType;
 
     std::vector<std::string> output;
-    for (auto type : types)
+    for (const auto& type : types)
     {
       switch (type)
       {
@@ -1293,12 +1297,12 @@ struct blocking_types_traits<std::vector<vda5050_types::BlockingType>>
   }
 
   static std::vector<vda5050_types::BlockingType> from_string(
-    std::vector<std::string> types)
+    const std::vector<std::string>& types)
   {
     using vda5050_types::BlockingType;
 
     std::vector<vda5050_types::BlockingType> output;
-    for (auto type : types)
+    for (const auto& type : types)
     {
       if (type == "NONE")
         output.push_back(BlockingType::NONE);
@@ -1307,7 +1311,7 @@ struct blocking_types_traits<std::vector<vda5050_types::BlockingType>>
       else if (type == "HARD")
         output.push_back(BlockingType::HARD);
       else
-        throw std::runtime_error("Invalid support string");
+        throw std::runtime_error("Invalid blockingType string");
     }
     return output;
   }
@@ -1318,11 +1322,12 @@ struct blocking_types_traits<std::vector<vda5050_types::BlockingType>>
 template <>
 struct blocking_types_traits<std::vector<std::string>>
 {
-  static std::vector<std::string> to_string(std::vector<std::string> types)
+  static std::vector<std::string> to_string(
+    const std::vector<std::string>& types)
   {
     using vda5050_interfaces::msg::BlockingType;
 
-    for (auto type : types)
+    for (const auto& type : types)
     {
       if (
         type != BlockingType::BLOCKING_TYPE_NONE &&
@@ -1335,11 +1340,12 @@ struct blocking_types_traits<std::vector<std::string>>
     return types;
   }
 
-  static std::vector<std::string> from_string(std::vector<std::string> types)
+  static std::vector<std::string> from_string(
+    const std::vector<std::string>& types)
   {
     using vda5050_interfaces::msg::BlockingType;
 
-    for (auto type : types)
+    for (const auto& type : types)
     {
       if (
         type != BlockingType::BLOCKING_TYPE_NONE &&
