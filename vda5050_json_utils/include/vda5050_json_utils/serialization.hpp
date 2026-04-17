@@ -871,7 +871,7 @@ void from_json(const nlohmann::json& j, EdgeT& msg)
   using length_trait = optional_field_traits<decltype(msg.length)>;
 
   msg.edge_id = j.at("edgeId").get<std::string>();
-  msg.sequence_id = j.at("sequenceId").get<int32_t>();
+  msg.sequence_id = j.at("sequenceId").get<uint32_t>();
   msg.start_node_id = j.at("startNodeId").get<std::string>();
   msg.end_node_id = j.at("endNodeId").get<std::string>();
   msg.released = j.at("released").get<bool>();
@@ -1844,7 +1844,7 @@ void to_json(nlohmann::json& j, const MaxArrayLensT& msg)
     optional_field_traits<decltype(msg.trajectory_knot_vector)>;
   using trajectory_control_points_trait =
     optional_field_traits<decltype(msg.trajectory_control_points)>;
-  using state_node_states_traits =
+  using state_node_states_trait =
     optional_field_traits<decltype(msg.state_node_states)>;
   using state_edge_states_trait =
     optional_field_traits<decltype(msg.state_edge_states)>;
@@ -1903,10 +1903,9 @@ void to_json(nlohmann::json& j, const MaxArrayLensT& msg)
       trajectory_control_points_trait::get(msg.trajectory_control_points);
   }
 
-  if (state_node_states_traits::has_value(msg.state_node_states))
+  if (state_node_states_trait::has_value(msg.state_node_states))
   {
-    j["state.nodeStates"] =
-      state_action_states_trait::get(msg.state_node_states);
+    j["state.nodeStates"] = state_node_states_trait::get(msg.state_node_states);
   }
 
   if (state_edge_states_trait::has_value(msg.state_edge_states))
@@ -1968,7 +1967,7 @@ void from_json(const nlohmann::json& j, MaxArrayLensT& msg)
     optional_field_traits<decltype(msg.trajectory_knot_vector)>;
   using trajectory_control_points_trait =
     optional_field_traits<decltype(msg.trajectory_control_points)>;
-  using state_node_states_traits =
+  using state_node_states_trait =
     optional_field_traits<decltype(msg.state_node_states)>;
   using state_edge_states_trait =
     optional_field_traits<decltype(msg.state_edge_states)>;
@@ -2036,7 +2035,7 @@ void from_json(const nlohmann::json& j, MaxArrayLensT& msg)
 
   if (j.contains("state.nodeStates"))
   {
-    state_node_states_traits::set(
+    state_node_states_trait::set(
       msg.state_node_states, j.at("state.nodeStates").get<uint32_t>());
   }
 
