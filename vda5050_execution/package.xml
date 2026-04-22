@@ -3,7 +3,7 @@
 <package format="3">
   <name>vda5050_execution</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Execution system to execute workflows sequentially</description>
   <maintainer email="saurabh_kamat@a-star.edu.sg">Saurabh Kamat</maintainer>
   <license>Apache License 2.0</license>
 

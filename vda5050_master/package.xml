@@ -3,8 +3,9 @@
 <package format="3">
   <name>vda5050_master</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="glenn_tan@artc.a-star.edu.sg">rosi</maintainer>
+  <description>VDA5050 master control implementation</description>
+  <maintainer email="glenn_tan@a-star.edu.sg">Glenn Tan</maintainer>
+  <maintainer email="saurabh_kamat@a-star.edu.sg">Saurabh Kamat</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

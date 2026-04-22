@@ -3,9 +3,9 @@
 <package format="3">
   <name>vda5050_json_utils</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="saurabh_kamat@artc.a-star.edu.sg">Saurabh Kamat</maintainer>
-  <license>TODO: License declaration</license>
+  <description>JSON utilities for VDA5050 related workflows</description>
+  <maintainer email="saurabh_kamat@a-star.edu.sg">Saurabh Kamat</maintainer>
+  <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
