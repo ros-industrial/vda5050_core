@@ -60,11 +60,11 @@ protected:
     agv_id_ = manufacturer_ + "/" + serial_number_;
   }
 
-  std::unique_ptr<VDA5050Master> create_master()
+  std::shared_ptr<VDA5050Master> create_master()
   {
     auto client = vda5050_core::mqtt_client::create_default_client(
       MQTT_BROKER, "master_logic_test_" + std::to_string(test_id_++));
-    return std::make_unique<VDA5050Master>(client);
+    return std::make_shared<VDA5050Master>(client);
   }
 
   vda5050_types::Order create_test_order(const std::string& order_id)

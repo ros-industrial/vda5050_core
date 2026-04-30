@@ -85,16 +85,19 @@ public:
    *        VDA5050Master. When set, the AGV dispatches incoming
    *        messages to the master's virtual callbacks (on_state,
    *        on_connection, on_factsheet, on_visualization) after
-   *        caching them. Lifetime contract: the AGV must not outlive
-   *        its parent (master owns the AGV via shared_ptr, so this
-   *        holds by construction).
+   *        caching them. Held as a `weak_ptr` so the AGV can detect
+   *        if the master is gone (returns null cleanly via `lock()`)
+   *        rather than silently dangling. The master MUST be
+   *        constructed via `std::make_shared<MyMaster>(...)` for the
+   *        weak_ptr to be valid — see VDA5050Master class
+   *        doc-comment.
    */
   AGV(
     std::shared_ptr<vda5050_execution::ProtocolAdapter> protocol_adapter,
     const std::string& manufacturer, const std::string& serial_number,
     size_t max_queue_size = 10, bool drop_oldest = true,
     int state_heartbeat_interval = StateHeartbeatInterval,
-    VDA5050Master* parent = nullptr);
+    std::weak_ptr<VDA5050Master> parent = {});
 
   /**
    * @brief Destructor - stops the queue processing thread
@@ -367,10 +370,12 @@ private:
   // Protocol Adapter for publishing/subscribing
   std::shared_ptr<vda5050_execution::ProtocolAdapter> protocol_adapter_;
 
-  // Non-owning back-pointer to the owning VDA5050Master (may be nullptr).
+  // Non-owning back-pointer to the owning VDA5050Master.
   // Set at construction and never reassigned — safe to read concurrently
   // from MQTT-callback thread inside handle_*() dispatch.
-  VDA5050Master* parent_;
+  // Stored as weak_ptr so dispatch sites can detect master destruction
+  // cleanly via lock() rather than silently dangling.
+  std::weak_ptr<VDA5050Master> parent_;
 
   // Heartbeat listener for state timeout detection (protected by heartbeat_mutex_)
   mutable std::mutex heartbeat_mutex_;

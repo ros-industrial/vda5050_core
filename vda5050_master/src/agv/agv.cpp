@@ -37,12 +37,12 @@ AGV::AGV(
   std::shared_ptr<vda5050_execution::ProtocolAdapter> protocol_adapter,
   const std::string& manufacturer, const std::string& serial_number,
   size_t max_queue_size, bool drop_oldest, int state_heartbeat_interval,
-  VDA5050Master* parent)
+  std::weak_ptr<VDA5050Master> parent)
 : manufacturer_(manufacturer),
   serial_number_(serial_number),
   agv_id_(manufacturer + "/" + serial_number),
   protocol_adapter_(protocol_adapter),
-  parent_(parent),
+  parent_(std::move(parent)),
   state_heartbeat_interval_(state_heartbeat_interval),
   created_time_(Clock::now()),
   max_queue_size_(max_queue_size),
@@ -373,9 +373,9 @@ void AGV::handle_connection(const vda5050_types::Connection& msg)
   }
 
   // Dispatch to user override
-  if (parent_)
+  if (auto p = parent_.lock())
   {
-    parent_->on_connection(agv_id_, msg);
+    p->on_connection(agv_id_, msg);
   }
 }
 
@@ -401,9 +401,9 @@ void AGV::handle_state(const vda5050_types::State& msg)
   set_operational_state(AGVState::AVAILABLE);
 
   // Dispatch to user override
-  if (parent_)
+  if (auto p = parent_.lock())
   {
-    parent_->on_state(agv_id_, msg);
+    p->on_state(agv_id_, msg);
   }
 }
 
@@ -416,9 +416,9 @@ void AGV::handle_factsheet(const vda5050_types::Factsheet& msg)
   }
 
   // Dispatch to user override
-  if (parent_)
+  if (auto p = parent_.lock())
   {
-    parent_->on_factsheet(agv_id_, msg);
+    p->on_factsheet(agv_id_, msg);
   }
 }
 
@@ -431,9 +431,9 @@ void AGV::handle_visualization(const vda5050_types::Visualization& msg)
   }
 
   // Dispatch to user override
-  if (parent_)
+  if (auto p = parent_.lock())
   {
-    parent_->on_visualization(agv_id_, msg);
+    p->on_visualization(agv_id_, msg);
   }
 }
 

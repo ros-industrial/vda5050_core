@@ -47,21 +47,33 @@ namespace vda5050_master {
  * Thread safety note: Callbacks are invoked on the MQTT client thread.
  * If thread safety is required, the callback implementation should handle
  * synchronization (e.g., using a mutex).
+ *
+ * Construction requirement: VDA5050Master MUST be constructed via
+ * `std::make_shared<MyMaster>(...)`. Each onboarded AGV stores a
+ * `std::weak_ptr<VDA5050Master>` back-pointer (populated via
+ * `weak_from_this()`) and uses it to dispatch incoming messages to the
+ * master's virtual callbacks. `weak_from_this()` only returns a valid
+ * weak_ptr if the master is currently inside a `shared_ptr` — stack-
+ * allocated or `unique_ptr`-managed masters silently no-op on user
+ * callbacks.
  */
-class VDA5050Master
+class VDA5050Master : public std::enable_shared_from_this<VDA5050Master>
 {
 public:
   /**
    * @brief Construct a VDA5050 master with shared MQTT client and broker address
    * @param mqtt_client Shared MQTT client for subscriptions
    *
-   * The mqtt_client is used to create protocol adapters for each onboarded AGV
+   * The mqtt_client is used to create protocol adapters for each onboarded AGV.
+   *
+   * IMPORTANT: must be constructed via `std::make_shared<MyMaster>(...)` —
+   * see class doc-comment.
    *
    * Example usage:
    * @code
    * auto client = vda5050_core::mqtt_client::create_default_client(broker, "master");
-   * MyMaster master(client);
-   * master.connect();
+   * auto master = std::make_shared<MyMaster>(client);
+   * master->connect();
    * @endcode
    */
   VDA5050Master(std::shared_ptr<vda5050_core::mqtt_client::MqttClientInterface>

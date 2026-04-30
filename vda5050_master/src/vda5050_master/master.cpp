@@ -110,14 +110,15 @@ void VDA5050Master::onboard_agv(
     return;
   }
 
-  // Create AGV instance with a new protocol adapter. Pass `this` as the
-  // back-pointer so the AGV can dispatch incoming messages to our
-  // virtual callbacks (on_state, on_connection, etc.).
+  // Create AGV instance with a new protocol adapter. Pass weak_from_this()
+  // as the back-pointer so the AGV can dispatch incoming messages to the
+  // master's virtual callbacks (on_state, on_connection, etc.) while
+  // detecting master destruction cleanly via lock().
   auto agv = std::make_shared<AGV>(
     vda5050_execution::ProtocolAdapter::make(
       mqtt_client_, InterfaceName, Version, manufacturer, serial_number),
     manufacturer, serial_number, max_queue_size, drop_oldest,
-    StateHeartbeatInterval, this);
+    StateHeartbeatInterval, weak_from_this());
 
   agvs_[agv_id] = std::move(agv);
 

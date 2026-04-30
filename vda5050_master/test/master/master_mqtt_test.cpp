@@ -64,11 +64,11 @@ protected:
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 
-  std::unique_ptr<VDA5050Master> create_master()
+  std::shared_ptr<VDA5050Master> create_master()
   {
     auto client = vda5050_core::mqtt_client::create_default_client(
       MQTT_BROKER, "master_mqtt_test_" + std::to_string(test_id_++));
-    return std::make_unique<VDA5050Master>(client);
+    return std::make_shared<VDA5050Master>(client);
   }
 
   std::string manufacturer_;
