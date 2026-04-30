@@ -61,7 +61,7 @@ enum class AGVState
  * - Outgoing message queue for orders and instant actions
  *
  * The VDA5050Master routes incoming messages to AGV instances and the AGV
- * handles ingoing/outgoing messages via the VDA5050Execution ProtocolAdapter.
+ * handles incoming/outgoing messages via the VDA5050Execution ProtocolAdapter.
  *
  * Thread safety: Methods are thread-safe. Cached data access is protected
  * by mutexes.
