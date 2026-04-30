@@ -24,7 +24,6 @@
 #include "vda5050_core/logger/logger.hpp"
 #include "vda5050_execution/protocol_adapter.hpp"
 #include "vda5050_json_utils/serialization.hpp"
-#include "vda5050_master/agv/agv_impl.hpp"
 #include "vda5050_master/standard_names.hpp"
 #include "vda5050_master/vda5050_master/master.hpp"
 
@@ -90,15 +89,14 @@ void AGV::setup_subscriptions()
     return;
   }
 
-  detail::create_subscription<vda5050_types::Connection>(
-    this, [this](const auto& msg) { handle_connection(msg); }, ConnectionQos);
-  detail::create_subscription<vda5050_types::State>(
-    this, [this](const auto& msg) { handle_state(msg); }, StateQos);
-  detail::create_subscription<vda5050_types::Factsheet>(
-    this, [this](const auto& msg) { handle_factsheet(msg); }, FactsheetQos);
-  detail::create_subscription<vda5050_types::Visualization>(
-    this, [this](const auto& msg) { handle_visualization(msg); },
-    VisualizationQos);
+  create_subscription<vda5050_types::Connection>(
+    [this](const auto& msg) { handle_connection(msg); }, ConnectionQos);
+  create_subscription<vda5050_types::State>(
+    [this](const auto& msg) { handle_state(msg); }, StateQos);
+  create_subscription<vda5050_types::Factsheet>(
+    [this](const auto& msg) { handle_factsheet(msg); }, FactsheetQos);
+  create_subscription<vda5050_types::Visualization>(
+    [this](const auto& msg) { handle_visualization(msg); }, VisualizationQos);
 }
 
 void AGV::stop()

@@ -29,34 +29,19 @@
 #include <queue>
 #include <string>
 #include <thread>
+#include <utility>
 
+#include "vda5050_core/logger/logger.hpp"
 #include "vda5050_execution/protocol_adapter.hpp"
 #include "vda5050_master/communication/heartbeat.hpp"
 #include "vda5050_master/standard_names.hpp"
 #include "vda5050_master/vda5050_interfaces.hpp"
+#include "vda5050_types/error.hpp"
 
 namespace vda5050_master {
 
-// Forward declarations
+// Forward declaration
 class VDA5050Master;
-class AGV;
-
-namespace detail {
-
-/**
- * @brief Wire a typed subscription on an AGV's protocol adapter.
- *
- * Free function (with friend access to AGV's private members) so the
- * template body can live in `agv_impl.hpp` rather than `agv.cpp`.
- * Same pattern used by rclcpp internals — keeps the public header
- * free of template implementation while still allowing instantiation
- * from any TU that includes `agv_impl.hpp`.
- */
-template <typename MsgType>
-void create_subscription(
-  AGV* agv, std::function<void(const MsgType&)> handler, QosLevel qos);
-
-}  // namespace detail
 
 /**
  * @brief AGV operational state based on state heartbeat
@@ -336,17 +321,42 @@ public:
   void handle_visualization(const vda5050_types::Visualization& msg);
 
 private:
-  // detail::create_subscription needs access to protocol_adapter_ and
-  // agv_id_ to wire the typed subscription. Body lives in agv_impl.hpp.
-  template <typename MsgType>
-  friend void detail::create_subscription(
-    AGV* agv, std::function<void(const MsgType&)> handler, QosLevel qos);
-
   // ============================================================================
   // Subscription Management
   // ============================================================================
 
   void setup_subscriptions();
+
+  // Wire a typed subscription on protocol_adapter_. Logs parse errors
+  // at ERROR level and exceptions thrown by `handler` at WARN level
+  // without re-throwing — both are non-fatal for the AGV.
+  template <typename MsgType>
+  void create_subscription(
+    std::function<void(const MsgType&)> handler, QosLevel qos)
+  {
+    protocol_adapter_->template subscribe<MsgType>(
+      [agv = this, handler = std::move(handler)](
+        MsgType msg, std::optional<vda5050_types::Error> error) {
+        if (error.has_value())
+        {
+          VDA5050_ERROR(
+            "[AGV] Failed to parse message for {}: {}", agv->agv_id_,
+            error->error_description.value_or("unknown error"));
+          return;
+        }
+        try
+        {
+          handler(msg);
+        }
+        catch (const std::exception& e)
+        {
+          VDA5050_WARN(
+            "[AGV] Failed to handle message for {}: {}", agv->agv_id_,
+            e.what());
+        }
+      },
+      static_cast<int>(qos));
+  }
 
   // ============================================================================
   // Internal State Management
