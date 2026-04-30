@@ -113,7 +113,7 @@ void VDA5050Master::setup_subscriptions()
     [this](const std::string& topic, const std::string& payload) {
       handle_connection_message(topic, payload);
     },
-    ConnectionQos);
+    static_cast<int>(ConnectionQos));
   VDA5050_INFO("[VDA5050Master] Subscribed to: {}", connection_topic);
 
   // Subscribe to state topic with wildcard
@@ -123,7 +123,7 @@ void VDA5050Master::setup_subscriptions()
     [this](const std::string& topic, const std::string& payload) {
       handle_state_message(topic, payload);
     },
-    StateQos);
+    static_cast<int>(StateQos));
   VDA5050_INFO("[VDA5050Master] Subscribed to: {}", state_topic);
 
   // Subscribe to factsheet topic with wildcard
@@ -133,7 +133,7 @@ void VDA5050Master::setup_subscriptions()
     [this](const std::string& topic, const std::string& payload) {
       handle_factsheet_message(topic, payload);
     },
-    FactsheetQos);
+    static_cast<int>(FactsheetQos));
   VDA5050_INFO("[VDA5050Master] Subscribed to: {}", factsheet_topic);
 
   // Subscribe to visualization topic with wildcard
@@ -143,7 +143,7 @@ void VDA5050Master::setup_subscriptions()
     [this](const std::string& topic, const std::string& payload) {
       handle_visualization_message(topic, payload);
     },
-    VisualizationQos);
+    static_cast<int>(VisualizationQos));
   VDA5050_INFO("[VDA5050Master] Subscribed to: {}", visualization_topic);
 }
 

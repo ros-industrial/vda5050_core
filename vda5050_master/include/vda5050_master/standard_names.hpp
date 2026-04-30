@@ -22,24 +22,44 @@
 #include <string>
 
 namespace vda5050_master {
-const std::string Version = "v2";                           // NOLINT
-const std::string InterfaceName = "rmf2";                   // NOLINT
-const std::string ConnectionTopic = "connection";           // NOLINT
-const std::string FactsheetTopic = "factsheet";             // NOLINT
-const std::string OrderTopic = "order";                     // NOLINT
-const std::string StateTopic = "state";                     // NOLINT
-const std::string InstantActionsTopic = "instant_actions";  // NOLINT
-const std::string VisualizationTopic = "visualization";     // NOLINT
 
-const int ConnectionQos = 1;
-const int FactsheetQos = 0;
-const int OrderQos = 0;
-const int StateQos = 0;
-const int VisualizationQos = 0;
-const int InstantActionsQos = 0;
+/// \brief MQTT QoS level — typed replacement for raw int values.
+///
+/// Cast to int via static_cast<int>(qos) at the MQTT boundary
+/// (MqttClientInterface::publish / subscribe expect int).
+enum class QosLevel : int
+{
+  AtMostOnce = 0,   ///< Fire-and-forget; may drop. Used for state, order, etc.
+  AtLeastOnce = 1,  ///< Ack'd by broker; may duplicate. Used for connection.
+  ExactlyOnce = 2,  ///< Two-phase handshake; rarely needed.
+};
 
-const int ConnectionHeartbeatInterval = 15;  // seconds
-const int StateHeartbeatInterval = 30;       // seconds
+const std::string Version = "v2";                          // NOLINT
+const std::string InterfaceName = "rmf2";                  // NOLINT
+const std::string ConnectionTopic = "connection";          // NOLINT
+const std::string FactsheetTopic = "factsheet";            // NOLINT
+const std::string OrderTopic = "order";                    // NOLINT
+const std::string StateTopic = "state";                    // NOLINT
+const std::string InstantActionsTopic = "instantActions";  // NOLINT
+const std::string VisualizationTopic = "visualization";    // NOLINT
+
+/// \brief Per-topic QoS levels.
+///
+/// Connection uses AtLeastOnce because the last-will (CONNECTIONBROKEN) must
+/// reach master — drops there would silently miss AGV crashes. All other
+/// topics use AtMostOnce because there is an application-level feedback loop
+/// (state-message progression catches missed orders / instant actions, etc.)
+/// so broker-level acks would just add wasted bandwidth.
+constexpr QosLevel ConnectionQos = QosLevel::AtLeastOnce;
+constexpr QosLevel FactsheetQos = QosLevel::AtMostOnce;
+constexpr QosLevel OrderQos = QosLevel::AtMostOnce;
+constexpr QosLevel StateQos = QosLevel::AtMostOnce;
+constexpr QosLevel VisualizationQos = QosLevel::AtMostOnce;
+constexpr QosLevel InstantActionsQos = QosLevel::AtMostOnce;
+
+constexpr int ConnectionHeartbeatInterval = 15;  // seconds
+constexpr int StateHeartbeatInterval = 30;       // seconds
+
 }  // namespace vda5050_master
 
 #endif  // VDA5050_MASTER__STANDARD_NAMES_HPP_

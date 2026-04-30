@@ -588,7 +588,7 @@ void AGV::process_queues()
 // ============================================================================
 
 void AGV::publish_message(
-  const std::string& topic, const std::string& payload, int qos,
+  const std::string& topic, const std::string& payload, QosLevel qos,
   const std::string& label)
 {
   if (!mqtt_client_)
@@ -601,7 +601,7 @@ void AGV::publish_message(
   try
   {
     mqtt_client_->connect();
-    mqtt_client_->publish(build_topic(topic), payload, qos);
+    mqtt_client_->publish(build_topic(topic), payload, static_cast<int>(qos));
     mqtt_client_->disconnect();
 
     VDA5050_INFO("[AGV] Published {} to AGV: {}", label, agv_id_);

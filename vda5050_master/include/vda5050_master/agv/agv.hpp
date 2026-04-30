@@ -329,7 +329,7 @@ private:
 
   // Publishing
   void publish_message(
-    const std::string& topic, const std::string& payload, int qos,
+    const std::string& topic, const std::string& payload, QosLevel qos,
     const std::string& label);
   void publish_order(const vda5050_types::Order& order);
   void publish_instant_actions(const vda5050_types::InstantActions& actions);
