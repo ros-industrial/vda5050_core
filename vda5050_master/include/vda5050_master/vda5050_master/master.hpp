@@ -224,6 +224,23 @@ private:
 
   std::shared_ptr<AGV> get_agv_by_id(const std::string& agv_id) const;
 
+  /**
+   * @brief Unsubscribe from all per-AGV inbound topics.
+   *
+   * Called from offboard_agv() before the AGV is destroyed to stop the
+   * broker from routing messages to lambdas captured at subscribe time
+   * (which would otherwise dangle once the AGV is gone). Reaches past
+   * the per-AGV ProtocolAdapter directly to mqtt_client_ because
+   * ProtocolAdapter does not expose an unsubscribe API today — see
+   * upstream issue regarding ProtocolAdapter::unsubscribe<T>(). When
+   * that lands, this helper can become a thin call into the adapter.
+   *
+   * @param manufacturer Manufacturer name (used to construct topics)
+   * @param serial_number Serial number (used to construct topics)
+   */
+  void cleanup_agv_subscriptions(
+    const std::string& manufacturer, const std::string& serial_number);
+
   // ============================================================================
   // Member Variables
   // ============================================================================
