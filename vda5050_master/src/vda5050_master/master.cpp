@@ -120,6 +120,11 @@ void VDA5050Master::onboard_agv(
     manufacturer, serial_number, max_queue_size, drop_oldest,
     StateHeartbeatInterval, weak_from_this());
 
+  // Subscriptions are wired here (not in AGV's ctor) so that
+  // AGV::weak_from_this() is valid — make_shared above has
+  // associated the shared_ptr by this point.
+  agv->setup_subscriptions();
+
   agvs_[agv_id] = std::move(agv);
 
   VDA5050_INFO("[VDA5050Master] Onboarded AGV: {}", agv_id);

@@ -49,7 +49,9 @@ AGV::AGV(
   drop_oldest_(drop_oldest)
 {
   VDA5050_INFO("[AGV] Created AGV instance: {}", agv_id_);
-  setup_subscriptions();
+  // setup_subscriptions() must be called by the constructor's caller
+  // after make_shared returns — weak_from_this() is only valid once
+  // the shared_ptr ownership has been associated.
 }
 
 AGV::~AGV()

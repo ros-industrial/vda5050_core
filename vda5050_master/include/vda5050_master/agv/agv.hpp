@@ -69,7 +69,7 @@ enum class AGVState
  * Thread safety: Methods are thread-safe. Cached data access is protected
  * by mutexes.
  */
-class AGV
+class AGV : public std::enable_shared_from_this<AGV>
 {
 public:
   // Type aliases
@@ -78,6 +78,11 @@ public:
 
   /**
    * @brief Construct an AGV instance
+   *
+   * Caller must invoke setup_subscriptions() after make_shared
+   * returns; weak_from_this() is only valid once the shared_ptr
+   * has been associated.
+   *
    * @param protocol_adapter Protocol adapter for pub/sub
    * @param manufacturer Manufacturer name
    * @param serial_number Serial number
@@ -320,27 +325,46 @@ public:
    */
   void handle_visualization(const vda5050_types::Visualization& msg);
 
-private:
   // ============================================================================
   // Subscription Management
   // ============================================================================
 
+  /**
+   * @brief Wire per-topic subscriptions on the protocol adapter.
+   *
+   * Must be called by the caller of the constructor after
+   * `make_shared<AGV>(...)` returns — the wrapper lambda captures
+   * `weak_from_this()`, which is only valid once the shared_ptr
+   * ownership has been associated. Calling from inside the
+   * constructor would silently install wrappers with empty
+   * weak_ptrs, and user callbacks would never fire.
+   */
   void setup_subscriptions();
 
-  // Wire a typed subscription on protocol_adapter_. Logs parse errors
-  // at ERROR level and exceptions thrown by `handler` at WARN level
-  // without re-throwing — both are non-fatal for the AGV.
+private:
+  // Wire a typed subscription on protocol_adapter_. The wrapper
+  // captures weak_from_this() so the lambda no-ops cleanly if AGV
+  // is destroyed before the wrapper fires (instead of dereferencing
+  // a dangling pointer). Lock at the top keeps AGV alive for the
+  // entire dispatch — both `self->agv_id_` and `handler(msg)`
+  // (which captures [this]) are safe inside the locked scope.
+  // Logs parse errors at ERROR level and exceptions thrown by
+  // `handler` at WARN level without re-throwing — both are
+  // non-fatal for the AGV.
   template <typename MsgType>
   void create_subscription(
     std::function<void(const MsgType&)> handler, QosLevel qos)
   {
     protocol_adapter_->template subscribe<MsgType>(
-      [agv = this, handler = std::move(handler)](
+      [self_weak = weak_from_this(), handler = std::move(handler)](
         MsgType msg, std::optional<vda5050_types::Error> error) {
+        auto self = self_weak.lock();
+        if (!self) return;  // AGV gone — drop the message silently
+
         if (error.has_value())
         {
           VDA5050_ERROR(
-            "[AGV] Failed to parse message for {}: {}", agv->agv_id_,
+            "[AGV] Failed to parse message for {}: {}", self->agv_id_,
             error->error_description.value_or("unknown error"));
           return;
         }
@@ -351,7 +375,7 @@ private:
         catch (const std::exception& e)
         {
           VDA5050_WARN(
-            "[AGV] Failed to handle message for {}: {}", agv->agv_id_,
+            "[AGV] Failed to handle message for {}: {}", self->agv_id_,
             e.what());
         }
       },
