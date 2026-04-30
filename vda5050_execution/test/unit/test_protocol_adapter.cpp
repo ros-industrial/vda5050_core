@@ -147,6 +147,15 @@ TYPED_TEST(ProtocolAdapterTest, SubscribeMessage)
   EXPECT_TRUE(success);
 }
 
+TYPED_TEST(ProtocolAdapterTest, UnsubscribeMessage)
+{
+  EXPECT_CALL(
+    *this->mock_, unsubscribe(testing::StartsWith(this->topic_prefix_)))
+    .Times(1);
+
+  this->adapter_->template unsubscribe<TypeParam>();
+}
+
 TYPED_TEST(ProtocolAdapterTest, HeaderIncrement)
 {
   TypeParam msg;

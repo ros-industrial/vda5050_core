@@ -161,6 +161,20 @@ public:
     if (mqtt_client_) mqtt_client_->subscribe(it->second, wrapper, qos);
   }
 
+  template <typename MessageT>
+  void unsubscribe()
+  {
+    static_assert(
+      is_valid_message_v<MessageT>, "Type is not supported in ProtocolAdapter");
+
+    auto type_idx = std::type_index(typeid(MessageT));
+
+    auto it = topic_names_.find(type_idx);
+    if (it == topic_names_.end()) return;
+
+    if (mqtt_client_) mqtt_client_->unsubscribe(it->second);
+  }
+
 private:
   ProtocolAdapter(
     std::shared_ptr<vda5050_core::mqtt_client::MqttClientInterface> mqtt_client,
