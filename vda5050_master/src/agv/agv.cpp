@@ -58,25 +58,25 @@ AGV::~AGV()
 
   // Teardown order matters (per CLAUDE.md):
   //   1. Stop spinning   — halt the queue processor and heartbeat threads
-  //   2. Release resources — drop the protocol_adapter_ shared_ptr
+  //   2. Release resources — unsubscribe per-topic; drop protocol_adapter_
   //   3. Join threads     — handled inside stop_queue_processor() and
   //                         cleanup_heartbeat() above
-  //
-  // Note on subscription cleanup: ProtocolAdapter does not currently
-  // expose an unsubscribe<T>() API. The owning VDA5050Master is
-  // responsible for calling cleanup_agv_subscriptions() in offboard_agv()
-  // before this destructor runs (see master.cpp). When ProtocolAdapter
-  // gains an unsubscribe API upstream, the per-topic cleanup can move
-  // here instead.
 
   // 1. Stop spinning
   stop_queue_processor();
   cleanup_heartbeat();
 
-  // 2. Release resources — drop the ProtocolAdapter reference. If we
-  // were the last holder, the underlying shared connection on
-  // mqtt_client_ stays alive (master owns it); only the per-AGV typed
-  // wrapper goes away.
+  // 2. Release resources — unsubscribe via ProtocolAdapter so the broker
+  // stops routing to lambdas captured at subscribe time, then drop the
+  // shared_ptr. The underlying MqttClient stays alive (master owns it);
+  // only the per-AGV typed wrapper goes away.
+  if (protocol_adapter_)
+  {
+    protocol_adapter_->unsubscribe<vda5050_types::Connection>();
+    protocol_adapter_->unsubscribe<vda5050_types::State>();
+    protocol_adapter_->unsubscribe<vda5050_types::Factsheet>();
+    protocol_adapter_->unsubscribe<vda5050_types::Visualization>();
+  }
   protocol_adapter_.reset();
 
   VDA5050_INFO("[AGV] AGV instance destroyed: {}", agv_id_);

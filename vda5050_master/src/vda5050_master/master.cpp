@@ -143,11 +143,10 @@ void VDA5050Master::offboard_agv(
     agvs_.erase(it);
   }
 
-  // Unsubscribe from per-AGV inbound topics BEFORE destroying the AGV,
-  // so the broker stops invoking lambdas that captured the AGV's `this`.
-  cleanup_agv_subscriptions(manufacturer, serial_number);
-
-  // Stop AGV after removing from map
+  // Stop AGV after removing from map. The AGV destructor calls
+  // protocol_adapter_->unsubscribe<T>() for each subscribed topic, so
+  // the broker stops routing to lambdas captured at subscribe time
+  // before the AGV instance is gone.
   agv->stop();
 
   VDA5050_INFO("[VDA5050Master] Offboarded AGV: {}", agv_id);
@@ -179,25 +178,6 @@ std::shared_ptr<AGV> VDA5050Master::get_agv_by_id(
   // Note: Caller must hold agv_mutex_
   auto it = agvs_.find(agv_id);
   return (it != agvs_.end()) ? it->second : nullptr;
-}
-
-void VDA5050Master::cleanup_agv_subscriptions(
-  const std::string& manufacturer, const std::string& serial_number)
-{
-  if (!mqtt_client_)
-  {
-    return;
-  }
-
-  // Per-AGV topic prefix per VDA5050 spec:
-  // {InterfaceName}/{Version}/{manufacturer}/{serial_number}/{topic}
-  const std::string prefix = InterfaceName + "/" + Version + "/" +
-                             manufacturer + "/" + serial_number + "/";
-
-  mqtt_client_->unsubscribe(prefix + ConnectionTopic);
-  mqtt_client_->unsubscribe(prefix + StateTopic);
-  mqtt_client_->unsubscribe(prefix + FactsheetTopic);
-  mqtt_client_->unsubscribe(prefix + VisualizationTopic);
 }
 
 // ============================================================================
