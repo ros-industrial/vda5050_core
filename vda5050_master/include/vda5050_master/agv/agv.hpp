@@ -37,8 +37,26 @@
 
 namespace vda5050_master {
 
-// Forward declaration
+// Forward declarations
 class VDA5050Master;
+class AGV;
+
+namespace detail {
+
+/**
+ * @brief Wire a typed subscription on an AGV's protocol adapter.
+ *
+ * Free function (with friend access to AGV's private members) so the
+ * template body can live in `agv_impl.hpp` rather than `agv.cpp`.
+ * Same pattern used by rclcpp internals — keeps the public header
+ * free of template implementation while still allowing instantiation
+ * from any TU that includes `agv_impl.hpp`.
+ */
+template <typename MsgType>
+void create_subscription(
+  AGV* agv, std::function<void(const MsgType&)> handler, QosLevel qos);
+
+}  // namespace detail
 
 /**
  * @brief AGV operational state based on state heartbeat
@@ -318,18 +336,17 @@ public:
   void handle_visualization(const vda5050_types::Visualization& msg);
 
 private:
+  // detail::create_subscription needs access to protocol_adapter_ and
+  // agv_id_ to wire the typed subscription. Body lives in agv_impl.hpp.
+  template <typename MsgType>
+  friend void detail::create_subscription(
+    AGV* agv, std::function<void(const MsgType&)> handler, QosLevel qos);
+
   // ============================================================================
   // Subscription Management
   // ============================================================================
 
   void setup_subscriptions();
-
-  // ============================================================================
-  // Message Handlers (from MQTT callbacks)
-  // ============================================================================
-
-  template <typename MsgType>
-  void create_subscription(void (AGV::*agv_handler)(const MsgType&), int qos);
 
   // ============================================================================
   // Internal State Management

@@ -24,6 +24,7 @@
 #include "vda5050_core/logger/logger.hpp"
 #include "vda5050_execution/protocol_adapter.hpp"
 #include "vda5050_json_utils/serialization.hpp"
+#include "vda5050_master/agv/agv_impl.hpp"
 #include "vda5050_master/standard_names.hpp"
 #include "vda5050_master/vda5050_master/master.hpp"
 
@@ -82,33 +83,6 @@ AGV::~AGV()
   VDA5050_INFO("[AGV] AGV instance destroyed: {}", agv_id_);
 }
 
-template <typename MsgType>
-void AGV::create_subscription(void (AGV::*agv_handler)(const MsgType&), int qos)
-{
-  protocol_adapter_->subscribe<MsgType>(
-    [this, agv_handler](
-      MsgType msg, std::optional<vda5050_types::Error> error) {
-      if (error.has_value())
-      {
-        VDA5050_ERROR(
-          "[AGV] Failed to parse message for {}: {}", agv_id_,
-          error->error_description.value_or("unknown error"));
-        return;
-      }
-
-      try
-      {
-        (this->*agv_handler)(msg);
-      }
-      catch (const std::exception& e)
-      {
-        VDA5050_WARN(
-          "[AGV] Failed to handle message for {}: {}", agv_id_, e.what());
-      }
-    },
-    qos);
-}
-
 void AGV::setup_subscriptions()
 {
   if (!protocol_adapter_)
@@ -116,14 +90,15 @@ void AGV::setup_subscriptions()
     return;
   }
 
-  create_subscription<vda5050_types::Connection>(
-    &AGV::handle_connection, static_cast<int>(ConnectionQos));
-  create_subscription<vda5050_types::State>(
-    &AGV::handle_state, static_cast<int>(StateQos));
-  create_subscription<vda5050_types::Factsheet>(
-    &AGV::handle_factsheet, static_cast<int>(FactsheetQos));
-  create_subscription<vda5050_types::Visualization>(
-    &AGV::handle_visualization, static_cast<int>(VisualizationQos));
+  detail::create_subscription<vda5050_types::Connection>(
+    this, [this](const auto& msg) { handle_connection(msg); }, ConnectionQos);
+  detail::create_subscription<vda5050_types::State>(
+    this, [this](const auto& msg) { handle_state(msg); }, StateQos);
+  detail::create_subscription<vda5050_types::Factsheet>(
+    this, [this](const auto& msg) { handle_factsheet(msg); }, FactsheetQos);
+  detail::create_subscription<vda5050_types::Visualization>(
+    this, [this](const auto& msg) { handle_visualization(msg); },
+    VisualizationQos);
 }
 
 void AGV::stop()
