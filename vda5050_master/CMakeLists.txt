@@ -77,6 +77,12 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_master vda5050_master)
 
+  # Master teardown integration test (uses gmock MqttClient, no broker)
+  ament_add_gmock(test_master_teardown
+    test/master/teardown_test.cpp
+  )
+  target_link_libraries(test_master_teardown vda5050_master)
+
 endif()
 
 ament_package()
