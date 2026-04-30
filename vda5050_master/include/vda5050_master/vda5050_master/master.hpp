@@ -176,6 +176,47 @@ public:
     const std::string& manufacturer, const std::string& serial_number,
     const vda5050_types::InstantActions& actions);
 
+  // ============================================================================
+  // User-Extension Callbacks (override in subclass)
+  // ============================================================================
+  //
+  // These virtuals fire after the per-AGV ProtocolAdapter receives and
+  // deserializes a message, and after the owning AGV instance has cached
+  // it. They are dispatched via a back-pointer the AGV holds to its
+  // owning master. Default implementations are empty — subclass and
+  // override to plug in fleet-level reaction logic.
+  //
+  // Threading: invoked on the Paho MQTT callback thread (not the user's
+  // main thread). User overrides must be thread-safe with respect to
+  // any state they touch.
+
+  /**
+   * @brief Called after a State message arrives and is cached on the AGV.
+   * @param agv_id  manufacturer/serial composite ID
+   * @param state   the parsed State message
+   */
+  virtual void on_state(
+    const std::string& agv_id, const vda5050_types::State& state);
+
+  /**
+   * @brief Called after a Connection message arrives and is cached.
+   */
+  virtual void on_connection(
+    const std::string& agv_id, const vda5050_types::Connection& connection);
+
+  /**
+   * @brief Called after a Factsheet message arrives and is cached.
+   */
+  virtual void on_factsheet(
+    const std::string& agv_id, const vda5050_types::Factsheet& factsheet);
+
+  /**
+   * @brief Called after a Visualization message arrives and is cached.
+   */
+  virtual void on_visualization(
+    const std::string& agv_id,
+    const vda5050_types::Visualization& visualization);
+
 private:
   // ============================================================================
   // Internal AGV lookup

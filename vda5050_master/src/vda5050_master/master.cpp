@@ -110,11 +110,14 @@ void VDA5050Master::onboard_agv(
     return;
   }
 
-  // Create AGV instance with a new protocol adapter
+  // Create AGV instance with a new protocol adapter. Pass `this` as the
+  // back-pointer so the AGV can dispatch incoming messages to our
+  // virtual callbacks (on_state, on_connection, etc.).
   auto agv = std::make_shared<AGV>(
     vda5050_execution::ProtocolAdapter::make(
       mqtt_client_, InterfaceName, Version, manufacturer, serial_number),
-    manufacturer, serial_number, max_queue_size, drop_oldest);
+    manufacturer, serial_number, max_queue_size, drop_oldest,
+    StateHeartbeatInterval, this);
 
   agvs_[agv_id] = std::move(agv);
 
@@ -218,6 +221,36 @@ bool VDA5050Master::publish_instant_actions(
   }
 
   return agv->send_instant_actions(actions);
+}
+
+// ============================================================================
+// User-Extension Callbacks — default empty implementations
+// ============================================================================
+//
+// Override these in a subclass to react to incoming AGV messages.
+// Default implementations are empty so a master that doesn't subclass
+// still works silently.
+
+void VDA5050Master::on_state(
+  const std::string& /*agv_id*/, const vda5050_types::State& /*state*/)
+{
+}
+
+void VDA5050Master::on_connection(
+  const std::string& /*agv_id*/,
+  const vda5050_types::Connection& /*connection*/)
+{
+}
+
+void VDA5050Master::on_factsheet(
+  const std::string& /*agv_id*/, const vda5050_types::Factsheet& /*factsheet*/)
+{
+}
+
+void VDA5050Master::on_visualization(
+  const std::string& /*agv_id*/,
+  const vda5050_types::Visualization& /*visualization*/)
+{
 }
 
 }  // namespace vda5050_master

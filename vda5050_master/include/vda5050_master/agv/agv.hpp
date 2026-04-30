@@ -81,13 +81,20 @@ public:
    * @param max_queue_size Maximum number of outgoing messages to queue (default: 10)
    * @param drop_oldest If true, drop oldest message when queue full; if false, reject new (default: true)
    * @param state_heartbeat_interval State heartbeat timeout in seconds
+   * @param parent Optional non-owning back-pointer to the owning
+   *        VDA5050Master. When set, the AGV dispatches incoming
+   *        messages to the master's virtual callbacks (on_state,
+   *        on_connection, on_factsheet, on_visualization) after
+   *        caching them. Lifetime contract: the AGV must not outlive
+   *        its parent (master owns the AGV via shared_ptr, so this
+   *        holds by construction).
    */
   AGV(
     std::shared_ptr<vda5050_execution::ProtocolAdapter> protocol_adapter,
     const std::string& manufacturer, const std::string& serial_number,
     size_t max_queue_size = 10, bool drop_oldest = true,
-
-    int state_heartbeat_interval = StateHeartbeatInterval);
+    int state_heartbeat_interval = StateHeartbeatInterval,
+    VDA5050Master* parent = nullptr);
 
   /**
    * @brief Destructor - stops the queue processing thread
@@ -359,6 +366,11 @@ private:
 
   // Protocol Adapter for publishing/subscribing
   std::shared_ptr<vda5050_execution::ProtocolAdapter> protocol_adapter_;
+
+  // Non-owning back-pointer to the owning VDA5050Master (may be nullptr).
+  // Set at construction and never reassigned — safe to read concurrently
+  // from MQTT-callback thread inside handle_*() dispatch.
+  VDA5050Master* parent_;
 
   // Heartbeat listener for state timeout detection (protected by heartbeat_mutex_)
   mutable std::mutex heartbeat_mutex_;

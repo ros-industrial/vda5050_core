@@ -25,6 +25,7 @@
 #include "vda5050_execution/protocol_adapter.hpp"
 #include "vda5050_json_utils/serialization.hpp"
 #include "vda5050_master/standard_names.hpp"
+#include "vda5050_master/vda5050_master/master.hpp"
 
 namespace vda5050_master {
 
@@ -35,11 +36,13 @@ namespace vda5050_master {
 AGV::AGV(
   std::shared_ptr<vda5050_execution::ProtocolAdapter> protocol_adapter,
   const std::string& manufacturer, const std::string& serial_number,
-  size_t max_queue_size, bool drop_oldest, int state_heartbeat_interval)
+  size_t max_queue_size, bool drop_oldest, int state_heartbeat_interval,
+  VDA5050Master* parent)
 : manufacturer_(manufacturer),
   serial_number_(serial_number),
   agv_id_(manufacturer + "/" + serial_number),
   protocol_adapter_(protocol_adapter),
+  parent_(parent),
   state_heartbeat_interval_(state_heartbeat_interval),
   created_time_(Clock::now()),
   max_queue_size_(max_queue_size),
@@ -353,6 +356,12 @@ void AGV::handle_connection(const vda5050_types::Connection& msg)
     cleanup_heartbeat();
     stop_queue_processor();
   }
+
+  // Dispatch to user override
+  if (parent_)
+  {
+    parent_->on_connection(agv_id_, msg);
+  }
 }
 
 void AGV::handle_state(const vda5050_types::State& msg)
@@ -375,20 +384,42 @@ void AGV::handle_state(const vda5050_types::State& msg)
 
   // Update operational state to AVAILABLE
   set_operational_state(AGVState::AVAILABLE);
+
+  // Dispatch to user override
+  if (parent_)
+  {
+    parent_->on_state(agv_id_, msg);
+  }
 }
 
 void AGV::handle_factsheet(const vda5050_types::Factsheet& msg)
 {
-  std::lock_guard<std::mutex> lock(data_mutex_);
-  last_factsheet_ = msg;
-  last_factsheet_time_ = Clock::now();
+  {
+    std::lock_guard<std::mutex> lock(data_mutex_);
+    last_factsheet_ = msg;
+    last_factsheet_time_ = Clock::now();
+  }
+
+  // Dispatch to user override
+  if (parent_)
+  {
+    parent_->on_factsheet(agv_id_, msg);
+  }
 }
 
 void AGV::handle_visualization(const vda5050_types::Visualization& msg)
 {
-  std::lock_guard<std::mutex> lock(data_mutex_);
-  last_visualization_ = msg;
-  last_visualization_time_ = Clock::now();
+  {
+    std::lock_guard<std::mutex> lock(data_mutex_);
+    last_visualization_ = msg;
+    last_visualization_time_ = Clock::now();
+  }
+
+  // Dispatch to user override
+  if (parent_)
+  {
+    parent_->on_visualization(agv_id_, msg);
+  }
 }
 
 // ============================================================================
