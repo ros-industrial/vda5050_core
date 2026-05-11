@@ -17,9 +17,9 @@ find_package(nlohmann_json REQUIRED)
 include(GNUInstallDirs)
 
 # Types
-add_library(types INTERFACE)
-add_library(${PROJECT_NAME}::types ALIAS types)
-target_include_directories(types
+add_library(${PROJECT_NAME}_types INTERFACE)
+add_library(${PROJECT_NAME}::types ALIAS ${PROJECT_NAME}_types)
+target_include_directories(${PROJECT_NAME}_types
   INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -34,69 +34,72 @@ else()
   message(STATUS "Building vda5050_json_utils without ROS 2 support")
 endif()
 
-add_library(json_utils INTERFACE)
-add_library(${PROJECT_NAME}::json_utils ALIAS json_utils)
-target_link_libraries(json_utils
+add_library(${PROJECT_NAME}_json_utils INTERFACE)
+add_library(${PROJECT_NAME}::json_utils ALIAS ${PROJECT_NAME}_json_utils)
+target_link_libraries(${PROJECT_NAME}_json_utils
   INTERFACE
-    types
+    ${PROJECT_NAME}_types
     nlohmann_json::nlohmann_json
 )
-target_include_directories(json_utils
+target_include_directories(${PROJECT_NAME}_json_utils
   INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 if(ament_cmake_FOUND AND ENABLE_ROS2)
-  target_link_libraries(json_utils
+  target_link_libraries(${PROJECT_NAME}_json_utils
     INTERFACE
       ${vda5050_interfaces_LIBRARIES}
   )
-  target_include_directories(json_utils
+  target_include_directories(${PROJECT_NAME}_json_utils
     INTERFACE
       ${vda5050_interfaces_INCLUDE_DIRS}
   )
-  target_compile_definitions(json_utils INTERFACE ENABLE_ROS2)
+  target_compile_definitions(${PROJECT_NAME}_json_utils INTERFACE ENABLE_ROS2)
 endif()
 
 # Logger
-add_library(logger SHARED src/logger/logger.cpp)
-add_library(${PROJECT_NAME}::logger ALIAS logger)
-target_link_libraries(logger PUBLIC fmt::fmt)
-target_include_directories(logger
+add_library(${PROJECT_NAME}_logger SHARED src/logger/logger.cpp)
+add_library(${PROJECT_NAME}::logger ALIAS ${PROJECT_NAME}_logger)
+target_link_libraries(${PROJECT_NAME}_logger PUBLIC fmt::fmt)
+target_include_directories(${PROJECT_NAME}_logger
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 # Errors
-add_library(errors INTERFACE)
-add_library(${PROJECT_NAME}::errors ALIAS errors)
-target_include_directories(errors
+add_library(${PROJECT_NAME}_errors INTERFACE)
+add_library(${PROJECT_NAME}::errors ALIAS ${PROJECT_NAME}_errors)
+target_include_directories(${PROJECT_NAME}_errors
   INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 # Order Utils
-add_library(order_utils SHARED src/order_utils/order_graph_validator.cpp)
-add_library(${PROJECT_NAME}::order_utils ALIAS order_utils)
-target_link_libraries(order_utils PUBLIC types errors)
-target_include_directories(order_utils
+add_library(${PROJECT_NAME}_order_utils SHARED src/order_utils/order_graph_validator.cpp)
+add_library(${PROJECT_NAME}::order_utils ALIAS ${PROJECT_NAME}_order_utils)
+target_link_libraries(${PROJECT_NAME}_order_utils PUBLIC
+  ${PROJECT_NAME}_types
+  ${PROJECT_NAME}_errors
+)
+target_include_directories(${PROJECT_NAME}_order_utils
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 # Transport
-add_library(transport src/transport/paho_mqtt_client.cpp)
-add_library(${PROJECT_NAME}::transport ALIAS transport)
-target_link_libraries(transport
+add_library(${PROJECT_NAME}_transport src/transport/paho_mqtt_client.cpp)
+add_library(${PROJECT_NAME}::transport ALIAS ${PROJECT_NAME}_transport)
+target_link_libraries(${PROJECT_NAME}_transport
   PUBLIC
     PahoMqttCpp::paho-mqttpp3
-    logger
+    ${PROJECT_NAME}_logger
 )
-target_include_directories(transport
+target_include_directories(${PROJECT_NAME}_transport
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -104,15 +107,15 @@ target_include_directories(transport
 
 # Execution
 file(GLOB_RECURSE execution_srcs "src/execution/*.cpp")
-add_library(execution ${execution_srcs})
-add_library(${PROJECT_NAME}::execution ALIAS execution)
-target_link_libraries(execution
+add_library(${PROJECT_NAME}_execution ${execution_srcs})
+add_library(${PROJECT_NAME}::execution ALIAS ${PROJECT_NAME}_execution)
+target_link_libraries(${PROJECT_NAME}_execution
   PUBLIC
-    types
-    json_utils
-    transport
+    ${PROJECT_NAME}_types
+    ${PROJECT_NAME}_json_utils
+    ${PROJECT_NAME}_transport
 )
-target_include_directories(transport
+target_include_directories(${PROJECT_NAME}_transport
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -120,16 +123,16 @@ target_include_directories(transport
 
 # Master
 file(GLOB_RECURSE master_srcs "src/master/*.cpp")
-add_library(master ${master_srcs})
-add_library(${PROJECT_NAME}::master ALIAS master)
-target_link_libraries(master
+add_library(${PROJECT_NAME}_master ${master_srcs})
+add_library(${PROJECT_NAME}::master ALIAS ${PROJECT_NAME}_master)
+target_link_libraries(${PROJECT_NAME}_master
   PUBLIC
-    types
-    json_utils
-    transport
-    execution
+    ${PROJECT_NAME}_types
+    ${PROJECT_NAME}_json_utils
+    ${PROJECT_NAME}_transport
+    ${PROJECT_NAME}_execution
 )
-target_include_directories(transport
+target_include_directories(${PROJECT_NAME}_transport
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -137,14 +140,14 @@ target_include_directories(transport
 
 
 set(lib_targets
-  types
-  json_utils
-  logger
-  errors
-  order_utils
-  transport
-  execution
-  master
+  ${PROJECT_NAME}_types
+  ${PROJECT_NAME}_json_utils
+  ${PROJECT_NAME}_logger
+  ${PROJECT_NAME}_errors
+  ${PROJECT_NAME}_order_utils
+  ${PROJECT_NAME}_transport
+  ${PROJECT_NAME}_execution
+  ${PROJECT_NAME}_master
 )
 
 install(
