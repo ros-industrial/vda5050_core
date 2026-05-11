@@ -179,6 +179,42 @@ if(ament_cmake_FOUND)
   endif()
 endif()
 
+option(BUILD_EXAMPLES "Build examples" ON)
+
+if(BUILD_EXAMPLES)
+  add_executable(custom_base examples/custom_base.cpp)
+  target_link_libraries(custom_base PUBLIC
+    vda5050_core::execution
+    vda5050_core::logger
+  )
+
+  add_executable(provider_example examples/provider_example.cpp)
+  target_link_libraries(provider_example PUBLIC
+    vda5050_core::execution
+    vda5050_core::logger
+  )
+
+  add_executable(engine_example examples/engine_example.cpp)
+  target_link_libraries(engine_example PUBLIC
+    vda5050_core::execution
+    vda5050_core::logger
+  )
+
+  add_executable(handler_integration examples/handler_integration.cpp)
+  target_link_libraries(handler_integration PUBLIC
+    vda5050_core::execution
+    vda5050_core::logger
+  )
+
+  install(TARGETS
+      custom_base
+      provider_example
+      engine_example
+      handler_integration
+    DESTINATION lib/${PROJECT_NAME}
+  )
+endif()
+
 option(BUILD_TESTING "Build tests" ON)
 
 if(BUILD_TESTING)
