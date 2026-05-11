@@ -9,7 +9,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-find_package(ament_cmake QUIET)
+find_package(ament_cmake REQUIRED)
 find_package(PahoMqttCpp REQUIRED)
 find_package(fmt REQUIRED)
 find_package(nlohmann_json REQUIRED)
@@ -27,7 +27,7 @@ target_include_directories(${PROJECT_NAME}_types
 
 # JSON Utils
 option(ENABLE_ROS2 "Enable ROS 2 message support in JSON utilities" OFF)
-if(ament_cmake_FOUND AND ENABLE_ROS2)
+if(ENABLE_ROS2)
   message(STATUS "Building vda5050_json_utils with ROS 2 support")
   find_package(vda5050_interfaces REQUIRED)
 else()
@@ -47,7 +47,7 @@ target_include_directories(${PROJECT_NAME}_json_utils
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-if(ament_cmake_FOUND AND ENABLE_ROS2)
+if(ENABLE_ROS2)
   target_link_libraries(${PROJECT_NAME}_json_utils
     INTERFACE
       ${vda5050_interfaces_LIBRARIES}
@@ -170,13 +170,11 @@ install(
   NAMESPACE ${PROJECT_NAME}::
 )
 
-if(ament_cmake_FOUND)
-  ament_export_targets(export_vda5050_core HAS_LIBRARY_TARGET)
-  ament_export_dependencies(PahoMqttCpp fmt nlohmann_json)
+ament_export_targets(export_vda5050_core HAS_LIBRARY_TARGET)
+ament_export_dependencies(PahoMqttCpp fmt nlohmann_json)
 
-  if(ENABLE_ROS2)
-    ament_export_dependencies(vda5050_interfaces)
-  endif()
+if(ENABLE_ROS2)
+  ament_export_dependencies(vda5050_interfaces)
 endif()
 
 option(BUILD_EXAMPLES "Build examples" ON)
@@ -218,129 +216,51 @@ endif()
 option(BUILD_TESTING "Build tests" ON)
 
 if(BUILD_TESTING)
-  if(ament_cmake_FOUND)
-    include(cmake/vda5050_ament_lint_common.cmake)
-    vda5050_ament_lint_common()
+  include(cmake/vda5050_ament_lint_common.cmake)
+  vda5050_ament_lint_common()
 
-    find_package(ament_cmake_gmock REQUIRED)
+  find_package(ament_cmake_gmock REQUIRED)
 
-    set(json_tests test/json_utils/test_json_utils.cpp)
-    if(ENABLE_ROS2)
-      list(APPEND json_tests test/json_utils/test_json_utils_ros2.cpp)
-    endif()
-    ament_add_gmock(test_json_utils ${json_tests})
-    target_link_libraries(test_json_utils vda5050_core::json_utils)
-
-    ament_add_gmock(test_order_utils
-      test/order_utils/test_unit_order_graph_validator.cpp)
-    target_link_libraries(test_order_utils vda5050_core::order_utils)
-
-    ament_add_gmock(test_logger
-      test/logger/test_unit_default_logger.cpp
-      test/logger/test_unit_logger.cpp
-    )
-    target_link_libraries(test_logger vda5050_core::logger)
-
-    ament_add_gmock(test_transport
-      test/transport/test_unit_mqtt_client_interface.cpp
-      test/transport/test_integration_paho_mqtt_client.cpp
-    )
-    target_link_libraries(test_transport vda5050_core::transport)
-
-    ament_add_gmock(test_execution
-      test/execution/test_engine.cpp
-      test/execution/test_event_queue.cpp
-      test/execution/test_handler.cpp
-      test/execution/test_protocol_adapter.cpp
-      test/execution/test_provider.cpp
-    )
-    target_link_libraries(test_execution vda5050_core::execution)
-
-    ament_add_gmock(test_master
-      test/master/test_integration_heartbeat.cpp
-      test/master/test_integration_master_logic.cpp
-      test/master/test_integration_master_mqtt.cpp
-      test/master/test_integration_master_teardown.cpp
-      test/master/test_unit_agv.cpp
-    )
-    target_link_libraries(test_master vda5050_core::master)
-  else()
-    enable_testing()
-
-    include(cmake/vda5050_lint_common.cmake)
-    vda5050_lint_common()
-
-    find_package(GTest REQUIRED)
-    include(GoogleTest)
-
-    add_executable(test_order_utils test/order_utils/test_unit_order_graph_validator.cpp)
-    target_link_libraries(test_order_utils
-      GTest::gtest_main
-      ${PROJECT_NAME}::order_utils
-    )
-
-    add_executable(test_json_utils test/json_utils/test_json_utils.cpp)
-    target_link_libraries(test_json_utils
-      GTest::gtest_main
-      ${PROJECT_NAME}::json_utils
-    )
-
-    add_executable(test_logger
-      test/logger/test_unit_logger.cpp
-      test/logger/test_unit_default_logger.cpp
-    )
-    target_link_libraries(test_logger
-      GTest::gtest_main
-      ${PROJECT_NAME}::logger
-    )
-
-    add_executable(test_transport
-      test/transport/test_unit_mqtt_client_interface.cpp
-      test/transport/test_integration_paho_mqtt_client.cpp
-    )
-    target_link_libraries(test_transport
-      GTest::gmock_main
-      ${PROJECT_NAME}::transport
-    )
-
-    add_executable(test_execution
-      test/execution/test_engine.cpp
-      test/execution/test_event_queue.cpp
-      test/execution/test_handler.cpp
-      test/execution/test_protocol_adapter.cpp
-      test/execution/test_provider.cpp
-    )
-    target_link_libraries(test_execution
-      GTest::gmock_main
-      ${PROJECT_NAME}::execution
-    )
-
-    add_executable(test_master
-      test/master/test_integration_heartbeat.cpp
-      test/master/test_integration_master_logic.cpp
-      test/master/test_integration_master_mqtt.cpp
-      test/master/test_integration_master_teardown.cpp
-      test/master/test_unit_agv.cpp
-    )
-    target_link_libraries(test_master
-      GTest::gmock_main
-      ${PROJECT_NAME}::master
-    )
-
-    set(test_execs
-      test_order_utils
-      test_json_utils
-      test_logger
-      test_transport
-      test_execution
-      test_master
-    )
-    foreach(exec ${test_execs})
-      gtest_discover_tests(${exec})
-    endforeach()
+  set(json_tests test/json_utils/test_json_utils.cpp)
+  if(ENABLE_ROS2)
+    list(APPEND json_tests test/json_utils/test_json_utils_ros2.cpp)
   endif()
+  ament_add_gmock(test_json_utils ${json_tests})
+  target_link_libraries(test_json_utils vda5050_core::json_utils)
+
+  ament_add_gmock(test_order_utils
+    test/order_utils/test_unit_order_graph_validator.cpp)
+  target_link_libraries(test_order_utils vda5050_core::order_utils)
+
+  ament_add_gmock(test_logger
+    test/logger/test_unit_default_logger.cpp
+    test/logger/test_unit_logger.cpp
+  )
+  target_link_libraries(test_logger vda5050_core::logger)
+
+  ament_add_gmock(test_transport
+    test/transport/test_unit_mqtt_client_interface.cpp
+    test/transport/test_integration_paho_mqtt_client.cpp
+  )
+  target_link_libraries(test_transport vda5050_core::transport)
+
+  ament_add_gmock(test_execution
+    test/execution/test_engine.cpp
+    test/execution/test_event_queue.cpp
+    test/execution/test_handler.cpp
+    test/execution/test_protocol_adapter.cpp
+    test/execution/test_provider.cpp
+  )
+  target_link_libraries(test_execution vda5050_core::execution)
+
+  ament_add_gmock(test_master
+    test/master/test_integration_heartbeat.cpp
+    test/master/test_integration_master_logic.cpp
+    test/master/test_integration_master_mqtt.cpp
+    test/master/test_integration_master_teardown.cpp
+    test/master/test_unit_agv.cpp
+  )
+  target_link_libraries(test_master vda5050_core::master)
 endif()
 
-if(ament_cmake_FOUND)
-  ament_package()
-endif()
+ament_package()
