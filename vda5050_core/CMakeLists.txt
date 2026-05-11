@@ -92,7 +92,7 @@ target_include_directories(${PROJECT_NAME}_order_utils
 )
 
 # Transport
-add_library(${PROJECT_NAME}_transport src/transport/paho_mqtt_client.cpp)
+add_library(${PROJECT_NAME}_transport SHARED src/transport/paho_mqtt_client.cpp)
 add_library(${PROJECT_NAME}::transport ALIAS ${PROJECT_NAME}_transport)
 target_link_libraries(${PROJECT_NAME}_transport
   PUBLIC
@@ -107,7 +107,7 @@ target_include_directories(${PROJECT_NAME}_transport
 
 # Execution
 file(GLOB_RECURSE execution_srcs "src/execution/*.cpp")
-add_library(${PROJECT_NAME}_execution ${execution_srcs})
+add_library(${PROJECT_NAME}_execution SHARED ${execution_srcs})
 add_library(${PROJECT_NAME}::execution ALIAS ${PROJECT_NAME}_execution)
 target_link_libraries(${PROJECT_NAME}_execution
   PUBLIC
@@ -123,7 +123,7 @@ target_include_directories(${PROJECT_NAME}_transport
 
 # Master
 file(GLOB_RECURSE master_srcs "src/master/*.cpp")
-add_library(${PROJECT_NAME}_master ${master_srcs})
+add_library(${PROJECT_NAME}_master SHARED ${master_srcs})
 add_library(${PROJECT_NAME}::master ALIAS ${PROJECT_NAME}_master)
 target_link_libraries(${PROJECT_NAME}_master
   PUBLIC
@@ -151,7 +151,7 @@ set(lib_targets
 )
 
 install(
-  DIRECTORY include/${PROJECT_NAME}
+  DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
 )
 
