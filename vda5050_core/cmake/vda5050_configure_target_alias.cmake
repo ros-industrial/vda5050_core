@@ -37,5 +37,5 @@ macro(vda5050_configure_target_alias)
   set_property(TARGET
     ${_ARG_TARGET}
     PROPERTY EXPORT_NAME ${_ARG_EXPORT_NAME}
- )
+  )
 endmacro()

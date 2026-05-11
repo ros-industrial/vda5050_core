@@ -60,7 +60,8 @@ struct OrderUpdate
   }
 };
 
-struct OrderEvent : public vda5050_core::execution::Initialize<OrderEvent, EventBase>
+struct OrderEvent
+: public vda5050_core::execution::Initialize<OrderEvent, EventBase>
 {
   std::string order_id;
   uint32_t sequence_id;

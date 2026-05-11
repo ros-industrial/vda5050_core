@@ -26,7 +26,8 @@ using UpdateBase = vda5050_core::execution::UpdateBase;
 using Engine = vda5050_core::execution::Engine;
 using Priority = vda5050_core::execution::Priority;
 
-struct MoveEvent : public vda5050_core::execution::Initialize<MoveEvent, EventBase>
+struct MoveEvent
+: public vda5050_core::execution::Initialize<MoveEvent, EventBase>
 {
   std::string direction;
 
@@ -37,7 +38,8 @@ struct MoveEvent : public vda5050_core::execution::Initialize<MoveEvent, EventBa
   }
 };
 
-struct SensorData : public vda5050_core::execution::Initialize<SensorData, UpdateBase>
+struct SensorData
+: public vda5050_core::execution::Initialize<SensorData, UpdateBase>
 {
   double value;
 
