@@ -15,11 +15,16 @@ find_package(fmt REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
 include(GNUInstallDirs)
+include(cmake/vda5050_configure_target_alias.cmake)
 
 # Types
-add_library(${PROJECT_NAME}_types INTERFACE)
-add_library(${PROJECT_NAME}::types ALIAS ${PROJECT_NAME}_types)
-target_include_directories(${PROJECT_NAME}_types
+add_library(vda5050_types INTERFACE)
+vda5050_configure_target_alias(
+  TARGET vda5050_types
+  NAMESPACE ${PROJECT_NAME}
+  EXPORT_NAME types
+)
+target_include_directories(vda5050_types
   INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -34,14 +39,18 @@ else()
   message(STATUS "Building vda5050_json_utils without ROS 2 support")
 endif()
 
-add_library(${PROJECT_NAME}_json_utils INTERFACE)
-add_library(${PROJECT_NAME}::json_utils ALIAS ${PROJECT_NAME}_json_utils)
-target_link_libraries(${PROJECT_NAME}_json_utils
+add_library(vda5050_json_utils INTERFACE)
+vda5050_configure_target_alias(
+  TARGET vda5050_json_utils
+  NAMESPACE ${PROJECT_NAME}
+  EXPORT_NAME json_utils
+)
+target_link_libraries(vda5050_json_utils
   INTERFACE
-    ${PROJECT_NAME}_types
+    ${PROJECT_NAME}::types
     nlohmann_json::nlohmann_json
 )
-target_include_directories(${PROJECT_NAME}_json_utils
+target_include_directories(vda5050_json_utils
   INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -60,46 +69,62 @@ if(ENABLE_ROS2)
 endif()
 
 # Logger
-add_library(${PROJECT_NAME}_logger SHARED src/logger/logger.cpp)
-add_library(${PROJECT_NAME}::logger ALIAS ${PROJECT_NAME}_logger)
-target_link_libraries(${PROJECT_NAME}_logger PUBLIC fmt::fmt)
-target_include_directories(${PROJECT_NAME}_logger
+add_library(vda5050_logger SHARED src/logger/logger.cpp)
+vda5050_configure_target_alias(
+  TARGET vda5050_logger
+  NAMESPACE ${PROJECT_NAME}
+  EXPORT_NAME logger
+)
+target_link_libraries(vda5050_logger PUBLIC fmt::fmt)
+target_include_directories(vda5050_logger
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 # Errors
-add_library(${PROJECT_NAME}_errors INTERFACE)
-add_library(${PROJECT_NAME}::errors ALIAS ${PROJECT_NAME}_errors)
-target_include_directories(${PROJECT_NAME}_errors
+add_library(vda5050_errors INTERFACE)
+vda5050_configure_target_alias(
+  TARGET vda5050_errors
+  NAMESPACE ${PROJECT_NAME}
+  EXPORT_NAME errors
+)
+target_include_directories(vda5050_errors
   INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 # Order Utils
-add_library(${PROJECT_NAME}_order_utils SHARED src/order_utils/order_graph_validator.cpp)
-add_library(${PROJECT_NAME}::order_utils ALIAS ${PROJECT_NAME}_order_utils)
-target_link_libraries(${PROJECT_NAME}_order_utils PUBLIC
-  ${PROJECT_NAME}_types
-  ${PROJECT_NAME}_errors
+add_library(vda5050_order_utils SHARED src/order_utils/order_graph_validator.cpp)
+vda5050_configure_target_alias(
+  TARGET vda5050_order_utils
+  NAMESPACE ${PROJECT_NAME}
+  EXPORT_NAME order_utils
 )
-target_include_directories(${PROJECT_NAME}_order_utils
+target_link_libraries(vda5050_order_utils PUBLIC
+  ${PROJECT_NAME}::types
+  ${PROJECT_NAME}::errors
+)
+target_include_directories(vda5050_order_utils
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 # Transport
-add_library(${PROJECT_NAME}_transport SHARED src/transport/paho_mqtt_client.cpp)
-add_library(${PROJECT_NAME}::transport ALIAS ${PROJECT_NAME}_transport)
-target_link_libraries(${PROJECT_NAME}_transport
+add_library(vda5050_transport SHARED src/transport/paho_mqtt_client.cpp)
+vda5050_configure_target_alias(
+  TARGET vda5050_transport
+  NAMESPACE ${PROJECT_NAME}
+  EXPORT_NAME transport
+)
+target_link_libraries(vda5050_transport
   PUBLIC
     PahoMqttCpp::paho-mqttpp3
-    ${PROJECT_NAME}_logger
+    ${PROJECT_NAME}::logger
 )
-target_include_directories(${PROJECT_NAME}_transport
+target_include_directories(vda5050_transport
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -107,15 +132,19 @@ target_include_directories(${PROJECT_NAME}_transport
 
 # Execution
 file(GLOB_RECURSE execution_srcs "src/execution/*.cpp")
-add_library(${PROJECT_NAME}_execution SHARED ${execution_srcs})
-add_library(${PROJECT_NAME}::execution ALIAS ${PROJECT_NAME}_execution)
-target_link_libraries(${PROJECT_NAME}_execution
-  PUBLIC
-    ${PROJECT_NAME}_types
-    ${PROJECT_NAME}_json_utils
-    ${PROJECT_NAME}_transport
+add_library(vda5050_execution SHARED ${execution_srcs})
+vda5050_configure_target_alias(
+  TARGET vda5050_execution
+  NAMESPACE ${PROJECT_NAME}
+  EXPORT_NAME execution
 )
-target_include_directories(${PROJECT_NAME}_execution
+target_link_libraries(vda5050_execution
+  PUBLIC
+    ${PROJECT_NAME}::types
+    ${PROJECT_NAME}::json_utils
+    ${PROJECT_NAME}::transport
+)
+target_include_directories(vda5050_execution
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -123,32 +152,25 @@ target_include_directories(${PROJECT_NAME}_execution
 
 # Master
 file(GLOB_RECURSE master_srcs "src/master/*.cpp")
-add_library(${PROJECT_NAME}_master SHARED ${master_srcs})
-add_library(${PROJECT_NAME}::master ALIAS ${PROJECT_NAME}_master)
-target_link_libraries(${PROJECT_NAME}_master
-  PUBLIC
-    ${PROJECT_NAME}_types
-    ${PROJECT_NAME}_json_utils
-    ${PROJECT_NAME}_transport
-    ${PROJECT_NAME}_execution
+add_library(vda5050_master SHARED ${master_srcs})
+vda5050_configure_target_alias(
+  TARGET vda5050_master
+  NAMESPACE ${PROJECT_NAME}
+  EXPORT_NAME master
 )
-target_include_directories(${PROJECT_NAME}_master
+target_link_libraries(vda5050_master
+  PUBLIC
+    ${PROJECT_NAME}::types
+    ${PROJECT_NAME}::json_utils
+    ${PROJECT_NAME}::transport
+    ${PROJECT_NAME}::execution
+)
+target_include_directories(vda5050_master
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-
-set(lib_targets
-  ${PROJECT_NAME}_types
-  ${PROJECT_NAME}_json_utils
-  ${PROJECT_NAME}_logger
-  ${PROJECT_NAME}_errors
-  ${PROJECT_NAME}_order_utils
-  ${PROJECT_NAME}_transport
-  ${PROJECT_NAME}_execution
-  ${PROJECT_NAME}_master
-)
 
 install(
   DIRECTORY include/${PROJECT_NAME}/
@@ -156,21 +178,25 @@ install(
 )
 
 install(
-  TARGETS ${lib_targets}
+  TARGETS
+    vda5050_types
+    vda5050_json_utils
+    vda5050_logger
+    vda5050_errors
+    vda5050_order_utils
+    vda5050_transport
+    vda5050_execution
+    vda5050_master
   EXPORT export_${PROJECT_NAME}
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
-install(
-  EXPORT export_${PROJECT_NAME}
-  DESTINATION share/${PROJECT_NAME}/cmake
+ament_export_targets(export_${PROJECT_NAME}
+  HAS_LIBRARY_TARGET
   NAMESPACE ${PROJECT_NAME}::
 )
-
-ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(PahoMqttCpp fmt nlohmann_json)
 
 if(ENABLE_ROS2)
@@ -182,26 +208,26 @@ option(BUILD_EXAMPLES "Build examples" ON)
 if(BUILD_EXAMPLES)
   add_executable(custom_base examples/custom_base.cpp)
   target_link_libraries(custom_base PUBLIC
-    vda5050_core::execution
-    vda5050_core::logger
+    ${PROJECT_NAME}::execution
+    ${PROJECT_NAME}::logger
   )
 
   add_executable(provider_example examples/provider_example.cpp)
   target_link_libraries(provider_example PUBLIC
-    vda5050_core::execution
-    vda5050_core::logger
+    ${PROJECT_NAME}::execution
+    ${PROJECT_NAME}::logger
   )
 
   add_executable(engine_example examples/engine_example.cpp)
   target_link_libraries(engine_example PUBLIC
-    vda5050_core::execution
-    vda5050_core::logger
+    ${PROJECT_NAME}::execution
+    ${PROJECT_NAME}::logger
   )
 
   add_executable(handler_integration examples/handler_integration.cpp)
   target_link_libraries(handler_integration PUBLIC
-    vda5050_core::execution
-    vda5050_core::logger
+    ${PROJECT_NAME}::execution
+    ${PROJECT_NAME}::logger
   )
 
   install(TARGETS
@@ -267,7 +293,7 @@ endif()
 install(
   FILES
     cmake/vda5050_ament_lint_common.cmake
-  DESTINATION share/${PROJECT_NAME}
+  DESTINATION share/${PROJECT_NAME}/cmake
 )
 
 ament_package(
