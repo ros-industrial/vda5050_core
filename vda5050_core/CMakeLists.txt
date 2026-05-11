@@ -115,7 +115,7 @@ target_link_libraries(${PROJECT_NAME}_execution
     ${PROJECT_NAME}_json_utils
     ${PROJECT_NAME}_transport
 )
-target_include_directories(${PROJECT_NAME}_transport
+target_include_directories(${PROJECT_NAME}_execution
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -132,7 +132,7 @@ target_link_libraries(${PROJECT_NAME}_master
     ${PROJECT_NAME}_transport
     ${PROJECT_NAME}_execution
 )
-target_include_directories(${PROJECT_NAME}_transport
+target_include_directories(${PROJECT_NAME}_master
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
