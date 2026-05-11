@@ -46,7 +46,7 @@ function(vda5050_ament_lint_common)
     if(CLANG_FORMAT_VERSION VERSION_GREATER_EQUAL "16.0.0")
       find_package(ament_cmake_clang_format REQUIRED)
       ament_clang_format(
-        CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/.clang-format"
+        CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/../.clang-format"
       )
     endif()
   endif()
