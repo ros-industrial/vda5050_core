@@ -57,15 +57,15 @@ target_include_directories(vda5050_json_utils
 )
 
 if(ENABLE_ROS2)
-  target_link_libraries(${PROJECT_NAME}_json_utils
+  target_link_libraries(vda5050_json_utils
     INTERFACE
       ${vda5050_interfaces_LIBRARIES}
   )
-  target_include_directories(${PROJECT_NAME}_json_utils
+  target_include_directories(vda5050_json_utils
     INTERFACE
       ${vda5050_interfaces_INCLUDE_DIRS}
   )
-  target_compile_definitions(${PROJECT_NAME}_json_utils INTERFACE ENABLE_ROS2)
+  target_compile_definitions(vda5050_json_utils INTERFACE ENABLE_ROS2)
 endif()
 
 # Logger
