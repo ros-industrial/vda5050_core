@@ -25,7 +25,6 @@ function(vda5050_ament_lint_common)
   find_package(ament_cmake_cpplint REQUIRED)
   set(cpplint_filters
     "-whitespace/newline"
-    "-build/header_guard"
   )
   ament_cpplint(FILTERS "${cpplint_filters}")
 
@@ -54,7 +53,6 @@ function(vda5050_ament_lint_common)
   # Disable copyright check for older ament_copyright versions
   find_package(ament_cmake_copyright 0.13.3 QUIET)
   if(ament_cmake_copyright_FOUND)
-    set(copyright_excludes install)
-    ament_copyright(include src test)
+    ament_copyright()
   endif()
 endfunction()
