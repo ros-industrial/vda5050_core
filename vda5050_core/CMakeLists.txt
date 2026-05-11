@@ -21,7 +21,7 @@ include(cmake/vda5050_configure_target_alias.cmake)
 add_library(vda5050_types INTERFACE)
 vda5050_configure_target_alias(
   TARGET vda5050_types
-  NAMESPACE ${PROJECT_NAME}
+  NAMESPACE ${PROJECT_NAME}::
   EXPORT_NAME types
 )
 target_include_directories(vda5050_types
@@ -42,7 +42,7 @@ endif()
 add_library(vda5050_json_utils INTERFACE)
 vda5050_configure_target_alias(
   TARGET vda5050_json_utils
-  NAMESPACE ${PROJECT_NAME}
+  NAMESPACE ${PROJECT_NAME}::
   EXPORT_NAME json_utils
 )
 target_link_libraries(vda5050_json_utils
@@ -72,7 +72,7 @@ endif()
 add_library(vda5050_logger SHARED src/logger/logger.cpp)
 vda5050_configure_target_alias(
   TARGET vda5050_logger
-  NAMESPACE ${PROJECT_NAME}
+  NAMESPACE ${PROJECT_NAME}::
   EXPORT_NAME logger
 )
 target_link_libraries(vda5050_logger PUBLIC fmt::fmt)
@@ -86,7 +86,7 @@ target_include_directories(vda5050_logger
 add_library(vda5050_errors INTERFACE)
 vda5050_configure_target_alias(
   TARGET vda5050_errors
-  NAMESPACE ${PROJECT_NAME}
+  NAMESPACE ${PROJECT_NAME}::
   EXPORT_NAME errors
 )
 target_include_directories(vda5050_errors
@@ -99,7 +99,7 @@ target_include_directories(vda5050_errors
 add_library(vda5050_order_utils SHARED src/order_utils/order_graph_validator.cpp)
 vda5050_configure_target_alias(
   TARGET vda5050_order_utils
-  NAMESPACE ${PROJECT_NAME}
+  NAMESPACE ${PROJECT_NAME}::
   EXPORT_NAME order_utils
 )
 target_link_libraries(vda5050_order_utils PUBLIC
@@ -116,7 +116,7 @@ target_include_directories(vda5050_order_utils
 add_library(vda5050_transport SHARED src/transport/paho_mqtt_client.cpp)
 vda5050_configure_target_alias(
   TARGET vda5050_transport
-  NAMESPACE ${PROJECT_NAME}
+  NAMESPACE ${PROJECT_NAME}::
   EXPORT_NAME transport
 )
 target_link_libraries(vda5050_transport
@@ -135,7 +135,7 @@ file(GLOB_RECURSE execution_srcs "src/execution/*.cpp")
 add_library(vda5050_execution SHARED ${execution_srcs})
 vda5050_configure_target_alias(
   TARGET vda5050_execution
-  NAMESPACE ${PROJECT_NAME}
+  NAMESPACE ${PROJECT_NAME}::
   EXPORT_NAME execution
 )
 target_link_libraries(vda5050_execution
@@ -155,7 +155,7 @@ file(GLOB_RECURSE master_srcs "src/master/*.cpp")
 add_library(vda5050_master SHARED ${master_srcs})
 vda5050_configure_target_alias(
   TARGET vda5050_master
-  NAMESPACE ${PROJECT_NAME}
+  NAMESPACE ${PROJECT_NAME}::
   EXPORT_NAME master
 )
 target_link_libraries(vda5050_master

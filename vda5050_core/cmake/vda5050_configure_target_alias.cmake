@@ -30,12 +30,31 @@ macro(vda5050_configure_target_alias)
   set(_one_value_args TARGET NAMESPACE EXPORT_NAME)
   cmake_parse_arguments(_ARG "" "${_one_value_args}" "" ${ARGN})
 
+  if(NOT DEFINED _ARG_TARGET)
+    message(FATAL_ERROR
+      "vda5050_configure_target_alias() must be called with TARGET defined!")
+  endif()
+
+  # Allow optionally overriding default namespace and alias name
+  set(_VDA5050_TARGET_NAMESPACE ${_ARG_NAMESPACE})
+  if(NOT DEFINED _VDA5050_TARGET_NAMESPACE)
+    set(_VDA5050_TARGET_NAMESPACE "${PROJECT_NAME}::")
+  endif()
+
+  set(_VDA5050_TARGET_EXPORT_NAME ${_ARG_EXPORT_NAME})
+  if(NOT DEFINED _VDA5050_TARGET_EXPORT_NAME)
+    set(_VDA5050_TARGET_EXPORT_NAME "${_ARG_TARGET}")
+  endif()
+
   # Set internal alias
-  add_library("${_ARG_NAMESPACE}::${_ARG_EXPORT_NAME}" ALIAS ${_ARG_TARGET})
+  add_library(
+    "${_VDA5050_TARGET_NAMESPACE}${_VDA5050_TARGET_EXPORT_NAME}"
+    ALIAS ${_ARG_TARGET}
+  )
 
   # set custom export name for target
   set_property(TARGET
     ${_ARG_TARGET}
-    PROPERTY EXPORT_NAME ${_ARG_EXPORT_NAME}
+    PROPERTY EXPORT_NAME ${_VDA5050_TARGET_EXPORT_NAME}
   )
 endmacro()
