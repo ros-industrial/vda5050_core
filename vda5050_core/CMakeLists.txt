@@ -170,7 +170,7 @@ install(
   NAMESPACE ${PROJECT_NAME}::
 )
 
-ament_export_targets(export_vda5050_core HAS_LIBRARY_TARGET)
+ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(PahoMqttCpp fmt nlohmann_json)
 
 if(ENABLE_ROS2)
@@ -263,4 +263,13 @@ if(BUILD_TESTING)
   target_link_libraries(test_master vda5050_core::master)
 endif()
 
-ament_package()
+# Install linter macro
+install(
+  FILES
+    cmake/vda5050_ament_lint_common.cmake
+  DESTINATION share/${PROJECT_NAME}
+)
+
+ament_package(
+  CONFIG_EXTRAS "vda5050_core-extras.cmake"
+)
