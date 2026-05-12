@@ -10,6 +10,9 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <build_depend>nlohmann-json-dev</build_depend>
+  <build_depend>libpaho-mqtt-dev</build_depend>
+  <build_depend>libpaho-mqttpp-dev</build_depend>
+  <build_depend>fmt</build_depend>
 
   <test_depend>ament_cmake_cppcheck</test_depend>
   <test_depend>ament_cmake_cpplint</test_depend>
