@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: |
           apt-get update -qq -y
-          apt-get install libpaho-mqtt-dev libpaho-mqttpp-dev libfmt-dev mosquitto -qq -y
+          apt-get install libpaho-mqtt-dev libpaho-mqttpp-dev mosquitto -qq -y
       - name: Start MQTT broker
         run: |
           mosquitto -d
