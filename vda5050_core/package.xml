@@ -5,7 +5,13 @@
   <version>0.0.0</version>
   <description>Tools for VDA5050 development workflows</description>
   <maintainer email="saurabh_kamat@a-star.edu.sg">Saurabh Kamat</maintainer>
+  <maintainer email="lim_yew_hao@a-star.edu.sg">Yew Hao Lim</maintainer>
+  <maintainer email="chen_bainian@a-star.edu.sg">Bainian Chen</maintainer>
   <license>Apache License 2.0</license>
+
+  <author email="glenn_tan@a-star.edu.sg">Glenn Tan</author>
+  <author email="shawnkengkiat@gmail.com">Shawn Chan</author>
+  <author email="john_abogado@a-star.edu.sg">John Abogado</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
