@@ -55,8 +55,6 @@ using vda5050_core::types::Order;
 using vda5050_core::types::State;
 using vda5050_core::types::Visualization;
 
-using vda5050_core::execution::ProtocolAdapter;
-
 namespace vda5050_core {
 
 namespace master {
@@ -122,7 +120,7 @@ public:
    *        doc-comment.
    */
   AGV(
-    std::shared_ptr<execution::ProtocolAdapter> protocol_adapter,
+    std::shared_ptr<ProtocolAdapter> protocol_adapter,
     const std::string& manufacturer, const std::string& serial_number,
     size_t max_queue_size = 10, bool drop_oldest = true,
     int state_heartbeat_interval = StateHeartbeatInterval,
