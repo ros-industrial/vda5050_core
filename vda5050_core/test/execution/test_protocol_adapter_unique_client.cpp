@@ -36,7 +36,7 @@
 
 #include "vda5050_core/execution/protocol_adapter.hpp"
 
-using vda5050_core::execution::ProtocolAdapter;
+using vda5050_core::master::ProtocolAdapter;
 using vda5050_core::transport::MqttClientInterface;
 
 using vda5050_core::types::AGVClass;
@@ -76,7 +76,7 @@ template <typename T>
 class ProtocolAdapterTest : public testing::Test
 {
 protected:
-  std::shared_ptr<MockMqttClient> mock_;
+  MockMqttClient* mock_{nullptr};
   std::shared_ptr<ProtocolAdapter> adapter_;
 
   std::string interface_;
@@ -96,10 +96,11 @@ protected:
     manufacturer_ = "ROS-I";
     serial_number_ = "S001";
 
-    mock_ = std::make_shared<MockMqttClient>();
+    auto mock = std::make_unique<MockMqttClient>();
+    mock_ = mock.get();
 
     adapter_ = ProtocolAdapter::make(
-      mock_, interface_, version_, manufacturer_, serial_number_);
+      std::move(mock), interface_, version_, manufacturer_, serial_number_);
 
     topic_prefix_ = fmt::format(
       "{}/{}/{}/{}/", interface_, version_, manufacturer_, serial_number_);
@@ -110,34 +111,16 @@ protected:
 
   void TearDown()
   {
-    mock_.reset();
     adapter_.reset();
+    mock_ = nullptr;
   }
 };
-
-template <typename T>
-T make_valid_message();
-
-template <>
-Factsheet make_valid_message()
-{
-  Factsheet msg;
-  msg.type_specification.agv_kinematic = AGVKinematic::DIFF;
-  msg.type_specification.agv_class = AGVClass::CARRIER;
-  return msg;
-}
-
-template <typename T>
-T make_valid_message()
-{
-  return T{};
-}
 
 TYPED_TEST_SUITE(ProtocolAdapterTest, MessageTypes);
 
 TYPED_TEST(ProtocolAdapterTest, PublishMessage)
 {
-  TypeParam msg = make_valid_message<TypeParam>();
+  TypeParam msg;
 
   EXPECT_CALL(
     *this->mock_, publish(
@@ -174,61 +157,16 @@ TYPED_TEST(ProtocolAdapterTest, SubscribeMessage)
     },
     this->qos_);
 
-  TypeParam msg = make_valid_message<TypeParam>();
+  TypeParam msg;
   nlohmann::json j = msg;
 
   captured_handler(this->topic_prefix_, j.dump());
   EXPECT_TRUE(success);
 }
 
-TYPED_TEST(ProtocolAdapterTest, UnsubscribeMessage)
-{
-  MqttClientInterface::MessageHandler captured_handler;
-
-  EXPECT_CALL(
-    *this->mock_,
-    subscribe(testing::StartsWith(this->topic_prefix_), testing::_, this->qos_))
-    .WillOnce(testing::SaveArg<1>(&captured_handler));
-
-  std::atomic_bool callback_invoked = false;
-  this->adapter_->template subscribe<TypeParam>(
-    [&](TypeParam /*msg*/, std::optional<vda5050_core::types::Error> err) {
-      if (!err.has_value()) callback_invoked = true;
-    },
-    this->qos_);
-
-  // While subscribed, the captured wrapper should dispatch to the
-  // user callback.
-  TypeParam msg = make_valid_message<TypeParam>();
-  nlohmann::json j = msg;
-  captured_handler(this->topic_prefix_, j.dump());
-  EXPECT_TRUE(callback_invoked);
-
-  // Unsubscribe.
-  EXPECT_CALL(
-    *this->mock_, unsubscribe(testing::StartsWith(this->topic_prefix_)))
-    .Times(1);
-  this->adapter_->template unsubscribe<TypeParam>();
-
-  // Invoking the captured wrapper after unsubscribe should NOT
-  // dispatch — the wrapper is now inert.
-  callback_invoked = false;
-  captured_handler(this->topic_prefix_, j.dump());
-  EXPECT_FALSE(callback_invoked);
-}
-
-TYPED_TEST(ProtocolAdapterTest, UnsubscribeWithoutSubscription)
-{
-  EXPECT_CALL(
-    *this->mock_, unsubscribe(testing::StartsWith(this->topic_prefix_)))
-    .Times(1);
-
-  this->adapter_->template unsubscribe<TypeParam>();
-}
-
 TYPED_TEST(ProtocolAdapterTest, HeaderIncrement)
 {
-  TypeParam msg = make_valid_message<TypeParam>();
+  TypeParam msg;
 
   std::atomic_uint32_t header_count = 0;
 

@@ -274,7 +274,8 @@ if(BUILD_TESTING)
     test/execution/test_engine.cpp
     test/execution/test_event_queue.cpp
     test/execution/test_handler.cpp
-    test/execution/test_protocol_adapter.cpp
+    test/execution/test_protocol_adapter_shared_client.cpp
+    test/execution/test_protocol_adapter_unique_client.cpp
     test/execution/test_provider.cpp
   )
   target_link_libraries(test_execution vda5050_core::execution)
