@@ -85,9 +85,15 @@ class ProtocolAdapter : public std::enable_shared_from_this<ProtocolAdapter>
 {
 public:
   static std::shared_ptr<ProtocolAdapter> make(
-    std::shared_ptr<vda5050_core::transport::MqttClientInterface> mqtt_client,
+    std::shared_ptr<transport::MqttClientInterface> mqtt_client,
     const std::string& interface, const std::string& version,
     const std::string& manufacturer, const std::string& serial_number);
+
+  void connect();
+
+  void disconnect();
+
+  bool connected();
 
   template <typename MessageT>
   void publish(MessageT message, int qos, bool retained = false)
@@ -211,13 +217,21 @@ public:
     if (mqtt_client_) mqtt_client_->unsubscribe(it->second);
   }
 
+  static std::string get_topic_version(const std::string& version)
+  {
+    // TODO(sauk2): Enforce stricter version checking before parsing string
+    auto position = version.find('.');
+    std::string major = version.substr(0, position);
+    return "v" + major;
+  }
+
 private:
   ProtocolAdapter(
-    std::shared_ptr<vda5050_core::transport::MqttClientInterface> mqtt_client,
+    std::shared_ptr<transport::MqttClientInterface> mqtt_client,
     const std::string& interface, const std::string& version,
     const std::string& manufacturer, const std::string& serial_number);
 
-  std::shared_ptr<vda5050_core::transport::MqttClientInterface> mqtt_client_;
+  std::shared_ptr<transport::MqttClientInterface> mqtt_client_;
 
   std::unordered_map<std::type_index, std::string> topic_names_;
   std::unordered_map<std::type_index, uint32_t> header_ids_;
@@ -239,6 +253,7 @@ private:
 };
 
 }  // namespace execution
+
 }  // namespace vda5050_core
 
 #endif  // VDA5050_CORE__EXECUTION__PROTOCOL_ADAPTER_HPP_

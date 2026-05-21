@@ -36,7 +36,8 @@ public:
     (override));
   MOCK_METHOD(void, unsubscribe, (const std::string&), (override));
   MOCK_METHOD(
-    void, set_will, (const std::string&, const std::string&, int), (override));
+    void, set_will, (const std::string&, const std::string&, int, bool),
+    (override));
 };
 
 TEST(MqttClientInterfaceTest, ConnectCall)
@@ -85,6 +86,6 @@ TEST(MqttClientInterfaceTest, UnsubscribeTopic)
 TEST(MqttClientInterfaceTest, SetWill)
 {
   MockMqttClient mock;
-  EXPECT_CALL(mock, set_will("topic", "{payload: 'data'}", 1)).Times(1);
-  mock.set_will("topic", "{payload: 'data'}", 1);
+  EXPECT_CALL(mock, set_will("topic", "{payload: 'data'}", 1, true)).Times(1);
+  mock.set_will("topic", "{payload: 'data'}", 1, true);
 }

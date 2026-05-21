@@ -88,7 +88,16 @@ public:
   /// \param client_id ID of the MQTT client
   ///
   /// \return Shared pointer to Paho MQTT client
-  static std::shared_ptr<PahoMqttClient> make(
+  static std::shared_ptr<PahoMqttClient> make_shared(
+    const std::string& broker_address, const std::string& client_id);
+
+  /// \brief Create a unique pointer to PahoMqttClient
+  ///
+  /// \param broker_address Address of the MQTT broker
+  /// \param client_id ID of the MQTT client
+  ///
+  /// \return Unique pointer to Paho MQTT client
+  static std::unique_ptr<PahoMqttClient> make_unique(
     const std::string& broker_address, const std::string& client_id);
 
   /// \brief Destructor for PahoMqttClient
@@ -122,7 +131,8 @@ public:
 
   // Documentation inherited from MqttClientInterface
   void set_will(
-    const std::string& topic, const std::string& message, int qos) override;
+    const std::string& topic, const std::string& message, int qos,
+    bool retain = true) override;
 
   /// \brief Get a mutable reference to Paho configuration options
   ///

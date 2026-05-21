@@ -24,10 +24,17 @@ namespace vda5050_core {
 namespace transport {
 
 //=============================================================================
-std::shared_ptr<MqttClientInterface> create_default_client(
+std::shared_ptr<MqttClientInterface> create_default_client_shared(
   const std::string& broker_address, const std::string& client_id)
 {
-  return PahoMqttClient::make(broker_address, client_id);
+  return PahoMqttClient::make_shared(broker_address, client_id);
+}
+
+//=============================================================================
+std::unique_ptr<MqttClientInterface> create_default_client_unique(
+  const std::string& broker_address, const std::string& client_id)
+{
+  return PahoMqttClient::make_unique(broker_address, client_id);
 }
 
 //=============================================================================
@@ -88,10 +95,19 @@ void MqttCallback::delivery_complete(mqtt::delivery_token_ptr /*tok*/)
 }
 
 //=============================================================================
-std::shared_ptr<PahoMqttClient> PahoMqttClient::make(
+std::shared_ptr<PahoMqttClient> PahoMqttClient::make_shared(
   const std::string& broker_address, const std::string& client_id)
 {
   auto paho_client = std::shared_ptr<PahoMqttClient>(
+    new PahoMqttClient(broker_address, client_id));
+  return paho_client;
+}
+
+//=============================================================================
+std::unique_ptr<PahoMqttClient> PahoMqttClient::make_unique(
+  const std::string& broker_address, const std::string& client_id)
+{
+  auto paho_client = std::unique_ptr<PahoMqttClient>(
     new PahoMqttClient(broker_address, client_id));
   return paho_client;
 }
@@ -192,11 +208,11 @@ void PahoMqttClient::unsubscribe(const std::string& topic)
 
 //=============================================================================
 void PahoMqttClient::set_will(
-  const std::string& topic, const std::string& message, int qos)
+  const std::string& topic, const std::string& message, int qos, bool retain)
 {
   mqtt::will_options will;
   will.set_topic(topic);
-  will.set_retained(true);
+  will.set_retained(retain);
   will.set_qos(qos);
   will.set_payload(message);
 

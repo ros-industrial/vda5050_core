@@ -68,7 +68,8 @@ public:
     (override));
   MOCK_METHOD(void, unsubscribe, (const std::string&), (override));
   MOCK_METHOD(
-    void, set_will, (const std::string&, const std::string&, int), (override));
+    void, set_will, (const std::string&, const std::string&, int, bool),
+    (override));
 };
 
 template <typename T>
@@ -133,6 +134,24 @@ T make_valid_message()
 }
 
 TYPED_TEST_SUITE(ProtocolAdapterTest, MessageTypes);
+
+TYPED_TEST(ProtocolAdapterTest, Connect)
+{
+  EXPECT_CALL(*this->mock_, connect()).Times(1);
+  this->adapter_->connect();
+}
+
+TYPED_TEST(ProtocolAdapterTest, Disconnect)
+{
+  EXPECT_CALL(*this->mock_, disconnect()).Times(1);
+  this->adapter_->disconnect();
+}
+
+TYPED_TEST(ProtocolAdapterTest, Connected)
+{
+  EXPECT_CALL(*this->mock_, connected()).Times(1);
+  this->adapter_->connected();
+}
 
 TYPED_TEST(ProtocolAdapterTest, PublishMessage)
 {

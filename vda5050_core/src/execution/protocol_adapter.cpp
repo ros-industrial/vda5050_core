@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#include <utility>
+
 #include "vda5050_core/execution/protocol_adapter.hpp"
 
 namespace vda5050_core {
@@ -24,13 +26,50 @@ namespace execution {
 
 //=============================================================================
 std::shared_ptr<ProtocolAdapter> ProtocolAdapter::make(
-  std::shared_ptr<vda5050_core::transport::MqttClientInterface> mqtt_client,
+  std::shared_ptr<transport::MqttClientInterface> mqtt_client,
   const std::string& interface, const std::string& version,
   const std::string& manufacturer, const std::string& serial_number)
 {
   auto adapter = std::shared_ptr<ProtocolAdapter>(new ProtocolAdapter(
-    mqtt_client, interface, version, manufacturer, serial_number));
+    std::move(mqtt_client), interface, version, manufacturer, serial_number));
   return adapter;
+}
+
+//=============================================================================
+void ProtocolAdapter::connect()
+{
+  if (!mqtt_client_) return;
+
+  try
+  {
+    mqtt_client_->connect();
+  }
+  catch (const std::exception& e)
+  {
+    VDA5050_ERROR("Unexpected error during client connection: {}", e.what());
+  }
+}
+
+//=============================================================================
+void ProtocolAdapter::disconnect()
+{
+  if (!mqtt_client_) return;
+
+  try
+  {
+    mqtt_client_->disconnect();
+  }
+  catch (const std::exception& e)
+  {
+    VDA5050_ERROR("Unexpected error during client disconnection: {}", e.what());
+  }
+}
+
+//=============================================================================
+bool ProtocolAdapter::connected()
+{
+  if (mqtt_client_) return mqtt_client_->connected();
+  return false;
 }
 
 //=============================================================================
@@ -38,7 +77,7 @@ ProtocolAdapter::ProtocolAdapter(
   std::shared_ptr<vda5050_core::transport::MqttClientInterface> mqtt_client,
   const std::string& interface, const std::string& version,
   const std::string& manufacturer, const std::string& serial_number)
-: mqtt_client_(mqtt_client),
+: mqtt_client_(std::move(mqtt_client)),
   interface_(interface),
   version_(version),
   manufacturer_(manufacturer),
