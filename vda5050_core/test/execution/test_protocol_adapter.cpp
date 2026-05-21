@@ -36,7 +36,7 @@
 
 #include "vda5050_core/execution/protocol_adapter.hpp"
 
-using vda5050_core::master::ProtocolAdapter;
+using vda5050_core::execution::ProtocolAdapter;
 using vda5050_core::transport::MqttClientInterface;
 
 using vda5050_core::types::AGVClass;
