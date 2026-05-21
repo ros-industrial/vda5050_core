@@ -30,7 +30,7 @@ namespace master {
 
 //=============================================================================
 AGV::AGV(
-  std::shared_ptr<execution::ProtocolAdapter> protocol_adapter,
+  std::shared_ptr<ProtocolAdapter> protocol_adapter,
   const std::string& manufacturer, const std::string& serial_number,
   size_t max_queue_size, bool drop_oldest, int state_heartbeat_interval,
   std::weak_ptr<VDA5050Master> parent)

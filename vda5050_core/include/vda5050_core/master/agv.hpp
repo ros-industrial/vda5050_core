@@ -55,6 +55,8 @@ using vda5050_core::types::Order;
 using vda5050_core::types::State;
 using vda5050_core::types::Visualization;
 
+using vda5050_core::execution::ProtocolAdapter;
+
 namespace vda5050_core {
 
 namespace master {
@@ -438,7 +440,7 @@ private:
   std::string agv_id_;
 
   // Protocol Adapter for publishing/subscribing
-  std::shared_ptr<execution::ProtocolAdapter> protocol_adapter_;
+  std::shared_ptr<ProtocolAdapter> protocol_adapter_;
 
   // Non-owning back-pointer to the owning VDA5050Master.
   // Set at construction and never reassigned — safe to read concurrently
