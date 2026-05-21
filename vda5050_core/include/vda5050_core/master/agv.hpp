@@ -120,7 +120,7 @@ public:
    *        doc-comment.
    */
   AGV(
-    std::shared_ptr<ProtocolAdapter> protocol_adapter,
+    std::shared_ptr<execution::ProtocolAdapter> protocol_adapter,
     const std::string& manufacturer, const std::string& serial_number,
     size_t max_queue_size = 10, bool drop_oldest = true,
     int state_heartbeat_interval = StateHeartbeatInterval,
@@ -438,7 +438,7 @@ private:
   std::string agv_id_;
 
   // Protocol Adapter for publishing/subscribing
-  std::shared_ptr<ProtocolAdapter> protocol_adapter_;
+  std::shared_ptr<execution::ProtocolAdapter> protocol_adapter_;
 
   // Non-owning back-pointer to the owning VDA5050Master.
   // Set at construction and never reassigned — safe to read concurrently

@@ -31,7 +31,6 @@
 #include <type_traits>
 #include <typeindex>
 #include <unordered_map>
-#include <utility>
 
 #include "vda5050_core/logger/logger.hpp"
 #include "vda5050_core/transport/mqtt_client_interface.hpp"
@@ -82,57 +81,19 @@ struct is_valid_message<vda5050_core::types::Visualization> : std::true_type
 template <typename T>
 inline constexpr bool is_valid_message_v = is_valid_message<T>::value;
 
-template <typename StoragePolicy>
-class ProtocolAdapterBase
-: public std::enable_shared_from_this<ProtocolAdapterBase<StoragePolicy>>
+class ProtocolAdapter : public std::enable_shared_from_this<ProtocolAdapter>
 {
 public:
-  static std::shared_ptr<ProtocolAdapterBase<StoragePolicy>> make(
-    StoragePolicy mqtt_client, const std::string& interface,
-    const std::string& version, const std::string& manufacturer,
-    const std::string& serial_number)
-  {
-    auto adapter = std::shared_ptr<ProtocolAdapterBase<StoragePolicy>>(
-      new ProtocolAdapterBase(
-        std::move(mqtt_client), interface, version, manufacturer,
-        serial_number));
-    return adapter;
-  }
+  static std::shared_ptr<ProtocolAdapter> make(
+    std::shared_ptr<transport::MqttClientInterface> mqtt_client,
+    const std::string& interface, const std::string& version,
+    const std::string& manufacturer, const std::string& serial_number);
 
-  void connect()
-  {
-    if (!mqtt_client_) return;
+  void connect();
 
-    try
-    {
-      mqtt_client_->connect();
-    }
-    catch (const std::exception& e)
-    {
-      VDA5050_ERROR("Unexpected error during client connection: {}", e.what());
-    }
-  }
+  void disconnect();
 
-  void disconnect()
-  {
-    if (!mqtt_client_) return;
-
-    try
-    {
-      mqtt_client_->disconnect();
-    }
-    catch (const std::exception& e)
-    {
-      VDA5050_ERROR(
-        "Unexpected error during client disconnection: {}", e.what());
-    }
-  }
-
-  bool connected()
-  {
-    if (mqtt_client_) return mqtt_client_->connected();
-    return false;
-  }
+  bool connected();
 
   template <typename MessageT>
   void publish(MessageT message, int qos, bool retained = false)
@@ -265,44 +226,12 @@ public:
   }
 
 private:
-  ProtocolAdapterBase(
-    StoragePolicy mqtt_client, const std::string& interface,
-    const std::string& version, const std::string& manufacturer,
-    const std::string& serial_number)
-  : mqtt_client_(std::move(mqtt_client)),
-    interface_(interface),
-    version_(version),
-    manufacturer_(manufacturer),
-    serial_number_(serial_number)
-  {
-    std::string topic_prefix = fmt::format(
-      "{}/{}/{}/{}", interface_, get_topic_version(version_), manufacturer_,
-      serial_number_);
+  ProtocolAdapter(
+    std::shared_ptr<transport::MqttClientInterface> mqtt_client,
+    const std::string& interface, const std::string& version,
+    const std::string& manufacturer, const std::string& serial_number);
 
-    topic_names_ = {
-      {std::type_index(typeid(vda5050_core::types::Connection)),
-       fmt::format("{}/connection", topic_prefix)},
-      {std::type_index(typeid(vda5050_core::types::State)),
-       fmt::format("{}/state", topic_prefix)},
-      {std::type_index(typeid(vda5050_core::types::Order)),
-       fmt::format("{}/order", topic_prefix)},
-      {std::type_index(typeid(vda5050_core::types::InstantActions)),
-       fmt::format("{}/instantActions", topic_prefix)},
-      {std::type_index(typeid(vda5050_core::types::Factsheet)),
-       fmt::format("{}/factsheet", topic_prefix)},
-      {std::type_index(typeid(vda5050_core::types::Visualization)),
-       fmt::format("{}/visualization", topic_prefix)}};
-
-    header_ids_ = {
-      {std::type_index(typeid(vda5050_core::types::Connection)), 0},
-      {std::type_index(typeid(vda5050_core::types::State)), 0},
-      {std::type_index(typeid(vda5050_core::types::Order)), 0},
-      {std::type_index(typeid(vda5050_core::types::InstantActions)), 0},
-      {std::type_index(typeid(vda5050_core::types::Factsheet)), 0},
-      {std::type_index(typeid(vda5050_core::types::Visualization)), 0}};
-  }
-
-  StoragePolicy mqtt_client_;
+  std::shared_ptr<transport::MqttClientInterface> mqtt_client_;
 
   std::unordered_map<std::type_index, std::string> topic_names_;
   std::unordered_map<std::type_index, uint32_t> header_ids_;
@@ -324,20 +253,6 @@ private:
 };
 
 }  // namespace execution
-
-namespace master {
-
-using ProtocolAdapter = execution::ProtocolAdapterBase<
-  std::shared_ptr<transport::MqttClientInterface>>;
-
-}  // namespace master
-
-namespace client {
-
-using ProtocolAdapter = execution::ProtocolAdapterBase<
-  std::unique_ptr<transport::MqttClientInterface>>;
-
-}  // namespace client
 
 }  // namespace vda5050_core
 

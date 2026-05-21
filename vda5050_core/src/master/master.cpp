@@ -105,7 +105,7 @@ void VDA5050Master::onboard_agv(
   // master's virtual callbacks (on_state, on_connection, etc.) while
   // detecting master destruction cleanly via lock().
   auto agv = std::make_shared<AGV>(
-    ProtocolAdapter::make(
+    execution::ProtocolAdapter::make(
       mqtt_client_, InterfaceName, Version, manufacturer, serial_number),
     manufacturer, serial_number, max_queue_size, drop_oldest,
     StateHeartbeatInterval, weak_from_this());
