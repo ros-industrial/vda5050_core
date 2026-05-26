@@ -217,13 +217,11 @@ public:
     if (mqtt_client_) mqtt_client_->unsubscribe(it->second);
   }
 
-  static std::string get_topic_version(const std::string& version)
-  {
-    // TODO(sauk2): Enforce stricter version checking before parsing string
-    auto position = version.find('.');
-    std::string major = version.substr(0, position);
-    return "v" + major;
-  }
+  /// \brief Convert a protocol version string to the VDA5050 MQTT topic segment.
+  ///
+  /// Accepts semver ("2.0.0"), major-only ("2"), or topic form ("v2").
+  /// Always returns the major version prefixed with "v" (e.g. "v2").
+  static std::string get_topic_version(const std::string& version);
 
 private:
   ProtocolAdapter(
@@ -247,7 +245,10 @@ private:
   std::mutex active_flags_mutex_;
 
   std::string interface_;
+  /// Full protocol version used in message JSON headers (e.g. "2.0.0").
   std::string version_;
+  /// Major version segment used in MQTT topic paths (e.g. "v2").
+  std::string topic_version_;
   std::string manufacturer_;
   std::string serial_number_;
 };
