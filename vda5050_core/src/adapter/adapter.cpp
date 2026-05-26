@@ -241,7 +241,7 @@ public:
   void step(std::shared_ptr<execution::ContextInterface> /*context*/) override
   {
     const auto now = std::chrono::steady_clock::now();
-    if (now - last_pub_time_ >= std::chrono::seconds(1))
+    if (now - last_pub_time_.load() >= std::chrono::seconds(1))
     {
       publish_state();
     }
@@ -264,7 +264,7 @@ private:
 
   std::shared_ptr<execution::ProtocolAdapter> protocol_adapter_;
   std::shared_ptr<AgvState> agv_state_;
-  std::chrono::steady_clock::time_point last_pub_time_;
+  std::atomic<std::chrono::steady_clock::time_point> last_pub_time_;
 };
 
 }  // namespace
