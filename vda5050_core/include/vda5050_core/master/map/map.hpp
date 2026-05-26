@@ -47,11 +47,11 @@ struct MapInfo
 struct MapNode
 {
   std::string node_id;
-  double x = 0.0;
-  double y = 0.0;
-  std::optional<double> theta;
-  std::optional<double> allowed_deviation_xy;
-  std::optional<double> allowed_deviation_theta;
+  double x = 0.0;                                 ///< [m]
+  double y = 0.0;                                 ///< [m]
+  std::optional<double> theta;                    ///< [rad]
+  std::optional<double> allowed_deviation_xy;     ///< [m]
+  std::optional<double> allowed_deviation_theta;  ///< [rad]
   std::string map_description;
 };
 
