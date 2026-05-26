@@ -68,6 +68,21 @@ TEST(StateEventDetectorTest, NewlyReachedNodeOnLastNodeAdvance)
   EXPECT_EQ(r->sequence_id, 2u);
 }
 
+TEST(StateEventDetectorTest, NewlyReachedNodeOnSameIdNewSequence)
+{
+  vda5050_core::types::State prev;
+  prev.last_node_id = "n1";
+  prev.last_node_sequence_id = 2;
+  vda5050_core::types::State curr;
+  curr.last_node_id = "n1";  // same id revisited at a new sequence
+  curr.last_node_sequence_id = 4;
+
+  auto r = newly_reached_node(prev, curr);
+  ASSERT_TRUE(r.has_value());
+  EXPECT_EQ(r->node_id, "n1");
+  EXPECT_EQ(r->sequence_id, 4u);
+}
+
 TEST(StateEventDetectorTest, NewlyReachedNodeNulloptWhenUnchanged)
 {
   vda5050_core::types::State prev;
@@ -129,6 +144,31 @@ TEST(StateEventDetectorTest, ErrorsAppearedReturnsNewOnly)
   auto appeared = errors_appeared(prev, curr);
   ASSERT_EQ(appeared.size(), 1u);
   EXPECT_EQ(appeared[0].error_type, "E2");
+}
+
+TEST(StateEventDetectorTest, ErrorsDistinguishedByReferences)
+{
+  // Same type + description on different sources (error_references) must be
+  // treated as distinct, not collapsed.
+  auto err_on = [](const std::string& node) {
+    vda5050_core::types::Error e;
+    e.error_type = "blocked";
+    e.error_description = "path blocked";
+    vda5050_core::types::ErrorReference ref;
+    ref.reference_key = "nodeId";
+    ref.reference_value = node;
+    e.error_references = std::vector<vda5050_core::types::ErrorReference>{ref};
+    return e;
+  };
+  vda5050_core::types::State prev;
+  prev.errors = {err_on("n1")};
+  vda5050_core::types::State curr;
+  curr.errors = {err_on("n1"), err_on("n2")};
+
+  auto appeared = errors_appeared(prev, curr);
+  ASSERT_EQ(appeared.size(), 1u);
+  ASSERT_TRUE(appeared[0].error_references.has_value());
+  EXPECT_EQ(appeared[0].error_references->front().reference_value, "n2");
 }
 
 TEST(StateEventDetectorTest, ErrorsAppearedEmptyWhenNoNewErrors)

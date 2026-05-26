@@ -16,38 +16,31 @@
  * limitations under the License.
  */
 
-#include <cmath>
+#include "vda5050_core/master/heartbeat.hpp"
+
 #include <utility>
 
 #include "vda5050_core/logger/logger.hpp"
 
-#include "vda5050_core/master/heartbeat.hpp"
+namespace vda5050_core::master {
 
-namespace vda5050_core {
-
-namespace master {
-
-//=============================================================================
 HeartbeatListener::HeartbeatListener(
   const std::string& id, const int heartbeat_interval,
   std::function<void()> disconnection_callback)
 : id_(id),
   heartbeat_interval_(heartbeat_interval),
   state_(HeartbeatState::STOPPED),
-  last_connection_report_(std::chrono::system_clock::now()),
+  last_connection_report_(std::chrono::steady_clock::now()),
   disconnection_callback_(std::move(disconnection_callback))
 {
-  // Nothing to do here ...
 }
 
-//=============================================================================
 HeartbeatListener::~HeartbeatListener()
 {
   stop_connection_heartbeat();
   VDA5050_INFO("[" + id_ + "] Deconstructing HeartbeatListener");
 }
 
-//=============================================================================
 void HeartbeatListener::start_connection_heartbeat()
 {
   std::lock_guard<std::mutex> lock(state_mutex_);
@@ -58,12 +51,19 @@ void HeartbeatListener::start_connection_heartbeat()
     return;
   }
 
+  // Reset last-report so a long gap before start doesn't fire an immediate
+  // timeout. Use now() directly, not the virtual get_current_time() (tests
+  // mock that to inject skew; resetting through it would defeat their setup).
+  {
+    std::lock_guard<std::mutex> ts_lock(last_connection_report_mutex_);
+    last_connection_report_ = std::chrono::steady_clock::now();
+  }
+
   VDA5050_INFO("Starting Connection heartbeat listener");
   state_ = HeartbeatState::RUNNING;
   connection_thread_ = std::thread(&HeartbeatListener::listen, this);
 }
 
-//=============================================================================
 void HeartbeatListener::stop_connection_heartbeat()
 {
   std::thread conn_thread_to_join;
@@ -98,10 +98,8 @@ void HeartbeatListener::stop_connection_heartbeat()
   VDA5050_INFO("Stopped Connection heartbeat listener");
 }
 
-//=============================================================================
 void HeartbeatListener::received_connection()
 {
-  // Check state with proper synchronization
   if (get_state() != HeartbeatState::RUNNING)
   {
     VDA5050_DEBUG("Connection heartbeat not running, ignored...");
@@ -113,44 +111,32 @@ void HeartbeatListener::received_connection()
   message_received_.notify_all();
 }
 
-//=============================================================================
-std::chrono::system_clock::time_point
+std::chrono::steady_clock::time_point
 HeartbeatListener::get_last_connection_report()
 {
   std::lock_guard<std::mutex> lock(last_connection_report_mutex_);
   return last_connection_report_;
 }
 
-//=============================================================================
 HeartbeatState HeartbeatListener::get_state()
 {
   std::lock_guard<std::mutex> lock(state_mutex_);
   return state_;
 }
 
-//=============================================================================
-std::chrono::system_clock::time_point HeartbeatListener::get_current_time()
+std::chrono::steady_clock::time_point HeartbeatListener::get_current_time()
 {
-  return std::chrono::system_clock::now();
+  return std::chrono::steady_clock::now();
 }
 
-//=============================================================================
 int HeartbeatListener::get_check_interval()
 {
   return heartbeat_interval_;
 }
 
-//=============================================================================
-bool HeartbeatListener::is_stop_requested()
-{
-  std::lock_guard<std::mutex> lock(state_mutex_);
-  return state_ == HeartbeatState::STOPPING;
-}
-
-//=============================================================================
 bool HeartbeatListener::is_timeout()
 {
-  std::chrono::system_clock::time_point current_time = get_current_time();
+  std::chrono::steady_clock::time_point current_time = get_current_time();
   int time_since_last_connection_report;
   {
     std::lock_guard<std::mutex> lock(last_connection_report_mutex_);
@@ -160,7 +146,7 @@ bool HeartbeatListener::is_timeout()
         .count();
   }
 
-  if (std::abs(time_since_last_connection_report) > heartbeat_interval_)
+  if (time_since_last_connection_report > heartbeat_interval_)
   {
     VDA5050_WARN(
       "[" + id_ + "] Connection heartbeat timeout after " +
@@ -171,30 +157,44 @@ bool HeartbeatListener::is_timeout()
   return false;
 }
 
-//=============================================================================
 void HeartbeatListener::listen()
 {
-  while (!is_stop_requested())
-  {
-    std::unique_lock<std::mutex> lock(check_lock_);
-    message_received_.wait_for(
-      lock, std::chrono::seconds(get_check_interval()));
+  // One callback per timeout episode, reset on recovery; the thread spins
+  // until an explicit stop.
+  bool timeout_fired = false;
 
-    // Check if shutdown was requested while waiting
-    if (is_stop_requested())
+  while (true)
+  {
     {
-      VDA5050_DEBUG("[" + id_ + "] Shutdown requested, exiting listen loop");
-      return;
+      // Wait on state_mutex_ (which guards state_) so stop_connection_
+      // heartbeat()'s state change + notify can't be lost; the timeout also
+      // bounds the poll interval. Any non-RUNNING state means stop.
+      std::unique_lock<std::mutex> lock(state_mutex_);
+      message_received_.wait_for(
+        lock, std::chrono::seconds(get_check_interval()),
+        [this] { return state_ != HeartbeatState::RUNNING; });
+
+      if (state_ != HeartbeatState::RUNNING)
+      {
+        VDA5050_DEBUG("[" + id_ + "] Shutdown requested, exiting listen loop");
+        return;
+      }
     }
 
     if (is_timeout())
     {
-      disconnection_callback_();
-      VDA5050_INFO("[" + id_ + "] Heartbeat monitoring stopped after timeout");
-      return;
+      if (!timeout_fired)
+      {
+        VDA5050_INFO("[" + id_ + "] Heartbeat timeout fired");
+        disconnection_callback_();
+        timeout_fired = true;
+      }
+    }
+    else
+    {
+      timeout_fired = false;
     }
   }
 }
 
-}  // namespace master
-}  // namespace vda5050_core
+}  // namespace vda5050_core::master

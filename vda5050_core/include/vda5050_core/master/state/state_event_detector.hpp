@@ -30,10 +30,6 @@
 namespace vda5050_core::master {
 namespace event {
 
-// State event detection: pure prev/curr State diffs, one transition per
-// function. (action_state, order-id, and error-level transitions are
-// handled elsewhere.)
-
 /// A node the AGV reports as reached (lastNodeId + lastNodeSequenceId).
 struct ReachedNode
 {
@@ -41,14 +37,12 @@ struct ReachedNode
   uint32_t sequence_id;
 };
 
-/// The node just reached this update — lastNode advanced vs prev (the AGV
-/// updates lastNodeId/lastNodeSequenceId on traversal), else nullopt. A
-/// `released`-flag flip alone is an order update, not a traversal → nullopt.
+/// Node just reached: lastNodeId/sequence advanced vs prev; else nullopt.
 std::optional<ReachedNode> newly_reached_node(
   const vda5050_core::types::State& prev,
   const vda5050_core::types::State& curr);
 
-/// Errors in curr but not prev (compared by type+description; no stable IDs).
+/// Errors in curr but not prev.
 std::vector<vda5050_core::types::Error> errors_appeared(
   const vda5050_core::types::State& prev,
   const vda5050_core::types::State& curr);

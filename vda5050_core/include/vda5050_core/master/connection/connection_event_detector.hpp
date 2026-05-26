@@ -25,10 +25,7 @@
 
 namespace vda5050_core::master {
 
-// A Connection-state transition. CONNECTIONBROKEN is the broker firing the
-// AGV's last-will (unexpected TCP drop); OFFLINE is a graceful disconnect the
-// AGV published itself. (Last-will timestamp/headerId are stale — registered
-// at connect time, not the actual disconnect.)
+// CONNECTIONBROKEN = broker last-will (unexpected drop); OFFLINE = graceful.
 enum class ConnectionEventKind
 {
   NONE,

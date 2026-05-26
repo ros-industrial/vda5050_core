@@ -29,11 +29,12 @@ bool same_error(
   const vda5050_core::types::Error& a, const vda5050_core::types::Error& b)
 {
   return a.error_type == b.error_type &&
+         a.error_references == b.error_references &&
          a.error_description == b.error_description;
 }
 
-// Returns errors in `from` that are not in `against` (set difference
-// by error_type + error_description).
+// Errors in `from` absent from `against` (identity: type + references +
+// description).
 std::vector<vda5050_core::types::Error> errors_diff(
   const std::vector<vda5050_core::types::Error>& from,
   const std::vector<vda5050_core::types::Error>& against)

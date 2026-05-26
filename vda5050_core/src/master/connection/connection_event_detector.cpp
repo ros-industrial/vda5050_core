@@ -26,7 +26,6 @@ ConnectionEventKind detect_connection_transition(
 {
   using vda5050_core::types::ConnectionState;
 
-  // Sustained state (prev exists and matches curr) — no transition.
   if (prev.has_value() && prev->connection_state == curr.connection_state)
   {
     return ConnectionEventKind::NONE;
