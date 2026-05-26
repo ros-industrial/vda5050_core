@@ -276,6 +276,36 @@ TEST(ProtocolAdapterTopicVersionTest, GetTopicVersionFromSemver)
   EXPECT_EQ(ProtocolAdapter::get_topic_version("1.3.2"), "v1");
 }
 
+TEST(ProtocolAdapterTest, SetWillConnectionMessage)
+{
+  auto mock = std::make_shared<MockMqttClient>();
+  auto adapter = ProtocolAdapter::make(
+    mock, "uagv", "2.0.0", "Manufacturer", "S001");
+
+  const std::string expected_topic =
+    "uagv/v2/Manufacturer/S001/connection";
+
+  Connection connection;
+  connection.connection_state = vda5050_core::types::ConnectionState::CONNECTIONBROKEN;
+
+  EXPECT_CALL(
+    *mock, set_will(expected_topic, testing::_, 1, true))
+    .WillOnce([](
+                const std::string& /*topic*/, const std::string& message,
+                int qos, bool retain) {
+      EXPECT_EQ(qos, 1);
+      EXPECT_TRUE(retain);
+      auto j = nlohmann::json::parse(message);
+      EXPECT_EQ(j["headerId"], 0);
+      EXPECT_EQ(j["version"], "2.0.0");
+      EXPECT_EQ(j["manufacturer"], "Manufacturer");
+      EXPECT_EQ(j["serialNumber"], "S001");
+      EXPECT_EQ(j["connectionState"], "CONNECTIONBROKEN");
+    });
+
+  adapter->set_will<Connection>(connection, 1, true);
+}
+
 TEST(ProtocolAdapterTopicVersionTest, SemverInputUsesV2TopicsAndFullVersionInJson)
 {
   auto mock = std::make_shared<MockMqttClient>();

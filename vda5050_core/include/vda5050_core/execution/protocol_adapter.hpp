@@ -132,6 +132,41 @@ public:
   }
 
   template <typename MessageT>
+  void set_will(MessageT message, int qos, bool retained = true)
+  {
+    static_assert(
+      is_valid_message_v<MessageT>, "Type is not supported in ProtocolAdapter");
+
+    auto type_idx = std::type_index(typeid(MessageT));
+
+    auto it = topic_names_.find(type_idx);
+    if (it == topic_names_.end()) return;
+
+    try
+    {
+      vda5050_core::types::Header header{
+        header_ids_[type_idx]++, std::chrono::system_clock::now(), version_,
+        manufacturer_, serial_number_};
+      message.header = header;
+
+      nlohmann::json j = message;
+
+      if (mqtt_client_)
+        mqtt_client_->set_will(it->second, j.dump(), qos, retained);
+    }
+    catch (const nlohmann::json::exception& e)
+    {
+      VDA5050_ERROR(
+        "Serialization failed for will message on {}: {}", it->second, e.what());
+    }
+    catch (const std::exception& e)
+    {
+      VDA5050_ERROR(
+        "Unexpected error during set_will on {}: {}", it->second, e.what());
+    }
+  }
+
+  template <typename MessageT>
   void subscribe(
     std::function<void(MessageT, std::optional<vda5050_core::types::Error>)>
       callback,

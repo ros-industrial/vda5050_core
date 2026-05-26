@@ -31,10 +31,8 @@ using vda5050_core::execution::ProtocolAdapter;
 
 std::atomic_bool running{true};
 
-void signal_handler(int signal)
+void signal_handler(int /*signal*/)
 {
-  VDA5050_INFO_STREAM(
-    "System Signal [" << signal << "] received. Shutting down ...");
   running = false;
 }
 
@@ -77,14 +75,15 @@ int main(int argc, char** argv)
 
     std::thread([nav, node]() {
       std::this_thread::sleep_for(std::chrono::seconds(2));
-      nav->node_reached(node.node_id, node.sequence_id);
+      nav->node_reached(node);
       VDA5050_INFO("Simulated arrival at node {}", node.node_id);
     }).detach();
   });
 
-  adapter->on_cancel([]() {
-    VDA5050_INFO("Cancel navigation requested");
-  });
+  // on_cancel() is not yet implemented — see adapter.hpp
+  // adapter->on_cancel([]() {
+  //   VDA5050_INFO("Cancel navigation requested");
+  // });
 
   adapter->start();
   VDA5050_INFO(
@@ -98,6 +97,7 @@ int main(int argc, char** argv)
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 
+  VDA5050_INFO("Shutting down ...");
   adapter->stop();
   VDA5050_INFO("Adapter stopped");
 
