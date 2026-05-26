@@ -287,6 +287,13 @@ if(BUILD_TESTING)
     test/master/test_unit_agv.cpp
   )
   target_link_libraries(test_master vda5050_core::master)
+
+  ament_add_gmock(test_master_map
+    test/master/test_unit_map_loader.cpp
+  )
+  target_link_libraries(test_master_map vda5050_core::master)
+  target_compile_definitions(test_master_map PRIVATE
+    VDA5050_CORE__MASTER__SAMPLE_MAP_PATH="${CMAKE_CURRENT_SOURCE_DIR}/test/master/data/sample_map.json")
 endif()
 
 # Install linter macro
