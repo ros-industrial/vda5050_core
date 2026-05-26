@@ -274,6 +274,7 @@ if(BUILD_TESTING)
     test/execution/test_engine.cpp
     test/execution/test_event_queue.cpp
     test/execution/test_handler.cpp
+    test/execution/test_order_types.cpp
     test/execution/test_protocol_adapter.cpp
     test/execution/test_provider.cpp
   )
