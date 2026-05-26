@@ -341,6 +341,10 @@ void Adapter::start()
 {
   if (pimpl_->started.exchange(true)) return;
 
+  types::Connection connection_will;
+  connection_will.connection_state = types::ConnectionState::CONNECTIONBROKEN;
+  pimpl_->protocol_adapter->set_will<types::Connection>(connection_will, 1, true);
+
   pimpl_->protocol_adapter->connect();
 
   // connect() swallows exceptions internally, so verify the result explicitly.
@@ -378,16 +382,24 @@ void Adapter::stop()
 {
   if (!pimpl_->started.exchange(false)) return;
 
+  if (pimpl_->protocol_adapter)
+  {
+    pimpl_->protocol_adapter->unsubscribe<types::Order>();
+  }
+
   if (pimpl_->handler) pimpl_->handler->stop();
 
   if (pimpl_->spin_thread.joinable()) pimpl_->spin_thread.join();
 
   if (pimpl_->protocol_adapter)
   {
-    types::Connection connection_offline;
-    connection_offline.connection_state = types::ConnectionState::OFFLINE;
-    pimpl_->protocol_adapter->publish<types::Connection>(
-      connection_offline, 1, true);
+    if (pimpl_->protocol_adapter->connected())
+    {
+      types::Connection connection_offline;
+      connection_offline.connection_state = types::ConnectionState::OFFLINE;
+      pimpl_->protocol_adapter->publish<types::Connection>(
+        connection_offline, 1, true);
+    }
     pimpl_->protocol_adapter->disconnect();
   }
 }
