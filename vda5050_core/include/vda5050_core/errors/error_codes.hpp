@@ -28,6 +28,9 @@ namespace errors {
 // Error Codes for vda5050_types::Error::error_type field
 inline const std::string GraphValidationError = "graphValidationError";
 inline const std::string OrderUpdateError = "orderUpdateError";
+inline const std::string SchemaValidationError = "schemaValidationError";
+inline const std::string PreSendValidationError = "preSendValidationError";
+inline const std::string MapValidationError = "mapValidationError";
 
 // Reference key string for vda5050_types::ErrorReference::key
 inline const std::string RefOrderId = "orderId";
