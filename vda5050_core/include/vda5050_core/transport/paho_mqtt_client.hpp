@@ -154,6 +154,8 @@ private:
   PahoMqttClient(
     const std::string& broker_address, const std::string& client_id);
 
+  /// Safer than token->wait(): bounds the block so a slow/unreachable broker
+  /// cannot hang the process indefinitely.
   bool wait_for_token(mqtt::token_ptr token, const char* operation);
 
   static constexpr std::chrono::milliseconds kDefaultOperationTimeout{
