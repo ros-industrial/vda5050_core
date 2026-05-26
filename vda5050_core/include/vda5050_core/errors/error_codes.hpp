@@ -28,6 +28,19 @@ namespace errors {
 // Error Codes for vda5050_types::Error::error_type field
 inline const std::string GraphValidationError = "graphValidationError";
 inline const std::string OrderUpdateError = "orderUpdateError";
+inline const std::string SchemaValidationError = "schemaValidationError";
+inline const std::string PreSendValidationError = "preSendValidationError";
+inline const std::string TraversabilityValidationError =
+  "traversabilityValidationError";
+inline const std::string ActionConflictValidationError =
+  "actionConflictValidationError";
+inline const std::string MapValidationError = "mapValidationError";
+
+// Mirrors the literal currently hardcoded in
+// vda5050_core::execution::ProtocolAdapter::subscribe<T>(); centralized here
+// so future call sites reference it symbolically.
+inline const std::string JsonDeserializationError =
+  "JSON_DESERIALIZATION_ERROR";
 
 // Reference key string for vda5050_types::ErrorReference::key
 inline const std::string RefOrderId = "orderId";
@@ -35,6 +48,7 @@ inline const std::string RefOrderUpdateId = "orderUpdateId";
 inline const std::string RefNodeId = "nodeId";
 inline const std::string RefEdgeId = "edgeId";
 inline const std::string RefSequenceId = "sequenceId";
+inline const std::string RefActionId = "actionId";
 
 }  // namespace errors
 }  // namespace vda5050_core
