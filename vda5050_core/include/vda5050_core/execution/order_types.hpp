@@ -71,8 +71,8 @@ struct ConfigResource : public Initialize<ConfigResource, ResourceBase>
   std::string serial_number;
 
   ConfigResource(
-    std::string interface_name, 
-    std::string version, 
+    std::string interface_name,
+    std::string version,
     std::string manufacturer,
     std::string serial_number)
   : interface_name(std::move(interface_name)),

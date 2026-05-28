@@ -41,7 +41,7 @@ TEST(OrderTypesTest, OrderUpdateCarriesOrder)
   OrderUpdate update(order);
 
   EXPECT_EQ(update.order.order_id, "order_1");
-  EXPECT_EQ(update.order.order_update_id, 3u); // 3u means unsigned int 3
+  EXPECT_EQ(update.order.order_update_id, 3u);  // 3u means unsigned int 3
 }
 
 // Test 2: Check if OrderUpdate reports its type correctly through the base class.
@@ -80,7 +80,8 @@ TEST(OrderTypesTest, ConfigResourceReportsItsTypeThroughBase)
   EXPECT_EQ(base->get_type(), std::type_index(typeid(ConfigResource)));
 }
 
-// Test 5: Check that OrderUpdate and ConfigResource have distinct type indices, ensuring they are treated as distinct types in the Provider/Context system.
+// Test 5: Check that OrderUpdate and ConfigResource have distinct type indices,
+// ensuring they are treated as distinct types in the Provider/Context system.
 TEST(OrderTypesTest, DistinctTypesHaveDistinctTypeIndex)
 {
   EXPECT_NE(
