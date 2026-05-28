@@ -37,7 +37,8 @@ namespace client {
 /// topic to instruct the AGV which nodes/edges to traverse.
 
 // Stores the Order message
-struct OrderUpdate : public execution::Initialize<OrderUpdate, execution::UpdateBase>
+struct OrderUpdate
+: public execution::Initialize<OrderUpdate, execution::UpdateBase>
 {
   /// \brief The VDA5050 order as received from master control.
   types::Order order;
@@ -56,7 +57,8 @@ struct OrderUpdate : public execution::Initialize<OrderUpdate, execution::Update
 /// Strategy reason about which AGV it is acting for.
 
 // Stores the AGV's identity/config information
-struct ConfigResource : public execution::Initialize<ConfigResource, execution::ResourceBase>
+struct ConfigResource
+: public execution::Initialize<ConfigResource, execution::ResourceBase>
 {
   /// \brief Interface name, e.g. "uagv".
   std::string interface_name;

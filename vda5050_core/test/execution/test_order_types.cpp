@@ -21,13 +21,14 @@
 #include <memory>
 #include <typeindex>
 
+#include "vda5050_core/client/order_types.hpp"
 #include "vda5050_core/execution/base.hpp"
-#include "vda5050_core/execution/order_types.hpp"
 #include "vda5050_core/types/order.hpp"
 
 namespace {
 
 using namespace vda5050_core::execution;  // NOLINT
+using namespace vda5050_core::client;     // NOLINT
 namespace types = vda5050_core::types;
 
 // Test if the OrderUpdate struct correctly carries the Order message and reports its type
