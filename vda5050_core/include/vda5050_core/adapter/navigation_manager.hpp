@@ -25,11 +25,13 @@
 
 #include "vda5050_core/execution/context_interface.hpp"
 #include "vda5050_core/execution/provider.hpp"
+#include "vda5050_core/types/action_state.hpp"
 #include "vda5050_core/types/error.hpp"
 #include "vda5050_core/types/operating_mode.hpp"
 #include "vda5050_core/types/agv_position.hpp"
 #include "vda5050_core/types/battery_state.hpp"
 #include "vda5050_core/types/node.hpp"
+#include <vector>
 
 namespace vda5050_core {
 
@@ -55,6 +57,9 @@ public:
 
   /// \brief Update battery information in the published state message
   void set_battery_state(const types::BatteryState& battery_state);
+
+  /// \brief Update action states in the published state message
+  void set_action_states(const std::vector<types::ActionState>& action_states);
 
   /// \brief Update operating mode in the published state message
   void set_operating_mode(types::OperatingMode mode);

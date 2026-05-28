@@ -25,9 +25,47 @@
 #include <vda5050_core/execution/protocol_adapter.hpp>
 #include <vda5050_core/logger/logger.hpp>
 #include <vda5050_core/transport/mqtt_client_interface.hpp>
+#include <vda5050_core/types/action_state.hpp>
+#include <vda5050_core/types/action_status.hpp>
+#include <vda5050_core/types/battery_state.hpp>
 
 using vda5050_core::adapter::Adapter;
+using vda5050_core::adapter::NavigationManager;
 using vda5050_core::execution::ProtocolAdapter;
+using vda5050_core::types::ActionState;
+using vda5050_core::types::ActionStatus;
+using vda5050_core::types::BatteryState;
+
+namespace {
+
+void apply_empty_reported_state(NavigationManager& nav)
+{
+  nav.set_action_states({});
+
+  BatteryState battery;
+  battery.battery_charge = 0.0;
+  battery.charging = false;
+  nav.set_battery_state(battery);
+}
+
+void apply_full_reported_state(NavigationManager& nav)
+{
+  ActionState action;
+  action.action_id = "example_action_0";
+  action.action_type = "startPause";
+  action.action_status = ActionStatus::FINISHED;
+  nav.set_action_states({action});
+
+  BatteryState battery;
+  battery.battery_charge = 85.0;
+  battery.battery_voltage = 48.0;
+  battery.battery_health = 95;
+  battery.charging = false;
+  battery.reach = 1200;
+  nav.set_battery_state(battery);
+}
+
+}  // namespace
 
 std::atomic_bool running{true};
 
@@ -47,7 +85,7 @@ int main(int argc, char** argv)
     (argc > 2) ? argv[2] : "vda5050_adapter_example";
 
   constexpr const char* k_interface = "uagv";
-  constexpr const char* k_protocol_version = "2.0.0";  // JSON header field
+  constexpr const char* k_protocol_version = "2.1.0";  // JSON header field
   constexpr const char* k_manufacturer = "Manufacturer";
   constexpr const char* k_serial_number = "S001";
 
@@ -58,6 +96,16 @@ int main(int argc, char** argv)
     k_serial_number);
   auto adapter = Adapter::make(protocol_adapter);
   auto nav = adapter->navigation_manager();
+
+  constexpr bool k_use_full_state = false;
+  if (k_use_full_state)
+  {
+    apply_full_reported_state(*nav);
+  }
+  else
+  {
+    apply_empty_reported_state(*nav);
+  }
 
   adapter->on_navigate([&nav](vda5050_core::types::Node node) {
     if (!node.node_position.has_value())

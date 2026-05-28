@@ -102,6 +102,15 @@ void NavigationManager::set_battery_state(const types::BatteryState& battery_sta
   pimpl_->agv_state->state.battery_state = battery_state;
 }
 
+void NavigationManager::set_action_states(
+  const std::vector<types::ActionState>& action_states)
+{
+  if (!pimpl_->agv_state) return;
+
+  std::lock_guard<std::mutex> lock(pimpl_->agv_state->mutex);
+  pimpl_->agv_state->state.action_states = action_states;
+}
+
 void NavigationManager::set_operating_mode(types::OperatingMode mode)
 {
   if (!pimpl_->agv_state) return;
