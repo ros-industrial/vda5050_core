@@ -87,10 +87,11 @@ bool VDA5050Master::is_connected() const
 
 //=============================================================================
 void VDA5050Master::onboard_agv(
+  const std::string& interface_name,
   const std::string& manufacturer, const std::string& serial_number,
   size_t max_queue_size, bool drop_oldest)
 {
-  std::string agv_id = manufacturer + "/" + serial_number;
+  std::string agv_id = interface_name + "/" + manufacturer + "/" + serial_number;
 
   std::lock_guard<std::mutex> lock(agv_mutex_);
 
@@ -106,8 +107,8 @@ void VDA5050Master::onboard_agv(
   // detecting master destruction cleanly via lock().
   auto agv = std::make_shared<AGV>(
     ProtocolAdapter::make(
-      mqtt_client_, InterfaceName, Version, manufacturer, serial_number),
-    manufacturer, serial_number, max_queue_size, drop_oldest,
+      mqtt_client_, interface_name, Version, manufacturer, serial_number),
+    interface_name, manufacturer, serial_number, max_queue_size, drop_oldest,
     StateHeartbeatInterval, weak_from_this());
 
   // Subscriptions are wired here (not in AGV's ctor) so that
@@ -122,9 +123,10 @@ void VDA5050Master::onboard_agv(
 
 //=============================================================================
 void VDA5050Master::offboard_agv(
+  const std::string& interface_name,
   const std::string& manufacturer, const std::string& serial_number)
 {
-  std::string agv_id = manufacturer + "/" + serial_number;
+  std::string agv_id = interface_name + "/" + manufacturer + "/" + serial_number;
 
   std::shared_ptr<AGV> agv;
   {
@@ -151,19 +153,21 @@ void VDA5050Master::offboard_agv(
 
 //=============================================================================
 bool VDA5050Master::is_agv_onboarded(
+  const std::string& interface_name,
   const std::string& manufacturer, const std::string& serial_number) const
 {
   std::lock_guard<std::mutex> lock(agv_mutex_);
-  std::string agv_id = manufacturer + "/" + serial_number;
+  std::string agv_id = interface_name + "/" + manufacturer + "/" + serial_number;
   return get_agv_by_id(agv_id) != nullptr;
 }
 
 //=============================================================================
 std::shared_ptr<AGV> VDA5050Master::get_agv(
+  const std::string& interface_name,
   const std::string& manufacturer, const std::string& serial_number) const
 {
   std::lock_guard<std::mutex> lock(agv_mutex_);
-  std::string agv_id = manufacturer + "/" + serial_number;
+  std::string agv_id = interface_name + "/" + manufacturer + "/" + serial_number;
   return get_agv_by_id(agv_id);
 }
 
@@ -178,10 +182,11 @@ std::shared_ptr<AGV> VDA5050Master::get_agv_by_id(
 
 //=============================================================================
 bool VDA5050Master::publish_order(
+  const std::string& interface_name,
   const std::string& manufacturer, const std::string& serial_number,
   const Order& order)
 {
-  std::string agv_id = manufacturer + "/" + serial_number;
+  std::string agv_id = interface_name + "/" + manufacturer + "/" + serial_number;
 
   std::shared_ptr<AGV> agv;
   {
@@ -200,10 +205,11 @@ bool VDA5050Master::publish_order(
 
 //=============================================================================
 bool VDA5050Master::publish_instant_actions(
+  const std::string& interface_name,
   const std::string& manufacturer, const std::string& serial_number,
   const InstantActions& actions)
 {
-  std::string agv_id = manufacturer + "/" + serial_number;
+  std::string agv_id = interface_name + "/" + manufacturer + "/" + serial_number;
 
   std::shared_ptr<AGV> agv;
   {

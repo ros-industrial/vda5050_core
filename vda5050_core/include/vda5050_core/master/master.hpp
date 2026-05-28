@@ -139,6 +139,7 @@ public:
    * will be routed to the appropriate handlers.
    */
   void onboard_agv(
+    const std::string& interface_name,
     const std::string& manufacturer, const std::string& serial_number,
     size_t max_queue_size = 10, bool drop_oldest = true);
 
@@ -151,6 +152,7 @@ public:
    * will be ignored with a warning.
    */
   void offboard_agv(
+    const std::string& interface_name,
     const std::string& manufacturer, const std::string& serial_number);
 
   /**
@@ -160,6 +162,7 @@ public:
    * @return true if AGV is onboarded
    */
   bool is_agv_onboarded(
+    const std::string& interface_name,
     const std::string& manufacturer, const std::string& serial_number) const;
 
   // ============================================================================
@@ -173,6 +176,7 @@ public:
    * @return Shared pointer to AGV, or nullptr if not onboarded
    */
   std::shared_ptr<AGV> get_agv(
+    const std::string& interface_name,
     const std::string& manufacturer, const std::string& serial_number) const;
 
   // ============================================================================
@@ -188,6 +192,7 @@ public:
    * @throws std::runtime_error if AGV is not onboarded
    */
   bool publish_order(
+    const std::string& interface_name,
     const std::string& manufacturer, const std::string& serial_number,
     const Order& order);
 
@@ -200,6 +205,7 @@ public:
    * @throws std::runtime_error if AGV is not onboarded
    */
   bool publish_instant_actions(
+    const std::string& interface_name,
     const std::string& manufacturer, const std::string& serial_number,
     const InstantActions& actions);
 
