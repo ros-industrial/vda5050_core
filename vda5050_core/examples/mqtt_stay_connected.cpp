@@ -25,6 +25,7 @@
 //
 // Example:
 //   mqtt_stay_connected tcp://localhost:1883 stay_connected 3000
+//   ros2 run vda5050_core mqtt_stay_connected tcp://localhost:1883 stay_connected 3000
 
 #include <atomic>
 #include <chrono>
