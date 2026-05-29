@@ -194,7 +194,7 @@ public:
       execution::Priority::NORMAL, std::move(target));
     engine()->step();
     engine()->suspend_for<NodeAckUpdate>(
-      std::chrono::seconds(30),
+      std::chrono::seconds(300),
       [sequence_id](auto update) -> bool {
         return update->sequence_id == sequence_id;
       });
@@ -229,19 +229,21 @@ public:
 
   void init(std::shared_ptr<execution::ContextInterface> context) override
   {
-    auto publish = [this]() { publish_state(); };
+    auto mark_pending = [this]() { publish_pending_ = true; };
 
     context->provider()->on<OrderUpdate>(
-      [publish](auto /*update*/) { publish(); });
+      [mark_pending](auto /*update*/) { mark_pending(); });
 
     context->provider()->on<NodeAckUpdate>(
-      [publish](auto /*update*/) { publish(); });
+      [mark_pending](auto /*update*/) { mark_pending(); });
   }
 
   void step(std::shared_ptr<execution::ContextInterface> /*context*/) override
   {
     const auto now = std::chrono::steady_clock::now();
-    if (now - last_pub_time_.load() >= std::chrono::seconds(1))
+    const bool heartbeat_due =
+      now - last_pub_time_.load() >= std::chrono::seconds(1);
+    if (publish_pending_.exchange(false) || heartbeat_due)
     {
       publish_state();
     }
@@ -264,6 +266,7 @@ private:
 
   std::shared_ptr<execution::ProtocolAdapter> protocol_adapter_;
   std::shared_ptr<AgvState> agv_state_;
+  std::atomic<bool> publish_pending_{false};
   std::atomic<std::chrono::steady_clock::time_point> last_pub_time_;
 };
 

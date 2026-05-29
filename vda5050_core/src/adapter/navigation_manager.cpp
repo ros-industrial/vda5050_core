@@ -18,6 +18,7 @@
 
 #include "vda5050_core/adapter/navigation_manager.hpp"
 
+#include <algorithm>
 #include <utility>
 
 #include "vda5050_core/execution/context_interface.hpp"
@@ -28,6 +29,41 @@
 namespace vda5050_core {
 
 namespace adapter {
+
+namespace {
+
+void mark_node_traversed(
+  types::State& state, const std::string& node_id, uint32_t sequence_id)
+{
+  state.last_node_id = node_id;
+  state.last_node_sequence_id = sequence_id;
+  state.driving = false;
+
+  // VDA5050 §6.10.2: remove traversed node from nodeStates.
+  state.node_states.erase(
+    std::remove_if(
+      state.node_states.begin(), state.node_states.end(),
+      [&](const types::NodeState& node_state) {
+        return node_state.node_id == node_id &&
+               node_state.sequence_id == sequence_id;
+      }),
+    state.node_states.end());
+
+  // VDA5050 §6.10.2: remove the incoming edge (sequenceId - 1).
+  if (sequence_id > 0)
+  {
+    const uint32_t incoming_edge_sequence_id = sequence_id - 1;
+    state.edge_states.erase(
+      std::remove_if(
+        state.edge_states.begin(), state.edge_states.end(),
+        [&](const types::EdgeState& edge_state) {
+          return edge_state.sequence_id == incoming_edge_sequence_id;
+        }),
+      state.edge_states.end());
+  }
+}
+
+}  // namespace
 
 class NavigationManager::Implementation
 {
@@ -65,9 +101,7 @@ void NavigationManager::node_reached(const types::Node& node)
 
   {
     std::lock_guard<std::mutex> lock(pimpl_->agv_state->mutex);
-    pimpl_->agv_state->state.last_node_id = node_id_copy;
-    pimpl_->agv_state->state.last_node_sequence_id = sequence_id;
-    pimpl_->agv_state->state.driving = false;
+    mark_node_traversed(pimpl_->agv_state->state, node_id_copy, sequence_id);
   }
 
   pimpl_->provider->push<NodeAckUpdate>(node_id_copy, sequence_id);
