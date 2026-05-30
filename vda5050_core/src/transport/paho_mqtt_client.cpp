@@ -127,7 +127,8 @@ void PahoMqttClient::set_operation_timeout(std::chrono::milliseconds timeout)
 }
 
 //=============================================================================
-bool PahoMqttClient::wait_for_token(mqtt::token_ptr token, const char* operation)
+bool PahoMqttClient::wait_for_token(
+  mqtt::token_ptr token, const char* operation)
 {
   if (!token) return true;
 
@@ -171,8 +172,7 @@ void PahoMqttClient::disconnect()
     const auto timeout_ms = static_cast<int>(operation_timeout_.count());
     mqtt::disconnect_options options(timeout_ms);
 
-    if (
-      wait_for_token(client_->disconnect(options), "disconnect"))
+    if (wait_for_token(client_->disconnect(options), "disconnect"))
     {
       VDA5050_INFO_STREAM(
         "MQTT client disconnected: " << client_->get_client_id());

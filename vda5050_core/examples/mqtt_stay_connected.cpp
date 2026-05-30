@@ -53,13 +53,11 @@ void handle_signal(int signum)
 
 int main(int argc, char** argv)
 {
-  const std::string broker =
-    (argc > 1) ? argv[1] : "tcp://localhost:1883";
-  const std::string client_id =
-    (argc > 2) ? argv[2] : "stay_connected";
-  const auto timeout_ms =
-    (argc > 3) ? std::chrono::milliseconds(std::atol(argv[3]))
-               : std::chrono::milliseconds(3000);
+  const std::string broker = (argc > 1) ? argv[1] : "tcp://localhost:1883";
+  const std::string client_id = (argc > 2) ? argv[2] : "stay_connected";
+  const auto timeout_ms = (argc > 3)
+                            ? std::chrono::milliseconds(std::atol(argv[3]))
+                            : std::chrono::milliseconds(3000);
 
   std::signal(SIGINT, handle_signal);
   std::signal(SIGTERM, handle_signal);
