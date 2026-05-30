@@ -43,8 +43,9 @@ namespace {
 
 std::atomic<bool> g_running{true};
 
-void handle_signal(int /*signum*/)
+void handle_signal(int signum)
 {
+  (void)signum;
   g_running = false;
 }
 

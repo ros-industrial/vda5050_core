@@ -131,12 +131,11 @@ bool PahoMqttClient::wait_for_token(mqtt::token_ptr token, const char* operation
 {
   if (!token) return true;
 
-  const auto timeout_ms = static_cast<long>(operation_timeout_.count());
-  if (token->wait_for(timeout_ms)) return true;
+  if (token->wait_for(operation_timeout_)) return true;
 
   VDA5050_WARN(
-    "MQTT {} timed out after {} ms for client [{}]", operation, timeout_ms,
-    client_->get_client_id());
+    "MQTT {} timed out after {} ms for client [{}]", operation,
+    operation_timeout_.count(), client_->get_client_id());
   return false;
 }
 
