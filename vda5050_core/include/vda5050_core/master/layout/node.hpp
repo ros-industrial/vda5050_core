@@ -16,22 +16,34 @@
  * limitations under the License.
  */
 
-#include "vda5050_core/master/map/map.hpp"
+#ifndef VDA5050_CORE__MASTER__LAYOUT__NODE_HPP_
+#define VDA5050_CORE__MASTER__LAYOUT__NODE_HPP_
 
-namespace vda5050_core::master {
+#include <optional>
+#include <string>
+#include <vector>
 
-const MapNode* Map::find_node(const std::string& id) const
+#include "vda5050_core/master/layout/vehicle_type_node_property.hpp"
+
+namespace vda5050_core::master::layout {
+
+struct NodePosition
 {
-  auto it = node_index.find(id);
-  if (it == node_index.end()) return nullptr;
-  return &nodes[it->second];
-}
+  double x = 0.0;  ///< [m]
+  double y = 0.0;  ///< [m]
+};
 
-const MapEdge* Map::find_edge(const std::string& id) const
+struct Node
 {
-  auto it = edge_index.find(id);
-  if (it == edge_index.end()) return nullptr;
-  return &edges[it->second];
-}
+  std::string node_id;
+  std::string map_id;
+  NodePosition node_position;
+  std::vector<VehicleTypeNodeProperty>
+    vehicle_type_node_properties;  ///< non-empty
+  std::optional<std::string> node_name;
+  std::optional<std::string> node_description;
+};
 
-}  // namespace vda5050_core::master
+}  // namespace vda5050_core::master::layout
+
+#endif  // VDA5050_CORE__MASTER__LAYOUT__NODE_HPP_
