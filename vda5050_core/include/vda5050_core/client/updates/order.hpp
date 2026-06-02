@@ -16,10 +16,9 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__CLIENT__ORDER_TYPES_HPP_
-#define VDA5050_CORE__CLIENT__ORDER_TYPES_HPP_
+#ifndef VDA5050_CORE__CLIENT__UPDATES__ORDER_HPP_
+#define VDA5050_CORE__CLIENT__UPDATES__ORDER_HPP_
 
-#include <string>
 #include <utility>
 
 #include "vda5050_core/execution/base.hpp"
@@ -49,42 +48,7 @@ struct OrderUpdate
   }
 };
 
-/// \brief Persistent identity of this AGV on the VDA5050 interface.
-///
-/// Stored once as a `ResourceBase` in the Context. It mirrors the topic
-/// identity used by the `ProtocolAdapter`
-/// (`<interface_name>/<version>/<manufacturer>/<serial_number>/...`) and lets a
-/// Strategy reason about which AGV it is acting for.
-
-// Stores the AGV's identity/config information
-struct ConfigResource
-: public execution::Initialize<ConfigResource, execution::ResourceBase>
-{
-  /// \brief Interface name, e.g. "uagv".
-  std::string interface_name;
-
-  /// \brief Protocol/major version segment, e.g. "v2".
-  std::string version;
-
-  /// \brief Manufacturer of the AGV.
-  std::string manufacturer;
-
-  /// \brief Serial number of the AGV.
-  std::string serial_number;
-
-  ConfigResource(
-    std::string interface_name, std::string version, std::string manufacturer,
-    std::string serial_number)
-  : interface_name(std::move(interface_name)),
-    version(std::move(version)),
-    manufacturer(std::move(manufacturer)),
-    serial_number(std::move(serial_number))
-  {
-    // Nothing to do here ...
-  }
-};
-
 }  // namespace client
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__CLIENT__ORDER_TYPES_HPP_
+#endif  // VDA5050_CORE__CLIENT__UPDATES__ORDER_HPP_

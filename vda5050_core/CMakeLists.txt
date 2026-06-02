@@ -270,11 +270,19 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_transport vda5050_core::transport)
 
+  ament_add_gmock(test_client
+    test/client/test_order_types.cpp
+  )
+
+  target_link_libraries(test_client
+    vda5050_core::execution
+    vda5050_core::types
+  )
+
   ament_add_gmock(test_execution
     test/execution/test_engine.cpp
     test/execution/test_event_queue.cpp
     test/execution/test_handler.cpp
-    test/execution/test_order_types.cpp
     test/execution/test_protocol_adapter.cpp
     test/execution/test_provider.cpp
   )

@@ -21,7 +21,8 @@
 #include <memory>
 #include <typeindex>
 
-#include "vda5050_core/client/order_types.hpp"
+#include "vda5050_core/client/resources/config.hpp"
+#include "vda5050_core/client/updates/order.hpp"
 #include "vda5050_core/execution/base.hpp"
 #include "vda5050_core/types/order.hpp"
 
@@ -42,7 +43,7 @@ TEST(OrderTypesTest, OrderUpdateCarriesOrder)
   OrderUpdate update(order);
 
   EXPECT_EQ(update.order.order_id, "order_1");
-  EXPECT_EQ(update.order.order_update_id, 3u);  // 3u means unsigned int 3
+  EXPECT_EQ(update.order.order_update_id, 3u);
 }
 
 // Test 2: Check if OrderUpdate reports its type correctly through the base class.
@@ -64,10 +65,10 @@ TEST(OrderTypesTest, OrderUpdateReportsItsTypeThroughBase)
 // Test 3: Check whether ConfigResource stores all four strings correctly
 TEST(OrderTypesTest, ConfigResourceCarriesAllFields)
 {
-  ConfigResource config("uagv", "v2", "ROS-I", "S001");
+  HeaderConfigResource config("uagv", "2.0.0", "ROS-I", "S001");
 
   EXPECT_EQ(config.interface_name, "uagv");
-  EXPECT_EQ(config.version, "v2");
+  EXPECT_EQ(config.version, "2.0.0");
   EXPECT_EQ(config.manufacturer, "ROS-I");
   EXPECT_EQ(config.serial_number, "S001");
 }
@@ -76,9 +77,9 @@ TEST(OrderTypesTest, ConfigResourceCarriesAllFields)
 TEST(OrderTypesTest, ConfigResourceReportsItsTypeThroughBase)
 {
   std::shared_ptr<ResourceBase> base =
-    std::make_shared<ConfigResource>("uagv", "v2", "ROS-I", "S001");
+    std::make_shared<HeaderConfigResource>("uagv", "2.0.0", "ROS-I", "S001");
 
-  EXPECT_EQ(base->get_type(), std::type_index(typeid(ConfigResource)));
+  EXPECT_EQ(base->get_type(), std::type_index(typeid(HeaderConfigResource)));
 }
 
 // Test 5: Check that OrderUpdate and ConfigResource have distinct type indices,
@@ -87,7 +88,7 @@ TEST(OrderTypesTest, DistinctTypesHaveDistinctTypeIndex)
 {
   EXPECT_NE(
     std::type_index(typeid(OrderUpdate)),
-    std::type_index(typeid(ConfigResource)));
+    std::type_index(typeid(HeaderConfigResource)));
 }
 
 }  // namespace
