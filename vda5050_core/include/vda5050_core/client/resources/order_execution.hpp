@@ -25,6 +25,7 @@
 #include "vda5050_core/types/state.hpp"
 
 namespace vda5050_core {
+
 namespace client {
 
 /// \brief Persistent, mutable AGV execution state shared across strategies.

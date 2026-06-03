@@ -34,7 +34,6 @@ using HeaderConfigResource = vda5050_core::client::HeaderConfigResource;
 using OrderContext = vda5050_core::client::OrderContext;
 using OrderExecutionResource = vda5050_core::client::OrderExecutionResource;
 using OrderUpdate = vda5050_core::client::OrderUpdate;
-
 namespace execution = vda5050_core::execution;
 namespace types = vda5050_core::types;
 

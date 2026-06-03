@@ -25,6 +25,7 @@
 #include "vda5050_core/client/updates/order.hpp"
 
 namespace vda5050_core {
+
 namespace client {
 
 void OrderContext::init()
