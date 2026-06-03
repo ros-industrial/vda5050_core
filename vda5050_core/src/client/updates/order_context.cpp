@@ -95,6 +95,20 @@ uint32_t OrderContext::get_active_order_update_id() const
   return execution_->state.order_update_id;
 }
 
+std::string OrderContext::get_last_node_id() const
+{
+  if (!execution_) return "";
+  std::lock_guard<std::mutex> lock(execution_->mutex_);
+  return execution_->state.last_node_id;
+}
+
+uint32_t OrderContext::get_last_node_sequence_id() const
+{
+  if (!execution_) return 0;
+  std::lock_guard<std::mutex> lock(execution_->mutex_);
+  return execution_->state.last_node_sequence_id;
+}
+
 std::vector<types::NodeState> OrderContext::get_node_states() const
 {
   if (!execution_) return {};
