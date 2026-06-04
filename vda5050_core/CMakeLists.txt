@@ -346,6 +346,13 @@ if(BUILD_TESTING)
   target_link_libraries(test_master_layout vda5050_core::layout)
   target_compile_definitions(test_master_layout PRIVATE
     VDA5050_CORE__SAMPLE_LAYOUT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/test/master/data/sample_layout.json")
+
+  ament_add_gmock(test_layout_graph
+    test/master/test_unit_layout_graph.cpp
+  )
+  target_link_libraries(test_layout_graph vda5050_core::layout)
+  target_compile_definitions(test_layout_graph PRIVATE
+    VDA5050_CORE__SAMPLE_LAYOUT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/test/master/data/sample_layout.json")
 endif()
 
 # Install linter macro
