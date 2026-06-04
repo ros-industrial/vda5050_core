@@ -32,6 +32,16 @@ struct VehicleTypeNodeProperty
   std::string vehicle_type_id;
   std::optional<double> theta;  ///< [rad], range [-Pi..Pi]
   std::optional<std::vector<Action>> actions;
+
+  inline bool operator==(const VehicleTypeNodeProperty& other) const
+  {
+    return this->vehicle_type_id == other.vehicle_type_id &&
+           this->theta == other.theta && this->actions == other.actions;
+  }
+  inline bool operator!=(const VehicleTypeNodeProperty& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 }  // namespace vda5050_core::layout

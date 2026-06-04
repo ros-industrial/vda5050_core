@@ -43,6 +43,21 @@ struct Layout
   const Node* find_node(const std::string& id) const;
   const Edge* find_edge(const std::string& id) const;
   const Station* find_station(const std::string& id) const;
+
+  inline bool operator==(const Layout& other) const
+  {
+    return this->layout_id == other.layout_id &&
+           this->layout_version == other.layout_version &&
+           this->nodes == other.nodes && this->edges == other.edges &&
+           this->stations == other.stations &&
+           this->layout_name == other.layout_name &&
+           this->layout_level_id == other.layout_level_id &&
+           this->layout_description == other.layout_description;
+  }
+  inline bool operator!=(const Layout& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 }  // namespace vda5050_core::layout

@@ -29,6 +29,16 @@ struct ControlPoint
   double x = 0.0;  ///< [m]
   double y = 0.0;  ///< [m]
   std::optional<double> weight;
+
+  inline bool operator==(const ControlPoint& other) const
+  {
+    return this->x == other.x && this->y == other.y &&
+           this->weight == other.weight;
+  }
+  inline bool operator!=(const ControlPoint& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 struct Trajectory
@@ -36,6 +46,17 @@ struct Trajectory
   std::vector<double> knot_vector;
   std::vector<ControlPoint> control_points;
   std::optional<int> degree;
+
+  inline bool operator==(const Trajectory& other) const
+  {
+    return this->knot_vector == other.knot_vector &&
+           this->control_points == other.control_points &&
+           this->degree == other.degree;
+  }
+  inline bool operator!=(const Trajectory& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 }  // namespace vda5050_core::layout

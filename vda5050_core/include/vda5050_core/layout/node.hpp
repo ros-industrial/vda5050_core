@@ -31,6 +31,15 @@ struct NodePosition
 {
   double x = 0.0;  ///< [m]
   double y = 0.0;  ///< [m]
+
+  inline bool operator==(const NodePosition& other) const
+  {
+    return this->x == other.x && this->y == other.y;
+  }
+  inline bool operator!=(const NodePosition& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 struct Node
@@ -42,6 +51,20 @@ struct Node
     vehicle_type_node_properties;  ///< non-empty
   std::optional<std::string> node_name;
   std::optional<std::string> node_description;
+
+  inline bool operator==(const Node& other) const
+  {
+    return this->node_id == other.node_id && this->map_id == other.map_id &&
+           this->node_position == other.node_position &&
+           this->vehicle_type_node_properties ==
+             other.vehicle_type_node_properties &&
+           this->node_name == other.node_name &&
+           this->node_description == other.node_description;
+  }
+  inline bool operator!=(const Node& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 }  // namespace vda5050_core::layout

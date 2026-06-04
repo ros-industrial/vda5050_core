@@ -42,6 +42,15 @@ struct ActionParameter
 {
   std::string key;
   std::string value;
+
+  inline bool operator==(const ActionParameter& other) const
+  {
+    return this->key == other.key && this->value == other.value;
+  }
+  inline bool operator!=(const ActionParameter& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 struct Action
@@ -51,6 +60,19 @@ struct Action
   std::optional<std::string> action_description;
   std::optional<RequirementType> requirement_type;
   std::optional<std::vector<ActionParameter>> action_parameters;
+
+  inline bool operator==(const Action& other) const
+  {
+    return this->action_type == other.action_type &&
+           this->blocking_type == other.blocking_type &&
+           this->action_description == other.action_description &&
+           this->requirement_type == other.requirement_type &&
+           this->action_parameters == other.action_parameters;
+  }
+  inline bool operator!=(const Action& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 }  // namespace vda5050_core::layout

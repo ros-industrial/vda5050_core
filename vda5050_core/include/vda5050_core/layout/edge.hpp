@@ -36,6 +36,21 @@ struct Edge
     vehicle_type_edge_properties;  ///< non-empty
   std::optional<std::string> edge_name;
   std::optional<std::string> edge_description;
+
+  inline bool operator==(const Edge& other) const
+  {
+    return this->edge_id == other.edge_id &&
+           this->start_node_id == other.start_node_id &&
+           this->end_node_id == other.end_node_id &&
+           this->vehicle_type_edge_properties ==
+             other.vehicle_type_edge_properties &&
+           this->edge_name == other.edge_name &&
+           this->edge_description == other.edge_description;
+  }
+  inline bool operator!=(const Edge& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 }  // namespace vda5050_core::layout

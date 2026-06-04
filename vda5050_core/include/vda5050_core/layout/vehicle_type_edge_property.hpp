@@ -60,6 +60,30 @@ struct VehicleTypeEdgeProperty
   std::optional<std::vector<Action>> actions;
   std::optional<Trajectory> trajectory;
   std::optional<bool> reentry_allowed;
+
+  inline bool operator==(const VehicleTypeEdgeProperty& other) const
+  {
+    return this->vehicle_type_id == other.vehicle_type_id &&
+           this->rotation_allowed == other.rotation_allowed &&
+           this->vehicle_orientation == other.vehicle_orientation &&
+           this->orientation_type == other.orientation_type &&
+           this->rotation_at_start_node_allowed ==
+             other.rotation_at_start_node_allowed &&
+           this->rotation_at_end_node_allowed ==
+             other.rotation_at_end_node_allowed &&
+           this->max_speed == other.max_speed &&
+           this->max_rotation_speed == other.max_rotation_speed &&
+           this->min_height == other.min_height &&
+           this->max_height == other.max_height &&
+           this->load_restriction == other.load_restriction &&
+           this->actions == other.actions &&
+           this->trajectory == other.trajectory &&
+           this->reentry_allowed == other.reentry_allowed;
+  }
+  inline bool operator!=(const VehicleTypeEdgeProperty& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 }  // namespace vda5050_core::layout

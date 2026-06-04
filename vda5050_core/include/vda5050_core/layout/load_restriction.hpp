@@ -33,6 +33,16 @@ struct LoadRestriction
   bool unloaded = true;  ///< edge usable when vehicle carries no load
   bool loaded = true;    ///< edge usable when vehicle carries a load
   std::optional<std::vector<std::string>> load_set_names;
+
+  inline bool operator==(const LoadRestriction& other) const
+  {
+    return this->unloaded == other.unloaded && this->loaded == other.loaded &&
+           this->load_set_names == other.load_set_names;
+  }
+  inline bool operator!=(const LoadRestriction& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 }  // namespace vda5050_core::layout

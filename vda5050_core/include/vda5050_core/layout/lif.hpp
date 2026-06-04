@@ -32,12 +32,34 @@ struct MetaInformation
   std::string creator;
   std::string export_timestamp;  ///< ISO 8601 UTC
   std::string lif_version;       ///< e.g. "0.11.0"
+
+  inline bool operator==(const MetaInformation& other) const
+  {
+    return this->project_identification == other.project_identification &&
+           this->creator == other.creator &&
+           this->export_timestamp == other.export_timestamp &&
+           this->lif_version == other.lif_version;
+  }
+  inline bool operator!=(const MetaInformation& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 struct LIF
 {
   MetaInformation meta_information;
   std::vector<Layout> layouts;
+
+  inline bool operator==(const LIF& other) const
+  {
+    return this->meta_information == other.meta_information &&
+           this->layouts == other.layouts;
+  }
+  inline bool operator!=(const LIF& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 }  // namespace vda5050_core::layout

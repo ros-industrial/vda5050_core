@@ -30,6 +30,16 @@ struct StationPosition
   double x = 0.0;               ///< [m]
   double y = 0.0;               ///< [m]
   std::optional<double> theta;  ///< [rad], range [-Pi..Pi]
+
+  inline bool operator==(const StationPosition& other) const
+  {
+    return this->x == other.x && this->y == other.y &&
+           this->theta == other.theta;
+  }
+  inline bool operator!=(const StationPosition& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 struct Station
@@ -40,6 +50,20 @@ struct Station
   std::optional<std::string> station_description;
   std::optional<double> station_height;  ///< [m], default 0
   std::optional<StationPosition> station_position;
+
+  inline bool operator==(const Station& other) const
+  {
+    return this->station_id == other.station_id &&
+           this->interaction_node_ids == other.interaction_node_ids &&
+           this->station_name == other.station_name &&
+           this->station_description == other.station_description &&
+           this->station_height == other.station_height &&
+           this->station_position == other.station_position;
+  }
+  inline bool operator!=(const Station& other) const
+  {
+    return !(this->operator==(other));
+  }
 };
 
 }  // namespace vda5050_core::layout

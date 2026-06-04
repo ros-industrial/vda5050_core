@@ -401,7 +401,8 @@ TEST(LayoutLoaderTest, Trajectory_HappyPath_RoundTrip)
   // Round-trip back to JSON and reload.
   nlohmann::json round = r.lif();
   auto r2 = load_from_json(round);
-  ASSERT_TRUE(static_cast<bool>(r2));
+  ASSERT_TRUE(r2.ok());
+  EXPECT_EQ(r.lif(), r2.lif());
 }
 
 TEST(LayoutLoaderTest, LoadRestriction_RoundTrip)
@@ -429,7 +430,8 @@ TEST(LayoutLoaderTest, LoadRestriction_RoundTrip)
 
   nlohmann::json round = r.lif();
   auto r2 = load_from_json(round);
-  EXPECT_TRUE(static_cast<bool>(r2));
+  ASSERT_TRUE(r2.ok());
+  EXPECT_EQ(r.lif(), r2.lif());
 }
 
 TEST(LayoutLoaderTest, StationPosition_RoundTrip)
@@ -457,7 +459,8 @@ TEST(LayoutLoaderTest, StationPosition_RoundTrip)
 
   nlohmann::json round = r.lif();
   auto r2 = load_from_json(round);
-  EXPECT_TRUE(static_cast<bool>(r2));
+  ASSERT_TRUE(r2.ok());
+  EXPECT_EQ(r.lif(), r2.lif());
 }
 
 TEST(LayoutLoaderTest, Action_RoundTrip)
@@ -496,7 +499,8 @@ TEST(LayoutLoaderTest, Action_RoundTrip)
 
   nlohmann::json round = r.lif();
   auto r2 = load_from_json(round);
-  EXPECT_TRUE(static_cast<bool>(r2));
+  ASSERT_TRUE(r2.ok());
+  EXPECT_EQ(r.lif(), r2.lif());
 }
 
 TEST(LayoutLoaderTest, Enums_NonDefaultValues_RoundTrip)
@@ -529,7 +533,8 @@ TEST(LayoutLoaderTest, Enums_NonDefaultValues_RoundTrip)
 
   nlohmann::json round = r.lif();
   auto r2 = load_from_json(round);
-  EXPECT_TRUE(static_cast<bool>(r2));
+  ASSERT_TRUE(r2.ok());
+  EXPECT_EQ(r.lif(), r2.lif());
 }
 
 // ============================================================================
