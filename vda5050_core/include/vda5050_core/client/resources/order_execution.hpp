@@ -33,6 +33,10 @@ struct OrderExecutionResource
 : public execution::Initialize<OrderExecutionResource, execution::ResourceBase>
 {
   /// \brief Serialises concurrent reads and writes to this resource.
+  ///
+  /// Callers that reach this resource via get_resource<OrderExecutionResource>()
+  /// must hold `mutex_` while reading or writing `state` (and the flags below),
+  /// as multiple strategies may access it concurrently.
   mutable std::mutex mutex_;
 
   /// \brief True while the AGV is actively executing an order.

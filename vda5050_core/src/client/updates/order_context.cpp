@@ -79,10 +79,14 @@ void OrderContext::cache_resource(
   resources_[resource->get_type()] = resource;
 }
 
+// The bridge getters below read fields out of the execution State snapshot.
+// `execution_` is created in the constructor and never reassigned, so it is
+// always valid; each read is serialised by the resource's own mutex_. Before a
+// strategy has run, these return the default-constructed (empty) State values.
+
 // Extraction logic for VDA5050 order_id
 std::string OrderContext::get_active_order_id() const
 {
-  if (!execution_) return "";
   std::lock_guard<std::mutex> lock(execution_->mutex_);
   return execution_->state.order_id;
 }
@@ -90,37 +94,38 @@ std::string OrderContext::get_active_order_id() const
 // Extraction logic for VDA 5050 order_update_id
 uint32_t OrderContext::get_active_order_update_id() const
 {
-  if (!execution_) return 0;
   std::lock_guard<std::mutex> lock(execution_->mutex_);
   return execution_->state.order_update_id;
 }
 
 std::string OrderContext::get_last_node_id() const
 {
-  if (!execution_) return "";
   std::lock_guard<std::mutex> lock(execution_->mutex_);
   return execution_->state.last_node_id;
 }
 
 uint32_t OrderContext::get_last_node_sequence_id() const
 {
-  if (!execution_) return 0;
   std::lock_guard<std::mutex> lock(execution_->mutex_);
   return execution_->state.last_node_sequence_id;
 }
 
 std::vector<types::NodeState> OrderContext::get_node_states() const
 {
-  if (!execution_) return {};
   std::lock_guard<std::mutex> lock(execution_->mutex_);
   return execution_->state.node_states;
 }
 
 std::vector<types::EdgeState> OrderContext::get_edge_states() const
 {
-  if (!execution_) return {};
   std::lock_guard<std::mutex> lock(execution_->mutex_);
   return execution_->state.edge_states;
+}
+
+std::vector<types::ActionState> OrderContext::get_action_states() const
+{
+  std::lock_guard<std::mutex> lock(execution_->mutex_);
+  return execution_->state.action_states;
 }
 
 }  // namespace client

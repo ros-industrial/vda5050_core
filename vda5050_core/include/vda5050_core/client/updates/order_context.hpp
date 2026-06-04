@@ -32,6 +32,7 @@
 #include "vda5050_core/client/resources/order_execution.hpp"
 #include "vda5050_core/client/updates/order.hpp"
 #include "vda5050_core/execution/context_interface.hpp"
+#include "vda5050_core/types/action_state.hpp"
 #include "vda5050_core/types/edge_state.hpp"
 #include "vda5050_core/types/node_state.hpp"
 
@@ -41,8 +42,8 @@ namespace client {
 /// \brief AGV client context: in-memory storage for VDA5050 execution data.
 ///
 /// Seeds `HeaderConfigResource` and `OrderExecutionResource` as persistent
-/// resources. Registers provider callbacks for `OrderUpdate` and `StateUpdate`
-/// so strategies can read the latest inbound messages via get_update<T>().
+/// resources. Registers a provider callback for `OrderUpdate` so strategies
+/// can read the latest inbound order via get_update<OrderUpdate>().
 ///
 /// All map reads and writes are protected by a single `storage_mutex_` via
 /// std::lock_guard to prevent race conditions when strategies run concurrently.
@@ -65,12 +66,11 @@ public:
 
   ~OrderContext() override = default;
 
-  /// \brief Seed resources and register provider callbacks for updates.
+  /// \brief Seed resources and register the provider callback for updates.
   ///
   /// Seeds HeaderConfigResource and OrderExecutionResource into the resource
-  /// map. Registers provider()->on<OrderUpdate>() and on<StateUpdate>() to
-  /// cache incoming updates. Each update triggers notify_on_change() so the
-  /// Handler wakes up.
+  /// map. Registers provider()->on<OrderUpdate>() to cache incoming orders.
+  /// Each update triggers notify_on_change() so the Handler wakes up.
   void init() override;
 
   std::string get_active_order_id() const;
@@ -79,6 +79,7 @@ public:
   uint32_t get_last_node_sequence_id() const;
   std::vector<types::NodeState> get_node_states() const;
   std::vector<types::EdgeState> get_edge_states() const;
+  std::vector<types::ActionState> get_action_states() const;
 
 protected:
   /// \brief Thread-safe lookup in the updates map. Returns nullptr if not found.
@@ -94,6 +95,9 @@ private:
   void cache_update(std::shared_ptr<execution::UpdateBase> update);
   void cache_resource(std::shared_ptr<execution::ResourceBase> resource);
 
+  // config_ and execution_ are also seeded into resources_ during init() so
+  // strategies can reach them via get_resource<T>(). They are kept as direct
+  // members for the bridge getters below, which read the same shared object.
   std::shared_ptr<HeaderConfigResource> config_;
   std::shared_ptr<OrderExecutionResource> execution_;
 

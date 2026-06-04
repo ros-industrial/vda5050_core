@@ -263,11 +263,34 @@ TEST(OrderContextTest, BridgeGettersExtractEdgeStates)
   EXPECT_FALSE(retrieved_edges[0].released);
 }
 
-// Test 14: Check whether shortcut getters return empty/default values
-// if execution resource isn't found
-TEST(OrderContextTest, BridgeGettersReturnDefaultsWhenMissing)
+// Test 14: Ensure get_action_states successfully bridges vectors from state.
+TEST(OrderContextTest, BridgeGettersExtractActionStates)
 {
-  // A context created without running init() won't have execution cached
+  auto context = make_context();
+  auto execution = context->get_resource<OrderExecutionResource>();
+
+  // Simulate an updated action state track array
+  types::ActionState action_pick;
+  action_pick.action_id = "action_pick";
+  action_pick.action_status = types::ActionStatus::RUNNING;
+
+  {
+    std::lock_guard<std::mutex> lock(execution->mutex_);
+    execution->state.action_states.push_back(action_pick);
+  }
+
+  auto retrieved_actions = context->get_action_states();
+  ASSERT_EQ(retrieved_actions.size(), 1u);
+  EXPECT_EQ(retrieved_actions[0].action_id, "action_pick");
+  EXPECT_EQ(retrieved_actions[0].action_status, types::ActionStatus::RUNNING);
+}
+
+// Test 15: Before any order runs, the bridge getters return the
+// default-constructed (empty) execution State values.
+TEST(OrderContextTest, BridgeGettersReturnDefaultsBeforeExecution)
+{
+  // init() is not required for the getters: execution_ is created in the
+  // constructor, so they read from a fresh, empty State.
   auto config =
     std::make_shared<HeaderConfigResource>("uagv", "2.0.0", "ROS-I", "S001");
   OrderContext raw_context(config);
@@ -275,6 +298,8 @@ TEST(OrderContextTest, BridgeGettersReturnDefaultsWhenMissing)
   EXPECT_EQ(raw_context.get_active_order_id(), "");
   EXPECT_EQ(raw_context.get_active_order_update_id(), 0u);
   EXPECT_TRUE(raw_context.get_node_states().empty());
+  EXPECT_TRUE(raw_context.get_edge_states().empty());
+  EXPECT_TRUE(raw_context.get_action_states().empty());
 }
 
 }  // namespace
