@@ -16,34 +16,30 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__MASTER__LAYOUT__NODE_HPP_
-#define VDA5050_CORE__MASTER__LAYOUT__NODE_HPP_
+#ifndef VDA5050_CORE__LAYOUT__LIF_HPP_
+#define VDA5050_CORE__LAYOUT__LIF_HPP_
 
-#include <optional>
 #include <string>
 #include <vector>
 
-#include "vda5050_core/master/layout/vehicle_type_node_property.hpp"
+#include "vda5050_core/layout/layout.hpp"
 
-namespace vda5050_core::master::layout {
+namespace vda5050_core::layout {
 
-struct NodePosition
+struct MetaInformation
 {
-  double x = 0.0;  ///< [m]
-  double y = 0.0;  ///< [m]
+  std::string project_identification;
+  std::string creator;
+  std::string export_timestamp;  ///< ISO 8601 UTC
+  std::string lif_version;       ///< e.g. "0.11.0"
 };
 
-struct Node
+struct LIF
 {
-  std::string node_id;
-  std::string map_id;
-  NodePosition node_position;
-  std::vector<VehicleTypeNodeProperty>
-    vehicle_type_node_properties;  ///< non-empty
-  std::optional<std::string> node_name;
-  std::optional<std::string> node_description;
+  MetaInformation meta_information;
+  std::vector<Layout> layouts;
 };
 
-}  // namespace vda5050_core::master::layout
+}  // namespace vda5050_core::layout
 
-#endif  // VDA5050_CORE__MASTER__LAYOUT__NODE_HPP_
+#endif  // VDA5050_CORE__LAYOUT__LIF_HPP_

@@ -24,9 +24,9 @@
 #include <utility>
 #include <vector>
 
-#include "vda5050_core/master/layout/layout_loader.hpp"
+#include "vda5050_core/layout/layout_loader.hpp"
 
-namespace vda5050_core::master::layout {
+namespace vda5050_core::layout {
 
 namespace {
 
@@ -278,4 +278,4 @@ std::vector<LayoutLoadError> validate_layout(const LIF& lif)
   return errors;
 }
 
-}  // namespace vda5050_core::master::layout
+}  // namespace vda5050_core::layout

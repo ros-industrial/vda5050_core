@@ -16,18 +16,18 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__MASTER__LAYOUT__LAYOUT_HPP_
-#define VDA5050_CORE__MASTER__LAYOUT__LAYOUT_HPP_
+#ifndef VDA5050_CORE__LAYOUT__LAYOUT_HPP_
+#define VDA5050_CORE__LAYOUT__LAYOUT_HPP_
 
 #include <optional>
 #include <string>
 #include <vector>
 
-#include "vda5050_core/master/layout/edge.hpp"
-#include "vda5050_core/master/layout/node.hpp"
-#include "vda5050_core/master/layout/station.hpp"
+#include "vda5050_core/layout/edge.hpp"
+#include "vda5050_core/layout/node.hpp"
+#include "vda5050_core/layout/station.hpp"
 
-namespace vda5050_core::master::layout {
+namespace vda5050_core::layout {
 
 struct Layout
 {
@@ -45,6 +45,6 @@ struct Layout
   const Station* find_station(const std::string& id) const;
 };
 
-}  // namespace vda5050_core::master::layout
+}  // namespace vda5050_core::layout
 
-#endif  // VDA5050_CORE__MASTER__LAYOUT__LAYOUT_HPP_
+#endif  // VDA5050_CORE__LAYOUT__LAYOUT_HPP_

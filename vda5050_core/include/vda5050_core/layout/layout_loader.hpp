@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__MASTER__LAYOUT__LAYOUT_LOADER_HPP_
-#define VDA5050_CORE__MASTER__LAYOUT__LAYOUT_LOADER_HPP_
+#ifndef VDA5050_CORE__LAYOUT__LAYOUT_LOADER_HPP_
+#define VDA5050_CORE__LAYOUT__LAYOUT_LOADER_HPP_
 
 #include <cstdint>
 #include <optional>
@@ -26,9 +26,9 @@
 
 #include <nlohmann/json.hpp>
 
-#include "vda5050_core/master/layout/lif.hpp"
+#include "vda5050_core/layout/lif.hpp"
 
-namespace vda5050_core::master::layout {
+namespace vda5050_core::layout {
 
 enum class LayoutLoadErrorType : std::uint8_t
 {
@@ -71,6 +71,6 @@ LayoutLoadResult load_from_json(const nlohmann::json& json);
 
 std::vector<LayoutLoadError> validate_layout(const LIF& lif);
 
-}  // namespace vda5050_core::master::layout
+}  // namespace vda5050_core::layout
 
-#endif  // VDA5050_CORE__MASTER__LAYOUT__LAYOUT_LOADER_HPP_
+#endif  // VDA5050_CORE__LAYOUT__LAYOUT_LOADER_HPP_

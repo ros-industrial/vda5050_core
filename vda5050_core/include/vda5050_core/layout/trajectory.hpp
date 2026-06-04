@@ -16,30 +16,28 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__MASTER__LAYOUT__LIF_HPP_
-#define VDA5050_CORE__MASTER__LAYOUT__LIF_HPP_
+#ifndef VDA5050_CORE__LAYOUT__TRAJECTORY_HPP_
+#define VDA5050_CORE__LAYOUT__TRAJECTORY_HPP_
 
-#include <string>
+#include <optional>
 #include <vector>
 
-#include "vda5050_core/master/layout/layout.hpp"
+namespace vda5050_core::layout {
 
-namespace vda5050_core::master::layout {
-
-struct MetaInformation
+struct ControlPoint
 {
-  std::string project_identification;
-  std::string creator;
-  std::string export_timestamp;  ///< ISO 8601 UTC
-  std::string lif_version;       ///< e.g. "0.11.0"
+  double x = 0.0;  ///< [m]
+  double y = 0.0;  ///< [m]
+  std::optional<double> weight;
 };
 
-struct LIF
+struct Trajectory
 {
-  MetaInformation meta_information;
-  std::vector<Layout> layouts;
+  std::vector<double> knot_vector;
+  std::vector<ControlPoint> control_points;
+  std::optional<int> degree;
 };
 
-}  // namespace vda5050_core::master::layout
+}  // namespace vda5050_core::layout
 
-#endif  // VDA5050_CORE__MASTER__LAYOUT__LIF_HPP_
+#endif  // VDA5050_CORE__LAYOUT__TRAJECTORY_HPP_

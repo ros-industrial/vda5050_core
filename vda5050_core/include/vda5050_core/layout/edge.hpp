@@ -16,28 +16,28 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__MASTER__LAYOUT__TRAJECTORY_HPP_
-#define VDA5050_CORE__MASTER__LAYOUT__TRAJECTORY_HPP_
+#ifndef VDA5050_CORE__LAYOUT__EDGE_HPP_
+#define VDA5050_CORE__LAYOUT__EDGE_HPP_
 
 #include <optional>
+#include <string>
 #include <vector>
 
-namespace vda5050_core::master::layout {
+#include "vda5050_core/layout/vehicle_type_edge_property.hpp"
 
-struct ControlPoint
+namespace vda5050_core::layout {
+
+struct Edge
 {
-  double x = 0.0;  ///< [m]
-  double y = 0.0;  ///< [m]
-  std::optional<double> weight;
+  std::string edge_id;
+  std::string start_node_id;  ///< must be in the current layout
+  std::string end_node_id;    ///< may be in another layout (layout transition)
+  std::vector<VehicleTypeEdgeProperty>
+    vehicle_type_edge_properties;  ///< non-empty
+  std::optional<std::string> edge_name;
+  std::optional<std::string> edge_description;
 };
 
-struct Trajectory
-{
-  std::vector<double> knot_vector;
-  std::vector<ControlPoint> control_points;
-  std::optional<int> degree;
-};
+}  // namespace vda5050_core::layout
 
-}  // namespace vda5050_core::master::layout
-
-#endif  // VDA5050_CORE__MASTER__LAYOUT__TRAJECTORY_HPP_
+#endif  // VDA5050_CORE__LAYOUT__EDGE_HPP_

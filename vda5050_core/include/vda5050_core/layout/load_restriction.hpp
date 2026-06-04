@@ -16,28 +16,25 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__MASTER__LAYOUT__EDGE_HPP_
-#define VDA5050_CORE__MASTER__LAYOUT__EDGE_HPP_
+#ifndef VDA5050_CORE__LAYOUT__LOAD_RESTRICTION_HPP_
+#define VDA5050_CORE__LAYOUT__LOAD_RESTRICTION_HPP_
 
 #include <optional>
 #include <string>
 #include <vector>
 
-#include "vda5050_core/master/layout/vehicle_type_edge_property.hpp"
+namespace vda5050_core::layout {
 
-namespace vda5050_core::master::layout {
-
-struct Edge
+// Load-traversability rule on an edge (per vehicle-type bucket). When
+// load_set_names is absent/empty, the edge is usable for all load sets the
+// vehicle declares in its factsheet.
+struct LoadRestriction
 {
-  std::string edge_id;
-  std::string start_node_id;  ///< must be in the current layout
-  std::string end_node_id;    ///< may be in another layout (layout transition)
-  std::vector<VehicleTypeEdgeProperty>
-    vehicle_type_edge_properties;  ///< non-empty
-  std::optional<std::string> edge_name;
-  std::optional<std::string> edge_description;
+  bool unloaded = true;  ///< edge usable when vehicle carries no load
+  bool loaded = true;    ///< edge usable when vehicle carries a load
+  std::optional<std::vector<std::string>> load_set_names;
 };
 
-}  // namespace vda5050_core::master::layout
+}  // namespace vda5050_core::layout
 
-#endif  // VDA5050_CORE__MASTER__LAYOUT__EDGE_HPP_
+#endif  // VDA5050_CORE__LAYOUT__LOAD_RESTRICTION_HPP_

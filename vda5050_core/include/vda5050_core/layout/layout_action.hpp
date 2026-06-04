@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__MASTER__LAYOUT__LAYOUT_ACTION_HPP_
-#define VDA5050_CORE__MASTER__LAYOUT__LAYOUT_ACTION_HPP_
+#ifndef VDA5050_CORE__LAYOUT__LAYOUT_ACTION_HPP_
+#define VDA5050_CORE__LAYOUT__LAYOUT_ACTION_HPP_
 
 #include <optional>
 #include <string>
@@ -25,7 +25,7 @@
 
 #include "vda5050_core/types/blocking_type.hpp"
 
-namespace vda5050_core::master::layout {
+namespace vda5050_core::layout {
 
 // LIF actions are layout templates (no `actionId`); the master generates ids
 // when integrating them into an order. Forked from VDA5050 Action because of
@@ -53,6 +53,6 @@ struct Action
   std::optional<std::vector<ActionParameter>> action_parameters;
 };
 
-}  // namespace vda5050_core::master::layout
+}  // namespace vda5050_core::layout
 
-#endif  // VDA5050_CORE__MASTER__LAYOUT__LAYOUT_ACTION_HPP_
+#endif  // VDA5050_CORE__LAYOUT__LAYOUT_ACTION_HPP_

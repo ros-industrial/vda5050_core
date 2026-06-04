@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__MASTER__LAYOUT__STATION_HPP_
-#define VDA5050_CORE__MASTER__LAYOUT__STATION_HPP_
+#ifndef VDA5050_CORE__LAYOUT__STATION_HPP_
+#define VDA5050_CORE__LAYOUT__STATION_HPP_
 
 #include <optional>
 #include <string>
 #include <vector>
 
-namespace vda5050_core::master::layout {
+namespace vda5050_core::layout {
 
 struct StationPosition
 {
@@ -42,6 +42,6 @@ struct Station
   std::optional<StationPosition> station_position;
 };
 
-}  // namespace vda5050_core::master::layout
+}  // namespace vda5050_core::layout
 
-#endif  // VDA5050_CORE__MASTER__LAYOUT__STATION_HPP_
+#endif  // VDA5050_CORE__LAYOUT__STATION_HPP_

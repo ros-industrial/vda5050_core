@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-#include "vda5050_core/master/layout/layout.hpp"
+#include "vda5050_core/layout/layout.hpp"
 
 #include <algorithm>
 
-namespace vda5050_core::master::layout {
+namespace vda5050_core::layout {
 
 const Node* Layout::find_node(const std::string& id) const
 {
@@ -46,4 +46,4 @@ const Station* Layout::find_station(const std::string& id) const
   return it == stations.end() ? nullptr : &(*it);
 }
 
-}  // namespace vda5050_core::master::layout
+}  // namespace vda5050_core::layout

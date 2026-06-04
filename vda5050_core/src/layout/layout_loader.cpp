@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "vda5050_core/master/layout/layout_loader.hpp"
+#include "vda5050_core/layout/layout_loader.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -24,9 +24,9 @@
 #include <utility>
 #include <vector>
 
-#include "vda5050_core/json_utils/master/layout_serialization.hpp"
+#include "vda5050_core/json_utils/layout_serialization.hpp"
 
-namespace vda5050_core::master::layout {
+namespace vda5050_core::layout {
 
 namespace {
 
@@ -236,4 +236,4 @@ LayoutLoadResult load_from_json(const nlohmann::json& json)
   return result;
 }
 
-}  // namespace vda5050_core::master::layout
+}  // namespace vda5050_core::layout

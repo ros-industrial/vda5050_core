@@ -16,24 +16,34 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__MASTER__LAYOUT__VEHICLE_TYPE_NODE_PROPERTY_HPP_
-#define VDA5050_CORE__MASTER__LAYOUT__VEHICLE_TYPE_NODE_PROPERTY_HPP_
+#ifndef VDA5050_CORE__LAYOUT__NODE_HPP_
+#define VDA5050_CORE__LAYOUT__NODE_HPP_
 
 #include <optional>
 #include <string>
 #include <vector>
 
-#include "vda5050_core/master/layout/layout_action.hpp"
+#include "vda5050_core/layout/vehicle_type_node_property.hpp"
 
-namespace vda5050_core::master::layout {
+namespace vda5050_core::layout {
 
-struct VehicleTypeNodeProperty
+struct NodePosition
 {
-  std::string vehicle_type_id;
-  std::optional<double> theta;  ///< [rad], range [-Pi..Pi]
-  std::optional<std::vector<Action>> actions;
+  double x = 0.0;  ///< [m]
+  double y = 0.0;  ///< [m]
 };
 
-}  // namespace vda5050_core::master::layout
+struct Node
+{
+  std::string node_id;
+  std::string map_id;
+  NodePosition node_position;
+  std::vector<VehicleTypeNodeProperty>
+    vehicle_type_node_properties;  ///< non-empty
+  std::optional<std::string> node_name;
+  std::optional<std::string> node_description;
+};
 
-#endif  // VDA5050_CORE__MASTER__LAYOUT__VEHICLE_TYPE_NODE_PROPERTY_HPP_
+}  // namespace vda5050_core::layout
+
+#endif  // VDA5050_CORE__LAYOUT__NODE_HPP_

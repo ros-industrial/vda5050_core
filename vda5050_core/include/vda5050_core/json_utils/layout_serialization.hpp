@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__JSON_UTILS__MASTER__LAYOUT_SERIALIZATION_HPP_
-#define VDA5050_CORE__JSON_UTILS__MASTER__LAYOUT_SERIALIZATION_HPP_
+#ifndef VDA5050_CORE__JSON_UTILS__LAYOUT_SERIALIZATION_HPP_
+#define VDA5050_CORE__JSON_UTILS__LAYOUT_SERIALIZATION_HPP_
 
 #include <stdexcept>
 #include <string>
@@ -25,19 +25,19 @@
 
 #include <nlohmann/json.hpp>
 
-#include "vda5050_core/master/layout/edge.hpp"
-#include "vda5050_core/master/layout/layout.hpp"
-#include "vda5050_core/master/layout/layout_action.hpp"
-#include "vda5050_core/master/layout/lif.hpp"
-#include "vda5050_core/master/layout/load_restriction.hpp"
-#include "vda5050_core/master/layout/node.hpp"
-#include "vda5050_core/master/layout/station.hpp"
-#include "vda5050_core/master/layout/trajectory.hpp"
-#include "vda5050_core/master/layout/vehicle_type_edge_property.hpp"
-#include "vda5050_core/master/layout/vehicle_type_node_property.hpp"
+#include "vda5050_core/layout/edge.hpp"
+#include "vda5050_core/layout/layout.hpp"
+#include "vda5050_core/layout/layout_action.hpp"
+#include "vda5050_core/layout/lif.hpp"
+#include "vda5050_core/layout/load_restriction.hpp"
+#include "vda5050_core/layout/node.hpp"
+#include "vda5050_core/layout/station.hpp"
+#include "vda5050_core/layout/trajectory.hpp"
+#include "vda5050_core/layout/vehicle_type_edge_property.hpp"
+#include "vda5050_core/layout/vehicle_type_node_property.hpp"
 #include "vda5050_core/types/blocking_type.hpp"
 
-namespace vda5050_core::master::layout {
+namespace vda5050_core::layout {
 
 //=============================================================================
 // Enum <-> string helpers (LIF enums are strings on the wire)
@@ -734,6 +734,6 @@ inline void from_json(const nlohmann::json& j, LIF& v)
   lif_detail::from_json(j, v);
 }
 
-}  // namespace vda5050_core::master::layout
+}  // namespace vda5050_core::layout
 
-#endif  // VDA5050_CORE__JSON_UTILS__MASTER__LAYOUT_SERIALIZATION_HPP_
+#endif  // VDA5050_CORE__JSON_UTILS__LAYOUT_SERIALIZATION_HPP_

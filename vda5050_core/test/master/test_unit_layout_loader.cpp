@@ -27,10 +27,10 @@
 
 #include <nlohmann/json.hpp>
 
-#include "vda5050_core/json_utils/master/layout_serialization.hpp"
-#include "vda5050_core/master/layout/layout_loader.hpp"
+#include "vda5050_core/json_utils/layout_serialization.hpp"
+#include "vda5050_core/layout/layout_loader.hpp"
 
-namespace vda5050_core::master::layout::test {
+namespace vda5050_core::layout::test {
 
 namespace {
 
@@ -531,17 +531,17 @@ TEST(LayoutLoaderTest, Enums_NonDefaultValues_RoundTrip)
 
 TEST(LayoutLoaderTest, LoadFromFile_RoundTripSampleData)
 {
-#ifdef VDA5050_CORE__MASTER__SAMPLE_LAYOUT_PATH
-  auto r = load_from_file(VDA5050_CORE__MASTER__SAMPLE_LAYOUT_PATH);
+#ifdef VDA5050_CORE__SAMPLE_LAYOUT_PATH
+  auto r = load_from_file(VDA5050_CORE__SAMPLE_LAYOUT_PATH);
   ASSERT_TRUE(static_cast<bool>(r))
-    << "Sample layout at " << VDA5050_CORE__MASTER__SAMPLE_LAYOUT_PATH
+    << "Sample layout at " << VDA5050_CORE__SAMPLE_LAYOUT_PATH
     << " did not load";
   ASSERT_TRUE(r.lif.has_value());
   EXPECT_EQ(r.lif->meta_information.lif_version, "0.11.0");
   ASSERT_EQ(r.lif->layouts.size(), 1u);
   EXPECT_EQ(r.lif->layouts[0].layout_id, "warehouse_floor1");
 #else
-  GTEST_SKIP() << "VDA5050_CORE__MASTER__SAMPLE_LAYOUT_PATH not defined";
+  GTEST_SKIP() << "VDA5050_CORE__SAMPLE_LAYOUT_PATH not defined";
 #endif
 }
 
@@ -561,4 +561,4 @@ TEST(LayoutLoaderTest, LayoutFindAccessors)
   EXPECT_EQ(layout.find_station("MISSING"), nullptr);
 }
 
-}  // namespace vda5050_core::master::layout::test
+}  // namespace vda5050_core::layout::test
