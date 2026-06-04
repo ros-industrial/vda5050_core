@@ -72,41 +72,90 @@ TEST_F(MasterTeardownTest, OffboardAgvUnsubscribesAllPerAgvTopics)
 {
   auto master = std::make_shared<VDA5050Master>(mock_);
   master->connect();
-  master->onboard_agv("agv", "acme", "agv-001");
+  master->onboard_agv("acme", "agv-001");
 
   EXPECT_CALL(
-    *mock_, unsubscribe(::testing::HasSubstr("agv/v2/acme/agv-001/connection")))
+    *mock_, unsubscribe(::testing::HasSubstr("acme/agv-001/connection")))
     .Times(1);
-  EXPECT_CALL(*mock_, unsubscribe(::testing::HasSubstr("agv/v2/acme/agv-001/state")))
-    .Times(1);
-  EXPECT_CALL(
-    *mock_, unsubscribe(::testing::HasSubstr("agv/v2/acme/agv-001/factsheet")))
+  EXPECT_CALL(*mock_, unsubscribe(::testing::HasSubstr("acme/agv-001/state")))
     .Times(1);
   EXPECT_CALL(
-    *mock_, unsubscribe(::testing::HasSubstr("agv/v2/acme/agv-001/visualization")))
+    *mock_, unsubscribe(::testing::HasSubstr("acme/agv-001/factsheet")))
+    .Times(1);
+  EXPECT_CALL(
+    *mock_, unsubscribe(::testing::HasSubstr("acme/agv-001/visualization")))
     .Times(1);
 
-  master->offboard_agv("agv", "acme", "agv-001");
+  master->offboard_agv("acme", "agv-001");
 }
 
+TEST_F(MasterTeardownTest, OffboardAgvUnsubscribesAllPerAgvTopicsInterfaceName)
+{
+  auto master = std::make_shared<VDA5050Master>(mock_);
+  master->connect();
+  {  // default interface name
+    master->onboard_agv("acme", "agv-001");
+
+    EXPECT_CALL(
+      *mock_,
+      unsubscribe(::testing::HasSubstr("uagv/v2/acme/agv-001/connection")))
+      .Times(1);
+    EXPECT_CALL(
+      *mock_, unsubscribe(::testing::HasSubstr("uagv/v2/acme/agv-001/state")))
+      .Times(1);
+    EXPECT_CALL(
+      *mock_,
+      unsubscribe(::testing::HasSubstr("uagv/v2/acme/agv-001/factsheet")))
+      .Times(1);
+    EXPECT_CALL(
+      *mock_,
+      unsubscribe(::testing::HasSubstr("uagv/v2/acme/agv-001/visualization")))
+      .Times(1);
+
+    master->offboard_agv("acme", "agv-001");
+  }
+
+  {  // custom interface name
+    std::string custom_interface_name = "amr";
+    master->onboard_agv(custom_interface_name, "acme", "agv-001");
+
+    EXPECT_CALL(
+      *mock_,
+      unsubscribe(::testing::HasSubstr("amr/v2/acme/agv-001/connection")))
+      .Times(1);
+    EXPECT_CALL(
+      *mock_, unsubscribe(::testing::HasSubstr("amr/v2/acme/agv-001/state")))
+      .Times(1);
+    EXPECT_CALL(
+      *mock_,
+      unsubscribe(::testing::HasSubstr("amr/v2/acme/agv-001/factsheet")))
+      .Times(1);
+    EXPECT_CALL(
+      *mock_,
+      unsubscribe(::testing::HasSubstr("amr/v2/acme/agv-001/visualization")))
+      .Times(1);
+
+    master->offboard_agv("acme", "agv-001");
+  }
+}
 TEST_F(MasterTeardownTest, MasterDestructionUnsubscribesAllPerAgvTopics)
 {
   EXPECT_CALL(
-    *mock_, unsubscribe(::testing::HasSubstr("agv/v2/acme/agv-001/connection")))
+    *mock_, unsubscribe(::testing::HasSubstr("acme/agv-001/connection")))
     .Times(1);
-  EXPECT_CALL(*mock_, unsubscribe(::testing::HasSubstr("agv/v2/acme/agv-001/state")))
-    .Times(1);
-  EXPECT_CALL(
-    *mock_, unsubscribe(::testing::HasSubstr("agv/v2/acme/agv-001/factsheet")))
+  EXPECT_CALL(*mock_, unsubscribe(::testing::HasSubstr("acme/agv-001/state")))
     .Times(1);
   EXPECT_CALL(
-    *mock_, unsubscribe(::testing::HasSubstr("agv/v2/acme/agv-001/visualization")))
+    *mock_, unsubscribe(::testing::HasSubstr("acme/agv-001/factsheet")))
+    .Times(1);
+  EXPECT_CALL(
+    *mock_, unsubscribe(::testing::HasSubstr("acme/agv-001/visualization")))
     .Times(1);
 
   {
     auto master = std::make_shared<VDA5050Master>(mock_);
     master->connect();
-    master->onboard_agv("agv", "acme", "agv-001");
+    master->onboard_agv("acme", "agv-001");
     // master leaves scope → AGV destructor runs → unsubscribe chain
   }
 }
@@ -115,12 +164,12 @@ TEST_F(MasterTeardownTest, MultipleAgvsAllUnsubscribeOnOffboard)
 {
   auto master = std::make_shared<VDA5050Master>(mock_);
   master->connect();
-  master->onboard_agv("agv", "mfg1", "001");
-  master->onboard_agv("agv", "mfg2", "002");
+  master->onboard_agv("mfg1", "001");
+  master->onboard_agv("mfg2", "002");
 
-  EXPECT_CALL(*mock_, unsubscribe(::testing::HasSubstr("agv/v2/mfg1/001/"))).Times(4);
-  EXPECT_CALL(*mock_, unsubscribe(::testing::HasSubstr("agv/v2/mfg2/002/"))).Times(4);
+  EXPECT_CALL(*mock_, unsubscribe(::testing::HasSubstr("mfg1/001/"))).Times(4);
+  EXPECT_CALL(*mock_, unsubscribe(::testing::HasSubstr("mfg2/002/"))).Times(4);
 
-  master->offboard_agv("agv", "mfg1", "001");
-  master->offboard_agv("agv", "mfg2", "002");
+  master->offboard_agv("mfg1", "001");
+  master->offboard_agv("mfg2", "002");
 }

@@ -123,9 +123,9 @@ public:
    */
   AGV(
     std::shared_ptr<execution::ProtocolAdapter> protocol_adapter,
-    const std::string& interface_name,
-    const std::string& manufacturer, const std::string& serial_number,
-    size_t max_queue_size = 10, bool drop_oldest = true,
+    const std::string& interface_name, const std::string& manufacturer,
+    const std::string& serial_number, size_t max_queue_size = 10,
+    bool drop_oldest = true,
     int state_heartbeat_interval = StateHeartbeatInterval,
     std::weak_ptr<VDA5050Master> parent = {});
 

@@ -46,10 +46,10 @@ class MasterLogicTestFixture : public ::testing::Test
 protected:
   void SetUp() override
   {
-    interface_name_ = "agv";
+    interface_name_ = "uagv";
     manufacturer_ = "TestManufacturer";
     serial_number_ = "SN001";
-    agv_id_ = interface_name_ + "/" + manufacturer_ + "/" + serial_number_;
+    agv_id_ = manufacturer_ + "/" + serial_number_;
   }
 
   std::shared_ptr<VDA5050Master> create_master()
@@ -86,11 +86,26 @@ TEST_F(MasterLogicTestFixture, OnboardAGVCreatesInstance)
   auto master = create_master();
   master->connect();
 
-  EXPECT_FALSE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  EXPECT_FALSE(master->is_agv_onboarded(manufacturer_, serial_number_));
 
-  master->onboard_agv(interface_name_, manufacturer_, serial_number_);
+  master->onboard_agv(manufacturer_, serial_number_);
 
-  EXPECT_TRUE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  EXPECT_TRUE(master->is_agv_onboarded(manufacturer_, serial_number_));
+
+  master->disconnect();
+}
+
+TEST_F(MasterLogicTestFixture, OnboardAGVCreatesInstanceCustomInterfaceName)
+{
+  std::string custom_interface_name = "amr";
+  auto master = create_master();
+  master->connect();
+
+  EXPECT_FALSE(master->is_agv_onboarded(manufacturer_, serial_number_));
+
+  master->onboard_agv(custom_interface_name, manufacturer_, serial_number_);
+
+  EXPECT_TRUE(master->is_agv_onboarded(manufacturer_, serial_number_));
 
   master->disconnect();
 }
@@ -100,11 +115,11 @@ TEST_F(MasterLogicTestFixture, OffboardAGVRemovesInstance)
   auto master = create_master();
   master->connect();
 
-  master->onboard_agv(interface_name_, manufacturer_, serial_number_);
-  EXPECT_TRUE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  master->onboard_agv(manufacturer_, serial_number_);
+  EXPECT_TRUE(master->is_agv_onboarded(manufacturer_, serial_number_));
 
-  master->offboard_agv(interface_name_, manufacturer_, serial_number_);
-  EXPECT_FALSE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  master->offboard_agv(manufacturer_, serial_number_);
+  EXPECT_FALSE(master->is_agv_onboarded(manufacturer_, serial_number_));
 
   master->disconnect();
 }
@@ -116,7 +131,7 @@ TEST_F(MasterLogicTestFixture, PublishOrderToNotOnboardedAGVThrows)
 
   EXPECT_THROW(
     master->publish_order(
-      interface_name_, manufacturer_, serial_number_, create_test_order("1")),
+      manufacturer_, serial_number_, create_test_order("1")),
     std::runtime_error);
 
   master->disconnect();
@@ -129,7 +144,7 @@ TEST_F(MasterLogicTestFixture, PublishInstantActionsToNotOnboardedAGVThrows)
 
   EXPECT_THROW(
     master->publish_instant_actions(
-      interface_name_, manufacturer_, serial_number_, create_test_instant_actions(1)),
+      manufacturer_, serial_number_, create_test_instant_actions(1)),
     std::runtime_error);
 
   master->disconnect();
@@ -140,13 +155,13 @@ TEST_F(MasterLogicTestFixture, MultipleAGVsCanBeOnboarded)
   auto master = create_master();
   master->connect();
 
-  master->onboard_agv("agv", "Manufacturer1", "SN001");
-  master->onboard_agv("agv", "Manufacturer1", "SN002");
-  master->onboard_agv("agv", "Manufacturer2", "SN001");
+  master->onboard_agv("Manufacturer1", "SN001");
+  master->onboard_agv("Manufacturer1", "SN002");
+  master->onboard_agv("Manufacturer2", "SN001");
 
-  EXPECT_TRUE(master->is_agv_onboarded("agv", "Manufacturer1", "SN001"));
-  EXPECT_TRUE(master->is_agv_onboarded("agv", "Manufacturer1", "SN002"));
-  EXPECT_TRUE(master->is_agv_onboarded("agv", "Manufacturer2", "SN001"));
+  EXPECT_TRUE(master->is_agv_onboarded("Manufacturer1", "SN001"));
+  EXPECT_TRUE(master->is_agv_onboarded("Manufacturer1", "SN002"));
+  EXPECT_TRUE(master->is_agv_onboarded("Manufacturer2", "SN001"));
 
   master->disconnect();
 }
@@ -156,12 +171,12 @@ TEST_F(MasterLogicTestFixture, DuplicateOnboardingIsIgnored)
   auto master = create_master();
   master->connect();
 
-  master->onboard_agv(interface_name_, manufacturer_, serial_number_);
-  EXPECT_TRUE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  master->onboard_agv(manufacturer_, serial_number_);
+  EXPECT_TRUE(master->is_agv_onboarded(manufacturer_, serial_number_));
 
   // Second onboarding should be ignored (no crash, no duplicate)
-  master->onboard_agv(interface_name_, manufacturer_, serial_number_);
-  EXPECT_TRUE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  master->onboard_agv(manufacturer_, serial_number_);
+  EXPECT_TRUE(master->is_agv_onboarded(manufacturer_, serial_number_));
 
   master->disconnect();
 }
@@ -172,7 +187,7 @@ TEST_F(MasterLogicTestFixture, OffboardNonExistentAGVIsIgnored)
   master->connect();
 
   // Should not throw or crash
-  EXPECT_NO_THROW(master->offboard_agv("agv", "NonExistent", "AGV"));
+  EXPECT_NO_THROW(master->offboard_agv("NonExistent", "AGV"));
 
   master->disconnect();
 }
@@ -182,7 +197,7 @@ TEST_F(MasterLogicTestFixture, GetAGVReturnsNullptrForNonOnboardedAGV)
   auto master = create_master();
   master->connect();
 
-  auto agv = master->get_agv(interface_name_, manufacturer_, serial_number_);
+  auto agv = master->get_agv(manufacturer_, serial_number_);
   EXPECT_EQ(agv, nullptr);
 
   master->disconnect();
@@ -193,9 +208,9 @@ TEST_F(MasterLogicTestFixture, GetAGVReturnsValidAGVAfterOnboarding)
   auto master = create_master();
   master->connect();
 
-  master->onboard_agv(interface_name_, manufacturer_, serial_number_);
+  master->onboard_agv(manufacturer_, serial_number_);
 
-  auto agv = master->get_agv(interface_name_, manufacturer_, serial_number_);
+  auto agv = master->get_agv(manufacturer_, serial_number_);
   ASSERT_NE(agv, nullptr);
   EXPECT_EQ(agv->get_interface_name(), interface_name_);
   EXPECT_EQ(agv->get_manufacturer(), manufacturer_);
@@ -210,13 +225,13 @@ TEST_F(MasterLogicTestFixture, GetAGVReturnsNullptrAfterOffboarding)
   auto master = create_master();
   master->connect();
 
-  master->onboard_agv(interface_name_, manufacturer_, serial_number_);
-  auto agv_before = master->get_agv(interface_name_, manufacturer_, serial_number_);
+  master->onboard_agv(manufacturer_, serial_number_);
+  auto agv_before = master->get_agv(manufacturer_, serial_number_);
   ASSERT_NE(agv_before, nullptr);
 
-  master->offboard_agv(interface_name_, manufacturer_, serial_number_);
+  master->offboard_agv(manufacturer_, serial_number_);
 
-  auto agv_after = master->get_agv(interface_name_, manufacturer_, serial_number_);
+  auto agv_after = master->get_agv(manufacturer_, serial_number_);
   EXPECT_EQ(agv_after, nullptr);
 
   master->disconnect();
@@ -228,21 +243,21 @@ TEST_F(MasterLogicTestFixture, ReOnboardingAfterOffboardingWorks)
   master->connect();
 
   // First onboarding
-  master->onboard_agv(interface_name_, manufacturer_, serial_number_);
-  EXPECT_TRUE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  master->onboard_agv(manufacturer_, serial_number_);
+  EXPECT_TRUE(master->is_agv_onboarded(manufacturer_, serial_number_));
 
-  auto agv1 = master->get_agv(interface_name_, manufacturer_, serial_number_);
+  auto agv1 = master->get_agv(manufacturer_, serial_number_);
   ASSERT_NE(agv1, nullptr);
 
   // Offboard
-  master->offboard_agv(interface_name_, manufacturer_, serial_number_);
-  EXPECT_FALSE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  master->offboard_agv(manufacturer_, serial_number_);
+  EXPECT_FALSE(master->is_agv_onboarded(manufacturer_, serial_number_));
 
   // Re-onboard
-  master->onboard_agv(interface_name_, manufacturer_, serial_number_);
-  EXPECT_TRUE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  master->onboard_agv(manufacturer_, serial_number_);
+  EXPECT_TRUE(master->is_agv_onboarded(manufacturer_, serial_number_));
 
-  auto agv2 = master->get_agv(interface_name_, manufacturer_, serial_number_);
+  auto agv2 = master->get_agv(manufacturer_, serial_number_);
   ASSERT_NE(agv2, nullptr);
 
   // Should be a new instance (different pointer)
@@ -255,9 +270,9 @@ TEST_F(MasterLogicTestFixture, AGVQueuesOrders)
 {
   auto master = create_master();
   master->connect();
-  master->onboard_agv(interface_name_, manufacturer_, serial_number_);
+  master->onboard_agv(manufacturer_, serial_number_);
 
-  auto agv = master->get_agv(interface_name_, manufacturer_, serial_number_);
+  auto agv = master->get_agv(manufacturer_, serial_number_);
   ASSERT_NE(agv, nullptr);
 
   // Queue should work
@@ -271,9 +286,9 @@ TEST_F(MasterLogicTestFixture, AGVQueuesInstantActions)
 {
   auto master = create_master();
   master->connect();
-  master->onboard_agv(interface_name_, manufacturer_, serial_number_);
+  master->onboard_agv(manufacturer_, serial_number_);
 
-  auto agv = master->get_agv(interface_name_, manufacturer_, serial_number_);
+  auto agv = master->get_agv(manufacturer_, serial_number_);
   ASSERT_NE(agv, nullptr);
 
   // Queue should work
@@ -290,9 +305,9 @@ TEST_F(MasterLogicTestFixture, AGVDropOldestPolicyWorks)
 
   // Onboard with small queue size and drop_oldest = true
   size_t queue_size = 2;
-  master->onboard_agv(interface_name_, manufacturer_, serial_number_, queue_size, true);
+  master->onboard_agv(manufacturer_, serial_number_, queue_size, true);
 
-  auto agv = master->get_agv(interface_name_, manufacturer_, serial_number_);
+  auto agv = master->get_agv(manufacturer_, serial_number_);
   ASSERT_NE(agv, nullptr);
 
   // Fill the queue
@@ -312,9 +327,9 @@ TEST_F(MasterLogicTestFixture, AGVDropNewestPolicyWorks)
 
   // Onboard with small queue size and drop_oldest = false (drop newest)
   size_t queue_size = 2;
-  master->onboard_agv(interface_name_, manufacturer_, serial_number_, queue_size, false);
+  master->onboard_agv(manufacturer_, serial_number_, queue_size, false);
 
-  auto agv = master->get_agv(interface_name_, manufacturer_, serial_number_);
+  auto agv = master->get_agv(manufacturer_, serial_number_);
   ASSERT_NE(agv, nullptr);
 
   // Fill the queue
@@ -336,9 +351,9 @@ TEST_F(MasterLogicTestFixture, OnboardingWithCustomQueueSettings)
   size_t custom_queue_size = 5;
   bool drop_oldest = false;
   master->onboard_agv(
-    interface_name_, manufacturer_, serial_number_, custom_queue_size, drop_oldest);
+    manufacturer_, serial_number_, custom_queue_size, drop_oldest);
 
-  auto agv = master->get_agv(interface_name_, manufacturer_, serial_number_);
+  auto agv = master->get_agv(manufacturer_, serial_number_);
   ASSERT_NE(agv, nullptr);
 
   // Queue should accept up to custom_queue_size orders
@@ -385,14 +400,14 @@ TEST_F(MasterLogicTestFixture, AGVsRemainsOnboardedAfterMasterDisconnect)
 {
   auto master = create_master();
   master->connect();
-  master->onboard_agv(interface_name_, manufacturer_, serial_number_);
+  master->onboard_agv(manufacturer_, serial_number_);
 
-  EXPECT_TRUE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  EXPECT_TRUE(master->is_agv_onboarded(manufacturer_, serial_number_));
 
   master->disconnect();
 
   // AGV should still be onboarded even if master is disconnected
-  EXPECT_TRUE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  EXPECT_TRUE(master->is_agv_onboarded(manufacturer_, serial_number_));
 }
 
 TEST_F(MasterLogicTestFixture, DestructorCompletesWithPendingMessages)
@@ -402,9 +417,9 @@ TEST_F(MasterLogicTestFixture, DestructorCompletesWithPendingMessages)
   {
     auto master = create_master();
     master->connect();
-    master->onboard_agv(interface_name_, manufacturer_, serial_number_);
+    master->onboard_agv(manufacturer_, serial_number_);
 
-    auto agv = master->get_agv(interface_name_, manufacturer_, serial_number_);
+    auto agv = master->get_agv(manufacturer_, serial_number_);
     ASSERT_NE(agv, nullptr);
 
     // Queue many messages
@@ -427,9 +442,9 @@ TEST_F(MasterLogicTestFixture, OffboardWithPendingMessages)
 {
   auto master = create_master();
   master->connect();
-  master->onboard_agv(interface_name_, manufacturer_, serial_number_);
+  master->onboard_agv(manufacturer_, serial_number_);
 
-  auto agv = master->get_agv(interface_name_, manufacturer_, serial_number_);
+  auto agv = master->get_agv(manufacturer_, serial_number_);
   ASSERT_NE(agv, nullptr);
 
   // Queue some messages
@@ -440,12 +455,12 @@ TEST_F(MasterLogicTestFixture, OffboardWithPendingMessages)
 
   // Offboard should complete gracefully
   auto start = std::chrono::steady_clock::now();
-  master->offboard_agv(interface_name_, manufacturer_, serial_number_);
+  master->offboard_agv(manufacturer_, serial_number_);
   auto elapsed = std::chrono::steady_clock::now() - start;
 
   EXPECT_LT(elapsed, std::chrono::seconds(5)) << "Offboard took too long";
 
-  EXPECT_FALSE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  EXPECT_FALSE(master->is_agv_onboarded(manufacturer_, serial_number_));
 
   master->disconnect();
 }

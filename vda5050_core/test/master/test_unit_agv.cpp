@@ -32,10 +32,10 @@ class AGVTestFixture : public ::testing::Test
 protected:
   void SetUp() override
   {
-    interface_name_ = "agv";
+    interface_name_ = "uagv";
     manufacturer_ = "TestManufacturer";
     serial_number_ = "SN001";
-    agv_id_ = interface_name_ + "/" + manufacturer_ + "/" + serial_number_;
+    agv_id_ = manufacturer_ + "/" + serial_number_;
   }
 
   void TearDown() override
@@ -46,7 +46,8 @@ protected:
   std::unique_ptr<AGV>& create_agv()
   {
     // Use nullptr for ProtocolAdapter in unit tests
-    agv_ = std::make_unique<AGV>(nullptr, interface_name_, manufacturer_, serial_number_);
+    agv_ = std::make_unique<AGV>(
+      nullptr, interface_name_, manufacturer_, serial_number_);
     return agv_;
   }
 

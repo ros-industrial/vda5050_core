@@ -40,9 +40,9 @@ class MasterMqttTestFixture : public ::testing::Test
 protected:
   void SetUp() override
   {
-    interface_name_ = "agv";
     manufacturer_ = "TestManufacturer";
     serial_number_ = "SN001";
+    interface_name_ = "uagv";
   }
 
   void TearDown() override
@@ -100,15 +100,36 @@ TEST_F(MasterMqttTestFixture, OnboardAGVWhileConnected)
   auto master = create_master();
   master->connect();
 
-  EXPECT_FALSE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  EXPECT_FALSE(master->is_agv_onboarded(manufacturer_, serial_number_));
 
-  master->onboard_agv(interface_name_, manufacturer_, serial_number_);
+  master->onboard_agv(manufacturer_, serial_number_);
 
-  EXPECT_TRUE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  EXPECT_TRUE(master->is_agv_onboarded(manufacturer_, serial_number_));
 
-  auto agv = master->get_agv(interface_name_, manufacturer_, serial_number_);
+  auto agv = master->get_agv(manufacturer_, serial_number_);
   ASSERT_NE(agv, nullptr);
   EXPECT_EQ(agv->get_interface_name(), interface_name_);
+  EXPECT_EQ(agv->get_manufacturer(), manufacturer_);
+  EXPECT_EQ(agv->get_serial_number(), serial_number_);
+
+  master->disconnect();
+}
+
+TEST_F(MasterMqttTestFixture, OnboardAGVWCustomInterfaceNameWhileConnected)
+{
+  std::string custom_interface_name = "amr";
+  auto master = create_master();
+  master->connect();
+
+  EXPECT_FALSE(master->is_agv_onboarded(manufacturer_, serial_number_));
+
+  master->onboard_agv(custom_interface_name, manufacturer_, serial_number_);
+
+  EXPECT_TRUE(master->is_agv_onboarded(manufacturer_, serial_number_));
+
+  auto agv = master->get_agv(manufacturer_, serial_number_);
+  ASSERT_NE(agv, nullptr);
+  EXPECT_EQ(agv->get_interface_name(), custom_interface_name);
   EXPECT_EQ(agv->get_manufacturer(), manufacturer_);
   EXPECT_EQ(agv->get_serial_number(), serial_number_);
 
@@ -120,11 +141,11 @@ TEST_F(MasterMqttTestFixture, OffboardAGVWhileConnected)
   auto master = create_master();
   master->connect();
 
-  master->onboard_agv(interface_name_, manufacturer_, serial_number_);
-  EXPECT_TRUE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  master->onboard_agv(manufacturer_, serial_number_);
+  EXPECT_TRUE(master->is_agv_onboarded(manufacturer_, serial_number_));
 
-  master->offboard_agv(interface_name_, manufacturer_, serial_number_);
-  EXPECT_FALSE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  master->offboard_agv(manufacturer_, serial_number_);
+  EXPECT_FALSE(master->is_agv_onboarded(manufacturer_, serial_number_));
 
   master->disconnect();
 }
@@ -134,17 +155,17 @@ TEST_F(MasterMqttTestFixture, MultipleAGVsWhileConnected)
   auto master = create_master();
   master->connect();
 
-  master->onboard_agv("agv", "Mfg1", "AGV1");
-  master->onboard_agv("agv", "Mfg1", "AGV2");
-  master->onboard_agv("agv", "Mfg2", "AGV1");
+  master->onboard_agv("Mfg1", "AGV1");
+  master->onboard_agv("Mfg1", "AGV2");
+  master->onboard_agv("Mfg2", "AGV1");
 
-  EXPECT_TRUE(master->is_agv_onboarded("agv", "Mfg1", "AGV1"));
-  EXPECT_TRUE(master->is_agv_onboarded("agv", "Mfg1", "AGV2"));
-  EXPECT_TRUE(master->is_agv_onboarded("agv", "Mfg2", "AGV1"));
+  EXPECT_TRUE(master->is_agv_onboarded("Mfg1", "AGV1"));
+  EXPECT_TRUE(master->is_agv_onboarded("Mfg1", "AGV2"));
+  EXPECT_TRUE(master->is_agv_onboarded("Mfg2", "AGV1"));
 
-  auto agv1 = master->get_agv("agv", "Mfg1", "AGV1");
-  auto agv2 = master->get_agv("agv", "Mfg1", "AGV2");
-  auto agv3 = master->get_agv("agv", "Mfg2", "AGV1");
+  auto agv1 = master->get_agv("Mfg1", "AGV1");
+  auto agv2 = master->get_agv("Mfg1", "AGV2");
+  auto agv3 = master->get_agv("Mfg2", "AGV1");
 
   ASSERT_NE(agv1, nullptr);
   ASSERT_NE(agv2, nullptr);
@@ -158,17 +179,17 @@ TEST_F(MasterMqttTestFixture, AGVsPersistedAcrossReconnect)
   auto master = create_master();
   master->connect();
 
-  master->onboard_agv(interface_name_, manufacturer_, serial_number_);
-  auto agv_before = master->get_agv(interface_name_, manufacturer_, serial_number_);
+  master->onboard_agv(manufacturer_, serial_number_);
+  auto agv_before = master->get_agv(manufacturer_, serial_number_);
   ASSERT_NE(agv_before, nullptr);
 
   master->disconnect();
-  EXPECT_TRUE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  EXPECT_TRUE(master->is_agv_onboarded(manufacturer_, serial_number_));
 
   master->connect();
-  EXPECT_TRUE(master->is_agv_onboarded(interface_name_, manufacturer_, serial_number_));
+  EXPECT_TRUE(master->is_agv_onboarded(manufacturer_, serial_number_));
 
-  auto agv_after = master->get_agv(interface_name_, manufacturer_, serial_number_);
+  auto agv_after = master->get_agv(manufacturer_, serial_number_);
   ASSERT_NE(agv_after, nullptr);
 
   // Same AGV instance should be preserved
