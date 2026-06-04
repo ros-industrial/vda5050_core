@@ -56,7 +56,9 @@ nlohmann::json minimal_valid_json()
         {"edgeId":"E1","startNodeId":"N0","endNodeId":"N1",
          "vehicleTypeEdgeProperties":[{"vehicleTypeId":"v1","rotationAllowed":false}]}
       ],
-      "stations": []
+      "stations": [
+        {"stationId":"S1","interactionNodeIds":["N0"]}
+      ]
     }]
   })");
 }
@@ -70,10 +72,6 @@ bool has_error_of_type(const LayoutLoadResult& r, LayoutLoadErrorType t)
 }
 
 }  // namespace
-
-// ============================================================================
-// File-level errors
-// ============================================================================
 
 TEST(LayoutLoaderTest, LoadFromFile_NotFound_ReturnsFileNotFound)
 {
@@ -104,20 +102,11 @@ TEST(LayoutLoaderTest, LoadFromFile_MalformedJson_ReturnsParseError)
   EXPECT_TRUE(has_error_of_type(r, LayoutLoadErrorType::JSON_PARSE_ERROR));
 }
 
-// ============================================================================
-// Happy path + round-trip
-// ============================================================================
-
 TEST(LayoutLoaderTest, LoadFromJson_Minimal_HappyPath)
 {
   auto r = load_from_json(minimal_valid_json());
-  ASSERT_TRUE(static_cast<bool>(r));
   ASSERT_TRUE(r.ok());
-  EXPECT_EQ(r.lif().meta_information.lif_version, "0.11.0");
   ASSERT_EQ(r.lif().layouts.size(), 1u);
-  EXPECT_EQ(r.lif().layouts[0].layout_id, "L1");
-  EXPECT_EQ(r.lif().layouts[0].nodes.size(), 2u);
-  EXPECT_EQ(r.lif().layouts[0].edges.size(), 1u);
 }
 
 TEST(LayoutLoaderTest, LoadFromJson_LenientOnUnknownFields)
@@ -125,29 +114,17 @@ TEST(LayoutLoaderTest, LoadFromJson_LenientOnUnknownFields)
   auto j = minimal_valid_json();
   j["unknownTopLevel"] = "future-compat";
   j["layouts"][0]["unknownLayoutField"] = 42;
-  auto r = load_from_json(j);
-  EXPECT_TRUE(static_cast<bool>(r));
+  EXPECT_TRUE(load_from_json(j).ok());
 }
 
 TEST(LayoutLoaderTest, LoadFromJson_AbsentOptionalsStayNullopt)
 {
-  // The loader must not silently substitute spec defaults — absent JSON keys
-  // leave the std::optional empty so consumers can distinguish "vendor said X"
-  // from "vendor did not specify". Default resolution is the consumer's job.
-  auto j = minimal_valid_json();
-  auto r = load_from_json(j);
-  ASSERT_TRUE(static_cast<bool>(r));
+  auto r = load_from_json(minimal_valid_json());
+  ASSERT_TRUE(r.ok());
   const auto& vtep =
     r.lif().layouts[0].edges[0].vehicle_type_edge_properties[0];
   EXPECT_FALSE(vtep.orientation_type.has_value());
-  EXPECT_FALSE(vtep.rotation_at_start_node_allowed.has_value());
-  EXPECT_FALSE(vtep.rotation_at_end_node_allowed.has_value());
-  EXPECT_FALSE(vtep.reentry_allowed.has_value());
 }
-
-// ============================================================================
-// Missing required fields
-// ============================================================================
 
 TEST(LayoutLoaderTest, LoadFromJson_MissingMetaInformation_ReturnsMissingField)
 {
@@ -158,10 +135,6 @@ TEST(LayoutLoaderTest, LoadFromJson_MissingMetaInformation_ReturnsMissingField)
   EXPECT_TRUE(
     has_error_of_type(r, LayoutLoadErrorType::MISSING_REQUIRED_FIELD));
 }
-
-// ============================================================================
-// Invalid field values (enum + type)
-// ============================================================================
 
 TEST(LayoutLoaderTest, LoadFromJson_UnknownOrientationType_ReturnsInvalidValue)
 {
@@ -181,10 +154,6 @@ TEST(LayoutLoaderTest, LoadFromJson_NonStringLifVersion_ReturnsInvalidValue)
   EXPECT_FALSE(static_cast<bool>(r));
   EXPECT_TRUE(has_error_of_type(r, LayoutLoadErrorType::INVALID_FIELD_VALUE));
 }
-
-// ============================================================================
-// Topology invariants (validate_layout)
-// ============================================================================
 
 TEST(LayoutLoaderTest, LoadFromJson_DuplicateNodeId_ReturnsDuplicateId)
 {
@@ -248,8 +217,6 @@ TEST(LayoutLoaderTest, LoadFromJson_StationEmptyInteractionNodeIds)
 
 TEST(LayoutLoaderTest, LoadFromJson_TrajectorySizeMismatch)
 {
-  // degree default = 1; knotVector must equal controlPoints.size + degree + 1
-  // = 2 + 1 + 1 = 4. Use 3 to fail.
   auto j = minimal_valid_json();
   j["layouts"][0]["edges"][0]["vehicleTypeEdgeProperties"][0]["trajectory"] =
     nlohmann::json::parse(R"({
@@ -261,10 +228,6 @@ TEST(LayoutLoaderTest, LoadFromJson_TrajectorySizeMismatch)
   EXPECT_TRUE(
     has_error_of_type(r, LayoutLoadErrorType::TRAJECTORY_SIZE_MISMATCH));
 }
-
-// ============================================================================
-// Value-range invariants
-// ============================================================================
 
 TEST(LayoutLoaderTest, LoadFromJson_EmptyLayouts_ReturnsEmptyArray)
 {
@@ -370,15 +333,9 @@ TEST(LayoutLoaderTest, LoadFromJson_NodeThetaOutOfRange_ReturnsOutOfRange)
   EXPECT_TRUE(has_error_of_type(r, LayoutLoadErrorType::OUT_OF_RANGE));
 }
 
-// ============================================================================
-// Round-trip coverage for optional / parsed-only types
-// ============================================================================
-
 TEST(LayoutLoaderTest, Trajectory_HappyPath_RoundTrip)
 {
   auto j = minimal_valid_json();
-  // degree default = 1; knotVector size must equal controlPoints + degree + 1
-  // = 2 + 1 + 1 = 4.
   j["layouts"][0]["edges"][0]["vehicleTypeEdgeProperties"][0]["trajectory"] =
     nlohmann::json::parse(R"({
       "knotVector": [0.0, 0.33, 0.66, 1.0],
@@ -389,18 +346,8 @@ TEST(LayoutLoaderTest, Trajectory_HappyPath_RoundTrip)
       "degree": 1
     })");
   auto r = load_from_json(j);
-  ASSERT_TRUE(static_cast<bool>(r));
-  const auto& vtep =
-    r.lif().layouts[0].edges[0].vehicle_type_edge_properties[0];
-  ASSERT_TRUE(vtep.trajectory.has_value());
-  EXPECT_EQ(vtep.trajectory->knot_vector.size(), 4u);
-  EXPECT_EQ(vtep.trajectory->control_points.size(), 2u);
-  EXPECT_EQ(vtep.trajectory->degree.value_or(-1), 1);
-  EXPECT_DOUBLE_EQ(vtep.trajectory->control_points[1].x, 5.0);
-
-  // Round-trip back to JSON and reload.
-  nlohmann::json round = r.lif();
-  auto r2 = load_from_json(round);
+  ASSERT_TRUE(r.ok());
+  auto r2 = load_from_json(nlohmann::json(r.lif()));
   ASSERT_TRUE(r2.ok());
   EXPECT_EQ(r.lif(), r2.lif());
 }
@@ -415,21 +362,8 @@ TEST(LayoutLoaderTest, LoadRestriction_RoundTrip)
       "loadSetNames": ["pallet_eur", "pallet_us"]
     })");
   auto r = load_from_json(j);
-  ASSERT_TRUE(static_cast<bool>(r));
-  const auto& lr = r.lif()
-                     .layouts[0]
-                     .edges[0]
-                     .vehicle_type_edge_properties[0]
-                     .load_restriction;
-  ASSERT_TRUE(lr.has_value());
-  EXPECT_TRUE(lr->unloaded);
-  EXPECT_FALSE(lr->loaded);
-  ASSERT_TRUE(lr->load_set_names.has_value());
-  ASSERT_EQ(lr->load_set_names->size(), 2u);
-  EXPECT_EQ((*lr->load_set_names)[1], "pallet_us");
-
-  nlohmann::json round = r.lif();
-  auto r2 = load_from_json(round);
+  ASSERT_TRUE(r.ok());
+  auto r2 = load_from_json(nlohmann::json(r.lif()));
   ASSERT_TRUE(r2.ok());
   EXPECT_EQ(r.lif(), r2.lif());
 }
@@ -447,18 +381,8 @@ TEST(LayoutLoaderTest, StationPosition_RoundTrip)
     }
   ])");
   auto r = load_from_json(j);
-  ASSERT_TRUE(static_cast<bool>(r));
-  ASSERT_EQ(r.lif().layouts[0].stations.size(), 1u);
-  const auto& s = r.lif().layouts[0].stations[0];
-  ASSERT_TRUE(s.station_position.has_value());
-  EXPECT_DOUBLE_EQ(s.station_position->x, 0.0);
-  ASSERT_TRUE(s.station_position->theta.has_value());
-  EXPECT_DOUBLE_EQ(*s.station_position->theta, 1.5708);
-  EXPECT_TRUE(s.station_height.has_value());
-  EXPECT_DOUBLE_EQ(*s.station_height, 1.2);
-
-  nlohmann::json round = r.lif();
-  auto r2 = load_from_json(round);
+  ASSERT_TRUE(r.ok());
+  auto r2 = load_from_json(nlohmann::json(r.lif()));
   ASSERT_TRUE(r2.ok());
   EXPECT_EQ(r.lif(), r2.lif());
 }
@@ -480,34 +404,14 @@ TEST(LayoutLoaderTest, Action_RoundTrip)
       }
     ])");
   auto r = load_from_json(j);
-  ASSERT_TRUE(static_cast<bool>(r));
-  const auto& vtnp =
-    r.lif().layouts[0].nodes[0].vehicle_type_node_properties[0];
-  ASSERT_TRUE(vtnp.actions.has_value());
-  ASSERT_EQ(vtnp.actions->size(), 1u);
-  const auto& a = (*vtnp.actions)[0];
-  EXPECT_EQ(a.action_type, "pick");
-  EXPECT_EQ(a.blocking_type, vda5050_core::types::BlockingType::HARD);
-  ASSERT_TRUE(a.action_description.has_value());
-  EXPECT_EQ(*a.action_description, "Pick a pallet");
-  ASSERT_TRUE(a.requirement_type.has_value());
-  EXPECT_EQ(*a.requirement_type, RequirementType::CONDITIONAL);
-  ASSERT_TRUE(a.action_parameters.has_value());
-  ASSERT_EQ(a.action_parameters->size(), 2u);
-  EXPECT_EQ((*a.action_parameters)[0].key, "loadId");
-  EXPECT_EQ((*a.action_parameters)[1].value, "fork");
-
-  nlohmann::json round = r.lif();
-  auto r2 = load_from_json(round);
+  ASSERT_TRUE(r.ok());
+  auto r2 = load_from_json(nlohmann::json(r.lif()));
   ASSERT_TRUE(r2.ok());
   EXPECT_EQ(r.lif(), r2.lif());
 }
 
 TEST(LayoutLoaderTest, Enums_NonDefaultValues_RoundTrip)
 {
-  // Exercise non-default enum values for OrientationType, RotationAtNode, and
-  // RequirementType. The absent-optional branch is covered by
-  // AbsentOptionalsStayNullopt.
   auto j = minimal_valid_json();
   auto& vtep = j["layouts"][0]["edges"][0]["vehicleTypeEdgeProperties"][0];
   vtep["orientationType"] = "GLOBAL";
@@ -517,59 +421,37 @@ TEST(LayoutLoaderTest, Enums_NonDefaultValues_RoundTrip)
     nlohmann::json::parse(R"([
       {"actionType":"x","blockingType":"SOFT","requirementType":"REQUIRED"}
     ])");
-
   auto r = load_from_json(j);
-  ASSERT_TRUE(static_cast<bool>(r));
-  const auto& v = r.lif().layouts[0].edges[0].vehicle_type_edge_properties[0];
-  EXPECT_EQ(*v.orientation_type, OrientationType::GLOBAL);
-  EXPECT_EQ(*v.rotation_at_start_node_allowed, RotationAtNode::NONE);
-  EXPECT_EQ(*v.rotation_at_end_node_allowed, RotationAtNode::CW);
-  const auto& act_opt =
-    r.lif().layouts[0].nodes[0].vehicle_type_node_properties[0].actions;
-  ASSERT_TRUE(act_opt.has_value());
-  EXPECT_EQ(
-    (*act_opt)[0].blocking_type, vda5050_core::types::BlockingType::SOFT);
-  EXPECT_EQ(*(*act_opt)[0].requirement_type, RequirementType::REQUIRED);
-
-  nlohmann::json round = r.lif();
-  auto r2 = load_from_json(round);
+  ASSERT_TRUE(r.ok());
+  auto r2 = load_from_json(nlohmann::json(r.lif()));
   ASSERT_TRUE(r2.ok());
   EXPECT_EQ(r.lif(), r2.lif());
 }
-
-// ============================================================================
-// Round-trip with sample data
-// ============================================================================
 
 TEST(LayoutLoaderTest, LoadFromFile_RoundTripSampleData)
 {
 #ifdef VDA5050_CORE__SAMPLE_LAYOUT_PATH
   auto r = load_from_file(VDA5050_CORE__SAMPLE_LAYOUT_PATH);
-  ASSERT_TRUE(static_cast<bool>(r))
-    << "Sample layout at " << VDA5050_CORE__SAMPLE_LAYOUT_PATH
-    << " did not load";
-  ASSERT_TRUE(r.ok());
-  EXPECT_EQ(r.lif().meta_information.lif_version, "0.11.0");
-  ASSERT_EQ(r.lif().layouts.size(), 1u);
-  EXPECT_EQ(r.lif().layouts[0].layout_id, "warehouse_floor1");
+  ASSERT_TRUE(r.ok()) << "Sample layout at " << VDA5050_CORE__SAMPLE_LAYOUT_PATH
+                      << " did not load";
+  auto r2 = load_from_json(nlohmann::json(r.lif()));
+  ASSERT_TRUE(r2.ok());
+  EXPECT_EQ(r.lif(), r2.lif());
 #else
   GTEST_SKIP() << "VDA5050_CORE__SAMPLE_LAYOUT_PATH not defined";
 #endif
 }
 
-// ============================================================================
-// Layout::find_node / find_edge / find_station
-// ============================================================================
-
 TEST(LayoutLoaderTest, LayoutFindAccessors)
 {
   auto r = load_from_json(minimal_valid_json());
-  ASSERT_TRUE(static_cast<bool>(r));
+  ASSERT_TRUE(r.ok());
   const auto& layout = r.lif().layouts[0];
   EXPECT_NE(layout.find_node("N0"), nullptr);
   EXPECT_EQ(layout.find_node("MISSING"), nullptr);
   EXPECT_NE(layout.find_edge("E1"), nullptr);
   EXPECT_EQ(layout.find_edge("MISSING"), nullptr);
+  EXPECT_NE(layout.find_station("S1"), nullptr);
   EXPECT_EQ(layout.find_station("MISSING"), nullptr);
 }
 

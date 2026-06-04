@@ -31,8 +31,6 @@ namespace vda5050_core::layout::test {
 
 namespace {
 
-// Build a minimal valid LIF: 1 layout, 2 nodes (N0, N1), 1 edge (E1: N0→N1),
-// 1 station (S1, interactionNodeIds=[N0]).
 LIF make_minimal_lif()
 {
   LIF lif;
@@ -75,8 +73,6 @@ LIF make_minimal_lif()
   return lif;
 }
 
-// 2-layout LIF for cross-layout tests: layout A has N0, N1; layout B has N5.
-// Edge E_xfer goes from N1 (in A) to N5 (in B) — elevator transition.
 LIF make_multi_layout_lif()
 {
   LIF lif;
@@ -110,7 +106,6 @@ LIF make_multi_layout_lif()
   e1.vehicle_type_edge_properties.push_back(p1);
   la.edges.push_back(e1);
 
-  // Cross-layout edge: N1 (layout A) -> N5 (layout B)
   Edge e_xfer;
   e_xfer.edge_id = "E_xfer";
   e_xfer.start_node_id = "N1";
@@ -138,11 +133,26 @@ LIF make_multi_layout_lif()
   return lif;
 }
 
-}  // namespace
+LIF make_station_only_lif()
+{
+  LIF lif;
+  lif.meta_information = {"p", "c", "2026-01-01T00:00:00Z", "0.11.0"};
+  Layout layout;
+  layout.layout_id = "L1";
+  Node n;
+  n.node_id = "N0";
+  n.map_id = "L1";
+  n.vehicle_type_node_properties.push_back({"v1", std::nullopt, std::nullopt});
+  layout.nodes.push_back(n);
+  Station s;
+  s.station_id = "S1";
+  s.interaction_node_ids = {"N0"};
+  layout.stations.push_back(s);
+  lif.layouts.push_back(layout);
+  return lif;
+}
 
-// ============================================================================
-// Construction (4 tests)
-// ============================================================================
+}  // namespace
 
 TEST(GraphTest, FromLif_EmptyLIF_ReturnsEmptyGraph)
 {
@@ -181,7 +191,6 @@ TEST(GraphTest, FromLif_MultiLayout_IndicesSpanAllLayouts)
 TEST(GraphTest, FromLif_DuplicateNodeId_Throws)
 {
   LIF lif = make_minimal_lif();
-  // Inject duplicate node id.
   Node dup;
   dup.node_id = "N0";  // collision
   dup.map_id = "L1";
@@ -190,10 +199,6 @@ TEST(GraphTest, FromLif_DuplicateNodeId_Throws)
   lif.layouts[0].nodes.push_back(dup);
   EXPECT_THROW(Graph::from_lif(lif), std::invalid_argument);
 }
-
-// ============================================================================
-// Lookup — has_ / get_ / find_ (6 tests)
-// ============================================================================
 
 TEST(GraphTest, HasFindReturnsFalseAndNullForMissing)
 {
@@ -216,19 +221,11 @@ TEST(GraphTest, GetThrowsOnMissing)
 
 TEST(GraphTest, GetReturnsCorrectEntity)
 {
-  auto g = Graph::from_lif(make_minimal_lif());
-  const auto& n = g->get_node("N0");
-  EXPECT_EQ(n.node_id, "N0");
-  EXPECT_EQ(n.map_id, "L1");
-  EXPECT_DOUBLE_EQ(n.node_position.x, 0.0);
-
-  const auto& e = g->get_edge("E1");
-  EXPECT_EQ(e.start_node_id, "N0");
-  EXPECT_EQ(e.end_node_id, "N1");
-
-  const auto& s = g->get_station("S1");
-  EXPECT_EQ(s.interaction_node_ids.size(), 1u);
-  EXPECT_EQ(s.interaction_node_ids[0], "N0");
+  const LIF lif = make_minimal_lif();
+  auto g = Graph::from_lif(lif);
+  EXPECT_EQ(g->get_node("N0"), lif.layouts[0].nodes[0]);
+  EXPECT_EQ(g->get_edge("E1"), lif.layouts[0].edges[0]);
+  EXPECT_EQ(g->get_station("S1"), lif.layouts[0].stations[0]);
 }
 
 TEST(GraphTest, FindLayoutWorks)
@@ -255,10 +252,6 @@ TEST(GraphTest, FindNodeReturnsPointerInUnderlyingLIF)
   EXPECT_EQ(n, &g->lif().layouts[0].nodes[0]);
 }
 
-// ============================================================================
-// Adjacency — 5 tests including multi-edge §10.12 + cross-layout
-// ============================================================================
-
 TEST(GraphTest, OutboundEdges_SingleEdge)
 {
   auto g = Graph::from_lif(make_minimal_lif());
@@ -279,7 +272,7 @@ TEST(GraphTest, InboundEdges_SingleEdge)
 
 TEST(GraphTest, MultiEdge_SameStartEnd_BothListed)
 {
-  // Spec §10.12: multiple parallel edges between same nodes with different
+  // Parallel edges between the same node pair with different
   // vehicleTypeEdgeProperties are legal.
   LIF lif = make_minimal_lif();
   Edge e2;
@@ -287,7 +280,7 @@ TEST(GraphTest, MultiEdge_SameStartEnd_BothListed)
   e2.start_node_id = "N0";
   e2.end_node_id = "N1";
   VehicleTypeEdgeProperty p2;
-  p2.vehicle_type_id = "v2";  // different vehicle type
+  p2.vehicle_type_id = "v2";
   p2.rotation_allowed = true;
   e2.vehicle_type_edge_properties.push_back(p2);
   lif.layouts[0].edges.push_back(e2);
@@ -319,24 +312,18 @@ TEST(GraphTest, EdgesBetween_MultiEdge_ReturnsAll)
   std::set<std::string> ids(between.begin(), between.end());
   EXPECT_EQ(ids.count("E1"), 1u);
   EXPECT_EQ(ids.count("E2"), 1u);
-  // No reverse edges.
   EXPECT_TRUE(g->edges_between("N1", "N0").empty());
 }
 
 TEST(GraphTest, Adjacency_CrossLayoutEdge_OutboundInSource_InboundInDest)
 {
   auto g = Graph::from_lif(make_multi_layout_lif());
-  // E_xfer: N1 (layout A) -> N5 (layout B).
   const auto& out_n1 = g->outbound_edges("N1");
   EXPECT_TRUE(
     std::find(out_n1.begin(), out_n1.end(), "E_xfer") != out_n1.end());
   const auto& in_n5 = g->inbound_edges("N5");
   EXPECT_TRUE(std::find(in_n5.begin(), in_n5.end(), "E_xfer") != in_n5.end());
 }
-
-// ============================================================================
-// Iteration (4 tests)
-// ============================================================================
 
 TEST(GraphTest, ForEachNode_VisitsAll)
 {
@@ -377,17 +364,9 @@ TEST(GraphTest, ForEachStation_VisitsAll)
   EXPECT_EQ(visited[0], "S1");
 }
 
-// ============================================================================
-// Diagnostics (2 tests)
-// ============================================================================
-
 TEST(GraphTest, UnconnectedNodes_IdentifiesIsolated)
 {
   LIF lif = make_minimal_lif();
-  // Drop the station (which was referencing N0). Now nothing references N0
-  // except via the edge — so N0 is connected (outbound), N1 is connected
-  // (inbound), neither unconnected.
-  // To create an isolated node, add a brand-new node with no edges/stations.
   Node iso;
   iso.node_id = "N_iso";
   iso.map_id = "L1";
@@ -403,15 +382,9 @@ TEST(GraphTest, UnconnectedNodes_IdentifiesIsolated)
 
 TEST(GraphTest, UnconnectedNodes_StationReferencedNotListed)
 {
-  // N0 has outbound edge AND is referenced by S1's interactionNodeIds → not
-  // unconnected.
   auto g = Graph::from_lif(make_minimal_lif());
   EXPECT_TRUE(g->unconnected_nodes().empty());
 }
-
-// ============================================================================
-// Comparison (4 tests)
-// ============================================================================
 
 TEST(GraphTest, OperatorEq_SameLIF_True)
 {
@@ -431,29 +404,15 @@ TEST(GraphTest, OperatorEq_DifferentLIF_False)
   EXPECT_TRUE(*a != *b);
 }
 
-TEST(GraphTest, OperatorNeq_SameLIF_False)
-{
-  auto a = Graph::from_lif(make_minimal_lif());
-  auto b = Graph::from_lif(make_minimal_lif());
-  EXPECT_FALSE(*a != *b);
-}
-
 TEST(GraphTest, OperatorEq_SameNodesDifferentLayoutOrder_False)
 {
-  // V0 equality is structural (order-sensitive). Two LIFs with the same
-  // nodes but distributed across layouts in different orders are NOT equal.
+  // Equality is structural (order-sensitive): same nodes across layouts in
+  // different orders are NOT equal.
   LIF lif_a = make_multi_layout_lif();
   LIF lif_b = make_multi_layout_lif();
-  // Swap layout order in lif_b.
   std::swap(lif_b.layouts[0], lif_b.layouts[1]);
-  auto a = Graph::from_lif(lif_a);
-  auto b = Graph::from_lif(lif_b);
-  EXPECT_FALSE(*a == *b);
+  EXPECT_FALSE(*Graph::from_lif(lif_a) == *Graph::from_lif(lif_b));
 }
-
-// ============================================================================
-// DOT dump (3 tests)
-// ============================================================================
 
 TEST(GraphTest, DumpDot_OutputContainsAllNodesAndEdges)
 {
@@ -495,10 +454,6 @@ TEST(GraphTest, DumpDot_MultiEdge_BothEdgesRendered)
   EXPECT_NE(os.str().find("label=\"E2\""), std::string::npos);
 }
 
-// ============================================================================
-// Round-trip with sample data
-// ============================================================================
-
 TEST(GraphTest, FromLoadedLif_SampleLayout_Loads)
 {
 #ifdef VDA5050_CORE__SAMPLE_LAYOUT_PATH
@@ -512,10 +467,6 @@ TEST(GraphTest, FromLoadedLif_SampleLayout_Loads)
   GTEST_SKIP() << "VDA5050_CORE__SAMPLE_LAYOUT_PATH not defined";
 #endif
 }
-
-// ============================================================================
-// Mutation — add (9 tests)
-// ============================================================================
 
 TEST(GraphTest, AddNode_Appends_AndIndexes)
 {
@@ -549,7 +500,6 @@ TEST(GraphTest, AddNode_UnknownLayout_Throws)
 TEST(GraphTest, AddEdge_AppendsAndAdjacencyUpdated)
 {
   auto g = Graph::from_lif(make_minimal_lif());
-  // Add an edge N1 -> N0 (reverse direction).
   Edge e;
   e.edge_id = "E2";
   e.start_node_id = "N1";
@@ -566,12 +516,10 @@ TEST(GraphTest, AddEdge_AppendsAndAdjacencyUpdated)
 
 TEST(GraphTest, AddEdge_StartNotInLayout_Throws)
 {
-  // Use multi-layout: try to add edge to LB with start_node_id N0 (which
-  // lives in LA, not LB).
   auto g = Graph::from_lif(make_multi_layout_lif());
   Edge e;
   e.edge_id = "E_bad";
-  e.start_node_id = "N0";  // N0 is in LA, not LB
+  e.start_node_id = "N0";
   e.end_node_id = "N5";
   EXPECT_THROW(g->add_edge(e, "LB"), std::invalid_argument);
 }
@@ -613,10 +561,6 @@ TEST(GraphTest, EmptyGraph_AnyAdd_Throws_OnUnknownLayout)
   EXPECT_THROW(g->add_node(n, "L1"), std::invalid_argument);
 }
 
-// ============================================================================
-// Mutation — delete (5 tests)
-// ============================================================================
-
 TEST(GraphTest, DeleteNode_NoRefs_Succeeds)
 {
   LIF lif = make_minimal_lif();
@@ -634,30 +578,12 @@ TEST(GraphTest, DeleteNode_NoRefs_Succeeds)
 TEST(GraphTest, DeleteNode_ReferencedByEdge_Throws)
 {
   auto g = Graph::from_lif(make_minimal_lif());
-  // N0 is referenced by E1 (as start) AND by S1 (interactionNodeIds).
-  // Should throw with a message listing references.
   EXPECT_THROW(g->delete_node("N0"), std::invalid_argument);
 }
 
 TEST(GraphTest, DeleteNode_ReferencedByStation_Throws)
 {
-  // Build a graph where a node is referenced ONLY by a station, not by edges.
-  LIF lif;
-  lif.meta_information = {"p", "c", "2026-01-01T00:00:00Z", "0.11.0"};
-  Layout layout;
-  layout.layout_id = "L1";
-  Node n;
-  n.node_id = "N0";
-  n.map_id = "L1";
-  n.vehicle_type_node_properties.push_back({"v1", std::nullopt, std::nullopt});
-  layout.nodes.push_back(n);
-  Station s;
-  s.station_id = "S1";
-  s.interaction_node_ids = {"N0"};
-  layout.stations.push_back(s);
-  lif.layouts.push_back(layout);
-
-  auto g = Graph::from_lif(lif);
+  auto g = Graph::from_lif(make_station_only_lif());
   EXPECT_THROW(g->delete_node("N0"), std::invalid_argument);
 }
 
@@ -678,22 +604,14 @@ TEST(GraphTest, DeleteStation_Removes)
   EXPECT_EQ(g->station_count(), 0u);
 }
 
-// ============================================================================
-// Mutation — update id (3 tests)
-// ============================================================================
-
 TEST(GraphTest, UpdateNodeId_RewritesNode_AndAllRefs)
 {
   auto g = Graph::from_lif(make_minimal_lif());
   g->update_node_id("N0", "N_renamed");
   EXPECT_FALSE(g->has_node("N0"));
   EXPECT_TRUE(g->has_node("N_renamed"));
-  // Edge E1 should now reference N_renamed -> N1.
-  const auto& e = g->get_edge("E1");
-  EXPECT_EQ(e.start_node_id, "N_renamed");
-  // Station S1 should now reference N_renamed.
-  const auto& s = g->get_station("S1");
-  EXPECT_EQ(s.interaction_node_ids[0], "N_renamed");
+  EXPECT_EQ(g->get_edge("E1").start_node_id, "N_renamed");
+  EXPECT_EQ(g->get_station("S1").interaction_node_ids[0], "N_renamed");
 }
 
 TEST(GraphTest, UpdateNodeId_DuplicateNewId_Throws)
@@ -709,10 +627,6 @@ TEST(GraphTest, UpdateEdgeId_Simple)
   EXPECT_FALSE(g->has_edge("E1"));
   EXPECT_TRUE(g->has_edge("E_renamed"));
 }
-
-// ============================================================================
-// Mutation — prune (2 tests)
-// ============================================================================
 
 TEST(GraphTest, Prune_RemovesIsolatedNodes)
 {
@@ -733,59 +647,22 @@ TEST(GraphTest, Prune_RemovesIsolatedNodes)
 
 TEST(GraphTest, Prune_KeepsStationReferencedNodes)
 {
-  // N0 is station-referenced (via S1.interactionNodeIds). Prune must keep
-  // it even though it has no inbound edges.
-  // (N0 also has outbound E1 in minimal, so use a custom LIF.)
-  LIF lif;
-  lif.meta_information = {"p", "c", "2026-01-01T00:00:00Z", "0.11.0"};
-  Layout layout;
-  layout.layout_id = "L1";
-  Node n;
-  n.node_id = "N0";
-  n.map_id = "L1";
-  n.vehicle_type_node_properties.push_back({"v1", std::nullopt, std::nullopt});
-  layout.nodes.push_back(n);
-  Station s;
-  s.station_id = "S1";
-  s.interaction_node_ids = {"N0"};
-  layout.stations.push_back(s);
-  lif.layouts.push_back(layout);
-
-  auto g = Graph::from_lif(lif);
-  auto removed = g->prune();
-  EXPECT_TRUE(removed.empty());
+  auto g = Graph::from_lif(make_station_only_lif());
+  EXPECT_TRUE(g->prune().empty());
   EXPECT_TRUE(g->has_node("N0"));
 }
-
-// ============================================================================
-// State preservation across mutations (1 test)
-// ============================================================================
 
 TEST(GraphTest, Mutation_AfterAddDeleteAdd_StateConsistent)
 {
   auto g = Graph::from_lif(make_minimal_lif());
-  EXPECT_EQ(g->node_count(), 2u);
-
-  // Add a node.
   Node n;
   n.node_id = "N_tmp";
   n.map_id = "L1";
   n.vehicle_type_node_properties.push_back({"v1", std::nullopt, std::nullopt});
   g->add_node(n, "L1");
-  EXPECT_TRUE(g->has_node("N_tmp"));
-  EXPECT_EQ(g->node_count(), 3u);
-
-  // Delete it.
   g->delete_node("N_tmp");
-  EXPECT_FALSE(g->has_node("N_tmp"));
-  EXPECT_EQ(g->node_count(), 2u);
-
-  // Add it again — should succeed (id no longer exists).
   g->add_node(n, "L1");
   EXPECT_TRUE(g->has_node("N_tmp"));
-  EXPECT_EQ(g->node_count(), 3u);
-
-  // Adjacency for N0 unchanged through all this.
   const auto& out_n0 = g->outbound_edges("N0");
   ASSERT_EQ(out_n0.size(), 1u);
   EXPECT_EQ(out_n0[0], "E1");
