@@ -22,11 +22,50 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "vda5050_core/json_utils/layout_serialization.hpp"
 
 namespace vda5050_core::layout {
+
+// ─── LayoutLoadResult ────────────────────────────────────────────────────────
+
+LayoutLoadResult LayoutLoadResult::success(LIF lif)
+{
+  LayoutLoadResult r;
+  r.data_.emplace<LIF>(std::move(lif));
+  return r;
+}
+
+LayoutLoadResult LayoutLoadResult::failure(std::vector<LayoutLoadError> errors)
+{
+  LayoutLoadResult r;
+  r.data_.emplace<std::vector<LayoutLoadError>>(std::move(errors));
+  return r;
+}
+
+bool LayoutLoadResult::ok() const noexcept
+{
+  return std::holds_alternative<LIF>(data_);
+}
+
+const LIF& LayoutLoadResult::lif() const
+{
+  return std::get<LIF>(data_);
+}
+
+LIF LayoutLoadResult::take_lif() &&
+{
+  return std::get<LIF>(std::move(data_));
+}
+
+const std::vector<LayoutLoadError>& LayoutLoadResult::errors() const
+{
+  return std::get<std::vector<LayoutLoadError>>(data_);
+}
+
+// ─── Loader internals ────────────────────────────────────────────────────────
 
 namespace {
 
@@ -85,17 +124,19 @@ void parse_element(
 
 }  // namespace
 
+// ─── Public loader functions ────────────────────────────────────────────────
+
 LayoutLoadResult load_from_file(const std::string& path)
 {
-  LayoutLoadResult result;
+  std::vector<LayoutLoadError> errors;
 
   std::ifstream in(path);
   if (!in.is_open())
   {
     add(
-      result.errors, LayoutLoadErrorType::FILE_NOT_FOUND,
+      errors, LayoutLoadErrorType::FILE_NOT_FOUND,
       "Cannot open LIF config file '" + path + "'.");
-    return result;
+    return LayoutLoadResult::failure(std::move(errors));
   }
 
   std::stringstream buf;
@@ -103,9 +144,9 @@ LayoutLoadResult load_from_file(const std::string& path)
   if (in.bad())
   {
     add(
-      result.errors, LayoutLoadErrorType::FILE_READ_FAILED,
+      errors, LayoutLoadErrorType::FILE_READ_FAILED,
       "I/O error while reading LIF config file '" + path + "'.");
-    return result;
+    return LayoutLoadResult::failure(std::move(errors));
   }
 
   nlohmann::json parsed;
@@ -116,9 +157,9 @@ LayoutLoadResult load_from_file(const std::string& path)
   catch (const nlohmann::json::parse_error& e)
   {
     add(
-      result.errors, LayoutLoadErrorType::JSON_PARSE_ERROR,
+      errors, LayoutLoadErrorType::JSON_PARSE_ERROR,
       std::string("JSON parse error in '") + path + "': " + e.what());
-    return result;
+    return LayoutLoadResult::failure(std::move(errors));
   }
 
   return load_from_json(parsed);
@@ -126,14 +167,14 @@ LayoutLoadResult load_from_file(const std::string& path)
 
 LayoutLoadResult load_from_json(const nlohmann::json& json)
 {
-  LayoutLoadResult result;
+  std::vector<LayoutLoadError> errors;
 
   if (!json.is_object())
   {
     add(
-      result.errors, LayoutLoadErrorType::JSON_PARSE_ERROR,
+      errors, LayoutLoadErrorType::JSON_PARSE_ERROR,
       "Top-level JSON value is not an object.");
-    return result;
+    return LayoutLoadResult::failure(std::move(errors));
   }
 
   LIF lif;
@@ -141,26 +182,26 @@ LayoutLoadResult load_from_json(const nlohmann::json& json)
   if (!json.contains("metaInformation"))
   {
     add(
-      result.errors, LayoutLoadErrorType::MISSING_REQUIRED_FIELD,
+      errors, LayoutLoadErrorType::MISSING_REQUIRED_FIELD,
       "metaInformation: missing required field");
   }
   else
   {
     parse_element<MetaInformation>(
-      json.at("metaInformation"), "metaInformation", result.errors,
+      json.at("metaInformation"), "metaInformation", errors,
       [&](MetaInformation mi) { lif.meta_information = std::move(mi); });
   }
 
   if (!json.contains("layouts"))
   {
     add(
-      result.errors, LayoutLoadErrorType::MISSING_REQUIRED_FIELD,
+      errors, LayoutLoadErrorType::MISSING_REQUIRED_FIELD,
       "layouts: missing required field");
   }
   else if (!json.at("layouts").is_array())
   {
     add(
-      result.errors, LayoutLoadErrorType::INVALID_FIELD_VALUE,
+      errors, LayoutLoadErrorType::INVALID_FIELD_VALUE,
       "layouts: must be an array");
   }
   else
@@ -173,7 +214,7 @@ LayoutLoadResult load_from_json(const nlohmann::json& json)
 
       Layout layout;
       bool ok = try_with_breadcrumb(
-        result.errors, lcrumb, [&]() { layout = lj.get<Layout>(); });
+        errors, lcrumb, [&]() { layout = lj.get<Layout>(); });
 
       if (!ok)
       {
@@ -187,8 +228,8 @@ LayoutLoadResult load_from_json(const nlohmann::json& json)
             for (std::size_t ni = 0; ni < na.size(); ++ni)
             {
               parse_element<Node>(
-                na[ni], lcrumb + ".nodes[" + std::to_string(ni) + "]",
-                result.errors, [](Node) {});
+                na[ni], lcrumb + ".nodes[" + std::to_string(ni) + "]", errors,
+                [](Node) {});
             }
           }
           if (lj.contains("edges") && lj.at("edges").is_array())
@@ -197,8 +238,8 @@ LayoutLoadResult load_from_json(const nlohmann::json& json)
             for (std::size_t ei = 0; ei < ea.size(); ++ei)
             {
               parse_element<Edge>(
-                ea[ei], lcrumb + ".edges[" + std::to_string(ei) + "]",
-                result.errors, [](Edge) {});
+                ea[ei], lcrumb + ".edges[" + std::to_string(ei) + "]", errors,
+                [](Edge) {});
             }
           }
           if (lj.contains("stations") && lj.at("stations").is_array())
@@ -208,7 +249,7 @@ LayoutLoadResult load_from_json(const nlohmann::json& json)
             {
               parse_element<Station>(
                 sa[si], lcrumb + ".stations[" + std::to_string(si) + "]",
-                result.errors, [](Station) {});
+                errors, [](Station) {});
             }
           }
         }
@@ -219,21 +260,19 @@ LayoutLoadResult load_from_json(const nlohmann::json& json)
     }
   }
 
-  if (!result.errors.empty())
+  if (!errors.empty())
   {
-    return result;
+    return LayoutLoadResult::failure(std::move(errors));
   }
 
   auto invariants = validate_layout(lif);
   if (!invariants.empty())
   {
-    result.errors.insert(
-      result.errors.end(), invariants.begin(), invariants.end());
-    return result;
+    errors.insert(errors.end(), invariants.begin(), invariants.end());
+    return LayoutLoadResult::failure(std::move(errors));
   }
 
-  result.lif = std::move(lif);
-  return result;
+  return LayoutLoadResult::success(std::move(lif));
 }
 
 }  // namespace vda5050_core::layout

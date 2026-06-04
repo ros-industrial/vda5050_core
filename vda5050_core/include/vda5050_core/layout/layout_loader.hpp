@@ -20,8 +20,8 @@
 #define VDA5050_CORE__LAYOUT__LAYOUT_LOADER_HPP_
 
 #include <cstdint>
-#include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -50,15 +50,36 @@ struct LayoutLoadError
   std::string description;
 };
 
-struct LayoutLoadResult
+// Exactly one of {LIF, errors} is populated. Construction is funnelled through
+// success() / failure() factories so an invalid state cannot be represented.
+class LayoutLoadResult
 {
-  std::optional<LIF> lif;
-  std::vector<LayoutLoadError> errors;
+public:
+  static LayoutLoadResult success(LIF lif);
+  static LayoutLoadResult failure(std::vector<LayoutLoadError> errors);
 
-  explicit operator bool() const
+  LayoutLoadResult(const LayoutLoadResult&) = default;
+  LayoutLoadResult(LayoutLoadResult&&) noexcept = default;
+  LayoutLoadResult& operator=(const LayoutLoadResult&) = default;
+  LayoutLoadResult& operator=(LayoutLoadResult&&) noexcept = default;
+  ~LayoutLoadResult() = default;
+
+  bool ok() const noexcept;
+  explicit operator bool() const noexcept
   {
-    return errors.empty() && lif.has_value();
+    return ok();
   }
+
+  // Precondition: ok(); throws std::bad_variant_access otherwise.
+  const LIF& lif() const;
+  LIF take_lif() &&;
+
+  // Precondition: !ok(); throws std::bad_variant_access otherwise.
+  const std::vector<LayoutLoadError>& errors() const;
+
+private:
+  LayoutLoadResult() = default;
+  std::variant<LIF, std::vector<LayoutLoadError>> data_;
 };
 
 // Load a single LIF file. Node, edge, station, and layout IDs are required

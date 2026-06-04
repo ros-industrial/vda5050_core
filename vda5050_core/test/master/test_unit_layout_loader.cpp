@@ -63,7 +63,8 @@ nlohmann::json minimal_valid_json()
 
 bool has_error_of_type(const LayoutLoadResult& r, LayoutLoadErrorType t)
 {
-  return std::any_of(r.errors.begin(), r.errors.end(), [&](const auto& e) {
+  if (r.ok()) return false;
+  return std::any_of(r.errors().begin(), r.errors().end(), [&](const auto& e) {
     return e.type == t;
   });
 }
@@ -111,12 +112,12 @@ TEST(LayoutLoaderTest, LoadFromJson_Minimal_HappyPath)
 {
   auto r = load_from_json(minimal_valid_json());
   ASSERT_TRUE(static_cast<bool>(r));
-  ASSERT_TRUE(r.lif.has_value());
-  EXPECT_EQ(r.lif->meta_information.lif_version, "0.11.0");
-  ASSERT_EQ(r.lif->layouts.size(), 1u);
-  EXPECT_EQ(r.lif->layouts[0].layout_id, "L1");
-  EXPECT_EQ(r.lif->layouts[0].nodes.size(), 2u);
-  EXPECT_EQ(r.lif->layouts[0].edges.size(), 1u);
+  ASSERT_TRUE(r.ok());
+  EXPECT_EQ(r.lif().meta_information.lif_version, "0.11.0");
+  ASSERT_EQ(r.lif().layouts.size(), 1u);
+  EXPECT_EQ(r.lif().layouts[0].layout_id, "L1");
+  EXPECT_EQ(r.lif().layouts[0].nodes.size(), 2u);
+  EXPECT_EQ(r.lif().layouts[0].edges.size(), 1u);
 }
 
 TEST(LayoutLoaderTest, LoadFromJson_LenientOnUnknownFields)
@@ -136,7 +137,8 @@ TEST(LayoutLoaderTest, LoadFromJson_AbsentOptionalsStayNullopt)
   auto j = minimal_valid_json();
   auto r = load_from_json(j);
   ASSERT_TRUE(static_cast<bool>(r));
-  const auto& vtep = r.lif->layouts[0].edges[0].vehicle_type_edge_properties[0];
+  const auto& vtep =
+    r.lif().layouts[0].edges[0].vehicle_type_edge_properties[0];
   EXPECT_FALSE(vtep.orientation_type.has_value());
   EXPECT_FALSE(vtep.rotation_at_start_node_allowed.has_value());
   EXPECT_FALSE(vtep.rotation_at_end_node_allowed.has_value());
@@ -388,7 +390,8 @@ TEST(LayoutLoaderTest, Trajectory_HappyPath_RoundTrip)
     })");
   auto r = load_from_json(j);
   ASSERT_TRUE(static_cast<bool>(r));
-  const auto& vtep = r.lif->layouts[0].edges[0].vehicle_type_edge_properties[0];
+  const auto& vtep =
+    r.lif().layouts[0].edges[0].vehicle_type_edge_properties[0];
   ASSERT_TRUE(vtep.trajectory.has_value());
   EXPECT_EQ(vtep.trajectory->knot_vector.size(), 4u);
   EXPECT_EQ(vtep.trajectory->control_points.size(), 2u);
@@ -396,7 +399,7 @@ TEST(LayoutLoaderTest, Trajectory_HappyPath_RoundTrip)
   EXPECT_DOUBLE_EQ(vtep.trajectory->control_points[1].x, 5.0);
 
   // Round-trip back to JSON and reload.
-  nlohmann::json round = *r.lif;
+  nlohmann::json round = r.lif();
   auto r2 = load_from_json(round);
   ASSERT_TRUE(static_cast<bool>(r2));
 }
@@ -412,8 +415,11 @@ TEST(LayoutLoaderTest, LoadRestriction_RoundTrip)
     })");
   auto r = load_from_json(j);
   ASSERT_TRUE(static_cast<bool>(r));
-  const auto& lr =
-    r.lif->layouts[0].edges[0].vehicle_type_edge_properties[0].load_restriction;
+  const auto& lr = r.lif()
+                     .layouts[0]
+                     .edges[0]
+                     .vehicle_type_edge_properties[0]
+                     .load_restriction;
   ASSERT_TRUE(lr.has_value());
   EXPECT_TRUE(lr->unloaded);
   EXPECT_FALSE(lr->loaded);
@@ -421,7 +427,7 @@ TEST(LayoutLoaderTest, LoadRestriction_RoundTrip)
   ASSERT_EQ(lr->load_set_names->size(), 2u);
   EXPECT_EQ((*lr->load_set_names)[1], "pallet_us");
 
-  nlohmann::json round = *r.lif;
+  nlohmann::json round = r.lif();
   auto r2 = load_from_json(round);
   EXPECT_TRUE(static_cast<bool>(r2));
 }
@@ -440,8 +446,8 @@ TEST(LayoutLoaderTest, StationPosition_RoundTrip)
   ])");
   auto r = load_from_json(j);
   ASSERT_TRUE(static_cast<bool>(r));
-  ASSERT_EQ(r.lif->layouts[0].stations.size(), 1u);
-  const auto& s = r.lif->layouts[0].stations[0];
+  ASSERT_EQ(r.lif().layouts[0].stations.size(), 1u);
+  const auto& s = r.lif().layouts[0].stations[0];
   ASSERT_TRUE(s.station_position.has_value());
   EXPECT_DOUBLE_EQ(s.station_position->x, 0.0);
   ASSERT_TRUE(s.station_position->theta.has_value());
@@ -449,7 +455,7 @@ TEST(LayoutLoaderTest, StationPosition_RoundTrip)
   EXPECT_TRUE(s.station_height.has_value());
   EXPECT_DOUBLE_EQ(*s.station_height, 1.2);
 
-  nlohmann::json round = *r.lif;
+  nlohmann::json round = r.lif();
   auto r2 = load_from_json(round);
   EXPECT_TRUE(static_cast<bool>(r2));
 }
@@ -472,7 +478,8 @@ TEST(LayoutLoaderTest, Action_RoundTrip)
     ])");
   auto r = load_from_json(j);
   ASSERT_TRUE(static_cast<bool>(r));
-  const auto& vtnp = r.lif->layouts[0].nodes[0].vehicle_type_node_properties[0];
+  const auto& vtnp =
+    r.lif().layouts[0].nodes[0].vehicle_type_node_properties[0];
   ASSERT_TRUE(vtnp.actions.has_value());
   ASSERT_EQ(vtnp.actions->size(), 1u);
   const auto& a = (*vtnp.actions)[0];
@@ -487,7 +494,7 @@ TEST(LayoutLoaderTest, Action_RoundTrip)
   EXPECT_EQ((*a.action_parameters)[0].key, "loadId");
   EXPECT_EQ((*a.action_parameters)[1].value, "fork");
 
-  nlohmann::json round = *r.lif;
+  nlohmann::json round = r.lif();
   auto r2 = load_from_json(round);
   EXPECT_TRUE(static_cast<bool>(r2));
 }
@@ -509,18 +516,18 @@ TEST(LayoutLoaderTest, Enums_NonDefaultValues_RoundTrip)
 
   auto r = load_from_json(j);
   ASSERT_TRUE(static_cast<bool>(r));
-  const auto& v = r.lif->layouts[0].edges[0].vehicle_type_edge_properties[0];
+  const auto& v = r.lif().layouts[0].edges[0].vehicle_type_edge_properties[0];
   EXPECT_EQ(*v.orientation_type, OrientationType::GLOBAL);
   EXPECT_EQ(*v.rotation_at_start_node_allowed, RotationAtNode::NONE);
   EXPECT_EQ(*v.rotation_at_end_node_allowed, RotationAtNode::CW);
   const auto& act_opt =
-    r.lif->layouts[0].nodes[0].vehicle_type_node_properties[0].actions;
+    r.lif().layouts[0].nodes[0].vehicle_type_node_properties[0].actions;
   ASSERT_TRUE(act_opt.has_value());
   EXPECT_EQ(
     (*act_opt)[0].blocking_type, vda5050_core::types::BlockingType::SOFT);
   EXPECT_EQ(*(*act_opt)[0].requirement_type, RequirementType::REQUIRED);
 
-  nlohmann::json round = *r.lif;
+  nlohmann::json round = r.lif();
   auto r2 = load_from_json(round);
   EXPECT_TRUE(static_cast<bool>(r2));
 }
@@ -536,10 +543,10 @@ TEST(LayoutLoaderTest, LoadFromFile_RoundTripSampleData)
   ASSERT_TRUE(static_cast<bool>(r))
     << "Sample layout at " << VDA5050_CORE__SAMPLE_LAYOUT_PATH
     << " did not load";
-  ASSERT_TRUE(r.lif.has_value());
-  EXPECT_EQ(r.lif->meta_information.lif_version, "0.11.0");
-  ASSERT_EQ(r.lif->layouts.size(), 1u);
-  EXPECT_EQ(r.lif->layouts[0].layout_id, "warehouse_floor1");
+  ASSERT_TRUE(r.ok());
+  EXPECT_EQ(r.lif().meta_information.lif_version, "0.11.0");
+  ASSERT_EQ(r.lif().layouts.size(), 1u);
+  EXPECT_EQ(r.lif().layouts[0].layout_id, "warehouse_floor1");
 #else
   GTEST_SKIP() << "VDA5050_CORE__SAMPLE_LAYOUT_PATH not defined";
 #endif
@@ -553,7 +560,7 @@ TEST(LayoutLoaderTest, LayoutFindAccessors)
 {
   auto r = load_from_json(minimal_valid_json());
   ASSERT_TRUE(static_cast<bool>(r));
-  const auto& layout = r.lif->layouts[0];
+  const auto& layout = r.lif().layouts[0];
   EXPECT_NE(layout.find_node("N0"), nullptr);
   EXPECT_EQ(layout.find_node("MISSING"), nullptr);
   EXPECT_NE(layout.find_edge("E1"), nullptr);
