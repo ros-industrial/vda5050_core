@@ -39,10 +39,6 @@
 
 namespace vda5050_core::layout {
 
-//=============================================================================
-// Enum <-> string helpers (LIF enums are strings on the wire)
-//=============================================================================
-
 inline std::string to_string(RequirementType v)
 {
   switch (v)
@@ -130,10 +126,6 @@ inline vda5050_core::types::BlockingType blocking_type_from_string(
   throw std::invalid_argument("Unknown BlockingType value: '" + s + "'");
 }
 
-//=============================================================================
-// ControlPoint
-//=============================================================================
-
 namespace control_point_detail {
 
 template <typename T>
@@ -163,10 +155,6 @@ inline void from_json(const nlohmann::json& j, ControlPoint& v)
   control_point_detail::from_json(j, v);
 }
 
-//=============================================================================
-// Trajectory
-//=============================================================================
-
 namespace trajectory_detail {
 
 template <typename T>
@@ -195,10 +183,6 @@ inline void from_json(const nlohmann::json& j, Trajectory& v)
 {
   trajectory_detail::from_json(j, v);
 }
-
-//=============================================================================
-// LoadRestriction
-//=============================================================================
 
 namespace load_restriction_detail {
 
@@ -232,10 +216,6 @@ inline void from_json(const nlohmann::json& j, LoadRestriction& v)
   load_restriction_detail::from_json(j, v);
 }
 
-//=============================================================================
-// ActionParameter
-//=============================================================================
-
 namespace action_parameter_detail {
 
 template <typename T>
@@ -262,10 +242,6 @@ inline void from_json(const nlohmann::json& j, ActionParameter& v)
 {
   action_parameter_detail::from_json(j, v);
 }
-
-//=============================================================================
-// Action
-//=============================================================================
 
 namespace action_detail {
 
@@ -315,10 +291,6 @@ inline void from_json(const nlohmann::json& j, Action& v)
   action_detail::from_json(j, v);
 }
 
-//=============================================================================
-// NodePosition
-//=============================================================================
-
 namespace node_position_detail {
 
 template <typename T>
@@ -345,10 +317,6 @@ inline void from_json(const nlohmann::json& j, NodePosition& v)
 {
   node_position_detail::from_json(j, v);
 }
-
-//=============================================================================
-// VehicleTypeNodeProperty
-//=============================================================================
 
 namespace vehicle_type_node_property_detail {
 
@@ -381,10 +349,6 @@ inline void from_json(const nlohmann::json& j, VehicleTypeNodeProperty& v)
 {
   vehicle_type_node_property_detail::from_json(j, v);
 }
-
-//=============================================================================
-// VehicleTypeEdgeProperty
-//=============================================================================
 
 namespace vehicle_type_edge_property_detail {
 
@@ -458,10 +422,6 @@ inline void from_json(const nlohmann::json& j, VehicleTypeEdgeProperty& v)
   vehicle_type_edge_property_detail::from_json(j, v);
 }
 
-//=============================================================================
-// Node
-//=============================================================================
-
 namespace node_detail {
 
 template <typename T>
@@ -500,10 +460,6 @@ inline void from_json(const nlohmann::json& j, Node& v)
 {
   node_detail::from_json(j, v);
 }
-
-//=============================================================================
-// Edge
-//=============================================================================
 
 namespace edge_detail {
 
@@ -544,10 +500,6 @@ inline void from_json(const nlohmann::json& j, Edge& v)
   edge_detail::from_json(j, v);
 }
 
-//=============================================================================
-// StationPosition
-//=============================================================================
-
 namespace station_position_detail {
 
 template <typename T>
@@ -576,10 +528,6 @@ inline void from_json(const nlohmann::json& j, StationPosition& v)
 {
   station_position_detail::from_json(j, v);
 }
-
-//=============================================================================
-// Station
-//=============================================================================
 
 namespace station_detail {
 
@@ -621,10 +569,6 @@ inline void from_json(const nlohmann::json& j, Station& v)
 {
   station_detail::from_json(j, v);
 }
-
-//=============================================================================
-// Layout
-//=============================================================================
 
 namespace layout_detail {
 
@@ -668,10 +612,6 @@ inline void from_json(const nlohmann::json& j, Layout& v)
   layout_detail::from_json(j, v);
 }
 
-//=============================================================================
-// MetaInformation
-//=============================================================================
-
 namespace meta_information_detail {
 
 template <typename T>
@@ -702,10 +642,6 @@ inline void from_json(const nlohmann::json& j, MetaInformation& v)
 {
   meta_information_detail::from_json(j, v);
 }
-
-//=============================================================================
-// LIF (root)
-//=============================================================================
 
 namespace lif_detail {
 

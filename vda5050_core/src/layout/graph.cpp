@@ -18,7 +18,6 @@
 
 #include "vda5050_core/layout/graph.hpp"
 
-#include <algorithm>
 #include <map>
 #include <ostream>
 #include <stdexcept>
@@ -26,8 +25,6 @@
 #include <utility>
 
 namespace vda5050_core::layout {
-
-// ─── Construction ────────────────────────────────────────────────────────
 
 Graph::Ptr Graph::from_lif(LIF lif)
 {
@@ -111,8 +108,6 @@ void Graph::rebuild_indices_()
   }
 }
 
-// ─── Existence ───────────────────────────────────────────────────────────
-
 bool Graph::has_node(const std::string& id) const noexcept
 {
   return node_index_.find(id) != node_index_.end();
@@ -127,8 +122,6 @@ bool Graph::has_station(const std::string& id) const noexcept
 {
   return station_index_.find(id) != station_index_.end();
 }
-
-// ─── Lookup (throwing) ──────────────────────────────────────────────────
 
 const Node& Graph::get_node(const std::string& id) const
 {
@@ -159,8 +152,6 @@ const Station& Graph::get_station(const std::string& id) const
   }
   return *s;
 }
-
-// ─── Lookup (nullable) ──────────────────────────────────────────────────
 
 const Node* Graph::find_node(const std::string& id) const noexcept
 {
@@ -194,8 +185,6 @@ const Layout* Graph::find_layout(const std::string& layout_id) const noexcept
   }
   return nullptr;
 }
-
-// ─── Adjacency ──────────────────────────────────────────────────────────
 
 const std::vector<std::string>& Graph::outbound_edges(
   const std::string& node_id) const
@@ -236,8 +225,6 @@ std::vector<std::string> Graph::edges_between(
   return out;
 }
 
-// ─── Size / state ───────────────────────────────────────────────────────
-
 std::size_t Graph::node_count() const noexcept
 {
   return node_index_.size();
@@ -257,8 +244,6 @@ bool Graph::empty() const noexcept
 {
   return node_index_.empty() && edge_index_.empty() && station_index_.empty();
 }
-
-// ─── Diagnostics ────────────────────────────────────────────────────────
 
 std::vector<std::string> Graph::unconnected_nodes() const
 {
@@ -292,8 +277,6 @@ std::vector<std::string> Graph::unconnected_nodes() const
   }
   return result;
 }
-
-// ─── Mutation: add ──────────────────────────────────────────────────────
 
 namespace {
 
@@ -339,7 +322,7 @@ void Graph::add_edge(Edge edge, const std::string& layout_id)
     throw std::invalid_argument(
       "Graph::add_edge: layout '" + layout_id + "' not found");
   }
-  // startNodeId must be in the specified layout (LIF §8.3.8).
+  // startNodeId must be in the specified layout.
   bool start_in_layout = false;
   for (const auto& n : lif_.layouts[li].nodes)
   {
@@ -391,8 +374,6 @@ void Graph::add_station(Station station, const std::string& layout_id)
   lif_.layouts[li].stations.push_back(std::move(station));
   rebuild_indices_();
 }
-
-// ─── Mutation: delete ───────────────────────────────────────────────────
 
 void Graph::delete_node(const std::string& id)
 {
@@ -484,8 +465,6 @@ void Graph::delete_station(const std::string& id)
   rebuild_indices_();
 }
 
-// ─── Mutation: update id ────────────────────────────────────────────────
-
 void Graph::update_node_id(const std::string& old_id, const std::string& new_id)
 {
   if (!has_node(old_id))
@@ -559,8 +538,6 @@ void Graph::update_station_id(
   rebuild_indices_();
 }
 
-// ─── Mutation: prune ────────────────────────────────────────────────────
-
 std::vector<std::string> Graph::prune()
 {
   auto victims = unconnected_nodes();
@@ -571,8 +548,6 @@ std::vector<std::string> Graph::prune()
   return victims;
 }
 
-// ─── Comparison ─────────────────────────────────────────────────────────
-
 bool Graph::operator==(const Graph& rhs) const
 {
   return lif_ == rhs.lif_;
@@ -582,8 +557,6 @@ bool Graph::operator!=(const Graph& rhs) const
 {
   return !(*this == rhs);
 }
-
-// ─── Visualization ──────────────────────────────────────────────────────
 
 void Graph::dump_dot(std::ostream& os) const
 {

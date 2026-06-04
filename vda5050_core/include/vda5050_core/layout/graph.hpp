@@ -73,9 +73,9 @@ public:
   const Station* find_station(const std::string& id) const noexcept;
   const Layout* find_layout(const std::string& layout_id) const noexcept;
 
-  // Adjacency — multi-edge safe (vector since LIF §10.12 allows multiple
-  // parallel edges between the same node pair). Throws std::out_of_range if
-  // `node_id` doesn't exist.
+  // Adjacency — multi-edge safe (vector since LIF allows multiple parallel
+  // edges between the same node pair). Throws std::out_of_range if `node_id`
+  // doesn't exist.
   const std::vector<std::string>& outbound_edges(
     const std::string& node_id) const;
   const std::vector<std::string>& inbound_edges(
@@ -105,9 +105,9 @@ public:
   std::size_t station_count() const noexcept;
   bool empty() const noexcept;
 
-  // Underlying LIF. V0 boundary: no non-const accessor, no lif_mut(), no
-  // take_lif(). The owned LIF is mutable only through the typed mutation
-  // methods so that indices + adjacency stay in sync.
+  // Underlying LIF. No non-const accessor by design — the owned LIF is
+  // mutable only through the typed mutation methods so that indices and
+  // adjacency stay in sync.
   const LIF& lif() const noexcept
   {
     return lif_;
@@ -140,8 +140,8 @@ public:
   // Deletes all nodes in unconnected_nodes(). Returns IDs removed.
   std::vector<std::string> prune();
 
-  // Deep equality (structural). Two graphs with the same node IDs and
-  // properties in different layout order are NOT equal in V0.
+  // Deep equality (structural, order-sensitive). Two graphs with the same
+  // node IDs and properties in different layout order are NOT equal.
   bool operator==(const Graph& rhs) const;
   bool operator!=(const Graph& rhs) const;
 
@@ -163,8 +163,6 @@ private:
   std::unordered_map<std::string, std::vector<std::string>> node_outbound_;
   std::unordered_map<std::string, std::vector<std::string>> node_inbound_;
 };
-
-// ─── Inline template implementations ────────────────────────────────────────
 
 template <typename V>
 void Graph::for_each_node(V&& visitor) const

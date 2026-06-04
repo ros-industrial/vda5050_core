@@ -29,8 +29,6 @@
 
 namespace vda5050_core::layout {
 
-// ─── LayoutLoadResult ────────────────────────────────────────────────────────
-
 LayoutLoadResult LayoutLoadResult::success(LIF lif)
 {
   LayoutLoadResult r;
@@ -64,8 +62,6 @@ const std::vector<LayoutLoadError>& LayoutLoadResult::errors() const
 {
   return std::get<std::vector<LayoutLoadError>>(data_);
 }
-
-// ─── Loader internals ────────────────────────────────────────────────────────
 
 namespace {
 
@@ -123,8 +119,6 @@ void parse_element(
 }
 
 }  // namespace
-
-// ─── Public loader functions ────────────────────────────────────────────────
 
 LayoutLoadResult load_from_file(const std::string& path)
 {
