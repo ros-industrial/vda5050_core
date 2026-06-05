@@ -23,7 +23,7 @@
 #include <memory>
 #include <vector>
 
-#include "vda5050_core/client/updates/order_context.hpp"
+#include "vda5050_core/client/contexts/agv_context.hpp"
 #include "vda5050_core/types/error.hpp"
 #include "vda5050_core/types/order.hpp"
 
@@ -101,7 +101,7 @@ public:
   /// \return Acceptance decision; on rejection `errors` holds the VDA5050 errors.
   AcceptanceResult validate_order(
     const types::Order& incoming_order,
-    const std::shared_ptr<OrderContext>& context) const;
+    const std::shared_ptr<AGVContext>& context) const;
 
 private:
   ReachabilityCheck reachable_;

@@ -21,27 +21,27 @@
 #include <memory>
 #include <string>
 
+#include "vda5050_core/client/contexts/agv_context.hpp"
 #include "vda5050_core/client/resources/config.hpp"
 #include "vda5050_core/client/resources/order_execution.hpp"
 #include "vda5050_core/client/strategies/order_acceptance.hpp"
 #include "vda5050_core/client/updates/order.hpp"
-#include "vda5050_core/client/updates/order_context.hpp"
 #include "vda5050_core/types/order.hpp"
 
 namespace {
 
 using OrderAcceptance = vda5050_core::client::OrderAcceptance;
-using OrderContext = vda5050_core::client::OrderContext;
+using AGVContext = vda5050_core::client::AGVContext;
 using OrderExecutionResource = vda5050_core::client::OrderExecutionResource;
 using OrderUpdate = vda5050_core::client::OrderUpdate;
 namespace execution = vda5050_core::execution;
 namespace types = vda5050_core::types;
 
-std::shared_ptr<OrderContext> make_context()
+std::shared_ptr<AGVContext> make_context()
 {
   auto config = std::make_shared<vda5050_core::client::HeaderConfigResource>(
     "uagv", "2.0.0", "ROS-I", "S001");
-  auto context = std::make_shared<OrderContext>(config);
+  auto context = std::make_shared<AGVContext>(config);
   context->init();
   return context;
 }
@@ -95,14 +95,14 @@ TEST(OrderAcceptanceTest, AcceptsAndPopulatesNewOrder)
   strategy.step(context);
 
   auto execution = context->get_resource<OrderExecutionResource>();
-  std::lock_guard<std::mutex> lock(execution->mutex_);
-  EXPECT_TRUE(execution->executing_order);
-  EXPECT_EQ(execution->state.order_id, "o1");
-  EXPECT_EQ(execution->state.order_update_id, 0u);
-  EXPECT_EQ(execution->state.node_states.size(), 2u);
-  EXPECT_EQ(execution->state.edge_states.size(), 1u);
-  EXPECT_EQ(execution->state.action_states.size(), 1u);
-  EXPECT_TRUE(execution->state.errors.empty());
+  EXPECT_TRUE(execution->is_executing_order());
+  const auto state = execution->get_state();
+  EXPECT_EQ(state.order_id, "o1");
+  EXPECT_EQ(state.order_update_id, 0u);
+  EXPECT_EQ(state.node_states.size(), 2u);
+  EXPECT_EQ(state.edge_states.size(), 1u);
+  EXPECT_EQ(state.action_states.size(), 1u);
+  EXPECT_TRUE(state.errors.empty());
 }
 
 // Test 2: A structurally invalid order is rejected; errors are recorded and the
@@ -122,11 +122,11 @@ TEST(OrderAcceptanceTest, RejectsInvalidOrderAndRecordsErrors)
   strategy.step(context);
 
   auto execution = context->get_resource<OrderExecutionResource>();
-  std::lock_guard<std::mutex> lock(execution->mutex_);
-  EXPECT_FALSE(execution->executing_order);
-  EXPECT_TRUE(execution->state.order_id.empty());
-  EXPECT_TRUE(execution->state.node_states.empty());
-  EXPECT_FALSE(execution->state.errors.empty());
+  EXPECT_FALSE(execution->is_executing_order());
+  const auto state = execution->get_state();
+  EXPECT_TRUE(state.order_id.empty());
+  EXPECT_TRUE(state.node_states.empty());
+  EXPECT_FALSE(state.errors.empty());
 }
 
 // Test 3: A valid update appends the new node onto the running base.
@@ -138,19 +138,20 @@ TEST(OrderAcceptanceTest, AppliesUpdateByAppending)
   // Seed a running base: order "o1" update 1, sitting at node_a (seq 10).
   {
     auto execution = context->get_resource<OrderExecutionResource>();
-    std::lock_guard<std::mutex> lock(execution->mutex_);
-    execution->executing_order = true;
-    execution->state.order_id = "o1";
-    execution->state.order_update_id = 1;
-    execution->state.last_node_id = "node_a";
-    execution->state.last_node_sequence_id = 10;
-    execution->state.node_states.push_back([] {
-      types::NodeState n;
-      n.node_id = "node_a";
-      n.sequence_id = 10;
-      n.released = true;
-      return n;
-    }());
+    execution->set_executing_order(true);
+    execution->update_state([](types::State& state) {
+      state.order_id = "o1";
+      state.order_update_id = 1;
+      state.last_node_id = "node_a";
+      state.last_node_sequence_id = 10;
+      state.node_states.push_back([] {
+        types::NodeState n;
+        n.node_id = "node_a";
+        n.sequence_id = 10;
+        n.released = true;
+        return n;
+      }());
+    });
   }
 
   types::Order update;
@@ -164,12 +165,12 @@ TEST(OrderAcceptanceTest, AppliesUpdateByAppending)
   strategy.step(context);
 
   auto execution = context->get_resource<OrderExecutionResource>();
-  std::lock_guard<std::mutex> lock(execution->mutex_);
-  EXPECT_EQ(execution->state.order_update_id, 2u);
-  ASSERT_EQ(execution->state.node_states.size(), 2u);
-  EXPECT_EQ(execution->state.node_states[0].node_id, "node_a");
-  EXPECT_EQ(execution->state.node_states[1].node_id, "node_b");
-  EXPECT_EQ(execution->state.edge_states.size(), 1u);
+  const auto state = execution->get_state();
+  EXPECT_EQ(state.order_update_id, 2u);
+  ASSERT_EQ(state.node_states.size(), 2u);
+  EXPECT_EQ(state.node_states[0].node_id, "node_a");
+  EXPECT_EQ(state.node_states[1].node_id, "node_b");
+  EXPECT_EQ(state.edge_states.size(), 1u);
 }
 
 // Test 4: A duplicate update (same orderUpdateId) leaves the state untouched.
@@ -180,11 +181,12 @@ TEST(OrderAcceptanceTest, IgnoresDuplicateUpdate)
 
   {
     auto execution = context->get_resource<OrderExecutionResource>();
-    std::lock_guard<std::mutex> lock(execution->mutex_);
-    execution->state.order_id = "o1";
-    execution->state.order_update_id = 3;
-    execution->state.last_node_id = "node_a";
-    execution->state.last_node_sequence_id = 10;
+    execution->update_state([](types::State& state) {
+      state.order_id = "o1";
+      state.order_update_id = 3;
+      state.last_node_id = "node_a";
+      state.last_node_sequence_id = 10;
+    });
   }
 
   types::Order duplicate;
@@ -196,10 +198,10 @@ TEST(OrderAcceptanceTest, IgnoresDuplicateUpdate)
   strategy.step(context);
 
   auto execution = context->get_resource<OrderExecutionResource>();
-  std::lock_guard<std::mutex> lock(execution->mutex_);
-  EXPECT_EQ(execution->state.order_update_id, 3u);
-  EXPECT_TRUE(execution->state.node_states.empty());
-  EXPECT_TRUE(execution->state.errors.empty());
+  const auto state = execution->get_state();
+  EXPECT_EQ(state.order_update_id, 3u);
+  EXPECT_TRUE(state.node_states.empty());
+  EXPECT_TRUE(state.errors.empty());
 }
 
 }  // namespace

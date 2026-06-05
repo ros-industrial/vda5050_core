@@ -22,9 +22,9 @@
 #include <memory>
 #include <mutex>
 
+#include "vda5050_core/client/contexts/agv_context.hpp"
 #include "vda5050_core/client/resources/order_execution.hpp"
 #include "vda5050_core/client/updates/order.hpp"
-#include "vda5050_core/client/updates/order_context.hpp"
 #include "vda5050_core/logger/logger.hpp"
 #include "vda5050_core/types/action_status.hpp"
 
@@ -135,10 +135,10 @@ void OrderAcceptance::init(
 
 void OrderAcceptance::step(std::shared_ptr<execution::ContextInterface> context)
 {
-  auto order_context = std::dynamic_pointer_cast<OrderContext>(context);
+  auto order_context = std::dynamic_pointer_cast<AGVContext>(context);
   if (!order_context)
   {
-    VDA5050_WARN_STREAM("OrderAcceptance: context is not an OrderContext");
+    VDA5050_WARN_STREAM("OrderAcceptance: context is not an AGVContext");
     return;
   }
 
@@ -153,28 +153,33 @@ void OrderAcceptance::step(std::shared_ptr<execution::ContextInterface> context)
   auto execution = order_context->get_resource<OrderExecutionResource>();
   if (!execution) return;
 
-  std::lock_guard<std::mutex> lock(execution->mutex_);
+  // All state mutation goes through update_state(), which holds the resource's
+  // internal mutex for us.
   switch (result.outcome)
   {
     case AcceptanceOutcome::Accepted: {
-      const bool is_update = (order.order_id == execution->state.order_id);
-      if (is_update)
-      {
-        apply_order_update(execution->state, order);
-      }
-      else
-      {
-        apply_new_order(execution->state, order);
-      }
-      execution->executing_order = true;
+      execution->update_state([&order](types::State& state) {
+        const bool is_update = (order.order_id == state.order_id);
+        if (is_update)
+        {
+          apply_order_update(state, order);
+        }
+        else
+        {
+          apply_new_order(state, order);
+        }
+      });
+      execution->set_executing_order(true);
       break;
     }
     case AcceptanceOutcome::Rejected: {
       // Errors are kept in state until a new order is accepted.
-      for (const auto& error : result.errors)
-      {
-        execution->state.errors.push_back(error);
-      }
+      execution->update_state([&result](types::State& state) {
+        for (const auto& error : result.errors)
+        {
+          state.errors.push_back(error);
+        }
+      });
       break;
     }
     case AcceptanceOutcome::Ignored:

@@ -22,24 +22,24 @@
 #include <string>
 #include <vector>
 
+#include "vda5050_core/client/contexts/agv_context.hpp"
 #include "vda5050_core/client/resources/config.hpp"
 #include "vda5050_core/client/resources/order_execution.hpp"
 #include "vda5050_core/client/strategies/order_validator.hpp"
-#include "vda5050_core/client/updates/order_context.hpp"
 #include "vda5050_core/types/order.hpp"
 
 namespace {
 
-using OrderContext = vda5050_core::client::OrderContext;
+using AGVContext = vda5050_core::client::AGVContext;
 using OrderExecutionResource = vda5050_core::client::OrderExecutionResource;
 using OrderValidator = vda5050_core::client::OrderValidator;
 namespace types = vda5050_core::types;
 
-std::shared_ptr<OrderContext> make_context()
+std::shared_ptr<AGVContext> make_context()
 {
   auto config = std::make_shared<vda5050_core::client::HeaderConfigResource>(
     "uagv", "2.0.0", "ROS-I", "S001");
-  auto context = std::make_shared<OrderContext>(config);
+  auto context = std::make_shared<AGVContext>(config);
   context->init();
   return context;
 }
@@ -78,19 +78,20 @@ types::Order single_node_order(
 }
 
 void seed_execution_state(
-  const std::shared_ptr<OrderContext>& context, const std::string& order_id,
+  const std::shared_ptr<AGVContext>& context, const std::string& order_id,
   uint32_t order_update_id, const std::string& last_node_id,
   uint32_t last_node_sequence_id,
   const std::vector<types::NodeState>& node_states = {})
 {
   auto execution = context->get_resource<OrderExecutionResource>();
   ASSERT_NE(execution, nullptr);
-  std::lock_guard<std::mutex> lock(execution->mutex_);
-  execution->state.order_id = order_id;
-  execution->state.order_update_id = order_update_id;
-  execution->state.last_node_id = last_node_id;
-  execution->state.last_node_sequence_id = last_node_sequence_id;
-  execution->state.node_states = node_states;
+  execution->update_state([&](types::State& state) {
+    state.order_id = order_id;
+    state.order_update_id = order_update_id;
+    state.last_node_id = last_node_id;
+    state.last_node_sequence_id = last_node_sequence_id;
+    state.node_states = node_states;
+  });
 }
 
 // Test 1: Accept a valid, structurally sound new order.

@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "vda5050_core/client/resources/order_execution.hpp"
 #include "vda5050_core/errors/error_codes.hpp"
 #include "vda5050_core/errors/error_factory.hpp"
 #include "vda5050_core/logger/logger.hpp"
@@ -81,11 +82,11 @@ AcceptanceResult accepted()
 
 // The vehicle is "busy" if it still has nodes left
 // to traverse (base or horizon) or any action that is not yet FINISHED/FAILED.
-bool is_busy(const std::shared_ptr<OrderContext>& context)
+bool is_busy(const std::shared_ptr<OrderExecutionResource>& execution)
 {
-  if (!context->get_node_states().empty()) return true;
+  if (!execution->get_node_states().empty()) return true;
 
-  for (const auto& action : context->get_action_states())
+  for (const auto& action : execution->get_action_states())
   {
     if (
       action.action_status != types::ActionStatus::FINISHED &&
@@ -118,13 +119,22 @@ void OrderValidator::set_capability_check(CapabilityCheck check)
 
 AcceptanceResult OrderValidator::validate_order(
   const types::Order& incoming_order,
-  const std::shared_ptr<OrderContext>& context) const
+  const std::shared_ptr<AGVContext>& context) const
 {
   // If context is null, return a validation error.
   if (!context)
   {
+    return rejected(
+      errors::create_error(errors::ValidationError, "AGVContext is null", {}));
+  }
+
+  // Execution state (order/node tracking) lives in the resource, not the
+  // context itself; the context only routes us to it.
+  auto execution = context->get_resource<OrderExecutionResource>();
+  if (!execution)
+  {
     return rejected(errors::create_error(
-      errors::ValidationError, "OrderContext is null", {}));
+      errors::ValidationError, "OrderExecutionResource is null", {}));
   }
 
   // Step 1: structural / format validity of the order graph.
@@ -143,15 +153,15 @@ AcceptanceResult OrderValidator::validate_order(
       incoming_order, std::move(unsupported)));
   }
 
-  const std::string current_id = context->get_active_order_id();
-  const uint32_t current_update_id = context->get_active_order_update_id();
+  const std::string current_id = execution->get_active_order_id();
+  const uint32_t current_update_id = execution->get_active_order_update_id();
 
   // Step 2: brand new order, or an update of the active one?
   if (incoming_order.order_id != current_id)
   {
     // New order
     // Step 3: reject if the vehicle is still executing or holding a horizon.
-    if (is_busy(context))
+    if (is_busy(execution))
     {
       return rejected(make_error(
         errors::ValidationError,
@@ -194,7 +204,7 @@ AcceptanceResult OrderValidator::validate_order(
   }
 
   // Steps 7/8: the update must continue from the decision point. We anchor on
-  // the last reached node tracked in OrderContext (nodeId + sequenceId).
+  // the last reached node tracked in OrderExecutionResource (nodeId + sequenceId).
   if (incoming_order.nodes.empty())
   {
     return rejected(make_error(
@@ -205,8 +215,8 @@ AcceptanceResult OrderValidator::validate_order(
 
   const auto& stitch_node = incoming_order.nodes.front();
   if (
-    stitch_node.node_id != context->get_last_node_id() ||
-    stitch_node.sequence_id != context->get_last_node_sequence_id())
+    stitch_node.node_id != execution->get_last_node_id() ||
+    stitch_node.sequence_id != execution->get_last_node_sequence_id())
   {
     return rejected(make_error(
       errors::OrderUpdateError,
