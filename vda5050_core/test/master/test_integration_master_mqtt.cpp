@@ -117,7 +117,7 @@ TEST_F(MasterMqttTestFixture, OnboardAGVWhileConnected)
   master->disconnect();
 }
 
-TEST_F(MasterMqttTestFixture, OnboardAGVWCustomInterfaceNameWhileConnected)
+TEST_F(MasterMqttTestFixture, OnboardAGVWithCustomInterfaceNameWhileConnected)
 {
   std::string custom_interface_name = "amr";
   auto master = create_master();

@@ -138,6 +138,7 @@ TEST_F(MasterTeardownTest, OffboardAgvUnsubscribesAllPerAgvTopicsInterfaceName)
     master->offboard_agv("acme", "agv-001");
   }
 }
+
 TEST_F(MasterTeardownTest, MasterDestructionUnsubscribesAllPerAgvTopics)
 {
   EXPECT_CALL(
