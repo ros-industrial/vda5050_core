@@ -31,9 +31,11 @@
 #include <thread>
 
 #include "vda5050_core/master/master.hpp"
+#include "vda5050_core/master/standard_names.hpp"
 #include "vda5050_core/transport/mqtt_client_interface.hpp"
 
 using vda5050_core::master::VDA5050Master;
+using vda5050_core::master::DefaultInterfaceName;
 
 class MasterMqttTestFixture : public ::testing::Test
 {
@@ -42,7 +44,7 @@ protected:
   {
     manufacturer_ = "TestManufacturer";
     serial_number_ = "SN001";
-    interface_name_ = "uagv";
+    interface_name_ = DefaultInterfaceName;
   }
 
   void TearDown() override

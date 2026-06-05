@@ -32,7 +32,7 @@ class AGVTestFixture : public ::testing::Test
 protected:
   void SetUp() override
   {
-    interface_name_ = "uagv";
+    interface_name_ = DefaultInterfaceName;
     manufacturer_ = "TestManufacturer";
     serial_number_ = "SN001";
     agv_id_ = manufacturer_ + "/" + serial_number_;
