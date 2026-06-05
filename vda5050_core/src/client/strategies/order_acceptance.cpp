@@ -213,6 +213,9 @@ void OrderAcceptance::step(std::shared_ptr<execution::ContextInterface> context)
         apply_new_order(state, order);
       }
       execution->set_state(std::move(state));
+      // Persist the order so action/stitching strategies can reach the full
+      // node/edge Action objects the state arrays do not carry.
+      execution->set_active_order(order);
       execution->set_executing_order(true);
       break;
     }
