@@ -295,7 +295,7 @@ if(BUILD_TESTING)
   ament_add_gmock(test_client
     test/client/test_order_types.cpp
     test/client/test_order_execution_resource.cpp
-    test/client/test_order_context.cpp
+    test/client/test_agv_context.cpp
   )
 
   target_link_libraries(test_client

@@ -16,11 +16,10 @@
  * limitations under the License.
  */
 
-#include "vda5050_core/client/updates/order_context.hpp"
+#include "vda5050_core/client/contexts/agv_context.hpp"
 
 #include <memory>
 #include <typeindex>
-#include <utility>
 
 #include "vda5050_core/client/updates/order.hpp"
 
@@ -28,7 +27,7 @@ namespace vda5050_core {
 
 namespace client {
 
-void OrderContext::init()
+void AGVContext::init()
 {
   cache_resource(config_);
   cache_resource(execution_);
@@ -40,7 +39,7 @@ void OrderContext::init()
 }
 
 // Thread-safe update retrieval, lock covers the map read
-std::shared_ptr<execution::UpdateBase> OrderContext::get_update_raw(
+std::shared_ptr<execution::UpdateBase> AGVContext::get_update_raw(
   std::type_index type) const
 {
   std::lock_guard<std::mutex> lock(storage_mutex_);
@@ -50,7 +49,7 @@ std::shared_ptr<execution::UpdateBase> OrderContext::get_update_raw(
 }
 
 // Thread-safe resource retrieval, lock covers the map read
-std::shared_ptr<execution::ResourceBase> OrderContext::get_resource_raw(
+std::shared_ptr<execution::ResourceBase> AGVContext::get_resource_raw(
   std::type_index type) const
 {
   std::lock_guard<std::mutex> lock(storage_mutex_);
@@ -60,7 +59,7 @@ std::shared_ptr<execution::ResourceBase> OrderContext::get_resource_raw(
 }
 
 // Stores an update and wakes the Handler
-void OrderContext::cache_update(std::shared_ptr<execution::UpdateBase> update)
+void AGVContext::cache_update(std::shared_ptr<execution::UpdateBase> update)
 {
   if (!update) return;
   {
@@ -71,61 +70,12 @@ void OrderContext::cache_update(std::shared_ptr<execution::UpdateBase> update)
 }
 
 // Stores a resource (no wake needed as resources are not event-driven)
-void OrderContext::cache_resource(
+void AGVContext::cache_resource(
   std::shared_ptr<execution::ResourceBase> resource)
 {
   if (!resource) return;
   std::lock_guard<std::mutex> lock(storage_mutex_);
   resources_[resource->get_type()] = resource;
-}
-
-// The bridge getters below read fields out of the execution State snapshot.
-// `execution_` is created in the constructor and never reassigned, so it is
-// always valid; each read is serialised by the resource's own mutex_. Before a
-// strategy has run, these return the default-constructed (empty) State values.
-
-// Extraction logic for VDA5050 order_id
-std::string OrderContext::get_active_order_id() const
-{
-  std::lock_guard<std::mutex> lock(execution_->mutex_);
-  return execution_->state.order_id;
-}
-
-// Extraction logic for VDA 5050 order_update_id
-uint32_t OrderContext::get_active_order_update_id() const
-{
-  std::lock_guard<std::mutex> lock(execution_->mutex_);
-  return execution_->state.order_update_id;
-}
-
-std::string OrderContext::get_last_node_id() const
-{
-  std::lock_guard<std::mutex> lock(execution_->mutex_);
-  return execution_->state.last_node_id;
-}
-
-uint32_t OrderContext::get_last_node_sequence_id() const
-{
-  std::lock_guard<std::mutex> lock(execution_->mutex_);
-  return execution_->state.last_node_sequence_id;
-}
-
-std::vector<types::NodeState> OrderContext::get_node_states() const
-{
-  std::lock_guard<std::mutex> lock(execution_->mutex_);
-  return execution_->state.node_states;
-}
-
-std::vector<types::EdgeState> OrderContext::get_edge_states() const
-{
-  std::lock_guard<std::mutex> lock(execution_->mutex_);
-  return execution_->state.edge_states;
-}
-
-std::vector<types::ActionState> OrderContext::get_action_states() const
-{
-  std::lock_guard<std::mutex> lock(execution_->mutex_);
-  return execution_->state.action_states;
 }
 
 }  // namespace client

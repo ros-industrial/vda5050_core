@@ -16,25 +16,20 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__CLIENT__UPDATES__ORDER_CONTEXT_HPP_
-#define VDA5050_CORE__CLIENT__UPDATES__ORDER_CONTEXT_HPP_
+#ifndef VDA5050_CORE__CLIENT__CONTEXTS__AGV_CONTEXT_HPP_
+#define VDA5050_CORE__CLIENT__CONTEXTS__AGV_CONTEXT_HPP_
 
 #include <memory>
 #include <mutex>
 #include <stdexcept>
-#include <string>
 #include <typeindex>
 #include <unordered_map>
 #include <utility>
-#include <vector>
 
 #include "vda5050_core/client/resources/config.hpp"
 #include "vda5050_core/client/resources/order_execution.hpp"
 #include "vda5050_core/client/updates/order.hpp"
 #include "vda5050_core/execution/context_interface.hpp"
-#include "vda5050_core/types/action_state.hpp"
-#include "vda5050_core/types/edge_state.hpp"
-#include "vda5050_core/types/node_state.hpp"
 
 namespace vda5050_core {
 namespace client {
@@ -45,26 +40,30 @@ namespace client {
 /// resources. Registers a provider callback for `OrderUpdate` so strategies
 /// can read the latest inbound order via get_update<OrderUpdate>().
 ///
+/// Order execution state is owned by the `OrderExecutionResource`; strategies
+/// reach it via get_resource<OrderExecutionResource>() and use its thread-safe
+/// accessors. The context itself only handles update/resource plumbing.
+///
 /// All map reads and writes are protected by a single `storage_mutex_` via
 /// std::lock_guard to prevent race conditions when strategies run concurrently.
-class OrderContext : public execution::ContextInterface
+class AGVContext : public execution::ContextInterface
 {
 public:
   /// \brief Construct with AGV identity resource.
   ///
   /// `HeaderConfigResource` and a blank `OrderExecutionResource` are available
   /// via get_resource<T>() after init() is called.
-  explicit OrderContext(std::shared_ptr<HeaderConfigResource> config)
+  explicit AGVContext(std::shared_ptr<HeaderConfigResource> config)
   : config_(std::move(config)),
     execution_(std::make_shared<OrderExecutionResource>())
   {
     if (!config_)
     {
-      throw std::invalid_argument("OrderContext: config cannot be nullptr");
+      throw std::invalid_argument("AGVContext: config cannot be nullptr");
     }
   }
 
-  ~OrderContext() override = default;
+  ~AGVContext() override = default;
 
   /// \brief Seed resources and register the provider callback for updates.
   ///
@@ -72,14 +71,6 @@ public:
   /// map. Registers provider()->on<OrderUpdate>() to cache incoming orders.
   /// Each update triggers notify_on_change() so the Handler wakes up.
   void init() override;
-
-  std::string get_active_order_id() const;
-  uint32_t get_active_order_update_id() const;
-  std::string get_last_node_id() const;
-  uint32_t get_last_node_sequence_id() const;
-  std::vector<types::NodeState> get_node_states() const;
-  std::vector<types::EdgeState> get_edge_states() const;
-  std::vector<types::ActionState> get_action_states() const;
 
 protected:
   /// \brief Thread-safe lookup in the updates map. Returns nullptr if not found.
@@ -97,7 +88,7 @@ private:
 
   // config_ and execution_ are also seeded into resources_ during init() so
   // strategies can reach them via get_resource<T>(). They are kept as direct
-  // members for the bridge getters below, which read the same shared object.
+  // members so init() can seed the same shared objects created at construction.
   std::shared_ptr<HeaderConfigResource> config_;
   std::shared_ptr<OrderExecutionResource> execution_;
 
@@ -111,4 +102,4 @@ private:
 }  // namespace client
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__CLIENT__UPDATES__ORDER_CONTEXT_HPP_
+#endif  // VDA5050_CORE__CLIENT__CONTEXTS__AGV_CONTEXT_HPP_

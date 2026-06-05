@@ -25,28 +25,33 @@
 #include "vda5050_core/client/resources/order_execution.hpp"
 #include "vda5050_core/client/updates/order.hpp"
 #include "vda5050_core/execution/base.hpp"
+#include "vda5050_core/types/state.hpp"
 
 namespace {
 
 using namespace vda5050_core::execution;  // NOLINT
 using namespace vda5050_core::client;     // NOLINT
+namespace types = vda5050_core::types;
 
 // Test 1: Ensure OrderExecutionResource correctly stores runtime execution state.
 TEST(OrderExecutionResourceTest, CarriesExecutionSnapshot)
 {
   OrderExecutionResource resource;
-  resource.executing_order = true;
-  resource.awaiting_order_update = true;
-  resource.state.order_id = "order_1";
-  resource.state.order_update_id = 1;
-  resource.state.last_node_id = "node_0";
-  resource.state.last_node_sequence_id = 0;
+  resource.set_executing_order(true);
+  resource.set_awaiting_order_update(true);
+  resource.update_state([](types::State& s) {
+    s.order_id = "order_1";
+    s.order_update_id = 1;
+    s.last_node_id = "node_0";
+    s.last_node_sequence_id = 0;
+  });
 
-  EXPECT_TRUE(resource.executing_order);
-  EXPECT_TRUE(resource.awaiting_order_update);
-  EXPECT_EQ(resource.state.order_id, "order_1");
-  EXPECT_EQ(resource.state.order_update_id, 1u);
-  EXPECT_EQ(resource.state.last_node_id, "node_0");
+  EXPECT_TRUE(resource.is_executing_order());
+  EXPECT_TRUE(resource.is_awaiting_order_update());
+  EXPECT_EQ(resource.get_active_order_id(), "order_1");
+  EXPECT_EQ(resource.get_active_order_update_id(), 1u);
+  EXPECT_EQ(resource.get_last_node_id(), "node_0");
+  EXPECT_EQ(resource.get_last_node_sequence_id(), 0u);
 }
 
 // Test 2: Check OrderExecutionResource reports its type through ResourceBase.
@@ -68,6 +73,90 @@ TEST(OrderExecutionResourceTest, HasDistinctTypeIndex)
   EXPECT_NE(
     std::type_index(typeid(OrderExecutionResource)),
     std::type_index(typeid(HeaderConfigResource)));
+}
+
+// Test 4: A freshly constructed resource exposes default (empty) state.
+TEST(OrderExecutionResourceTest, GettersReturnDefaultsWhenFresh)
+{
+  OrderExecutionResource resource;
+
+  EXPECT_FALSE(resource.is_executing_order());
+  EXPECT_FALSE(resource.is_awaiting_order_update());
+  EXPECT_EQ(resource.get_active_order_id(), "");
+  EXPECT_EQ(resource.get_active_order_update_id(), 0u);
+  EXPECT_TRUE(resource.get_node_states().empty());
+  EXPECT_TRUE(resource.get_edge_states().empty());
+  EXPECT_TRUE(resource.get_action_states().empty());
+}
+
+// Test 5: get_node_states returns the stored node states.
+TEST(OrderExecutionResourceTest, ExposesNodeStates)
+{
+  OrderExecutionResource resource;
+
+  types::NodeState node_a;
+  node_a.node_id = "node_a";
+  node_a.sequence_id = 0;
+  node_a.released = true;
+  resource.update_state(
+    [&](types::State& s) { s.node_states.push_back(node_a); });
+
+  auto retrieved_nodes = resource.get_node_states();
+  ASSERT_EQ(retrieved_nodes.size(), 1u);
+  EXPECT_EQ(retrieved_nodes[0].node_id, "node_a");
+  EXPECT_TRUE(retrieved_nodes[0].released);
+}
+
+// Test 6: get_edge_states returns the stored edge states.
+TEST(OrderExecutionResourceTest, ExposesEdgeStates)
+{
+  OrderExecutionResource resource;
+
+  types::EdgeState edge_ab;
+  edge_ab.edge_id = "edge_ab";
+  edge_ab.sequence_id = 1;
+  edge_ab.released = false;
+  resource.update_state(
+    [&](types::State& s) { s.edge_states.push_back(edge_ab); });
+
+  auto retrieved_edges = resource.get_edge_states();
+  ASSERT_EQ(retrieved_edges.size(), 1u);
+  EXPECT_EQ(retrieved_edges[0].edge_id, "edge_ab");
+  EXPECT_FALSE(retrieved_edges[0].released);
+}
+
+// Test 7: get_action_states returns the stored action states.
+TEST(OrderExecutionResourceTest, ExposesActionStates)
+{
+  OrderExecutionResource resource;
+
+  types::ActionState action_pick;
+  action_pick.action_id = "action_pick";
+  action_pick.action_status = types::ActionStatus::RUNNING;
+  resource.update_state(
+    [&](types::State& s) { s.action_states.push_back(action_pick); });
+
+  auto retrieved_actions = resource.get_action_states();
+  ASSERT_EQ(retrieved_actions.size(), 1u);
+  EXPECT_EQ(retrieved_actions[0].action_id, "action_pick");
+  EXPECT_EQ(retrieved_actions[0].action_status, types::ActionStatus::RUNNING);
+}
+
+// Test 8: get_state/set_state round-trips the full snapshot.
+TEST(OrderExecutionResourceTest, GetAndSetStateRoundTrips)
+{
+  OrderExecutionResource resource;
+
+  types::State state;
+  state.order_id = "order_abc";
+  state.order_update_id = 99;
+  resource.set_state(state);
+
+  auto snapshot = resource.get_state();
+  EXPECT_EQ(snapshot.order_id, "order_abc");
+  EXPECT_EQ(snapshot.order_update_id, 99u);
+  EXPECT_EQ(resource.get_active_order_id(), "order_abc");
+  EXPECT_EQ(resource.get_active_order_update_id(), 99u);
 }
 
 }  // namespace
