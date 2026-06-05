@@ -40,10 +40,6 @@ struct Layout
   std::optional<std::string> layout_level_id;
   std::optional<std::string> layout_description;
 
-  const Node* find_node(const std::string& id) const;
-  const Edge* find_edge(const std::string& id) const;
-  const Station* find_station(const std::string& id) const;
-
   inline bool operator==(const Layout& other) const
   {
     return this->layout_id == other.layout_id &&

@@ -442,17 +442,4 @@ TEST(LayoutLoaderTest, LoadFromFile_RoundTripSampleData)
 #endif
 }
 
-TEST(LayoutLoaderTest, LayoutFindAccessors)
-{
-  auto r = load_from_json(minimal_valid_json());
-  ASSERT_TRUE(r.ok());
-  const auto& layout = r.lif().layouts[0];
-  EXPECT_NE(layout.find_node("N0"), nullptr);
-  EXPECT_EQ(layout.find_node("MISSING"), nullptr);
-  EXPECT_NE(layout.find_edge("E1"), nullptr);
-  EXPECT_EQ(layout.find_edge("MISSING"), nullptr);
-  EXPECT_NE(layout.find_station("S1"), nullptr);
-  EXPECT_EQ(layout.find_station("MISSING"), nullptr);
-}
-
 }  // namespace vda5050_core::layout::test
