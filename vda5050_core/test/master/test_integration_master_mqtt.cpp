@@ -34,8 +34,8 @@
 #include "vda5050_core/master/standard_names.hpp"
 #include "vda5050_core/transport/mqtt_client_interface.hpp"
 
-using vda5050_core::master::VDA5050Master;
 using vda5050_core::master::DefaultInterfaceName;
+using vda5050_core::master::VDA5050Master;
 
 class MasterMqttTestFixture : public ::testing::Test
 {

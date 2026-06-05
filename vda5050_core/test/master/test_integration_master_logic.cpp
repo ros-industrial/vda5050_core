@@ -39,8 +39,8 @@
 using vda5050_core::types::InstantActions;
 using vda5050_core::types::Order;
 
-using vda5050_core::master::VDA5050Master;
 using vda5050_core::master::DefaultInterfaceName;
+using vda5050_core::master::VDA5050Master;
 
 class MasterLogicTestFixture : public ::testing::Test
 {

@@ -124,7 +124,9 @@ void VDA5050Master::onboard_agv(
   const std::string& manufacturer, const std::string& serial_number,
   size_t max_queue_size, bool drop_oldest)
 {
-  onboard_agv(DefaultInterfaceName, manufacturer, serial_number, max_queue_size, drop_oldest);
+  onboard_agv(
+    DefaultInterfaceName, manufacturer, serial_number, max_queue_size,
+    drop_oldest);
 }
 
 //=============================================================================
