@@ -32,6 +32,7 @@
 #include "vda5050_core/execution/context_interface.hpp"
 
 namespace vda5050_core {
+
 namespace client {
 
 /// \brief AGV client context: in-memory storage for VDA5050 execution data.

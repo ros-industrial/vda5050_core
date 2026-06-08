@@ -20,14 +20,9 @@
 #define VDA5050_CORE__CLIENT__RESOURCES__ORDER_EXECUTION_HPP_
 
 #include <mutex>
-#include <string>
 #include <utility>
-#include <vector>
 
 #include "vda5050_core/execution/base.hpp"
-#include "vda5050_core/types/action_state.hpp"
-#include "vda5050_core/types/edge_state.hpp"
-#include "vda5050_core/types/node_state.hpp"
 #include "vda5050_core/types/state.hpp"
 
 namespace vda5050_core {
@@ -35,16 +30,6 @@ namespace vda5050_core {
 namespace client {
 
 /// \brief Persistent, mutable AGV execution state shared across strategies.
-///
-/// Owns the working VDA5050 `State` snapshot together with runtime flags for
-/// the current order. Access is synchronised internally, so callers do not
-/// need to manage locking themselves.
-///
-/// Read APIs return copies, while `update_state()` allows safe in-place
-/// modification under the internal mutex.
-///
-/// Multiple strategies may access this resource concurrently via
-/// get_resource<OrderExecutionResource>().
 class OrderExecutionResource
 : public execution::Initialize<OrderExecutionResource, execution::ResourceBase>
 {
@@ -77,55 +62,6 @@ public:
     awaiting_order_update_ = awaiting;
   }
 
-  /// \brief Order ID of the current or last finished order ("" if none).
-  std::string get_active_order_id() const
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return state_.order_id;
-  }
-
-  /// \brief Update ID of the accepted order (0 if none).
-  uint32_t get_active_order_update_id() const
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return state_.order_update_id;
-  }
-
-  /// \brief Node ID of the last reached/current node ("" if none).
-  std::string get_last_node_id() const
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return state_.last_node_id;
-  }
-
-  /// \brief Sequence ID of the last reached/current node (0 if none).
-  uint32_t get_last_node_sequence_id() const
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return state_.last_node_sequence_id;
-  }
-
-  /// \brief Copy of the node states still to be traversed.
-  std::vector<types::NodeState> get_node_states() const
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return state_.node_states;
-  }
-
-  /// \brief Copy of the edge states still to be traversed.
-  std::vector<types::EdgeState> get_edge_states() const
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return state_.edge_states;
-  }
-
-  /// \brief Copy of the current and pending action states.
-  std::vector<types::ActionState> get_action_states() const
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return state_.action_states;
-  }
-
   /// \brief Return a copy of the full working state snapshot.
   types::State get_state() const
   {
@@ -138,14 +74,6 @@ public:
   {
     std::lock_guard<std::mutex> lock(mutex_);
     state_ = std::move(state);
-  }
-
-  /// \brief Mutate the working state under the resource lock.
-  template <typename Fn>
-  void update_state(Fn&& fn)
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    fn(state_);
   }
 
 private:

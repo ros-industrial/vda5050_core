@@ -74,13 +74,15 @@ TEST(AGVContextTest, SeedsOrderExecutionResource)
   ASSERT_NE(execution, nullptr);
   EXPECT_FALSE(execution->is_executing_order());
   EXPECT_FALSE(execution->is_awaiting_order_update());
-  EXPECT_TRUE(execution->get_active_order_id().empty());
-  EXPECT_EQ(execution->get_active_order_update_id(), 0u);
-  EXPECT_TRUE(execution->get_last_node_id().empty());
-  EXPECT_EQ(execution->get_last_node_sequence_id(), 0u);
-  EXPECT_TRUE(execution->get_node_states().empty());
-  EXPECT_TRUE(execution->get_edge_states().empty());
-  EXPECT_TRUE(execution->get_action_states().empty());
+
+  auto snapshot = execution->get_state();
+  EXPECT_TRUE(snapshot.order_id.empty());
+  EXPECT_EQ(snapshot.order_update_id, 0u);
+  EXPECT_TRUE(snapshot.last_node_id.empty());
+  EXPECT_EQ(snapshot.last_node_sequence_id, 0u);
+  EXPECT_TRUE(snapshot.node_states.empty());
+  EXPECT_TRUE(snapshot.edge_states.empty());
+  EXPECT_TRUE(snapshot.action_states.empty());
 }
 
 // Test 4: Make sure get_resource() always return same object.
@@ -90,20 +92,23 @@ TEST(AGVContextTest, OrderExecutionResourceIsSharedAcrossLookups)
 
   auto a = context->get_resource<OrderExecutionResource>();
   a->set_executing_order(true);
-  a->update_state([](types::State& s) {
-    s.order_id = "order_1";
-    s.order_update_id = 2;
-    s.last_node_id = "node_a";
-    s.last_node_sequence_id = 4;
-  });
+
+  types::State state;
+  state.order_id = "order_1";
+  state.order_update_id = 2;
+  state.last_node_id = "node_a";
+  state.last_node_sequence_id = 4;
+  a->set_state(state);
 
   auto b = context->get_resource<OrderExecutionResource>();
   ASSERT_EQ(a.get(), b.get());
   EXPECT_TRUE(b->is_executing_order());
-  EXPECT_EQ(b->get_active_order_id(), "order_1");
-  EXPECT_EQ(b->get_active_order_update_id(), 2u);
-  EXPECT_EQ(b->get_last_node_id(), "node_a");
-  EXPECT_EQ(b->get_last_node_sequence_id(), 4u);
+
+  auto snapshot = b->get_state();
+  EXPECT_EQ(snapshot.order_id, "order_1");
+  EXPECT_EQ(snapshot.order_update_id, 2u);
+  EXPECT_EQ(snapshot.last_node_id, "node_a");
+  EXPECT_EQ(snapshot.last_node_sequence_id, 4u);
 }
 
 // Test 5: Make sure the incoming order is received and stored in context.
