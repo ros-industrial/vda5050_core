@@ -86,6 +86,8 @@ private:
   void cache_update(std::shared_ptr<execution::UpdateBase> update);
   void cache_resource(std::shared_ptr<execution::ResourceBase> resource);
 
+  bool initialized_ = false;
+
   // config_ and execution_ are also seeded into resources_ during init() so
   // strategies can reach them via get_resource<T>(). They are kept as direct
   // members so init() can seed the same shared objects created at construction.

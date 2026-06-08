@@ -29,6 +29,9 @@ namespace client {
 
 void AGVContext::init()
 {
+  if (initialized_) return;
+  initialized_ = true;
+
   cache_resource(config_);
   cache_resource(execution_);
 
