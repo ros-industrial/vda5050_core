@@ -1,0 +1,334 @@
+/*
+ * Copyright (C) 2026 ROS-Industrial Consortium Asia Pacific
+ * Advanced Remanufacturing and Technology Centre
+ * A*STAR Research Entities (Co. Registration No. 199702110H)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <gmock/gmock.h>
+
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
+
+#include "vda5050_core/client/contexts/agv_context.hpp"
+#include "vda5050_core/client/events/edge_entered.hpp"
+#include "vda5050_core/client/events/edge_left.hpp"
+#include "vda5050_core/client/events/node_traversed.hpp"
+#include "vda5050_core/client/resources/config.hpp"
+#include "vda5050_core/client/resources/order_execution.hpp"
+#include "vda5050_core/client/strategies/order_actions.hpp"
+#include "vda5050_core/execution/engine.hpp"
+#include "vda5050_core/execution/event_queue.hpp"
+
+namespace {
+
+using AGVContext = vda5050_core::client::AGVContext;
+using ActionExecution = vda5050_core::client::ActionExecution;
+using EdgeEnteredEvent = vda5050_core::client::EdgeEnteredEvent;
+using EdgeLeftEvent = vda5050_core::client::EdgeLeftEvent;
+using Engine = vda5050_core::execution::Engine;
+using NodeTraversedEvent = vda5050_core::client::NodeTraversedEvent;
+using OrderActions = vda5050_core::client::OrderActions;
+using OrderExecutionResource = vda5050_core::client::OrderExecutionResource;
+using Priority = vda5050_core::execution::Priority;
+namespace types = vda5050_core::types;
+
+std::shared_ptr<AGVContext> make_context()
+{
+  auto config = std::make_shared<vda5050_core::client::HeaderConfigResource>(
+    "uagv", "2.0.0", "ROS-I", "S001");
+  auto context = std::make_shared<AGVContext>(config);
+  context->init();
+  return context;
+}
+
+types::Action make_action(
+  const std::string& action_id, const std::string& action_type,
+  types::BlockingType blocking = types::BlockingType::NONE)
+{
+  types::Action action;
+  action.action_id = action_id;
+  action.action_type = action_type;
+  action.blocking_type = blocking;
+  return action;
+}
+
+types::Node make_node(
+  const std::string& node_id, uint32_t sequence_id,
+  std::vector<types::Action> actions)
+{
+  types::Node node;
+  node.node_id = node_id;
+  node.sequence_id = sequence_id;
+  node.released = true;
+  node.actions = std::move(actions);
+  return node;
+}
+
+types::Edge make_edge(
+  const std::string& edge_id, uint32_t sequence_id,
+  std::vector<types::Action> actions)
+{
+  types::Edge edge;
+  edge.edge_id = edge_id;
+  edge.sequence_id = sequence_id;
+  edge.released = true;
+  edge.actions = std::move(actions);
+  return edge;
+}
+
+// Persist the order and seed every node/edge action as WAITING, mirroring what
+// OrderAcceptance does when an order is accepted.
+void accept_order(
+  const std::shared_ptr<AGVContext>& context, const types::Order& order)
+{
+  auto execution = context->get_resource<OrderExecutionResource>();
+  execution->update_state([&order](types::State& state) {
+    auto seed = [&state](const std::vector<types::Action>& actions) {
+      for (const auto& action : actions)
+      {
+        types::ActionState action_state;
+        action_state.action_id = action.action_id;
+        action_state.action_type = action.action_type;
+        action_state.action_status = types::ActionStatus::WAITING;
+        state.action_states.push_back(action_state);
+      }
+    };
+    for (const auto& node : order.nodes) seed(node.actions);
+    for (const auto& edge : order.edges) seed(edge.actions);
+  });
+  execution->set_active_order(order);
+}
+
+std::optional<types::ActionState> action_state_of(
+  const std::shared_ptr<AGVContext>& context, const std::string& action_id)
+{
+  auto execution = context->get_resource<OrderExecutionResource>();
+  for (const auto& action_state : execution->get_action_states())
+  {
+    if (action_state.action_id == action_id) return action_state;
+  }
+  return std::nullopt;
+}
+
+// An executor that always finishes the action it is given.
+vda5050_core::client::ActionExecutor finishing_executor()
+{
+  return [](const types::Action&) {
+    return ActionExecution{types::ActionStatus::FINISHED, std::nullopt};
+  };
+}
+
+// Test 1: Node actions run and finish when the node is traversed.
+TEST(OrderActionsTest, RunsNodeActionsOnTraversed)
+{
+  auto context = make_context();
+  types::Order order;
+  order.nodes.push_back(
+    make_node("n2", 2, {make_action("a1", "pick"), make_action("a2", "beep")}));
+  accept_order(context, order);
+
+  auto source = std::make_shared<Engine>();
+  OrderActions actions(source);
+  actions.init(context);
+  actions.set_executor(finishing_executor());
+
+  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->step();
+
+  EXPECT_EQ(
+    action_state_of(context, "a1")->action_status,
+    types::ActionStatus::FINISHED);
+  EXPECT_EQ(
+    action_state_of(context, "a2")->action_status,
+    types::ActionStatus::FINISHED);
+}
+
+// Test 2: The full Action (type, id, blockingType) reaches the executor.
+TEST(OrderActionsTest, PassesFullActionToExecutor)
+{
+  auto context = make_context();
+  types::Order order;
+  order.nodes.push_back(
+    make_node("n2", 2, {make_action("a1", "pick", types::BlockingType::HARD)}));
+  accept_order(context, order);
+
+  auto source = std::make_shared<Engine>();
+  OrderActions actions(source);
+  actions.init(context);
+
+  types::Action received;
+  actions.set_executor([&received](const types::Action& action) {
+    received = action;
+    return ActionExecution{types::ActionStatus::FINISHED, std::nullopt};
+  });
+
+  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->step();
+
+  EXPECT_EQ(received.action_id, "a1");
+  EXPECT_EQ(received.action_type, "pick");
+  EXPECT_EQ(received.blocking_type, types::BlockingType::HARD);
+}
+
+// Test 3: The executor's status and result description are recorded.
+TEST(OrderActionsTest, RecordsExecutorResult)
+{
+  auto context = make_context();
+  types::Order order;
+  order.nodes.push_back(make_node("n2", 2, {make_action("a1", "pick")}));
+  accept_order(context, order);
+
+  auto source = std::make_shared<Engine>();
+  OrderActions actions(source);
+  actions.init(context);
+  actions.set_executor([](const types::Action&) {
+    return ActionExecution{types::ActionStatus::FAILED, "gripper jammed"};
+  });
+
+  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->step();
+
+  const auto state = action_state_of(context, "a1");
+  ASSERT_TRUE(state.has_value());
+  EXPECT_EQ(state->action_status, types::ActionStatus::FAILED);
+  ASSERT_TRUE(state->result_description.has_value());
+  EXPECT_EQ(state->result_description.value(), "gripper jammed");
+}
+
+// Test 4: Edge actions start (RUNNING) when the edge is entered.
+TEST(OrderActionsTest, StartsEdgeActionsOnEntered)
+{
+  auto context = make_context();
+  types::Order order;
+  order.edges.push_back(make_edge("e3", 3, {make_action("a1", "blink")}));
+  accept_order(context, order);
+
+  auto source = std::make_shared<Engine>();
+  OrderActions actions(source);
+  actions.init(context);
+  actions.set_executor([](const types::Action&) {
+    return ActionExecution{types::ActionStatus::RUNNING, std::nullopt};
+  });
+
+  source->emit<EdgeEnteredEvent>(Priority::NORMAL, std::string("e3"), 3u);
+  source->step();
+
+  EXPECT_EQ(
+    action_state_of(context, "a1")->action_status,
+    types::ActionStatus::RUNNING);
+}
+
+// Test 5: Leaving an edge stops its still-running (time-bound) actions.
+TEST(OrderActionsTest, StopsRunningEdgeActionsOnLeft)
+{
+  auto context = make_context();
+  types::Order order;
+  order.edges.push_back(make_edge("e3", 3, {make_action("a1", "blink")}));
+  accept_order(context, order);
+
+  auto source = std::make_shared<Engine>();
+  OrderActions actions(source);
+  actions.init(context);
+  actions.set_executor([](const types::Action&) {
+    return ActionExecution{types::ActionStatus::RUNNING, std::nullopt};
+  });
+
+  source->emit<EdgeEnteredEvent>(Priority::NORMAL, std::string("e3"), 3u);
+  source->step();
+  source->emit<EdgeLeftEvent>(Priority::NORMAL, std::string("e3"), 3u);
+  source->step();
+
+  const auto state = action_state_of(context, "a1");
+  ASSERT_TRUE(state.has_value());
+  EXPECT_EQ(state->action_status, types::ActionStatus::FINISHED);
+  EXPECT_EQ(state->result_description.value(), "stopped: edge left");
+}
+
+// Test 6: Re-delivering the same signal does not execute an action twice.
+TEST(OrderActionsTest, IsIdempotentOnRedelivery)
+{
+  auto context = make_context();
+  types::Order order;
+  order.nodes.push_back(make_node("n2", 2, {make_action("a1", "pick")}));
+  accept_order(context, order);
+
+  auto source = std::make_shared<Engine>();
+  OrderActions actions(source);
+  actions.init(context);
+
+  int calls = 0;
+  actions.set_executor([&calls](const types::Action&) {
+    ++calls;
+    return ActionExecution{types::ActionStatus::FINISHED, std::nullopt};
+  });
+
+  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->step();
+  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->step();
+
+  EXPECT_EQ(calls, 1);
+  EXPECT_EQ(
+    action_state_of(context, "a1")->action_status,
+    types::ActionStatus::FINISHED);
+}
+
+// Test 7: Without a registered executor, actions stay WAITING (and warn).
+TEST(OrderActionsTest, LeavesActionsWaitingWithoutExecutor)
+{
+  auto context = make_context();
+  types::Order order;
+  order.nodes.push_back(make_node("n2", 2, {make_action("a1", "pick")}));
+  accept_order(context, order);
+
+  auto source = std::make_shared<Engine>();
+  OrderActions actions(source);
+  actions.init(context);
+
+  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->step();
+
+  EXPECT_EQ(
+    action_state_of(context, "a1")->action_status,
+    types::ActionStatus::WAITING);
+}
+
+// Test 8: A signal for a node/sequence not in the order is ignored.
+TEST(OrderActionsTest, IgnoresUnknownNode)
+{
+  auto context = make_context();
+  types::Order order;
+  order.nodes.push_back(make_node("n2", 2, {make_action("a1", "pick")}));
+  accept_order(context, order);
+
+  auto source = std::make_shared<Engine>();
+  OrderActions actions(source);
+  actions.init(context);
+  actions.set_executor(finishing_executor());
+
+  // Same node_id but wrong sequence_id, then an entirely unknown node.
+  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 9u);
+  source->step();
+  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("nX"), 5u);
+  source->step();
+
+  EXPECT_EQ(
+    action_state_of(context, "a1")->action_status,
+    types::ActionStatus::WAITING);
+}
+
+}  // namespace
