@@ -74,8 +74,18 @@ using ActionExecutor = std::function<ActionExecution(const types::Action&)>;
 /// carry `actionState`s. Work is driven synchronously from the source engine's
 /// callbacks, so each event is handled exactly once in cascade order.
 ///
-/// blockingType (NONE/SOFT/HARD) concurrency control and instantAction handling
-/// (pause/resume/cancel) are not yet enforced and are tracked as follow-ups.
+/// blockingType is enforced at action start. A triggered action that cannot run
+/// yet is held in a pending queue and retried whenever an action completes:
+/// - HARD runs exclusively: no other action may be active, and it does not start
+///   while the AGV is driving;
+/// - SOFT may run alongside other actions but not while the AGV is driving;
+/// - NONE is unrestricted (it is only held back while a HARD action is active).
+///
+/// The reciprocal coupling - the AGV's movement yielding to a pending blocking
+/// action - belongs to the navigation strategy that consumes `NavigateToNodeEvent`
+/// and which does not exist yet; this strategy only reads `state.driving`.
+/// instantAction handling (pause/resume/cancel) and asynchronous action
+/// completion remain follow-ups.
 class OrderActions : public execution::StrategyInterface
 {
 public:
@@ -88,10 +98,11 @@ public:
   /// \brief Resolve the execution resource and subscribe to the source engine.
   void init(std::shared_ptr<execution::ContextInterface> context) override;
 
-  /// \brief No-op: actions are driven by the source engine's callbacks.
+  /// \brief Retry actions deferred by blockingType once per Handler spin.
   ///
-  /// Reserved for future polling work (e.g. instantActions, asynchronous action
-  /// completion).
+  /// Actions are triggered by the source engine's callbacks; this only re-pumps
+  /// the pending queue so a deferral that has since cleared (driving stopped, a
+  /// blocker finished) proceeds without waiting for a new traversal event.
   void step(std::shared_ptr<execution::ContextInterface> context) override;
 
   /// \brief Register the hook that performs actions (no-op if `executor` empty).
@@ -107,11 +118,15 @@ private:
   /// \brief Stop an edge's still-running actions when it is left.
   void on_edge_left(const EdgeLeftEvent& event);
 
-  /// \brief Run each action through the executor, claiming WAITING ones only.
-  void run_actions(const std::vector<types::Action>& actions);
+  /// \brief Queue freshly triggered actions (de-duplicated by action_id).
+  void enqueue(const std::vector<types::Action>& actions);
 
-  /// \brief Claim, execute and record the outcome of a single action.
-  void run_action(const types::Action& action);
+  /// \brief Start every pending action whose blockingType constraints are met,
+  /// repeating until no further action can start (a completion may unblock more).
+  void pump();
+
+  /// \brief Claim (WAITING -> RUNNING), execute and record one action's outcome.
+  void start_action(const types::Action& action);
 
   /// \brief Finish any of these actions that are still running (edge left).
   void stop_actions(const std::vector<types::Action>& actions);
@@ -119,6 +134,9 @@ private:
   std::shared_ptr<execution::Engine> source_;
   std::shared_ptr<OrderExecutionResource> execution_;
   ActionExecutor executor_;
+
+  /// \brief Triggered actions still waiting for their blockingType turn.
+  std::vector<types::Action> pending_;
 };
 
 }  // namespace client

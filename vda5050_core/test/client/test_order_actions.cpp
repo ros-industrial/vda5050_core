@@ -18,6 +18,7 @@
 
 #include <gmock/gmock.h>
 
+#include <algorithm>
 #include <memory>
 #include <optional>
 #include <string>
@@ -329,6 +330,158 @@ TEST(OrderActionsTest, IgnoresUnknownNode)
   EXPECT_EQ(
     action_state_of(context, "a1")->action_status,
     types::ActionStatus::WAITING);
+}
+
+// An executor that leaves the given action types RUNNING (async/time-bound) and
+// finishes everything else.
+vda5050_core::client::ActionExecutor running_executor(
+  std::vector<std::string> running_types)
+{
+  return [running_types](const types::Action& action) {
+    const bool stays_running = std::find(
+                                 running_types.begin(), running_types.end(),
+                                 action.action_type) != running_types.end();
+    return ActionExecution{
+      stays_running ? types::ActionStatus::RUNNING
+                    : types::ActionStatus::FINISHED,
+      std::nullopt};
+  };
+}
+
+void set_driving(const std::shared_ptr<AGVContext>& context, bool driving)
+{
+  auto execution = context->get_resource<OrderExecutionResource>();
+  execution->update_state(
+    [driving](types::State& state) { state.driving = driving; });
+}
+
+// Test 9: A HARD action waits for an already-running action, then runs once it
+// clears (here the running action is a time-bound edge action).
+TEST(OrderActionsTest, HardActionDefersWhileAnotherActionRuns)
+{
+  auto context = make_context();
+  types::Order order;
+  order.edges.push_back(make_edge("e3", 3, {make_action("edge_a", "blink")}));
+  order.nodes.push_back(make_node(
+    "n4", 4, {make_action("hard_a", "lift", types::BlockingType::HARD)}));
+  accept_order(context, order);
+
+  auto source = std::make_shared<Engine>();
+  OrderActions actions(source);
+  actions.init(context);
+  actions.set_executor(running_executor({"blink"}));
+
+  source->emit<EdgeEnteredEvent>(Priority::NORMAL, std::string("e3"), 3u);
+  source->step();
+  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n4"), 4u);
+  source->step();
+
+  EXPECT_EQ(
+    action_state_of(context, "edge_a")->action_status,
+    types::ActionStatus::RUNNING);
+  EXPECT_EQ(
+    action_state_of(context, "hard_a")->action_status,
+    types::ActionStatus::WAITING);
+
+  source->emit<EdgeLeftEvent>(Priority::NORMAL, std::string("e3"), 3u);
+  source->step();
+
+  EXPECT_EQ(
+    action_state_of(context, "edge_a")->action_status,
+    types::ActionStatus::FINISHED);
+  EXPECT_EQ(
+    action_state_of(context, "hard_a")->action_status,
+    types::ActionStatus::FINISHED);
+}
+
+// Test 10: While a HARD action is running, no other action may start.
+TEST(OrderActionsTest, HardActionBlocksLaterActions)
+{
+  auto context = make_context();
+  types::Order order;
+  order.nodes.push_back(make_node(
+    "n1", 1, {make_action("hard_a", "lift", types::BlockingType::HARD)}));
+  order.nodes.push_back(make_node("n2", 2, {make_action("none_a", "beep")}));
+  accept_order(context, order);
+
+  auto source = std::make_shared<Engine>();
+  OrderActions actions(source);
+  actions.init(context);
+  actions.set_executor(running_executor({"lift"}));
+
+  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n1"), 1u);
+  source->step();
+  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->step();
+
+  EXPECT_EQ(
+    action_state_of(context, "hard_a")->action_status,
+    types::ActionStatus::RUNNING);
+  EXPECT_EQ(
+    action_state_of(context, "none_a")->action_status,
+    types::ActionStatus::WAITING);
+}
+
+// Test 11: A SOFT action must not start while the AGV is driving, but a NONE
+// action may; the SOFT action runs once the AGV stops (retried in step()).
+TEST(OrderActionsTest, BlockingActionWaitsWhileDrivingThenRuns)
+{
+  auto context = make_context();
+  types::Order order;
+  order.nodes.push_back(make_node(
+    "n2", 2,
+    {make_action("soft_a", "scan", types::BlockingType::SOFT),
+     make_action("none_a", "beep")}));
+  accept_order(context, order);
+  set_driving(context, true);
+
+  auto source = std::make_shared<Engine>();
+  OrderActions actions(source);
+  actions.init(context);
+  actions.set_executor(finishing_executor());
+
+  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->step();
+
+  EXPECT_EQ(
+    action_state_of(context, "soft_a")->action_status,
+    types::ActionStatus::WAITING);
+  EXPECT_EQ(
+    action_state_of(context, "none_a")->action_status,
+    types::ActionStatus::FINISHED);
+
+  // The AGV stops; the next spin retries the deferred SOFT action.
+  set_driving(context, false);
+  actions.step(context);
+
+  EXPECT_EQ(
+    action_state_of(context, "soft_a")->action_status,
+    types::ActionStatus::FINISHED);
+}
+
+// Test 12: NONE actions do not block each other and run concurrently.
+TEST(OrderActionsTest, NoneActionsRunConcurrently)
+{
+  auto context = make_context();
+  types::Order order;
+  order.nodes.push_back(make_node(
+    "n2", 2, {make_action("a1", "beep"), make_action("a2", "blink")}));
+  accept_order(context, order);
+
+  auto source = std::make_shared<Engine>();
+  OrderActions actions(source);
+  actions.init(context);
+  actions.set_executor(running_executor({"beep", "blink"}));
+
+  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->step();
+
+  EXPECT_EQ(
+    action_state_of(context, "a1")->action_status,
+    types::ActionStatus::RUNNING);
+  EXPECT_EQ(
+    action_state_of(context, "a2")->action_status,
+    types::ActionStatus::RUNNING);
 }
 
 }  // namespace
