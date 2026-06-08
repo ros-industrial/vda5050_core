@@ -22,9 +22,13 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <string>
 
 #include "vda5050_core/client/contexts/agv_context.hpp"
+#include "vda5050_core/client/events/edge_entered.hpp"
+#include "vda5050_core/client/events/edge_left.hpp"
 #include "vda5050_core/client/events/navigate_to_node.hpp"
+#include "vda5050_core/client/events/node_traversed.hpp"
 #include "vda5050_core/client/resources/order_execution.hpp"
 #include "vda5050_core/client/updates/node_reached.hpp"
 #include "vda5050_core/execution/event_queue.hpp"
@@ -46,10 +50,28 @@ struct Dispatch
   std::optional<types::EdgeState> via_edge;
 };
 
+// Identifies an edge for the edge-transition events.
+struct EdgeRef
+{
+  std::string edge_id;
+  uint32_t sequence_id = 0;
+};
+
+// What the cascade advanced: the traversed node (always present), the edge that
+// was left (if any), and the next dispatch (absent when stopped at the decision
+// point or the order is complete). The entered edge is the dispatch's via_edge.
+struct TraversalOutcome
+{
+  std::string node_id;
+  uint32_t sequence_id = 0;
+  std::optional<EdgeRef> left_edge;
+  std::optional<Dispatch> dispatch;
+};
+
 // Runs the VDA5050 traversal cascade against the working state. Returns the
-// next dispatch when traversal should continue, or nullopt when the AGV must
-// stop (order complete, or the next node is part of the horizon).
-std::optional<Dispatch> apply_node_reached(
+// outcome when a node was actually traversed, or nullopt when the signal is
+// ignored (unknown/stale node, or reported out of order).
+std::optional<TraversalOutcome> apply_node_reached(
   types::State& state, const NodeReachedUpdate& reached)
 {
   // Find the reached node (matched on sequence_id and node_id) in the base.
@@ -75,24 +97,32 @@ std::optional<Dispatch> apply_node_reached(
     });
   if (!is_next_expected) return std::nullopt;
 
+  TraversalOutcome outcome;
+  outcome.node_id = reached.node_id;
+  outcome.sequence_id = reached.sequence_id;
+
   // Mark the node as the last reached node, then drop its state.
   state.last_node_id = reached.node_id;
   state.last_node_sequence_id = reached.sequence_id;
   state.node_states.erase(node_it);
 
-  // Leaving the incoming edge (sequence_id == reached - 1): drop its state.
+  // Leaving the incoming edge (sequence_id == reached - 1): record then drop it.
   // reached - 1 is because the edge is the one before the reached node.
   // e.g edge = 3, node = 4, so the incoming edge is 3.
   if (reached.sequence_id > 0)
   {
     const uint32_t incoming_edge_seq = reached.sequence_id - 1;
-    state.edge_states.erase(
-      std::remove_if(
-        state.edge_states.begin(), state.edge_states.end(),
-        [&](const types::EdgeState& e) {
-          return e.sequence_id == incoming_edge_seq;
-        }),
-      state.edge_states.end());
+    auto incoming_it = std::find_if(
+      state.edge_states.begin(), state.edge_states.end(),
+      [&](const types::EdgeState& e) {
+        return e.sequence_id == incoming_edge_seq;
+      });
+    if (incoming_it != state.edge_states.end())
+    {
+      outcome.left_edge =
+        EdgeRef{incoming_it->edge_id, incoming_it->sequence_id};
+      state.edge_states.erase(incoming_it);
+    }
   }
 
   // The next node is the lowest sequence_id strictly ahead of the reached one.
@@ -110,7 +140,7 @@ std::optional<Dispatch> apply_node_reached(
   if (next_it == state.node_states.end())
   {
     state.new_base_request = std::nullopt;
-    return std::nullopt;  // nothing ahead -> order/base fully traversed
+    return outcome;  // node traversed; nothing ahead -> order/base complete
   }
 
   // Count the number of released nodes ahead of the reached node.
@@ -131,7 +161,7 @@ std::optional<Dispatch> apply_node_reached(
   }
 
   // Stop at the decision point: never drive into the horizon.
-  if (!next_it->released) return std::nullopt;
+  if (!next_it->released) return outcome;
 
   // Find the edge leading into the next node (sequence_id == next - 1).
   std::optional<types::EdgeState> via_edge;
@@ -144,7 +174,8 @@ std::optional<Dispatch> apply_node_reached(
     if (edge_it != state.edge_states.end()) via_edge = *edge_it;
   }
 
-  return Dispatch{*next_it, std::move(via_edge)};
+  outcome.dispatch = Dispatch{*next_it, std::move(via_edge)};
+  return outcome;
 }
 
 }  // namespace
@@ -175,15 +206,38 @@ void OrderTraversal::step(std::shared_ptr<execution::ContextInterface> context)
   // NOTE: get_state()/set_state() is a non-atomic read-modify-write.
   // This is safe while the handler runs state-writing strategies sequentially.
   types::State state = execution->get_state();
-  std::optional<Dispatch> dispatch = apply_node_reached(state, *reached);
+  std::optional<TraversalOutcome> outcome = apply_node_reached(state, *reached);
   execution->set_state(std::move(state));
 
-  if (dispatch)
+  if (!outcome) return;  // signal ignored; nothing traversed
+
+  // Announce the traversal so the action strategy can trigger node/edge actions.
+  // Order follows the VDA5050 cascade: node traversed, incoming edge left, then
+  // the next edge entered. emit() only enqueues, so step() is called after each
+  // to deliver that event before the next is emitted (one event per step()).
+  engine()->emit<NodeTraversedEvent>(
+    execution::Priority::NORMAL, outcome->node_id, outcome->sequence_id);
+  engine()->step();
+  if (outcome->left_edge)
+  {
+    engine()->emit<EdgeLeftEvent>(
+      execution::Priority::NORMAL, outcome->left_edge->edge_id,
+      outcome->left_edge->sequence_id);
+    engine()->step();
+  }
+  if (outcome->dispatch)
   {
     engine()->emit<NavigateToNodeEvent>(
-      execution::Priority::NORMAL, dispatch->target, dispatch->via_edge);
-    // emit() only enqueues; step() delivers the event to registered handlers.
+      execution::Priority::NORMAL, outcome->dispatch->target,
+      outcome->dispatch->via_edge);
     engine()->step();
+    if (outcome->dispatch->via_edge)
+    {
+      engine()->emit<EdgeEnteredEvent>(
+        execution::Priority::NORMAL, outcome->dispatch->via_edge->edge_id,
+        outcome->dispatch->via_edge->sequence_id);
+      engine()->step();
+    }
   }
 }
 

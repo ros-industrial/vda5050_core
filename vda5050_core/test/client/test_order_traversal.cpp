@@ -23,7 +23,10 @@
 #include <vector>
 
 #include "vda5050_core/client/contexts/agv_context.hpp"
+#include "vda5050_core/client/events/edge_entered.hpp"
+#include "vda5050_core/client/events/edge_left.hpp"
 #include "vda5050_core/client/events/navigate_to_node.hpp"
+#include "vda5050_core/client/events/node_traversed.hpp"
 #include "vda5050_core/client/resources/config.hpp"
 #include "vda5050_core/client/resources/order_execution.hpp"
 #include "vda5050_core/client/strategies/order_traversal.hpp"
@@ -31,9 +34,12 @@
 
 namespace {
 
+using EdgeEnteredEvent = vda5050_core::client::EdgeEnteredEvent;
+using EdgeLeftEvent = vda5050_core::client::EdgeLeftEvent;
 using NavigateToNodeEvent = vda5050_core::client::NavigateToNodeEvent;
 using NodeReachedUpdate = vda5050_core::client::NodeReachedUpdate;
 using AGVContext = vda5050_core::client::AGVContext;
+using NodeTraversedEvent = vda5050_core::client::NodeTraversedEvent;
 using OrderExecutionResource = vda5050_core::client::OrderExecutionResource;
 using OrderTraversal = vda5050_core::client::OrderTraversal;
 namespace types = vda5050_core::types;
@@ -235,6 +241,61 @@ TEST(OrderTraversalTest, DoesNotRequestBaseWhenPlentiful)
   const auto state = execution->get_state();
   ASSERT_TRUE(state.new_base_request.has_value());
   EXPECT_FALSE(state.new_base_request.value());
+}
+
+// Test 8: Traversing a mid-order node emits node-traversed, edge-left (incoming)
+// and edge-entered (next) so the action strategy can trigger/stop actions.
+TEST(OrderTraversalTest, EmitsTraversalEvents)
+{
+  OrderTraversal strategy;
+  auto context = make_context();
+  // node_0 already traversed; sitting on edge e1 toward node_2.
+  seed(
+    context, {node_state("node_2", 2, true), node_state("node_4", 4, true)},
+    {edge_state("e1", 1), edge_state("e3", 3)});
+
+  std::shared_ptr<NodeTraversedEvent> traversed;
+  std::shared_ptr<EdgeLeftEvent> left;
+  std::shared_ptr<EdgeEnteredEvent> entered;
+  strategy.engine()->on<NodeTraversedEvent>(
+    [&](std::shared_ptr<NodeTraversedEvent> e) { traversed = e; });
+  strategy.engine()->on<EdgeLeftEvent>(
+    [&](std::shared_ptr<EdgeLeftEvent> e) { left = e; });
+  strategy.engine()->on<EdgeEnteredEvent>(
+    [&](std::shared_ptr<EdgeEnteredEvent> e) { entered = e; });
+
+  context->provider()->push<NodeReachedUpdate>("node_2", 2);
+  strategy.step(context);
+
+  ASSERT_NE(traversed, nullptr);
+  EXPECT_EQ(traversed->node_id, "node_2");
+  EXPECT_EQ(traversed->sequence_id, 2u);
+  ASSERT_NE(left, nullptr);
+  EXPECT_EQ(left->edge_id, "e1");  // incoming edge
+  ASSERT_NE(entered, nullptr);
+  EXPECT_EQ(entered->edge_id, "e3");  // next edge
+}
+
+// Test 9: At the final node there is no next edge, so no edge-entered fires.
+TEST(OrderTraversalTest, NoEdgeEnteredAtFinalNode)
+{
+  OrderTraversal strategy;
+  auto context = make_context();
+  seed(context, {node_state("node_4", 4, true)}, {edge_state("e3", 3)});
+
+  std::shared_ptr<NodeTraversedEvent> traversed;
+  std::shared_ptr<EdgeEnteredEvent> entered;
+  strategy.engine()->on<NodeTraversedEvent>(
+    [&](std::shared_ptr<NodeTraversedEvent> e) { traversed = e; });
+  strategy.engine()->on<EdgeEnteredEvent>(
+    [&](std::shared_ptr<EdgeEnteredEvent> e) { entered = e; });
+
+  context->provider()->push<NodeReachedUpdate>("node_4", 4);
+  strategy.step(context);
+
+  ASSERT_NE(traversed, nullptr);
+  EXPECT_EQ(traversed->node_id, "node_4");
+  EXPECT_EQ(entered, nullptr);  // no edge ahead
 }
 
 }  // namespace
