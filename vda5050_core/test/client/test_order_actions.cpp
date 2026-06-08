@@ -31,6 +31,8 @@
 #include "vda5050_core/client/resources/config.hpp"
 #include "vda5050_core/client/resources/order_execution.hpp"
 #include "vda5050_core/client/strategies/order_actions.hpp"
+#include "vda5050_core/client/strategies/order_traversal.hpp"
+#include "vda5050_core/client/updates/node_reached.hpp"
 #include "vda5050_core/execution/engine.hpp"
 #include "vda5050_core/execution/event_queue.hpp"
 
@@ -41,9 +43,11 @@ using ActionExecution = vda5050_core::client::ActionExecution;
 using EdgeEnteredEvent = vda5050_core::client::EdgeEnteredEvent;
 using EdgeLeftEvent = vda5050_core::client::EdgeLeftEvent;
 using Engine = vda5050_core::execution::Engine;
+using NodeReachedUpdate = vda5050_core::client::NodeReachedUpdate;
 using NodeTraversedEvent = vda5050_core::client::NodeTraversedEvent;
 using OrderActions = vda5050_core::client::OrderActions;
 using OrderExecutionResource = vda5050_core::client::OrderExecutionResource;
+using OrderTraversal = vda5050_core::client::OrderTraversal;
 using Priority = vda5050_core::execution::Priority;
 namespace types = vda5050_core::types;
 
@@ -481,6 +485,65 @@ TEST(OrderActionsTest, NoneActionsRunConcurrently)
     types::ActionStatus::RUNNING);
   EXPECT_EQ(
     action_state_of(context, "a2")->action_status,
+    types::ActionStatus::RUNNING);
+}
+
+// Test 13: End-to-end. OrderActions wired to OrderTraversal's engine reacts to a
+// real node-reached signal: traversing n2 runs its node action and entering the
+// next edge e3 starts that edge's action - all over the shared engine, no
+// hand-emitted events.
+TEST(OrderActionsTest, IntegratesWithOrderTraversal)
+{
+  auto context = make_context();
+
+  // Reaching n2 leaves the incoming edge e1 and enters e3 toward n4.
+  types::Order order;
+  order.nodes.push_back(make_node("n2", 2, {make_action("node_a", "pick")}));
+  order.nodes.push_back(make_node("n4", 4, {}));
+  order.edges.push_back(make_edge("e1", 1, {}));
+  order.edges.push_back(make_edge("e3", 3, {make_action("edge_a", "blink")}));
+  accept_order(context, order);
+
+  // Seed the traversal tracking state (node/edge states still to traverse).
+  auto execution = context->get_resource<OrderExecutionResource>();
+  execution->update_state([](types::State& state) {
+    types::NodeState n2;
+    n2.node_id = "n2";
+    n2.sequence_id = 2;
+    n2.released = true;
+    types::NodeState n4;
+    n4.node_id = "n4";
+    n4.sequence_id = 4;
+    n4.released = true;
+    types::EdgeState e1;
+    e1.edge_id = "e1";
+    e1.sequence_id = 1;
+    e1.released = true;
+    types::EdgeState e3;
+    e3.edge_id = "e3";
+    e3.sequence_id = 3;
+    e3.released = true;
+    state.node_states = {n2, n4};
+    state.edge_states = {e1, e3};
+  });
+
+  auto traversal = std::make_shared<OrderTraversal>();
+  auto actions = std::make_shared<OrderActions>(traversal->engine());
+  traversal->init(context);
+  actions->init(context);
+  actions->set_executor(running_executor({"blink"}));
+
+  // A real node-reached signal flows through traversal, whose cascade events
+  // reach OrderActions over the shared engine.
+  context->provider()->push<NodeReachedUpdate>("n2", 2);
+  traversal->step(context);
+  actions->step(context);
+
+  EXPECT_EQ(
+    action_state_of(context, "node_a")->action_status,
+    types::ActionStatus::FINISHED);
+  EXPECT_EQ(
+    action_state_of(context, "edge_a")->action_status,
     types::ActionStatus::RUNNING);
 }
 
