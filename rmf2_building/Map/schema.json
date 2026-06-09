@@ -1,0 +1,102 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+      "type": {
+        "type": "string",
+        "description": "Property. NGSI Entity type. It has to be Map",
+        "enum": [
+          "Map"
+        ]
+      },
+      "id": {
+        "type": "string",
+        "description": "Map Id"
+      },
+      "updateTime": {
+        "type": "string",
+        "description": "Last Update time of Map. date-time format"
+      },
+      "edges": {
+        "type": "array",
+        "description": "Array of edges that connects nodes in the map",
+        "items": {
+          "type": "object",
+          "properties": {
+            "edgeId": {
+              "type": "string",
+              "description": "Edge Id"
+            },
+            "connectedNodes": {
+              "type": "array",
+              "description": "Array of Nodes this Edge connects",
+              "items": 
+                {
+                  "type": "object",
+                  "properties": {
+                    "nodeID": {
+                      "type": "string",
+                      "description": "Node Id of connected node to this Edge"
+                    }
+                  },
+                  "required": [
+                    "nodeID"
+                  ]
+                }
+            }
+          },
+          "required": [
+            "edgeId",
+            "connectedNodes"
+          ]
+        }
+      },
+      "nodes": {
+        "type": "array",
+        "description": "Array of Nodes in the Map",
+        "items": {
+          "type": "object",
+          "properties": {
+            "nodeId": {
+              "type": "string",
+              "description": "Node Id"
+            },
+            "point2D": {
+              "type": "object",
+              "description": "2D Coordinates of Node",
+              "properties": {
+                "x": {
+                  "type": "number",
+                  "description": "X coordinate of Node"
+                },
+                "y": {
+                  "type": "number",
+                  "description": "Y cooridinate of Node"
+                }
+              },
+              "required": [
+                "x",
+                "y"
+              ]
+            }
+          },
+          "required": [
+            "nodeId",
+            "point2D"
+          ]
+        }
+      },
+      "raw": {
+        "type": "string",
+        "description": "Raw, unparsed string representation of the building"
+      }
+    },
+    "required": [
+      "id",
+      "type",
+      "updateTime",
+      "edges",
+      "nodes",
+      "raw"
+    ]
+  }

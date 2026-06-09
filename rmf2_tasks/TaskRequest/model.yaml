@@ -1,0 +1,78 @@
+TaskRequest:
+  description: TaskRequest message
+  properties:
+    id:
+      description: Task ID String
+      type: string
+      x-ngsi:
+        type: Property
+    taskCommand:
+      description: Description of the Task Type
+      enum:
+        - START
+        - PAUSE
+        - RESUME
+        - CANCEL
+      type: string
+      x-ngsi:
+        type: Property
+    taskExpectedDuration:
+      description: Expected duration of the task, defined in the ISO 8601 standard
+      type: string
+      x-ngsi:
+        type: Property
+    taskExpectedEnd:
+      description: Expected End time of the task, defined in the ISO 8601 standard
+      format: date-time
+      type: string
+      x-ngsi:
+        type: Property
+    taskExpectedStart:
+      description: Expected Start time of the task, defined in the ISO 8601 standard
+      format: date-time
+      type: string
+      x-ngsi:
+        type: Property
+    taskParams:
+      description: List of Task Parameters represented as JSON Strings
+      items:
+        properties:
+          content:
+            description: Context of Parameter in JSON string
+            type: string
+            x-ngsi:
+              type: Property
+        required:
+          - content
+        type: object
+      type: array
+      x-ngsi:
+        type: Property
+    taskType:
+      description: Description of the Task Type
+      type: string
+      x-ngsi:
+        type: Property
+    type:
+      description: NGSI Entity type. It has to be TaskRequest
+      enum:
+        - TaskRequest
+      type: string
+      x-ngsi:
+        type: Property
+  required:
+    - id
+    - taskCommand
+    - taskExpectedDuration
+    - taskExpectedEnd
+    - taskExpectedStart
+    - taskParams
+    - taskType
+    - type
+  type: object
+  x-derived-from: ''
+  x-disclaimer: ''
+  x-license-url: ''
+  x-model-schema: ''
+  x-model-tags: ''
+  x-version: 0.0.1

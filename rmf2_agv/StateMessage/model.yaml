@@ -1,0 +1,224 @@
+StateMessage:
+  description: State message
+  properties:
+    battery:
+      description: Battery State of the AGV
+      items:
+        properties:
+          remainingPercentage:
+            description: Remaining Battery Charge
+            type: string
+            x-ngsi:
+              type: Property
+    destination:
+      description: Destination Node the AGV needs to reach
+      items:
+        properties:
+          mapId:
+            description: Map ID
+            type: string
+            x-ngsi:
+              type: Property
+          nodeId:
+            description: Destination's corresponding Node ID
+            type: string
+            x-ngsi:
+              type: Property
+          orientation2D:
+            description: 2D Angle of an element
+            properties:
+              theta:
+                default: 0.0
+                description: Simple measurement of an angle
+                type: number
+                x-ngsi:
+                  type: Property
+            required:
+              - theta
+            type: object
+            x-ngsi:
+              type: Property
+          point2D:
+            description: Point in 2D as a two simple coordinates x and y
+            properties:
+              x:
+                default: 0.0
+                description: Simple coordinate of a point
+                type: number
+                x-ngsi:
+                  type: Property
+              y:
+                default: 0.0
+                description: Simple coordinate of a point
+                type: number
+                x-ngsi:
+                  type: Property
+            required:
+              - x
+              - y
+            type: object
+            x-ngsi:
+              type: Property
+          released:
+            description: Determines if the waypoint is allowed to be traversed on yet
+            type: bool
+            x-ngsi:
+              type: Property
+          sequenceId:
+            description: Waypoint sequence relative to entire path
+            type: number
+            x-ngsi:
+              type: Property
+    pose:
+      description: Current pose of AGV
+      items:
+        properties:
+          lastNodeSequenceId:
+            description: The last traversed node's sequence ID with respect to the route
+            type: number
+            x-ngsi:
+              type: Property
+          mapId:
+            description: Map ID
+            type: string
+            x-ngsi:
+              type: Property
+          orientation2D:
+            description: 2D Angle of the AGV
+            properties:
+              theta:
+                default: 0.0
+                description: Simple measurement of an angle
+                type: number
+                x-ngsi:
+                  type: Property
+            required:
+              - theta
+            type: object
+            x-ngsi:
+              type: Property
+          point2D:
+            description: Point in 2D as a two simple coordinates x and y
+            properties:
+              x:
+                default: 0.0
+                description: Simple coordinate of a point
+                type: number
+                x-ngsi:
+                  type: Property
+              y:
+                default: 0.0
+                description: Simple coordinate of a point
+                type: number
+                x-ngsi:
+                  type: Property
+            required:
+              - x
+              - y
+            type: object
+            x-ngsi:
+              type: Property
+    velocity:
+      description: Velocity of AGV
+      items:
+        properties:
+          omega:
+            description: The AGVs turning speed around its z axis.
+            type: number
+            x-ngsi:
+              type: Property
+          vx:
+            description: The AGVs velocity in its x direction
+            type: number
+            x-ngsi:
+              type: Property
+          vy:
+            description: The AGVs velocity in its y direction
+            type: number
+            x-ngsi:
+              type: Property
+    status:
+      description: Status of AGV.
+      type: string
+      x-ngsi:
+        type: Property
+    type:
+      description: NGSI Entity type. It has to be StateMessage
+      enum:
+        - StateMessage
+      type: string
+      x-ngsi:
+        type: Property
+    waypoints:
+      description: Route to be traversed by AGV
+      items:
+        properties:
+          nodeId:
+            description: ID of the corresponding map node of a waypoint
+            type: string
+            x-ngsi:
+              type: Property
+          released:
+            description: Determines if the waypoint is allowed to be traversed on yet
+            type: bool
+            x-ngsi:
+              type: Property
+          orientation2D:
+            description: 2D Angle of the AGV
+            properties:
+              theta:
+                default: 0.0
+                description: Simple measurement of an angle
+                type: number
+                x-ngsi:
+                  type: Property
+            required:
+              - theta
+            type: object
+            x-ngsi:
+              type: Property
+          point2D:
+            description: Point in 2D as a two simple coordinates x and y
+            properties:
+              x:
+                default: 0.0
+                description: Simple coordinate of a point
+                type: number
+                x-ngsi:
+                  type: Property
+              y:
+                default: 0.0
+                description: Simple coordinate of a point
+                type: number
+                x-ngsi:
+                  type: Property
+            required:
+              - x
+              - y
+            type: object
+            x-ngsi:
+              type: Property
+          sequenceId:
+            description: Waypoint sequence relative to entire path
+            type: number
+            x-ngsi:
+              type: Property
+        type: object
+      type: array
+      x-ngsi:
+        type: Property
+  required:
+    - battery
+    - destination
+    - pose
+    - velocity
+    - status
+    - type
+    - waypoints
+  type: object
+  x-derived-from: ""
+  x-disclaimer: ""
+  x-license-url: ""
+  x-model-schema: ""
+  x-model-tags: ""
+  x-version: 0.0.1

@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "",
+  "description": "Command Status message",
+  "title": "Command Status message for RMF2 AGVs",
+  "modelTags": "",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "description": "Property. NGSI Entity type. It has to be CommandStatusMessage",
+      "enum": [
+        "CommandStatusMessage"
+      ]
+    },
+    "robotId": {
+      "type": "string",
+      "description": "ID of Robot Executing the Command"
+    },
+    "commandId": {
+      "type": "string",
+      "description": "Unique ID of the command assigned to the robot"
+    },
+    "commandStatusTime": {
+      "type": "string",
+      "description": "Time of Command Status recorded"
+    },
+    "commandUpdateId": {
+      "type": "integer",
+      "description": "Update count of the command assigned to the robot"
+    },
+    "completed": {
+      "type": "boolean",
+      "description": "Determines if the Path has been completed"
+    },
+    "path": {
+      "type": "array",
+      "description": "Path of Command to Robot",
+      "items": {
+        "type": "object",
+        "properties": {
+          "completed": {
+            "type": "boolean",
+            "description": "Determines if Waypoint has been traversed by the Robot"
+          },
+          "waypoint": {
+            "type": "object",
+            "properties": {
+              "nodeId": {
+                "type": "string",
+                "description": ""
+              },
+              "orientation2D": {
+                "type": "object",
+                "properties": {
+                  "theta": {
+                    "type": "number",
+                    "description": "2D Angle of the AGV"
+                  }
+                },
+                "required": [
+                  "theta"
+                ]
+              },
+              "point2D": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "default": 0,
+                    "description": "Property. Simple coordinate of a point"
+                  },
+                  "y": {
+                    "type": "number",
+                    "default": 0,
+                    "description": "Property. Simple coordinate of a point"
+                  }
+                },
+                "required": [
+                  "x",
+                  "y"
+                ]
+              },
+              "released": {
+                "type": "boolean",
+                "description": "Determines if AGV is allowed to reach this point"
+              },
+              "sequenceId": {
+                "type": "integer",
+                "description": "Sequence ID of the node with respect to the waypoints route"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "nodeId",
+              "orientation2D",
+              "point2D",
+              "released",
+              "sequenceId"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "completed",
+          "waypoint"
+        ]
+      }
+    }
+  },
+  "required": [
+    "type",
+    "commandId",
+    "commandStatusTime",
+    "commandUpdateId",
+    "path",
+    "completed"
+  ]
+}

@@ -1,0 +1,68 @@
+{
+    "id": "urn:ngsi-ld:StateMessage:MiR:0001",
+    "type": "StateMessage",
+    "battery": {
+        "type": "Property",
+        "value": {
+            "remainingPercentage": 80
+        }
+    },
+    "destination": {
+        "type": "Property",
+        "value": {
+            "mapId": "urn:ngsi-ld:Map:ue5_building_final",
+            "nodeId": "P912",
+            "orientation2D": {
+                "theta": 0.0
+            },
+            "point2D": {
+                "x": 172.1300048828125,
+                "y": -109.61000061035156
+            },
+            "released": true,
+            "sequenceId": 8.0
+        }
+    },
+    "pose": {
+        "type": "Property",
+        "value": {
+            "lastNodeSequenceId": 7.0,
+            "mapId": "",
+            "orientation2D": {
+                "theta": 0.0
+            },
+            "point2D": {
+                "x": 0.0,
+                "y": 0.0
+            }
+        }
+    },
+    "velocity": {
+        "type": "Property",
+        "value": {
+            "omega": 1.0,
+            "vx": 1.0,
+            "vy": 1.0
+        }
+    },
+    "waypoints": {
+        "type": "Property",
+        "value": {
+            "mapId": "urn:ngsi-ld:Map:ue5_building_final",
+            "nodeId": "P912",
+            "orientation2D": {
+                "theta": 0.0
+            },
+            "point2D": {
+                "x": 172.1300048828125,
+                "y": -109.61000061035156
+            },
+            "released": true,
+            "sequenceId": 8.0
+        }
+    },
+    "status": {
+        "type": "Property",
+        "value": "ACTIVE"
+    }
+}

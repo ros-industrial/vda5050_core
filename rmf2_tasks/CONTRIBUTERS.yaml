@@ -1,0 +1,9 @@
+description: This is a compilation list of all CONTRIBUTORS across different objects (data models) alphabetically ordered. All fields are non mandatory
+contributors:
+- name: Glenn
+  surname: Tan
+  mail: glenn_tan@artc.a-star.edu.sg
+  organization: Advanced Remanufacturing and Technology Centre (ARTC)
+  project: 
+  comments: 
+  year: 2024

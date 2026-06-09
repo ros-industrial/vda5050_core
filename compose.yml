@@ -1,0 +1,21 @@
+services:
+  vda5050_fiware:
+    build: .
+    # image: registry.gitlab.com/rosi-ap/rmf2/vda5050_fiware:latest
+    env_file:
+      - .env
+    ports:
+      - "1928:1928"
+    expose:
+      - "1928"
+    command: >
+      bash -c " source /colcon_ws/install/setup.bash 
+      && ros2 run vda5050_fiware scorpio ${MOSQUITTO_HOST} ${MOSQUITTO_PORT} http://scorpio:9090 ${MASTER_URL}"
+    networks:
+      - scorpio-net
+      - mosquitto-net
+networks:
+  scorpio-net:
+    external: true
+  mosquitto-net:
+    external: true

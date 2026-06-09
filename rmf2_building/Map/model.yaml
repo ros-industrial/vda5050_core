@@ -1,0 +1,101 @@
+Map:
+  description: Map message
+  properties:
+    id:
+      description: Unique Id assigned to Map
+      type: string
+      x-ngsi:
+        type: Property
+    updateTime:
+      description: Last Update for Map
+      format: date-time
+      type: string
+      x-ngsi:
+        type: Property
+    type:
+      description: NGSI Entity type. It has to be Map
+      enum:
+        - Map
+      type: string
+      x-ngsi:
+        type: Property
+    edges:
+      description: Array of edges that connects nodes in the map
+      items:
+        properties:
+          edgeId:
+            description: Unique Id assigned to Edge
+            type: string
+            x-ngsi:
+              type: Property
+          connectedNodes:
+            description: Array of Nodes this Edge connects
+            items:
+              properties:
+                nodeId:
+                  description: Node Id of connected node to this Edge
+                  type: string
+                  x-ngsi:
+                    type: Property
+              type: object
+            type: array
+            x-ngsi:
+              type: Property
+        type: object
+      type: array
+      x-ngsi:
+        type: Property
+    nodes:
+      description: Array of Nodes in the Map
+      items:
+        properties:
+          nodeId:
+            description: Unique Id assigned to Node
+            type: string
+            x-ngsi:
+              type: Property
+          point2D:
+            description: Point in 2D as a two simple coordinates x and y
+            properties:
+              x:
+                default: 0
+                description: Simple coordinate of a point
+                type: number
+                x-ngsi:
+                  type: Property
+              'y':
+                default: 0
+                description: Simple coordinate of a point
+                type: number
+                x-ngsi:
+                  type: Property
+            required:
+              - x
+              - 'y'
+            type: object
+            x-ngsi:
+              type: Property
+        type: object
+      type: array
+      x-ngsi:
+        type: Property
+    raw:
+      description: 'Raw, unparsed string representation of the building'
+      type: string
+      x-ngsi:
+        type: Property
+  required:
+    - id
+    - type
+    - commandTime
+    - commandId
+    - commandUpdateId
+    - command
+    - waypoints
+  type: object
+  x-derived-from: ''
+  x-disclaimer: ''
+  x-license-url: ''
+  x-model-schema: ''
+  x-model-tags: ''
+  x-version: 0.0.1

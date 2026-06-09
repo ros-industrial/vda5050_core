@@ -1,0 +1,60 @@
+version: '3'
+services:
+  zookeeper:
+    image: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181"
+    networks:
+      - scorpio-net
+  kafka:
+    image: bitnami/kafka:3.5.1-debian-11-r6
+    container_name: kafka
+    ports:
+      - "9092"
+    networks:
+      - scorpio-net
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_LOG_RETENTION_MS: 10000
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 5000
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - zookeeper
+  postgres:
+    image: postgis/postgis
+    container_name: postgres
+    ports:
+      - "5432"
+    networks:
+      - scorpio-net
+      - mosquitto-net
+    environment:
+      POSTGRES_USER: ngb
+      POSTGRES_PASSWORD: ngb
+      POSTGRES_DB: ngb
+  scorpio:
+    image: scorpiobroker/all-in-one-runner:ubuntu-kafka-latest
+    hostname: scorpio
+    container_name: scorpio
+    ports:
+      - "9090:9090"
+    networks:
+      - scorpio-net
+      - mosquitto-net
+    environment:
+      DBHOST: postgres
+      BUSHOST: kafka
+    depends_on:
+      - postgres
+      - kafka
+networks:
+  scorpio-net:
+    name: scorpio-net
+    driver: bridge
+  mosquitto-net:
+    external: true

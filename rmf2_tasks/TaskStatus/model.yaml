@@ -1,0 +1,63 @@
+TaskStatus:
+  description: Task Status Message
+  properties:
+    id:
+      description: Task ID String
+      type: string
+      x-ngsi:
+        type: Property
+    status:
+      description: Status of the task.
+      enum:
+        - IN_PROGRESS
+        - COMPLETED
+        - CANCELLED
+        - PAUSED
+        - ERROR
+      type: string
+      x-ngsi:
+        type: Property
+    taskElapsedDuration:
+      description: Total Elapsed time of the task from start time, defined in the ISO 8601 standard
+      type: string
+      x-ngsi:
+        type: Property
+    taskEnd:
+      description: End time of the task, defined in the ISO 8601 standard
+      format: date-time
+      type: string
+      x-ngsi:
+        type: Property
+    taskStart:
+      description: Start Time of the task, defined in the ISO 8601 standard
+      format: date-time
+      type: string
+      x-ngsi:
+        type: Property
+    taskType:
+      description: Description of the Task Type
+      type: string
+      x-ngsi:
+        type: Property
+    type:
+      description: NGSI Entity type. It has to be TaskStatus
+      enum:
+        - TaskStatus
+      type: string
+      x-ngsi:
+        type: Property
+  required:
+    - id
+    - status
+    - taskElapsedDuration
+    - taskEnd
+    - taskStart
+    - taskType
+    - type
+  type: object
+  x-derived-from: ''
+  x-disclaimer: ''
+  x-license-url: ''
+  x-model-schema: ''
+  x-model-tags: ''
+  x-version: 0.0.1

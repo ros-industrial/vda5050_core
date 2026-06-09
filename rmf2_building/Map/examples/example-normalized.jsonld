@@ -1,0 +1,68 @@
+{
+    "id": "urn:ngsi-ld:Map:TestMap",
+    "type": "Map",
+    "updateTime": {
+        "type": "Property",
+        "value": "07/10/2024, 08:00:42"
+    },
+    "edges": {
+        "type": "Property",
+        "value": [
+            {
+                "edgeId": "P0_P1",
+                "connectedNodes": [
+                    {
+                        "nodeId" : "P0"
+                    },
+                    {
+                        "nodeId" : "P1"
+                    }
+                ]
+            },
+            {
+                "edgeId": "P1_P2",
+                "connectedNodes": [
+                    {
+                        "nodeId" : "P1"
+                    },
+                    {
+                        "nodeId" : "P2"
+                    }
+                ]
+            }
+        ]
+    },
+    "nodes": {
+        "type": "Property",
+        "value": [
+            {
+                "nodeId": "P0",
+                "point2D": {
+                    "x": -72.0,
+                    "y": -130.0
+                }
+            },
+            {
+                "nodeId": "P1",
+                "point2D": {
+                    "x": -72.0,
+                    "y": -126.0
+                }
+            },
+            {
+                "nodeId": "P2",
+                "point2D": {
+                    "x": -72.0,
+                    "y": -122.0
+                }
+            }
+        ]
+    },
+    "raw": {
+        "type": "Property",
+        "value": "Some Raw Map Data"
+    },
+    "@context": [
+        "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.7.jsonld"
+    ]
+}

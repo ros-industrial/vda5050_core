@@ -1,0 +1,64 @@
+{
+    "id": "urn:ngsi-ld:Robot:MiR:9001:CommandMessage",
+    "type": "CommandMessage",
+    "command": {
+        "type": "Property",
+        "value": "move_to"
+    },
+    "commandId": {
+        "type": "Property",
+        "value": "001"
+    },
+    "commandTime": {
+        "type": "Property",
+        "value": "07/10/2024, 08:00:42"
+    },
+    "commandUpdateId": {
+        "type": "Property",
+        "value": 2
+    },
+    "waypoints": {
+        "type": "Property",
+        "value": [
+            {
+                "nodeId": "P17",
+                "point2D": {
+                    "x": -72.0,
+                    "y": -130.0
+                },
+                "released": true,
+                "sequenceId": 0
+            },
+            {
+                "nodeId": "P57",
+                "point2D": {
+                    "x": -72.0,
+                    "y": -126.0
+                },
+                "released": true,
+                "sequenceId": 1
+            },
+            {
+                "nodeId": "P97",
+                "point2D": {
+                    "x": -72.0,
+                    "y": -122.0
+                },
+                "released": true,
+                "sequenceId": 2
+            },
+            {
+                "nodeId": "P137",
+                "point2D": {
+                    "x": -72.0,
+                    "y": -118.0
+                },
+                "released": true,
+                "sequenceId": 3
+            }
+        ]
+    },
+    "@context": [
+        "https://uri.etsi.org/ngsi-ld/v1/ngsi-ld-core-context-v1.7.jsonld"
+    ]
+}

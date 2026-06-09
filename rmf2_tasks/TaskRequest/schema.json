@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "description": "NGSI Entity type. It has to be TaskRequest",
+      "enum": [
+        "Task"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "description": "Task ID"
+    },
+    "taskType": {
+      "type": "string",
+      "description": "Description of the Task Type"
+    },
+    "taskCommand": {
+      "type": "string",
+      "description": "Description of the Task Type",
+      "enum": [
+        "START",
+        "PAUSE",
+        "RESUME",
+        "CANCEL"
+      ]
+    },
+    "taskParams": {
+      "type": "array",
+      "description": "List of Task Parameters",
+      "items": {
+        "type": "string",
+        "description": "Task Parameter represented as JSON String"
+      }
+    },
+    "taskExpectedStart": {
+      "type": "string",
+      "description": "Expected Start time of the task, defined in the ISO 8601 standard"
+    },
+    "taskExpectedEnd": {
+      "type": "string",
+      "description": "Expected End time of the task, defined in the ISO 8601 standard"
+    },
+    "taskExpectedDuration": {
+      "type": "string",
+      "description": "Expected duration of the task, defined in the ISO 8601 standard"
+    }
+  },
+  "required": [
+    "type",
+    "id",
+    "taskType",
+    "taskCommand",
+    "taskParams",
+    "taskExpectedStart",
+    "taskExpectedEnd",
+    "taskExpectedDuration"
+  ]
+}

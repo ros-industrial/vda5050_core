@@ -1,0 +1,122 @@
+CommandStatusMessage:
+  description: Command Status message
+  properties:
+    robotId:
+      description: ID of Robot Executing the Command
+      type: string
+      x-ngsi:
+        type: Property
+    commandId:
+      description: Unique ID of the command assigned to the robot
+      type: string
+      x-ngsi:
+        type: Property
+    commandStatusTime:
+      description: Time of Command Status recorded
+      format: date-time
+      type: string
+      x-ngsi:
+        type: Property
+    commandUpdateId:
+      description: Update count of the command assigned to the robot
+      type: number
+      x-ngsi:
+        type: Property
+    type:
+      description: NGSI Entity type. It has to be CommandStatusMessage
+      enum:
+        - CommandMessage
+      type: string
+      x-ngsi:
+        type: Property
+    path:
+      description: Path of Command to Robot
+      items:
+        properties:
+          released:
+            description: Determines if the waypoint is allowed to be traversed on yet
+            type: bool
+            x-ngsi:
+              type: Property
+          waypoint:
+            description: Waypoint in Path
+            properties:
+              nodeId:
+                description: ID of the corresponding mpa node of a waypoint
+                type: string
+                x-ngsi:
+                  type: Property
+              released:
+                description: Determines if the waypoint is allowed to be traversed on yet
+                type: bool
+                x-ngsi:
+                  type: Property
+              orientation2D:
+                description: 2D Angle of the AGV
+                properties:
+                  theta:
+                    default: 0
+                    description: Simple measurement of an angle
+                    type: number
+                    x-ngsi:
+                      type: Property
+                required:
+                  - theta
+                type: object
+                x-ngsi:
+                  type: Property
+              point2D:
+                description: Point in 2D as a two simple coordinates x and y
+                properties:
+                  x:
+                    default: 0
+                    description: Simple coordinate of a point
+                    type: number
+                    x-ngsi:
+                      type: Property
+                  'y':
+                    default: 0
+                    description: Simple coordinate of a point
+                    type: number
+                    x-ngsi:
+                      type: Property
+                required:
+                  - x
+                  - 'y'
+                type: object
+                x-ngsi:
+                  type: Property
+              sequenceId:
+                description: Waypoint sequence relative to entire path
+                type: number
+                x-ngsi:
+                  type: Property
+            required:
+              - nodeId
+              - point2D
+              - released
+              - sequenceId
+            type: object
+            x-ngsi:
+              type: Property
+        required:
+          - waypoint
+          - released
+        type: object
+      type: array
+      x-ngsi:
+        type: Property
+  required:
+    - robotId
+    - type
+    - commandStatusTime
+    - commandId
+    - commandUpdateId
+    - path
+  type: object
+  x-derived-from: ''
+  x-disclaimer: ''
+  x-license-url: ''
+  x-model-schema: ''
+  x-model-tags: ''
+  x-version: 0.0.1

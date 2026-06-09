@@ -1,0 +1,104 @@
+CommandMessage:
+  description: Command message
+  properties:
+    command:
+      description: Command sent to the robot
+      type: string
+      x-ngsi:
+        type: Property
+    commandId:
+      description: Unique ID of the command assigned to the robot
+      type: string
+      x-ngsi:
+        type: Property
+    commandTime:
+      description: Sent time to the robot
+      format: date-time
+      type: string
+      x-ngsi:
+        type: Property
+    commandUpdateId:
+      description: Update count of the command assigned to the robot
+      type: number
+      x-ngsi:
+        type: Property
+    type:
+      description: NGSI Entity type. It has to be CommandMessage
+      enum:
+        - CommandMessage
+      type: string
+      x-ngsi:
+        type: Property
+    waypoints:
+      description: List of waypoints
+      items:
+        properties:
+          nodeId:
+            description: ID of the corresponding map node of a waypoint
+            type: string
+            x-ngsi:
+              type: Property
+          released:
+            description: Determines if the waypoint is allowed to be traversed on yet
+            type: bool
+            x-ngsi:
+              type: Property
+          orientation2D:
+            description: 2D Angle of the AGV
+            properties:
+              theta:
+                default: 0.0
+                description: Simple measurement of an angle
+                type: number
+                x-ngsi:
+                  type: Property
+            required:
+              - theta
+            type: object
+            x-ngsi:
+              type: Property
+          point2D:
+            description: Point in 2D as a two simple coordinates x and y
+            properties:
+              x:
+                default: 0.0
+                description: Simple coordinate of a point
+                type: number
+                x-ngsi:
+                  type: Property
+              y:
+                default: 0.0
+                description: Simple coordinate of a point
+                type: number
+                x-ngsi:
+                  type: Property
+            required:
+              - x
+              - y
+            type: object
+            x-ngsi:
+              type: Property
+          sequenceId:
+            description: Waypoint sequence relative to entire path
+            type: number
+            x-ngsi:
+              type: Property
+        type: object
+      type: array
+      x-ngsi:
+        type: Property
+  required:
+    - id
+    - type
+    - commandTime
+    - commandId
+    - commandUpdateId
+    - command
+    - waypoints
+  type: object
+  x-derived-from: ""
+  x-disclaimer: ""
+  x-license-url: ""
+  x-model-schema: ""
+  x-model-tags: ""
+  x-version: 0.0.1

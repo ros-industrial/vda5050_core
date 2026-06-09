@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "description": "NGSI Entity type. It has to be TaskStatus",
+      "enum": [
+        "TaskStatus"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "description": "Task ID"
+    },
+    "taskType": {
+      "type": "string",
+      "description": "Description of the Task Type"
+    },
+    "taskStart": {
+      "type": "string",
+      "description": "Start time of the task, expressed as date-time, defined in the ISO 8601 standard"
+    },
+    "taskEnd": {
+      "type": "string",
+      "description": "End time of the task, expressed as date-time, defined in the ISO 8601 standard"
+    },
+    "taskElapsedDuration": {
+      "type": "string",
+      "description": "Total Elapsed time of the task from start time, defined in the ISO 8601 standard"
+    },
+    "status": {
+      "type": "string",
+      "description": "Status of the task.",
+      "enum": [
+        "IN_PROGRESS",
+        "COMPLETED",
+        "CANCELLED",
+        "PAUSED",
+        "ERROR",
+        "CANCEL"
+      ]
+    }
+  },
+  "required": [
+    "type",
+    "id",
+    "taskType",
+    "taskStart",
+    "taskEnd",
+    "taskElapsedDuration",
+    "status"
+  ]
+}
