@@ -147,22 +147,7 @@ TEST(OrderValidatorTest, RejectsNewOrderWhileBusy)
   EXPECT_EQ(result.errors.front().error_type, "validationError");
 }
 
-// Test 4: Reject a new order whose start node is not reachable.
-TEST(OrderValidatorTest, RejectsUnreachableStartNode)
-{
-  OrderValidator validator;
-  validator.set_reachability_check([](const types::Node&) { return false; });
-  auto context = make_context();
-
-  const auto result =
-    validator.validate_order(single_node_order("new_4", 0), context);
-
-  EXPECT_TRUE(result.rejected());
-  ASSERT_FALSE(result.errors.empty());
-  EXPECT_EQ(result.errors.front().error_type, "validationError");
-}
-
-// Test 5: Accept a valid stitched update onto the active order.
+// Test 4: Accept a valid stitched update onto the active order.
 TEST(OrderValidatorTest, AcceptsValidStitchedUpdate)
 {
   OrderValidator validator;
@@ -181,7 +166,7 @@ TEST(OrderValidatorTest, AcceptsValidStitchedUpdate)
   EXPECT_TRUE(result.accepted());
 }
 
-// Test 6: A non-consecutive (but strictly greater) update id is still valid;
+// Test 5: A non-consecutive (but strictly greater) update id is still valid;
 // VDA5050 does not require updates to increment by exactly one.
 TEST(OrderValidatorTest, AcceptsNonConsecutiveUpdateId)
 {
@@ -199,7 +184,7 @@ TEST(OrderValidatorTest, AcceptsNonConsecutiveUpdateId)
   EXPECT_TRUE(result.accepted());
 }
 
-// Test 7: A duplicate update (same orderUpdateId) is ignored silently.
+// Test 6: A duplicate update (same orderUpdateId) is ignored silently.
 TEST(OrderValidatorTest, IgnoresDuplicateUpdate)
 {
   OrderValidator validator;
@@ -218,7 +203,7 @@ TEST(OrderValidatorTest, IgnoresDuplicateUpdate)
   EXPECT_TRUE(result.errors.empty());
 }
 
-// Test 8: A deprecated update (lower id) is rejected with orderUpdateError
+// Test 7: A deprecated update (lower id) is rejected with orderUpdateError
 // and the previous order is kept -- not silently dropped.
 TEST(OrderValidatorTest, RejectsDeprecatedUpdate)
 {
@@ -238,7 +223,7 @@ TEST(OrderValidatorTest, RejectsDeprecatedUpdate)
   EXPECT_EQ(result.errors.front().error_type, "orderUpdateError");
 }
 
-// Test 9: An update whose stitch node does not match the last base node fails.
+// Test 8: An update whose stitch node does not match the last base node fails.
 TEST(OrderValidatorTest, RejectsStitchNodeMismatch)
 {
   OrderValidator validator;
@@ -255,26 +240,6 @@ TEST(OrderValidatorTest, RejectsStitchNodeMismatch)
   EXPECT_TRUE(result.rejected());
   ASSERT_FALSE(result.errors.empty());
   EXPECT_EQ(result.errors.front().error_type, "orderUpdateError");
-}
-
-// Test 10: Reject fields/actions the AGV cannot process,
-// reporting an orderError carrying the offending errorReferences.
-TEST(OrderValidatorTest, RejectsUnsupportedCapability)
-{
-  OrderValidator validator;
-  validator.set_capability_check([](const types::Order&) {
-    return std::vector<types::ErrorReference>{{"actionType", "nurbs"}};
-  });
-  auto context = make_context();
-
-  const auto result =
-    validator.validate_order(single_node_order("new_11", 0), context);
-
-  EXPECT_TRUE(result.rejected());
-  ASSERT_FALSE(result.errors.empty());
-  EXPECT_EQ(result.errors.front().error_type, "orderError");
-  ASSERT_TRUE(result.errors.front().error_references.has_value());
-  EXPECT_FALSE(result.errors.front().error_references->empty());
 }
 
 }  // namespace

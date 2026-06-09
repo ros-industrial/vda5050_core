@@ -47,8 +47,7 @@ class OrderAcceptance : public execution::StrategyInterface
 public:
   OrderAcceptance();
 
-  /// \brief Construct with a pre-configured validator (e.g. with real
-  /// reachability/capability hooks injected by the robot config layer).
+  /// \brief Construct with a pre-configured validator
   explicit OrderAcceptance(OrderValidator validator)
   : validator_(std::move(validator))
   {

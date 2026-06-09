@@ -101,23 +101,6 @@ bool is_busy(const std::shared_ptr<OrderExecutionResource>& execution)
 
 }  // namespace
 
-OrderValidator::OrderValidator()
-: reachable_([](const types::Node&) { return true; }),
-  capable_(
-    [](const types::Order&) { return std::vector<types::ErrorReference>{}; })
-{
-}
-
-void OrderValidator::set_reachability_check(ReachabilityCheck check)
-{
-  if (check) reachable_ = std::move(check);
-}
-
-void OrderValidator::set_capability_check(CapabilityCheck check)
-{
-  if (check) capable_ = std::move(check);
-}
-
 AcceptanceResult OrderValidator::validate_order(
   const types::Order& incoming_order,
   const std::shared_ptr<AGVContext>& context) const
@@ -144,15 +127,7 @@ AcceptanceResult OrderValidator::validate_order(
     return rejected(std::move(graph.errors));
   }
 
-  // Capability / map / optional-field support. The AGV must
-  // reject (not silently ignore) fields or actions it cannot process.
-  if (auto unsupported = capable_(incoming_order); !unsupported.empty())
-  {
-    return rejected(make_error(
-      errors::OrderError,
-      "Order references fields or actions the AGV cannot process",
-      incoming_order, std::move(unsupported)));
-  }
+  // TODO(eileentyz): Add AGV capability/factsheet validation once capability data is available.
 
   // Read one consistent snapshot of the execution state; reused below for the
   // update-stitching check so both decisions see the same values.
@@ -174,17 +149,8 @@ AcceptanceResult OrderValidator::validate_order(
         incoming_order));
     }
 
-    // Step 4: the start node must be reachable from the current position.
-    if (
-      !incoming_order.nodes.empty() &&
-      !reachable_(incoming_order.nodes.front()))
-    {
-      return rejected(make_error(
-        errors::ValidationError,
-        "Start node of the new order is not reachable from current position",
-        incoming_order,
-        {{errors::RefNodeId, incoming_order.nodes.front().node_id}}));
-    }
+    // TODO(eileentyz): Add start-node reachability validation once AGV position tracking
+    // is available.
 
     return accepted();
   }
