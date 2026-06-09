@@ -68,16 +68,18 @@ struct AcceptanceResult
 /// before an order enters the execution plane.
 ///
 /// Structural validity reuses `order_utils::is_valid_graph`.
-/// TODO: Add position- and capability-dependent checks once AGV position and
-/// factsheet/capability data are available.
+/// TODO(eileentyz): Add position- and capability-dependent checks once AGV
+/// position and factsheet/capability data are available.
 class OrderValidator
 {
 public:
-  /// \brief Evaluate an incoming order against context state and protocol limits.
+  /// \brief Evaluate an incoming order against graph validity and execution state.
   ///
   /// \param incoming_order Order payload received from master control.
   /// \param context Thread-safe order context with execution tracking state.
   /// \return Acceptance decision; on rejection `errors` holds the VDA5050 errors.
+  // TODO(eileentyz): Add protocol limit validation once factsheet/config data
+  // is available.
   AcceptanceResult validate_order(
     const types::Order& incoming_order,
     const std::shared_ptr<AGVContext>& context) const;

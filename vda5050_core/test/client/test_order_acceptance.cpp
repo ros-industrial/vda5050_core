@@ -205,4 +205,122 @@ TEST(OrderAcceptanceTest, IgnoresDuplicateUpdate)
   EXPECT_TRUE(state.errors.empty());
 }
 
+// Test 5: Errors from a rejected order are cleared once a new order is accepted,
+// rather than leaking into the freshly accepted order's reported state.
+TEST(OrderAcceptanceTest, ClearsStaleErrorsOnAcceptedNewOrder)
+{
+  OrderAcceptance strategy;
+  auto context = make_context();
+
+  // First order is structurally invalid -> rejected, error recorded in state.
+  types::Order bad;
+  bad.order_id = "bad";
+  bad.order_update_id = 0;
+  bad.nodes.push_back(make_node("node_0", 0));
+  bad.nodes.push_back(make_node("node_2", 2));  // 2 nodes, 0 edges -> invalid
+
+  context->provider()->push<OrderUpdate>(bad);
+  strategy.step(context);
+
+  auto execution = context->get_resource<OrderExecutionResource>();
+  ASSERT_FALSE(execution->get_state().errors.empty());
+
+  // A subsequent valid new order is accepted and must clear the stale error.
+  types::Order good;
+  good.order_id = "o1";
+  good.order_update_id = 0;
+  good.nodes.push_back(make_node("node_0", 0));
+
+  context->provider()->push<OrderUpdate>(good);
+  strategy.step(context);
+
+  const auto state = execution->get_state();
+  EXPECT_EQ(state.order_id, "o1");
+  EXPECT_TRUE(state.errors.empty());
+}
+
+// Test 6: step() re-fires on every spin tick against the same cached order, so
+// re-processing a rejected order must not accumulate duplicate errors.
+TEST(OrderAcceptanceTest, ReprocessingRejectedOrderDoesNotDuplicateErrors)
+{
+  OrderAcceptance strategy;
+  auto context = make_context();
+
+  types::Order bad;
+  bad.order_id = "bad";
+  bad.order_update_id = 0;
+  bad.nodes.push_back(make_node("node_0", 0));
+  bad.nodes.push_back(make_node("node_2", 2));  // 2 nodes, 0 edges -> invalid
+
+  context->provider()->push<OrderUpdate>(bad);
+  auto execution = context->get_resource<OrderExecutionResource>();
+
+  strategy.step(context);
+  const size_t after_first = execution->get_state().errors.size();
+  ASSERT_GT(after_first, 0u);
+
+  // Same cached order re-processed on subsequent ticks; error count is stable.
+  strategy.step(context);
+  strategy.step(context);
+
+  EXPECT_EQ(execution->get_state().errors.size(), after_first);
+}
+
+// Test 7: An order update that re-supplies a horizon node's action must not
+// duplicate the corresponding action_state.
+TEST(OrderAcceptanceTest, UpdateDoesNotDuplicateReSuppliedActionStates)
+{
+  OrderAcceptance strategy;
+  auto context = make_context();
+
+  // Seed a base sitting at node_a (seq 10) with an unreleased horizon node_b
+  // whose action "act_b" is already tracked in action_states.
+  {
+    auto execution = context->get_resource<OrderExecutionResource>();
+    execution->set_executing_order(true);
+    types::State state = execution->get_state();
+    state.order_id = "o1";
+    state.order_update_id = 1;
+    state.last_node_id = "node_a";
+    state.last_node_sequence_id = 10;
+
+    types::NodeState a;
+    a.node_id = "node_a";
+    a.sequence_id = 10;
+    a.released = true;
+    types::NodeState b;
+    b.node_id = "node_b";
+    b.sequence_id = 12;
+    b.released = false;  // horizon
+    state.node_states = {a, b};
+
+    types::ActionState act;
+    act.action_id = "act_b";
+    state.action_states = {act};
+    execution->set_state(std::move(state));
+  }
+
+  // Update re-supplies node_b (now released) carrying the same action act_b.
+  types::Order update;
+  update.order_id = "o1";
+  update.order_update_id = 2;
+  update.nodes.push_back(make_node("node_a", 10));  // re-sent stitch node
+  auto node_b = make_node("node_b", 12);
+  node_b.actions.push_back(make_action("act_b"));
+  update.nodes.push_back(node_b);
+  update.edges.push_back(make_edge("edge_ab", 11, "node_a", "node_b"));
+
+  context->provider()->push<OrderUpdate>(update);
+  strategy.step(context);
+
+  const auto state =
+    context->get_resource<OrderExecutionResource>()->get_state();
+  size_t act_b_count = 0;
+  for (const auto& a : state.action_states)
+  {
+    if (a.action_id == "act_b") ++act_b_count;
+  }
+  EXPECT_EQ(act_b_count, 1u);
+}
+
 }  // namespace

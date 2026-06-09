@@ -121,13 +121,14 @@ AcceptanceResult OrderValidator::validate_order(
       errors::ValidationError, "OrderExecutionResource is null", {}));
   }
 
-  // Step 1: structural / format validity of the order graph.
+  // Structural / format validity of the order graph.
   if (auto graph = order_utils::is_valid_graph(incoming_order); !graph)
   {
     return rejected(std::move(graph.errors));
   }
 
-  // TODO(eileentyz): Add AGV capability/factsheet validation once capability data is available.
+  // TODO(eileentyz): Add AGV capability/factsheet validation once capability
+  // data is available.
 
   // Read one consistent snapshot of the execution state; reused below for the
   // update-stitching check so both decisions see the same values.
@@ -135,11 +136,11 @@ AcceptanceResult OrderValidator::validate_order(
   const std::string current_id = current_state.order_id;
   const uint32_t current_update_id = current_state.order_update_id;
 
-  // Step 2: brand new order, or an update of the active one?
+  // Brand new order, or an update of the active one?
   if (incoming_order.order_id != current_id)
   {
     // New order
-    // Step 3: reject if the vehicle is still executing or holding a horizon.
+    // Reject if the vehicle is still executing or holding a horizon.
     if (is_busy(execution))
     {
       return rejected(make_error(
@@ -149,20 +150,20 @@ AcceptanceResult OrderValidator::validate_order(
         incoming_order));
     }
 
-    // TODO(eileentyz): Add start-node reachability validation once AGV position tracking
-    // is available.
+    // TODO(eileentyz): Add start-node reachability validation once AGV position
+    // tracking is available.
 
     return accepted();
   }
 
   // Update of the active order (same orderId)
-  // Step 6: identical orderUpdateId => duplicate resend; discard silently.
+  // Identical orderUpdateId => duplicate resend; discard silently.
   if (incoming_order.order_update_id == current_update_id)
   {
     return ignored();
   }
 
-  // Step 5: lower orderUpdateId => deprecated update. Report it
+  // Lower orderUpdateId => deprecated update. Report it
   // and keep executing the previous order. Any strictly greater id is a valid
   // newer update -- there is no requirement that it increment by exactly one.
   if (incoming_order.order_update_id < current_update_id)
@@ -173,7 +174,7 @@ AcceptanceResult OrderValidator::validate_order(
       incoming_order));
   }
 
-  // Steps 7/8: the update must continue from the decision point. We anchor on
+  // The update must continue from the decision point. We anchor on
   // the last reached node tracked in OrderExecutionResource (nodeId + sequenceId).
   if (incoming_order.nodes.empty())
   {

@@ -20,6 +20,8 @@
 
 #include <algorithm>
 #include <memory>
+#include <string>
+#include <unordered_set>
 #include <utility>
 
 #include "vda5050_core/client/contexts/agv_context.hpp"
@@ -121,6 +123,21 @@ void apply_order_update(types::State& state, const types::Order& order)
     append_node(state, order.nodes[i]);
   }
   for (const auto& edge : order.edges) append_edge(state, edge);
+
+  // Deduplicate action states after replacing the horizon. This prevents
+  // re-sent horizon actions from accumulating while preserving first-seen
+  // action status.
+  // TODO(eileentyz): reconcile action_states fully (also drop actions for
+  // horizon nodes/edges that an update removes) once node->action tracking
+  // exists.
+  std::unordered_set<std::string> seen_action_ids;
+  state.action_states.erase(
+    std::remove_if(
+      state.action_states.begin(), state.action_states.end(),
+      [&seen_action_ids](const types::ActionState& a) {
+        return !seen_action_ids.insert(a.action_id).second;
+      }),
+    state.action_states.end());
 }
 
 }  // namespace
@@ -153,13 +170,16 @@ void OrderAcceptance::step(std::shared_ptr<execution::ContextInterface> context)
   auto execution = order_context->get_resource<OrderExecutionResource>();
   if (!execution) return;
 
-  // State is mutated via a read-modify-write on the resource's snapshot
-  // (get_state -> mutate -> set_state). OrderAcceptance is the sole writer of
-  // order/node state, so the read-write window carries no lost-update risk.
+  // NOTE: get_state()/set_state() is a non-atomic read-modify-write.
+  // This is safe while the handler runs state-writing strategies sequentially
+  // and OrderAcceptance is the only writer of this state.
   switch (result.outcome)
   {
     case AcceptanceOutcome::Accepted: {
       types::State state = execution->get_state();
+      // A successful acceptance supersedes any prior rejection, so clear stale
+      // errors before applying the new order or update.
+      state.errors.clear();
       const bool is_update = (order.order_id == state.order_id);
       if (is_update)
       {
@@ -174,12 +194,10 @@ void OrderAcceptance::step(std::shared_ptr<execution::ContextInterface> context)
       break;
     }
     case AcceptanceOutcome::Rejected: {
-      // Errors are kept in state until a new order is accepted.
+      // Replace errors instead of appending, since step() may re-process the
+      // same cached rejected order.
       types::State state = execution->get_state();
-      for (const auto& error : result.errors)
-      {
-        state.errors.push_back(error);
-      }
+      state.errors = result.errors;
       execution->set_state(std::move(state));
       break;
     }
