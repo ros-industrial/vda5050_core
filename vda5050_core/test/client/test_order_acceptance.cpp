@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "vda5050_core/client/contexts/agv_context.hpp"
 #include "vda5050_core/client/resources/config.hpp"
@@ -41,7 +42,7 @@ std::shared_ptr<AGVContext> make_context()
 {
   auto config = std::make_shared<vda5050_core::client::HeaderConfigResource>(
     "uagv", "2.0.0", "ROS-I", "S001");
-  auto context = std::make_shared<AGVContext>(config);
+  auto context = AGVContext::make(config);
   context->init();
   return context;
 }
@@ -139,19 +140,19 @@ TEST(OrderAcceptanceTest, AppliesUpdateByAppending)
   {
     auto execution = context->get_resource<OrderExecutionResource>();
     execution->set_executing_order(true);
-    execution->update_state([](types::State& state) {
-      state.order_id = "o1";
-      state.order_update_id = 1;
-      state.last_node_id = "node_a";
-      state.last_node_sequence_id = 10;
-      state.node_states.push_back([] {
-        types::NodeState n;
-        n.node_id = "node_a";
-        n.sequence_id = 10;
-        n.released = true;
-        return n;
-      }());
-    });
+    types::State state = execution->get_state();
+    state.order_id = "o1";
+    state.order_update_id = 1;
+    state.last_node_id = "node_a";
+    state.last_node_sequence_id = 10;
+    state.node_states.push_back([] {
+      types::NodeState n;
+      n.node_id = "node_a";
+      n.sequence_id = 10;
+      n.released = true;
+      return n;
+    }());
+    execution->set_state(std::move(state));
   }
 
   types::Order update;
@@ -181,12 +182,12 @@ TEST(OrderAcceptanceTest, IgnoresDuplicateUpdate)
 
   {
     auto execution = context->get_resource<OrderExecutionResource>();
-    execution->update_state([](types::State& state) {
-      state.order_id = "o1";
-      state.order_update_id = 3;
-      state.last_node_id = "node_a";
-      state.last_node_sequence_id = 10;
-    });
+    types::State state = execution->get_state();
+    state.order_id = "o1";
+    state.order_update_id = 3;
+    state.last_node_id = "node_a";
+    state.last_node_sequence_id = 10;
+    execution->set_state(std::move(state));
   }
 
   types::Order duplicate;

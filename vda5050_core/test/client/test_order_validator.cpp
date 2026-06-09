@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "vda5050_core/client/contexts/agv_context.hpp"
@@ -39,7 +40,7 @@ std::shared_ptr<AGVContext> make_context()
 {
   auto config = std::make_shared<vda5050_core::client::HeaderConfigResource>(
     "uagv", "2.0.0", "ROS-I", "S001");
-  auto context = std::make_shared<AGVContext>(config);
+  auto context = AGVContext::make(config);
   context->init();
   return context;
 }
@@ -85,13 +86,13 @@ void seed_execution_state(
 {
   auto execution = context->get_resource<OrderExecutionResource>();
   ASSERT_NE(execution, nullptr);
-  execution->update_state([&](types::State& state) {
-    state.order_id = order_id;
-    state.order_update_id = order_update_id;
-    state.last_node_id = last_node_id;
-    state.last_node_sequence_id = last_node_sequence_id;
-    state.node_states = node_states;
-  });
+  types::State state = execution->get_state();
+  state.order_id = order_id;
+  state.order_update_id = order_update_id;
+  state.last_node_id = last_node_id;
+  state.last_node_sequence_id = last_node_sequence_id;
+  state.node_states = node_states;
+  execution->set_state(std::move(state));
 }
 
 // Test 1: Accept a valid, structurally sound new order.

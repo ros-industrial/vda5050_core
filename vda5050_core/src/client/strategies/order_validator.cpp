@@ -84,9 +84,10 @@ AcceptanceResult accepted()
 // to traverse (base or horizon) or any action that is not yet FINISHED/FAILED.
 bool is_busy(const std::shared_ptr<OrderExecutionResource>& execution)
 {
-  if (!execution->get_node_states().empty()) return true;
+  const types::State state = execution->get_state();
+  if (!state.node_states.empty()) return true;
 
-  for (const auto& action : execution->get_action_states())
+  for (const auto& action : state.action_states)
   {
     if (
       action.action_status != types::ActionStatus::FINISHED &&
@@ -153,8 +154,11 @@ AcceptanceResult OrderValidator::validate_order(
       incoming_order, std::move(unsupported)));
   }
 
-  const std::string current_id = execution->get_active_order_id();
-  const uint32_t current_update_id = execution->get_active_order_update_id();
+  // Read one consistent snapshot of the execution state; reused below for the
+  // update-stitching check so both decisions see the same values.
+  const types::State current_state = execution->get_state();
+  const std::string current_id = current_state.order_id;
+  const uint32_t current_update_id = current_state.order_update_id;
 
   // Step 2: brand new order, or an update of the active one?
   if (incoming_order.order_id != current_id)
@@ -215,8 +219,8 @@ AcceptanceResult OrderValidator::validate_order(
 
   const auto& stitch_node = incoming_order.nodes.front();
   if (
-    stitch_node.node_id != execution->get_last_node_id() ||
-    stitch_node.sequence_id != execution->get_last_node_sequence_id())
+    stitch_node.node_id != current_state.last_node_id ||
+    stitch_node.sequence_id != current_state.last_node_sequence_id)
   {
     return rejected(make_error(
       errors::OrderUpdateError,

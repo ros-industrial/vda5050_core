@@ -20,7 +20,7 @@
 
 #include <algorithm>
 #include <memory>
-#include <mutex>
+#include <utility>
 
 #include "vda5050_core/client/contexts/agv_context.hpp"
 #include "vda5050_core/client/resources/order_execution.hpp"
@@ -153,33 +153,34 @@ void OrderAcceptance::step(std::shared_ptr<execution::ContextInterface> context)
   auto execution = order_context->get_resource<OrderExecutionResource>();
   if (!execution) return;
 
-  // All state mutation goes through update_state(), which holds the resource's
-  // internal mutex for us.
+  // State is mutated via a read-modify-write on the resource's snapshot
+  // (get_state -> mutate -> set_state). OrderAcceptance is the sole writer of
+  // order/node state, so the read-write window carries no lost-update risk.
   switch (result.outcome)
   {
     case AcceptanceOutcome::Accepted: {
-      execution->update_state([&order](types::State& state) {
-        const bool is_update = (order.order_id == state.order_id);
-        if (is_update)
-        {
-          apply_order_update(state, order);
-        }
-        else
-        {
-          apply_new_order(state, order);
-        }
-      });
+      types::State state = execution->get_state();
+      const bool is_update = (order.order_id == state.order_id);
+      if (is_update)
+      {
+        apply_order_update(state, order);
+      }
+      else
+      {
+        apply_new_order(state, order);
+      }
+      execution->set_state(std::move(state));
       execution->set_executing_order(true);
       break;
     }
     case AcceptanceOutcome::Rejected: {
       // Errors are kept in state until a new order is accepted.
-      execution->update_state([&result](types::State& state) {
-        for (const auto& error : result.errors)
-        {
-          state.errors.push_back(error);
-        }
-      });
+      types::State state = execution->get_state();
+      for (const auto& error : result.errors)
+      {
+        state.errors.push_back(error);
+      }
+      execution->set_state(std::move(state));
       break;
     }
     case AcceptanceOutcome::Ignored:
