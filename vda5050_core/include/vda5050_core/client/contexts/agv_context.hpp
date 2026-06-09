@@ -21,14 +21,11 @@
 
 #include <memory>
 #include <mutex>
-#include <stdexcept>
 #include <typeindex>
 #include <unordered_map>
 #include <utility>
 
 #include "vda5050_core/client/resources/config.hpp"
-#include "vda5050_core/client/resources/order_execution.hpp"
-#include "vda5050_core/client/updates/order.hpp"
 #include "vda5050_core/execution/context_interface.hpp"
 
 namespace vda5050_core {
@@ -80,15 +77,7 @@ protected:
 
 private:
   /// \brief Private constructor; use make() to obtain a shared_ptr instance.
-  explicit AGVContext(std::shared_ptr<HeaderConfigResource> config)
-  {
-    if (!config)
-    {
-      throw std::invalid_argument("AGVContext: config cannot be nullptr");
-    }
-    cache_resource(std::move(config));
-    cache_resource(std::make_shared<OrderExecutionResource>());
-  }
+  explicit AGVContext(std::shared_ptr<HeaderConfigResource> config);
 
   // Thread-safe internal layout caches
   void cache_update(std::shared_ptr<execution::UpdateBase> update);
