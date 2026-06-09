@@ -150,6 +150,27 @@ target_include_directories(vda5050_execution
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+# Client
+file(GLOB_RECURSE client_srcs "src/client/*.cpp")
+add_library(vda5050_client SHARED ${client_srcs})
+vda5050_configure_target_alias(
+  TARGET vda5050_client
+  NAMESPACE ${PROJECT_NAME}::
+  EXPORT_NAME client
+)
+target_link_libraries(vda5050_client
+  PUBLIC
+    ${PROJECT_NAME}::execution
+    ${PROJECT_NAME}::types
+    ${PROJECT_NAME}::order_utils
+    ${PROJECT_NAME}::logger
+)
+target_include_directories(vda5050_client
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
 # Master
 file(GLOB_RECURSE master_srcs "src/master/*.cpp")
 add_library(vda5050_master SHARED ${master_srcs})
@@ -186,6 +207,7 @@ install(
     vda5050_order_utils
     vda5050_transport
     vda5050_execution
+    vda5050_client
     vda5050_master
   EXPORT export_${PROJECT_NAME}
   LIBRARY DESTINATION lib
@@ -272,11 +294,12 @@ if(BUILD_TESTING)
 
   ament_add_gmock(test_client
     test/client/test_order_types.cpp
+    test/client/test_order_execution_resource.cpp
+    test/client/test_agv_context.cpp
   )
 
   target_link_libraries(test_client
-    vda5050_core::execution
-    vda5050_core::types
+    vda5050_core::client
   )
 
   ament_add_gmock(test_execution
