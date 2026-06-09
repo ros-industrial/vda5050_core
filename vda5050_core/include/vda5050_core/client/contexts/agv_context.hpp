@@ -47,21 +47,20 @@ namespace client {
 ///
 /// All map reads and writes are protected by a single `storage_mutex_` via
 /// std::lock_guard to prevent race conditions when strategies run concurrently.
-class AGVContext : public execution::ContextInterface
+class AGVContext : public execution::ContextInterface,
+                   public std::enable_shared_from_this<AGVContext>
 {
 public:
-  /// \brief Construct with AGV identity resource.
+  /// \brief Create an AGVContext owned by a shared_ptr.
   ///
   /// `HeaderConfigResource` and a blank `OrderExecutionResource` are available
   /// via get_resource<T>() after init() is called.
-  explicit AGVContext(std::shared_ptr<HeaderConfigResource> config)
-  : config_(std::move(config)),
-    execution_(std::make_shared<OrderExecutionResource>())
+  ///
+  /// \throws std::invalid_argument if `config` is nullptr.
+  static std::shared_ptr<AGVContext> make(
+    std::shared_ptr<HeaderConfigResource> config)
   {
-    if (!config_)
-    {
-      throw std::invalid_argument("AGVContext: config cannot be nullptr");
-    }
+    return std::shared_ptr<AGVContext>(new AGVContext(std::move(config)));
   }
 
   ~AGVContext() override = default;
@@ -83,6 +82,17 @@ protected:
     std::type_index type) const override;
 
 private:
+  /// \brief Private constructor; use make() to obtain a shared_ptr instance.
+  explicit AGVContext(std::shared_ptr<HeaderConfigResource> config)
+  : config_(std::move(config)),
+    execution_(std::make_shared<OrderExecutionResource>())
+  {
+    if (!config_)
+    {
+      throw std::invalid_argument("AGVContext: config cannot be nullptr");
+    }
+  }
+
   // Thread-safe internal layout caches
   void cache_update(std::shared_ptr<execution::UpdateBase> update);
   void cache_resource(std::shared_ptr<execution::ResourceBase> resource);

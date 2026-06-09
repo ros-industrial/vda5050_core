@@ -41,7 +41,7 @@ std::shared_ptr<AGVContext> make_context()
 {
   auto config =
     std::make_shared<HeaderConfigResource>("uagv", "2.0.0", "ROS-I", "S001");
-  auto context = std::make_shared<AGVContext>(config);
+  auto context = AGVContext::make(config);
   context->init();
   return context;
 }
@@ -49,7 +49,7 @@ std::shared_ptr<AGVContext> make_context()
 // Test 1: Make sure cannot create context without config.
 TEST(AGVContextTest, ThrowsForNullConfig)
 {
-  EXPECT_THROW(std::make_shared<AGVContext>(nullptr), std::invalid_argument);
+  EXPECT_THROW(AGVContext::make(nullptr), std::invalid_argument);
 }
 
 // Test 2: Make sure robot identity metadata matched what has passed in.
@@ -160,7 +160,7 @@ TEST(AGVContextTest, InvokesChangeCallbackOnOrderUpdate)
 {
   auto config =
     std::make_shared<HeaderConfigResource>("uagv", "2.0.0", "ROS-I", "S001");
-  auto context = std::make_shared<AGVContext>(config);
+  auto context = AGVContext::make(config);
 
   std::atomic_int count = 0;
   context->on_change([&count]() { count++; });
@@ -178,7 +178,7 @@ TEST(AGVContextTest, MultipleUpdatesInvokeCallbackMultipleTimes)
 {
   auto config =
     std::make_shared<HeaderConfigResource>("uagv", "2.0.0", "ROS-I", "S001");
-  auto context = std::make_shared<AGVContext>(config);
+  auto context = AGVContext::make(config);
 
   std::atomic_int count = 0;
   context->on_change([&count]() { count++; });

@@ -30,15 +30,19 @@ namespace client {
 void AGVContext::init()
 {
   if (initialized_) return;
-  initialized_ = true;
 
   cache_resource(config_);
   cache_resource(execution_);
 
-  // Register provider callbacks so incoming updates are cached automatically
-  provider()->on<OrderUpdate>([this](std::shared_ptr<OrderUpdate> update) {
-    this->cache_update(update);
-  });
+  provider()->on<OrderUpdate>(
+    [w = weak_from_this()](std::shared_ptr<OrderUpdate> update) {
+      if (auto con = w.lock())
+      {
+        con->cache_update(update);
+      }
+    });
+
+  initialized_ = true;
 }
 
 // Thread-safe update retrieval, lock covers the map read
