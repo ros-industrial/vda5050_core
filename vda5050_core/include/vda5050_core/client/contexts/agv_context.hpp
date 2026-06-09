@@ -38,8 +38,9 @@ namespace client {
 /// \brief AGV client context: in-memory storage for VDA5050 execution data.
 ///
 /// Seeds `HeaderConfigResource` and `OrderExecutionResource` as persistent
-/// resources. Registers a provider callback for `OrderUpdate` so strategies
-/// can read the latest inbound order via get_update<OrderUpdate>().
+/// resources during construction. init() then registers a provider callback for
+/// `OrderUpdate` so strategies can read the latest inbound order via
+/// get_update<OrderUpdate>().
 ///
 /// Order execution state is owned by the `OrderExecutionResource`; strategies
 /// reach it via get_resource<OrderExecutionResource>() and use its thread-safe
@@ -53,8 +54,8 @@ class AGVContext : public execution::ContextInterface,
 public:
   /// \brief Create an AGVContext owned by a shared_ptr.
   ///
-  /// `HeaderConfigResource` and a blank `OrderExecutionResource` are available
-  /// via get_resource<T>() after init() is called.
+  /// `HeaderConfigResource` and a blank `OrderExecutionResource` are seeded at
+  /// construction and available via get_resource<T>() once make() returns.
   ///
   /// \throws std::invalid_argument if `config` is nullptr.
   static std::shared_ptr<AGVContext> make(
@@ -65,11 +66,7 @@ public:
 
   ~AGVContext() override = default;
 
-  /// \brief Seed resources and register the provider callback for updates.
-  ///
-  /// Seeds HeaderConfigResource and OrderExecutionResource into the resource
-  /// map. Registers provider()->on<OrderUpdate>() to cache incoming orders.
-  /// Each update triggers notify_on_change() so the Handler wakes up.
+  /// \brief Register the provider callback for inbound updates.
   void init() override;
 
 protected:
@@ -84,13 +81,13 @@ protected:
 private:
   /// \brief Private constructor; use make() to obtain a shared_ptr instance.
   explicit AGVContext(std::shared_ptr<HeaderConfigResource> config)
-  : config_(std::move(config)),
-    execution_(std::make_shared<OrderExecutionResource>())
   {
-    if (!config_)
+    if (!config)
     {
       throw std::invalid_argument("AGVContext: config cannot be nullptr");
     }
+    cache_resource(std::move(config));
+    cache_resource(std::make_shared<OrderExecutionResource>());
   }
 
   // Thread-safe internal layout caches
@@ -98,12 +95,6 @@ private:
   void cache_resource(std::shared_ptr<execution::ResourceBase> resource);
 
   bool initialized_ = false;
-
-  // config_ and execution_ are also seeded into resources_ during init() so
-  // strategies can reach them via get_resource<T>(). They are kept as direct
-  // members so init() can seed the same shared objects created at construction.
-  std::shared_ptr<HeaderConfigResource> config_;
-  std::shared_ptr<OrderExecutionResource> execution_;
 
   std::unordered_map<std::type_index, std::shared_ptr<execution::UpdateBase>>
     updates_;

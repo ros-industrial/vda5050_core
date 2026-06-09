@@ -31,9 +31,6 @@ void AGVContext::init()
 {
   if (initialized_) return;
 
-  cache_resource(config_);
-  cache_resource(execution_);
-
   provider()->on<OrderUpdate>(
     [w = weak_from_this()](std::shared_ptr<OrderUpdate> update) {
       if (auto con = w.lock())
