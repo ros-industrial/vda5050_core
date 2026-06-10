@@ -276,11 +276,13 @@ void OrderActions::start_action(const types::Action& action)
     return;
   }
 
-  // Claim the action under the lock: only a WAITING action transitions to
-  // RUNNING, so re-delivery of the same signal is idempotent and a single
-  // action is never executed twice.
+  // Claim the action: only a WAITING action transitions to RUNNING, so
+  // re-delivery of the same signal is idempotent and a single action is never
+  // executed twice. Safe without one atomic section because the handler runs
+  // state-writing strategies sequentially.
   bool claimed = false;
-  execution_->update_state([&](types::State& state) {
+  {
+    types::State state = execution_->get_state();
     auto* action_state = find_action_state(state, action.action_id);
     if (
       action_state &&
@@ -288,22 +290,25 @@ void OrderActions::start_action(const types::Action& action)
     {
       action_state->action_status = types::ActionStatus::RUNNING;
       claimed = true;
+      execution_->set_state(std::move(state));
     }
-  });
+  }
   if (!claimed) return;
 
   // Perform the action outside the lock; the executor is integrator code and
   // may itself read the execution resource.
   const ActionExecution result = executor_(action);
 
-  execution_->update_state([&](types::State& state) {
+  {
+    types::State state = execution_->get_state();
     auto* action_state = find_action_state(state, action.action_id);
     if (action_state)
     {
       action_state->action_status = result.status;
       action_state->result_description = result.result_description;
     }
-  });
+    execution_->set_state(std::move(state));
+  }
 }
 
 void OrderActions::stop_actions(const std::vector<types::Action>& actions)
@@ -312,17 +317,17 @@ void OrderActions::stop_actions(const std::vector<types::Action>& actions)
 
   // Edge actions are time-bound: leaving the edge stops any that are still
   // active. Finished/failed/waiting actions are left untouched.
-  execution_->update_state([&](types::State& state) {
-    for (const auto& action : actions)
+  types::State state = execution_->get_state();
+  for (const auto& action : actions)
+  {
+    auto* action_state = find_action_state(state, action.action_id);
+    if (action_state && is_active(action_state->action_status))
     {
-      auto* action_state = find_action_state(state, action.action_id);
-      if (action_state && is_active(action_state->action_status))
-      {
-        action_state->action_status = types::ActionStatus::FINISHED;
-        action_state->result_description = "stopped: edge left";
-      }
+      action_state->action_status = types::ActionStatus::FINISHED;
+      action_state->result_description = "stopped: edge left";
     }
-  });
+  }
+  execution_->set_state(std::move(state));
 }
 
 }  // namespace client

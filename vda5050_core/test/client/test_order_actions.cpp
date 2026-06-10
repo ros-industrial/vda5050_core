@@ -55,7 +55,7 @@ std::shared_ptr<AGVContext> make_context()
 {
   auto config = std::make_shared<vda5050_core::client::HeaderConfigResource>(
     "uagv", "2.0.0", "ROS-I", "S001");
-  auto context = std::make_shared<AGVContext>(config);
+  auto context = AGVContext::make(config);
   context->init();
   return context;
 }
@@ -101,20 +101,20 @@ void accept_order(
   const std::shared_ptr<AGVContext>& context, const types::Order& order)
 {
   auto execution = context->get_resource<OrderExecutionResource>();
-  execution->update_state([&order](types::State& state) {
-    auto seed = [&state](const std::vector<types::Action>& actions) {
-      for (const auto& action : actions)
-      {
-        types::ActionState action_state;
-        action_state.action_id = action.action_id;
-        action_state.action_type = action.action_type;
-        action_state.action_status = types::ActionStatus::WAITING;
-        state.action_states.push_back(action_state);
-      }
-    };
-    for (const auto& node : order.nodes) seed(node.actions);
-    for (const auto& edge : order.edges) seed(edge.actions);
-  });
+  types::State state = execution->get_state();
+  auto seed = [&state](const std::vector<types::Action>& actions) {
+    for (const auto& action : actions)
+    {
+      types::ActionState action_state;
+      action_state.action_id = action.action_id;
+      action_state.action_type = action.action_type;
+      action_state.action_status = types::ActionStatus::WAITING;
+      state.action_states.push_back(action_state);
+    }
+  };
+  for (const auto& node : order.nodes) seed(node.actions);
+  for (const auto& edge : order.edges) seed(edge.actions);
+  execution->set_state(std::move(state));
   execution->set_active_order(order);
 }
 
@@ -122,7 +122,7 @@ std::optional<types::ActionState> action_state_of(
   const std::shared_ptr<AGVContext>& context, const std::string& action_id)
 {
   auto execution = context->get_resource<OrderExecutionResource>();
-  for (const auto& action_state : execution->get_action_states())
+  for (const auto& action_state : execution->get_state().action_states)
   {
     if (action_state.action_id == action_id) return action_state;
   }
@@ -355,8 +355,9 @@ vda5050_core::client::ActionExecutor running_executor(
 void set_driving(const std::shared_ptr<AGVContext>& context, bool driving)
 {
   auto execution = context->get_resource<OrderExecutionResource>();
-  execution->update_state(
-    [driving](types::State& state) { state.driving = driving; });
+  types::State state = execution->get_state();
+  state.driving = driving;
+  execution->set_state(std::move(state));
 }
 
 // Test 9: A HARD action waits for an already-running action, then runs once it
@@ -506,26 +507,26 @@ TEST(OrderActionsTest, IntegratesWithOrderTraversal)
 
   // Seed the traversal tracking state (node/edge states still to traverse).
   auto execution = context->get_resource<OrderExecutionResource>();
-  execution->update_state([](types::State& state) {
-    types::NodeState n2;
-    n2.node_id = "n2";
-    n2.sequence_id = 2;
-    n2.released = true;
-    types::NodeState n4;
-    n4.node_id = "n4";
-    n4.sequence_id = 4;
-    n4.released = true;
-    types::EdgeState e1;
-    e1.edge_id = "e1";
-    e1.sequence_id = 1;
-    e1.released = true;
-    types::EdgeState e3;
-    e3.edge_id = "e3";
-    e3.sequence_id = 3;
-    e3.released = true;
-    state.node_states = {n2, n4};
-    state.edge_states = {e1, e3};
-  });
+  types::State state = execution->get_state();
+  types::NodeState n2;
+  n2.node_id = "n2";
+  n2.sequence_id = 2;
+  n2.released = true;
+  types::NodeState n4;
+  n4.node_id = "n4";
+  n4.sequence_id = 4;
+  n4.released = true;
+  types::EdgeState e1;
+  e1.edge_id = "e1";
+  e1.sequence_id = 1;
+  e1.released = true;
+  types::EdgeState e3;
+  e3.edge_id = "e3";
+  e3.sequence_id = 3;
+  e3.released = true;
+  state.node_states = {n2, n4};
+  state.edge_states = {e1, e3};
+  execution->set_state(std::move(state));
 
   auto traversal = std::make_shared<OrderTraversal>();
   auto actions = std::make_shared<OrderActions>(traversal->engine());
