@@ -27,7 +27,7 @@
 
 #include "vda5050_core/client/events/edge_entered.hpp"
 #include "vda5050_core/client/events/edge_left.hpp"
-#include "vda5050_core/client/events/node_traversed.hpp"
+#include "vda5050_core/client/events/node_reached.hpp"
 #include "vda5050_core/client/resources/order_execution.hpp"
 #include "vda5050_core/execution/context_interface.hpp"
 #include "vda5050_core/execution/engine.hpp"
@@ -63,9 +63,9 @@ using ActionExecutor = std::function<ActionExecution(const types::Action&)>;
 /// \brief Triggers and tracks an order's node/edge actions.
 ///
 /// Subscribes to the traversal cascade emitted by `OrderTraversal`
-/// (`NodeTraversedEvent`, `EdgeEnteredEvent`, `EdgeLeftEvent`) and drives the
+/// (`NodeReachedEvent`, `EdgeEnteredEvent`, `EdgeLeftEvent`) and drives the
 /// matching `actionState`s in the `OrderExecutionResource`:
-/// - on node traversed: run the node's actions (WAITING -> RUNNING -> result);
+/// - on node reached: run the node's actions (WAITING -> RUNNING -> result);
 /// - on edge entered: start the edge's actions;
 /// - on edge left: stop the edge's still-running (time-bound) actions.
 ///
@@ -74,26 +74,28 @@ using ActionExecutor = std::function<ActionExecution(const types::Action&)>;
 /// carry `actionState`s. Work is driven synchronously from the source engine's
 /// callbacks, so each event is handled exactly once in cascade order.
 ///
-/// blockingType is enforced at action start. A triggered action that cannot run
-/// yet is held in a pending queue and retried whenever an action completes:
+/// This provides basic blocking-aware *scheduling* of actions against each
+/// other and the AGV's driving state - not full VDA5050 blocking/navigation
+/// coordination. blockingType is applied at action start: a triggered action
+/// that cannot run yet is held in a pending queue and retried whenever an action
+/// completes:
 /// - HARD runs exclusively: no other action may be active, and it does not start
 ///   while the AGV is driving;
 /// - SOFT may run alongside other actions but not while the AGV is driving;
 /// - NONE is unrestricted (it is only held back while a HARD action is active).
 ///
 /// The reciprocal coupling - the AGV's movement yielding to a pending blocking
-/// action - belongs to the navigation strategy that consumes `NavigateToNodeEvent`
-/// and which does not exist yet; this strategy only reads `state.driving`.
-/// instantAction handling (pause/resume/cancel) and asynchronous action
-/// completion remain follow-ups.
-class OrderActions : public execution::StrategyInterface
+/// action (so HARD actually pauses navigation) - is NOT done here; it belongs to
+/// the navigation strategy that consumes `NavigateToNodeEvent` and does not exist
+/// yet. This strategy only reads `state.driving`. instantAction handling
+/// (pause/resume/cancel) and asynchronous action completion remain follow-ups.
+class OrderActions : public execution::StrategyInterface,
+                     public std::enable_shared_from_this<OrderActions>
 {
 public:
-  /// \brief Construct against the engine that emits the traversal cascade.
-  ///
-  /// \param source The engine carrying the `OrderTraversal` events, i.e.
-  ///   `order_traversal->engine()`. Subscriptions are registered in `init()`.
-  explicit OrderActions(std::shared_ptr<execution::Engine> source);
+  /// \brief Create an OrderActions owned by a shared_ptr.
+  static std::shared_ptr<OrderActions> make(
+    std::shared_ptr<execution::Engine> source);
 
   /// \brief Resolve the execution resource and subscribe to the source engine.
   void init(std::shared_ptr<execution::ContextInterface> context) override;
@@ -109,8 +111,11 @@ public:
   void set_executor(ActionExecutor executor);
 
 private:
-  /// \brief Run a node's actions when it is traversed.
-  void on_node_traversed(const NodeTraversedEvent& event);
+  /// \brief Private; use make() to obtain a shared_ptr instance.
+  explicit OrderActions(std::shared_ptr<execution::Engine> source);
+
+  /// \brief Run a node's actions when it is reached.
+  void on_node_reached(const NodeReachedEvent& event);
 
   /// \brief Start an edge's actions when it is entered.
   void on_edge_entered(const EdgeEnteredEvent& event);

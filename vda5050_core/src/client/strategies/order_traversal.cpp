@@ -28,7 +28,7 @@
 #include "vda5050_core/client/events/edge_entered.hpp"
 #include "vda5050_core/client/events/edge_left.hpp"
 #include "vda5050_core/client/events/navigate_to_node.hpp"
-#include "vda5050_core/client/events/node_traversed.hpp"
+#include "vda5050_core/client/events/node_reached.hpp"
 #include "vda5050_core/client/resources/order_execution.hpp"
 #include "vda5050_core/client/updates/node_reached.hpp"
 #include "vda5050_core/execution/event_queue.hpp"
@@ -215,7 +215,7 @@ void OrderTraversal::step(std::shared_ptr<execution::ContextInterface> context)
   // Order follows the VDA5050 cascade: node traversed, incoming edge left, then
   // the next edge entered. emit() only enqueues, so step() is called after each
   // to deliver that event before the next is emitted (one event per step()).
-  engine()->emit<NodeTraversedEvent>(
+  engine()->emit<NodeReachedEvent>(
     execution::Priority::NORMAL, outcome->node_id, outcome->sequence_id);
   engine()->step();
   if (outcome->left_edge)

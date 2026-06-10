@@ -26,7 +26,7 @@
 #include "vda5050_core/client/events/edge_entered.hpp"
 #include "vda5050_core/client/events/edge_left.hpp"
 #include "vda5050_core/client/events/navigate_to_node.hpp"
-#include "vda5050_core/client/events/node_traversed.hpp"
+#include "vda5050_core/client/events/node_reached.hpp"
 #include "vda5050_core/client/resources/config.hpp"
 #include "vda5050_core/client/resources/order_execution.hpp"
 #include "vda5050_core/client/strategies/order_traversal.hpp"
@@ -39,7 +39,7 @@ using EdgeLeftEvent = vda5050_core::client::EdgeLeftEvent;
 using NavigateToNodeEvent = vda5050_core::client::NavigateToNodeEvent;
 using NodeReachedUpdate = vda5050_core::client::NodeReachedUpdate;
 using AGVContext = vda5050_core::client::AGVContext;
-using NodeTraversedEvent = vda5050_core::client::NodeTraversedEvent;
+using NodeReachedEvent = vda5050_core::client::NodeReachedEvent;
 using OrderExecutionResource = vda5050_core::client::OrderExecutionResource;
 using OrderTraversal = vda5050_core::client::OrderTraversal;
 namespace types = vda5050_core::types;
@@ -254,11 +254,11 @@ TEST(OrderTraversalTest, EmitsTraversalEvents)
     context, {node_state("node_2", 2, true), node_state("node_4", 4, true)},
     {edge_state("e1", 1), edge_state("e3", 3)});
 
-  std::shared_ptr<NodeTraversedEvent> traversed;
+  std::shared_ptr<NodeReachedEvent> traversed;
   std::shared_ptr<EdgeLeftEvent> left;
   std::shared_ptr<EdgeEnteredEvent> entered;
-  strategy.engine()->on<NodeTraversedEvent>(
-    [&](std::shared_ptr<NodeTraversedEvent> e) { traversed = e; });
+  strategy.engine()->on<NodeReachedEvent>(
+    [&](std::shared_ptr<NodeReachedEvent> e) { traversed = e; });
   strategy.engine()->on<EdgeLeftEvent>(
     [&](std::shared_ptr<EdgeLeftEvent> e) { left = e; });
   strategy.engine()->on<EdgeEnteredEvent>(
@@ -283,10 +283,10 @@ TEST(OrderTraversalTest, NoEdgeEnteredAtFinalNode)
   auto context = make_context();
   seed(context, {node_state("node_4", 4, true)}, {edge_state("e3", 3)});
 
-  std::shared_ptr<NodeTraversedEvent> traversed;
+  std::shared_ptr<NodeReachedEvent> traversed;
   std::shared_ptr<EdgeEnteredEvent> entered;
-  strategy.engine()->on<NodeTraversedEvent>(
-    [&](std::shared_ptr<NodeTraversedEvent> e) { traversed = e; });
+  strategy.engine()->on<NodeReachedEvent>(
+    [&](std::shared_ptr<NodeReachedEvent> e) { traversed = e; });
   strategy.engine()->on<EdgeEnteredEvent>(
     [&](std::shared_ptr<EdgeEnteredEvent> e) { entered = e; });
 

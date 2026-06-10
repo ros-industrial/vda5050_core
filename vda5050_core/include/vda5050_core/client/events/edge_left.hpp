@@ -31,8 +31,8 @@ namespace client {
 
 /// \brief Emitted by the traversal strategy when the AGV leaves an edge.
 ///
-/// The action strategy hooks this to stop the edge's (time-bound) actions; the
-/// pre-edge state is then restored. Fires when the AGV reaches the edge's end
+/// The action strategy hooks this to stop or expire the edge's (time-bound)
+/// actions that are still active. Fires when the AGV reaches the edge's end
 /// node.
 struct EdgeLeftEvent
 : public execution::Initialize<EdgeLeftEvent, execution::EventBase>

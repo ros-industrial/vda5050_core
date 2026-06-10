@@ -27,7 +27,7 @@
 #include "vda5050_core/client/contexts/agv_context.hpp"
 #include "vda5050_core/client/events/edge_entered.hpp"
 #include "vda5050_core/client/events/edge_left.hpp"
-#include "vda5050_core/client/events/node_traversed.hpp"
+#include "vda5050_core/client/events/node_reached.hpp"
 #include "vda5050_core/client/resources/config.hpp"
 #include "vda5050_core/client/resources/order_execution.hpp"
 #include "vda5050_core/client/strategies/order_actions.hpp"
@@ -44,7 +44,7 @@ using EdgeEnteredEvent = vda5050_core::client::EdgeEnteredEvent;
 using EdgeLeftEvent = vda5050_core::client::EdgeLeftEvent;
 using Engine = vda5050_core::execution::Engine;
 using NodeReachedUpdate = vda5050_core::client::NodeReachedUpdate;
-using NodeTraversedEvent = vda5050_core::client::NodeTraversedEvent;
+using NodeReachedEvent = vda5050_core::client::NodeReachedEvent;
 using OrderActions = vda5050_core::client::OrderActions;
 using OrderExecutionResource = vda5050_core::client::OrderExecutionResource;
 using OrderTraversal = vda5050_core::client::OrderTraversal;
@@ -137,8 +137,8 @@ vda5050_core::client::ActionExecutor finishing_executor()
   };
 }
 
-// Test 1: Node actions run and finish when the node is traversed.
-TEST(OrderActionsTest, RunsNodeActionsOnTraversed)
+// Test 1: Node actions run and finish when the node is reached.
+TEST(OrderActionsTest, RunsNodeActionsOnReached)
 {
   auto context = make_context();
   types::Order order;
@@ -147,11 +147,11 @@ TEST(OrderActionsTest, RunsNodeActionsOnTraversed)
   accept_order(context, order);
 
   auto source = std::make_shared<Engine>();
-  OrderActions actions(source);
-  actions.init(context);
-  actions.set_executor(finishing_executor());
+  auto actions = OrderActions::make(source);
+  actions->init(context);
+  actions->set_executor(finishing_executor());
 
-  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->emit<NodeReachedEvent>(Priority::NORMAL, std::string("n2"), 2u);
   source->step();
 
   EXPECT_EQ(
@@ -172,16 +172,16 @@ TEST(OrderActionsTest, PassesFullActionToExecutor)
   accept_order(context, order);
 
   auto source = std::make_shared<Engine>();
-  OrderActions actions(source);
-  actions.init(context);
+  auto actions = OrderActions::make(source);
+  actions->init(context);
 
   types::Action received;
-  actions.set_executor([&received](const types::Action& action) {
+  actions->set_executor([&received](const types::Action& action) {
     received = action;
     return ActionExecution{types::ActionStatus::FINISHED, std::nullopt};
   });
 
-  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->emit<NodeReachedEvent>(Priority::NORMAL, std::string("n2"), 2u);
   source->step();
 
   EXPECT_EQ(received.action_id, "a1");
@@ -198,13 +198,13 @@ TEST(OrderActionsTest, RecordsExecutorResult)
   accept_order(context, order);
 
   auto source = std::make_shared<Engine>();
-  OrderActions actions(source);
-  actions.init(context);
-  actions.set_executor([](const types::Action&) {
+  auto actions = OrderActions::make(source);
+  actions->init(context);
+  actions->set_executor([](const types::Action&) {
     return ActionExecution{types::ActionStatus::FAILED, "gripper jammed"};
   });
 
-  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->emit<NodeReachedEvent>(Priority::NORMAL, std::string("n2"), 2u);
   source->step();
 
   const auto state = action_state_of(context, "a1");
@@ -223,9 +223,9 @@ TEST(OrderActionsTest, StartsEdgeActionsOnEntered)
   accept_order(context, order);
 
   auto source = std::make_shared<Engine>();
-  OrderActions actions(source);
-  actions.init(context);
-  actions.set_executor([](const types::Action&) {
+  auto actions = OrderActions::make(source);
+  actions->init(context);
+  actions->set_executor([](const types::Action&) {
     return ActionExecution{types::ActionStatus::RUNNING, std::nullopt};
   });
 
@@ -246,9 +246,9 @@ TEST(OrderActionsTest, StopsRunningEdgeActionsOnLeft)
   accept_order(context, order);
 
   auto source = std::make_shared<Engine>();
-  OrderActions actions(source);
-  actions.init(context);
-  actions.set_executor([](const types::Action&) {
+  auto actions = OrderActions::make(source);
+  actions->init(context);
+  actions->set_executor([](const types::Action&) {
     return ActionExecution{types::ActionStatus::RUNNING, std::nullopt};
   });
 
@@ -272,18 +272,18 @@ TEST(OrderActionsTest, IsIdempotentOnRedelivery)
   accept_order(context, order);
 
   auto source = std::make_shared<Engine>();
-  OrderActions actions(source);
-  actions.init(context);
+  auto actions = OrderActions::make(source);
+  actions->init(context);
 
   int calls = 0;
-  actions.set_executor([&calls](const types::Action&) {
+  actions->set_executor([&calls](const types::Action&) {
     ++calls;
     return ActionExecution{types::ActionStatus::FINISHED, std::nullopt};
   });
 
-  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->emit<NodeReachedEvent>(Priority::NORMAL, std::string("n2"), 2u);
   source->step();
-  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->emit<NodeReachedEvent>(Priority::NORMAL, std::string("n2"), 2u);
   source->step();
 
   EXPECT_EQ(calls, 1);
@@ -301,10 +301,10 @@ TEST(OrderActionsTest, LeavesActionsWaitingWithoutExecutor)
   accept_order(context, order);
 
   auto source = std::make_shared<Engine>();
-  OrderActions actions(source);
-  actions.init(context);
+  auto actions = OrderActions::make(source);
+  actions->init(context);
 
-  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->emit<NodeReachedEvent>(Priority::NORMAL, std::string("n2"), 2u);
   source->step();
 
   EXPECT_EQ(
@@ -321,14 +321,14 @@ TEST(OrderActionsTest, IgnoresUnknownNode)
   accept_order(context, order);
 
   auto source = std::make_shared<Engine>();
-  OrderActions actions(source);
-  actions.init(context);
-  actions.set_executor(finishing_executor());
+  auto actions = OrderActions::make(source);
+  actions->init(context);
+  actions->set_executor(finishing_executor());
 
   // Same node_id but wrong sequence_id, then an entirely unknown node.
-  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 9u);
+  source->emit<NodeReachedEvent>(Priority::NORMAL, std::string("n2"), 9u);
   source->step();
-  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("nX"), 5u);
+  source->emit<NodeReachedEvent>(Priority::NORMAL, std::string("nX"), 5u);
   source->step();
 
   EXPECT_EQ(
@@ -372,13 +372,13 @@ TEST(OrderActionsTest, HardActionDefersWhileAnotherActionRuns)
   accept_order(context, order);
 
   auto source = std::make_shared<Engine>();
-  OrderActions actions(source);
-  actions.init(context);
-  actions.set_executor(running_executor({"blink"}));
+  auto actions = OrderActions::make(source);
+  actions->init(context);
+  actions->set_executor(running_executor({"blink"}));
 
   source->emit<EdgeEnteredEvent>(Priority::NORMAL, std::string("e3"), 3u);
   source->step();
-  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n4"), 4u);
+  source->emit<NodeReachedEvent>(Priority::NORMAL, std::string("n4"), 4u);
   source->step();
 
   EXPECT_EQ(
@@ -410,13 +410,13 @@ TEST(OrderActionsTest, HardActionBlocksLaterActions)
   accept_order(context, order);
 
   auto source = std::make_shared<Engine>();
-  OrderActions actions(source);
-  actions.init(context);
-  actions.set_executor(running_executor({"lift"}));
+  auto actions = OrderActions::make(source);
+  actions->init(context);
+  actions->set_executor(running_executor({"lift"}));
 
-  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n1"), 1u);
+  source->emit<NodeReachedEvent>(Priority::NORMAL, std::string("n1"), 1u);
   source->step();
-  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->emit<NodeReachedEvent>(Priority::NORMAL, std::string("n2"), 2u);
   source->step();
 
   EXPECT_EQ(
@@ -441,11 +441,11 @@ TEST(OrderActionsTest, BlockingActionWaitsWhileDrivingThenRuns)
   set_driving(context, true);
 
   auto source = std::make_shared<Engine>();
-  OrderActions actions(source);
-  actions.init(context);
-  actions.set_executor(finishing_executor());
+  auto actions = OrderActions::make(source);
+  actions->init(context);
+  actions->set_executor(finishing_executor());
 
-  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->emit<NodeReachedEvent>(Priority::NORMAL, std::string("n2"), 2u);
   source->step();
 
   EXPECT_EQ(
@@ -457,7 +457,7 @@ TEST(OrderActionsTest, BlockingActionWaitsWhileDrivingThenRuns)
 
   // The AGV stops; the next spin retries the deferred SOFT action.
   set_driving(context, false);
-  actions.step(context);
+  actions->step(context);
 
   EXPECT_EQ(
     action_state_of(context, "soft_a")->action_status,
@@ -474,11 +474,11 @@ TEST(OrderActionsTest, NoneActionsRunConcurrently)
   accept_order(context, order);
 
   auto source = std::make_shared<Engine>();
-  OrderActions actions(source);
-  actions.init(context);
-  actions.set_executor(running_executor({"beep", "blink"}));
+  auto actions = OrderActions::make(source);
+  actions->init(context);
+  actions->set_executor(running_executor({"beep", "blink"}));
 
-  source->emit<NodeTraversedEvent>(Priority::NORMAL, std::string("n2"), 2u);
+  source->emit<NodeReachedEvent>(Priority::NORMAL, std::string("n2"), 2u);
   source->step();
 
   EXPECT_EQ(
@@ -529,7 +529,7 @@ TEST(OrderActionsTest, IntegratesWithOrderTraversal)
   execution->set_state(std::move(state));
 
   auto traversal = std::make_shared<OrderTraversal>();
-  auto actions = std::make_shared<OrderActions>(traversal->engine());
+  auto actions = OrderActions::make(traversal->engine());
   traversal->init(context);
   actions->init(context);
   actions->set_executor(running_executor({"blink"}));

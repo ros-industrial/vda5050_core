@@ -119,6 +119,12 @@ OrderActions::OrderActions(std::shared_ptr<execution::Engine> source)
 {
 }
 
+std::shared_ptr<OrderActions> OrderActions::make(
+  std::shared_ptr<execution::Engine> source)
+{
+  return std::shared_ptr<OrderActions>(new OrderActions(std::move(source)));
+}
+
 void OrderActions::init(std::shared_ptr<execution::ContextInterface> context)
 {
   if (!context)
@@ -143,17 +149,18 @@ void OrderActions::init(std::shared_ptr<execution::ContextInterface> context)
 
   // Hook the traversal cascade. Callbacks fire synchronously while the traversal
   // strategy steps, so each event is handled exactly once and in order.
-  source_->on<NodeTraversedEvent>(
-    [this](std::shared_ptr<NodeTraversedEvent> event) {
-      this->on_node_traversed(*event);
+  source_->on<NodeReachedEvent>(
+    [w = weak_from_this()](std::shared_ptr<NodeReachedEvent> event) {
+      if (auto self = w.lock()) self->on_node_reached(*event);
     });
   source_->on<EdgeEnteredEvent>(
-    [this](std::shared_ptr<EdgeEnteredEvent> event) {
-      this->on_edge_entered(*event);
+    [w = weak_from_this()](std::shared_ptr<EdgeEnteredEvent> event) {
+      if (auto self = w.lock()) self->on_edge_entered(*event);
     });
-  source_->on<EdgeLeftEvent>([this](std::shared_ptr<EdgeLeftEvent> event) {
-    this->on_edge_left(*event);
-  });
+  source_->on<EdgeLeftEvent>(
+    [w = weak_from_this()](std::shared_ptr<EdgeLeftEvent> event) {
+      if (auto self = w.lock()) self->on_edge_left(*event);
+    });
 }
 
 void OrderActions::step(std::shared_ptr<execution::ContextInterface> /*ctx*/)
@@ -171,7 +178,7 @@ void OrderActions::set_executor(ActionExecutor executor)
   executor_ = std::move(executor);
 }
 
-void OrderActions::on_node_traversed(const NodeTraversedEvent& event)
+void OrderActions::on_node_reached(const NodeReachedEvent& event)
 {
   if (!execution_) return;
 

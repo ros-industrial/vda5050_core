@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__CLIENT__EVENTS__NODE_TRAVERSED_HPP_
-#define VDA5050_CORE__CLIENT__EVENTS__NODE_TRAVERSED_HPP_
+#ifndef VDA5050_CORE__CLIENT__EVENTS__NODE_REACHED_HPP_
+#define VDA5050_CORE__CLIENT__EVENTS__NODE_REACHED_HPP_
 
 #include <cstdint>
 #include <string>
@@ -29,18 +29,20 @@ namespace vda5050_core {
 
 namespace client {
 
-/// \brief Emitted by the traversal strategy when a node has been traversed.
+/// \brief Emitted by the traversal strategy once a node has been reached.
 ///
-/// The action strategy hooks this to trigger the node's actions (which then run
-/// as long as needed). Emitted only once traversal confirms the node as the
-/// next expected one, so action triggering stays in lockstep with traversal.
-struct NodeTraversedEvent
-: public execution::Initialize<NodeTraversedEvent, execution::EventBase>
+/// Internal, validated counterpart of the inbound `NodeReachedUpdate`: the
+/// update is the raw driver signal, this event is emitted only after the
+/// traversal strategy confirms the node as the next expected one and advances
+/// the base. The action strategy hooks it to trigger the node's actions, keeping
+/// action triggering in lockstep with traversal.
+struct NodeReachedEvent
+: public execution::Initialize<NodeReachedEvent, execution::EventBase>
 {
   std::string node_id;
   uint32_t sequence_id = 0;
 
-  NodeTraversedEvent(std::string node_id, uint32_t sequence_id)
+  NodeReachedEvent(std::string node_id, uint32_t sequence_id)
   : node_id(std::move(node_id)), sequence_id(sequence_id)
   {
   }
@@ -49,4 +51,4 @@ struct NodeTraversedEvent
 }  // namespace client
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__CLIENT__EVENTS__NODE_TRAVERSED_HPP_
+#endif  // VDA5050_CORE__CLIENT__EVENTS__NODE_REACHED_HPP_
