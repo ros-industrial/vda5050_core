@@ -213,8 +213,13 @@ void OrderAcceptance::step(std::shared_ptr<execution::ContextInterface> context)
         apply_new_order(state, order);
       }
       execution->set_state(std::move(state));
-      // Persist the order so action/stitching strategies can reach the full
-      // node/edge Action objects the state arrays do not carry.
+      // Persist the accepted order so action/traversal strategies can access the
+      // full node/edge Action objects that State.action_states does not carry.
+      // On updates this currently replaces active_order_ with the update payload.
+      // This is sufficient for the request-driven flow, where new_base_request is
+      // raised near the decision point and already-traversed base actions have fired.
+      // TODO(eileentyz): merge updates into active_order_ to support proactive
+      // updates that arrive before the AGV nears the decision point.
       execution->set_active_order(order);
       execution->set_executing_order(true);
       break;
