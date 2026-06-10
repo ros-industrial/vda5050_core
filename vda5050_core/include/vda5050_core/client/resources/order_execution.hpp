@@ -20,7 +20,6 @@
 #define VDA5050_CORE__CLIENT__RESOURCES__ORDER_EXECUTION_HPP_
 
 #include <mutex>
-#include <utility>
 
 #include "vda5050_core/execution/base.hpp"
 #include "vda5050_core/types/state.hpp"
@@ -35,46 +34,22 @@ class OrderExecutionResource
 {
 public:
   /// \brief Whether the AGV is actively executing an order.
-  bool is_executing_order() const
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return executing_order_;
-  }
+  bool is_executing_order() const;
 
   /// \brief Set whether the AGV is actively executing an order.
-  void set_executing_order(bool executing)
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    executing_order_ = executing;
-  }
+  void set_executing_order(bool executing);
 
   /// \brief Whether the AGV is waiting for a base extension from the master.
-  bool is_awaiting_order_update() const
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return awaiting_order_update_;
-  }
+  bool is_awaiting_order_update() const;
 
   /// \brief Set whether the AGV is waiting for a base extension.
-  void set_awaiting_order_update(bool awaiting)
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    awaiting_order_update_ = awaiting;
-  }
+  void set_awaiting_order_update(bool awaiting);
 
   /// \brief Return a copy of the full working state snapshot.
-  types::State get_state() const
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return state_;
-  }
+  types::State get_state() const;
 
   /// \brief Replace the full working state snapshot.
-  void set_state(types::State state)
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    state_ = std::move(state);
-  }
+  void set_state(types::State state);
 
 private:
   /// \brief Serialises concurrent reads and writes to the members below.

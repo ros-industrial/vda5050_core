@@ -19,13 +19,26 @@
 #include "vda5050_core/client/contexts/agv_context.hpp"
 
 #include <memory>
+#include <stdexcept>
 #include <typeindex>
+#include <utility>
 
+#include "vda5050_core/client/resources/order_execution.hpp"
 #include "vda5050_core/client/updates/order.hpp"
 
 namespace vda5050_core {
 
 namespace client {
+
+AGVContext::AGVContext(std::shared_ptr<HeaderConfigResource> config)
+{
+  if (!config)
+  {
+    throw std::invalid_argument("AGVContext: config cannot be nullptr");
+  }
+  cache_resource(std::move(config));
+  cache_resource(std::make_shared<OrderExecutionResource>());
+}
 
 void AGVContext::init()
 {
