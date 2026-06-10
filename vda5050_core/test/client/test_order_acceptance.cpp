@@ -323,4 +323,83 @@ TEST(OrderAcceptanceTest, UpdateDoesNotDuplicateReSuppliedActionStates)
   EXPECT_EQ(act_b_count, 1u);
 }
 
+// Test 8: A new order must not inherit traversal progress from a previous order.
+// last_node_id / last_node_sequence_id / new_base_request are reset so a later
+// update cannot stitch against a stale anchor.
+TEST(OrderAcceptanceTest, NewOrderResetsCarriedOverTraversalProgress)
+{
+  OrderAcceptance strategy;
+  auto context = make_context();
+
+  // Seed leftover state from a completed previous order: idle (no nodes, no
+  // pending actions) but still carrying a last-reached node and a base request.
+  {
+    auto execution = context->get_resource<OrderExecutionResource>();
+    types::State state = execution->get_state();
+    state.order_id = "old";
+    state.order_update_id = 7;
+    state.last_node_id = "old_node";
+    state.last_node_sequence_id = 99;
+    state.new_base_request = true;
+    execution->set_state(std::move(state));
+  }
+
+  types::Order fresh;
+  fresh.order_id = "new";
+  fresh.order_update_id = 0;
+  fresh.nodes.push_back(make_node("node_0", 0));
+
+  context->provider()->push<OrderUpdate>(fresh);
+  strategy.step(context);
+
+  const auto state =
+    context->get_resource<OrderExecutionResource>()->get_state();
+  EXPECT_EQ(state.order_id, "new");
+  EXPECT_TRUE(state.last_node_id.empty());
+  EXPECT_EQ(state.last_node_sequence_id, 0u);
+  EXPECT_FALSE(state.new_base_request.has_value());
+}
+
+// Test 9: Rejecting an update while an order is executing must preserve the
+// running base (only errors are updated) and keep the vehicle executing.
+TEST(OrderAcceptanceTest, RejectedUpdatePreservesRunningBase)
+{
+  OrderAcceptance strategy;
+  auto context = make_context();
+
+  // Running order o1 @ update 2, sitting at node_a (seq 10) still in the base.
+  {
+    auto execution = context->get_resource<OrderExecutionResource>();
+    execution->set_executing_order(true);
+    types::State state = execution->get_state();
+    state.order_id = "o1";
+    state.order_update_id = 2;
+    state.last_node_id = "node_a";
+    state.last_node_sequence_id = 10;
+    types::NodeState a;
+    a.node_id = "node_a";
+    a.sequence_id = 10;
+    a.released = true;
+    state.node_states = {a};
+    execution->set_state(std::move(state));
+  }
+
+  // A deprecated update (lower orderUpdateId) is rejected.
+  types::Order stale;
+  stale.order_id = "o1";
+  stale.order_update_id = 1;
+  stale.nodes.push_back(make_node("node_a", 10));
+
+  context->provider()->push<OrderUpdate>(stale);
+  strategy.step(context);
+
+  auto execution = context->get_resource<OrderExecutionResource>();
+  const auto state = execution->get_state();
+  EXPECT_TRUE(execution->is_executing_order());  // still executing
+  EXPECT_EQ(state.order_update_id, 2u);          // base left untouched
+  ASSERT_EQ(state.node_states.size(), 1u);
+  EXPECT_EQ(state.node_states[0].node_id, "node_a");
+  EXPECT_FALSE(state.errors.empty());  // rejection error recorded
+}
+
 }  // namespace

@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -95,6 +96,13 @@ void apply_new_order(types::State& state, const types::Order& order)
   state.order_id = order.order_id;
   state.order_update_id = order.order_update_id;
 
+  // A new order starts a fresh traversal, so clear any progress carried over
+  // from a previous order. Otherwise the stale last-reached node could be
+  // mistaken for this order's decision point when a later update is stitched.
+  state.last_node_id.clear();
+  state.last_node_sequence_id = 0;
+  state.new_base_request = std::nullopt;
+
   for (const auto& node : order.nodes) append_node(state, node);
   for (const auto& edge : order.edges) append_edge(state, edge);
 }
@@ -147,7 +155,8 @@ OrderAcceptance::OrderAcceptance() = default;
 void OrderAcceptance::init(
   std::shared_ptr<execution::ContextInterface> /*context*/)
 {
-  // Nothing to initialise; the validator carries its own (permissive) hooks.
+  // Nothing to initialise; the validator is stateless and reads everything it
+  // needs from the context on each step().
 }
 
 void OrderAcceptance::step(std::shared_ptr<execution::ContextInterface> context)

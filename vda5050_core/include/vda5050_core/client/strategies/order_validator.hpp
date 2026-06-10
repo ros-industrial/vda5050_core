@@ -37,7 +37,7 @@ enum class AcceptanceOutcome
   Accepted,
   /// \brief Order is invalid; report `errors` and keep the previous order.
   Rejected,
-  /// \brief Duplicate resend (same orderId + orderUpdateId); discard silently.
+  /// \brief Duplicate resend (same orderId + orderUpdateId); leave state unchanged.
   Ignored
 };
 
@@ -46,8 +46,7 @@ struct AcceptanceResult
 {
   AcceptanceOutcome outcome = AcceptanceOutcome::Rejected;
 
-  /// \brief VDA5050 errors to report when `outcome == Rejected`. Each carries
-  /// the error_type, errorReferences and warning level required by the spec.
+  /// \brief Errors to report when `outcome == Rejected`.
   std::vector<types::Error> errors;
 
   bool accepted() const

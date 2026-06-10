@@ -35,6 +35,16 @@ namespace client {
 
 namespace {
 
+// Appends the orderId / orderUpdateId references to an existing error so every
+// rejection carries the same order context, no matter where it originated.
+void attach_order_refs(types::Error& error, const types::Order& order)
+{
+  if (!error.error_references) error.error_references.emplace();
+  error.error_references->push_back({errors::RefOrderId, order.order_id});
+  error.error_references->push_back(
+    {errors::RefOrderUpdateId, std::to_string(order.order_update_id)});
+}
+
 // Builds a VDA5050 Error, always appending the orderId / orderUpdateId refs.
 types::Error make_error(
   const std::string& type, const std::string& description,
@@ -82,9 +92,11 @@ AcceptanceResult accepted()
 
 // The vehicle is "busy" if it still has nodes left
 // to traverse (base or horizon) or any action that is not yet FINISHED/FAILED.
-bool is_busy(const std::shared_ptr<OrderExecutionResource>& execution)
+// Edges never outlive their nodes, so checking node_states is sufficient.
+// Operates on a caller-supplied snapshot so the whole acceptance decision is
+// made from one consistent view of the state.
+bool is_busy(const types::State& state)
 {
-  const types::State state = execution->get_state();
   if (!state.node_states.empty()) return true;
 
   for (const auto& action : state.action_states)
@@ -124,14 +136,16 @@ AcceptanceResult OrderValidator::validate_order(
   // Structural / format validity of the order graph.
   if (auto graph = order_utils::is_valid_graph(incoming_order); !graph)
   {
+    for (auto& error : graph.errors) attach_order_refs(error, incoming_order);
     return rejected(std::move(graph.errors));
   }
 
   // TODO(eileentyz): Add AGV capability/factsheet validation once capability
   // data is available.
 
-  // Read one consistent snapshot of the execution state; reused below for the
-  // update-stitching check so both decisions see the same values.
+  // Read one consistent snapshot of the execution state; every decision below
+  // (busy check, duplicate/deprecated update, stitch match) reads from this
+  // same snapshot so they cannot disagree about the moment they observed.
   const types::State current_state = execution->get_state();
   const std::string current_id = current_state.order_id;
   const uint32_t current_update_id = current_state.order_update_id;
@@ -141,7 +155,7 @@ AcceptanceResult OrderValidator::validate_order(
   {
     // New order
     // Reject if the vehicle is still executing or holding a horizon.
-    if (is_busy(execution))
+    if (is_busy(current_state))
     {
       return rejected(make_error(
         errors::ValidationError,
@@ -174,8 +188,6 @@ AcceptanceResult OrderValidator::validate_order(
       incoming_order));
   }
 
-  // The update must continue from the decision point. We anchor on
-  // the last reached node tracked in OrderExecutionResource (nodeId + sequenceId).
   if (incoming_order.nodes.empty())
   {
     return rejected(make_error(
@@ -184,14 +196,26 @@ AcceptanceResult OrderValidator::validate_order(
       incoming_order));
   }
 
+  std::string base_end_id = current_state.last_node_id;
+  uint32_t base_end_sequence_id = current_state.last_node_sequence_id;
+  for (const auto& node : current_state.node_states)
+  {
+    if (node.released && node.sequence_id > base_end_sequence_id)
+    {
+      base_end_id = node.node_id;
+      base_end_sequence_id = node.sequence_id;
+    }
+  }
+
   const auto& stitch_node = incoming_order.nodes.front();
   if (
-    stitch_node.node_id != current_state.last_node_id ||
-    stitch_node.sequence_id != current_state.last_node_sequence_id)
+    stitch_node.node_id != base_end_id ||
+    stitch_node.sequence_id != base_end_sequence_id)
   {
     return rejected(make_error(
       errors::OrderUpdateError,
-      "Order update stitch node does not match the last known base node",
+      "Order update stitch node does not match the last node of the current "
+      "base (the decision point)",
       incoming_order,
       {{errors::RefNodeId, stitch_node.node_id},
        {errors::RefSequenceId, std::to_string(stitch_node.sequence_id)}}));

@@ -33,15 +33,13 @@ namespace client {
 /// \brief Strategy that runs the VDA5050 order-acceptance flow.
 ///
 /// On each step it reads the latest inbound `OrderUpdate` from the context,
-/// runs the `OrderValidator` decision, and acts on the outcome against the
-/// `OrderExecutionResource`:
-///   - Accepted -> populate (new) or append (update) the execution state and
-///                 mark the vehicle as executing.
-///   - Rejected -> record the VDA5050 errors (kept until a new order is taken).
-///   - Ignored  -> no-op (duplicate resend).
+/// runs the `OrderValidator` decision, and applies the corresponding side effects:
+///   - Accepted -> applies the order to the execution state.
+///   - Rejected -> records the validation errors.
+///   - Ignored  -> leaves the current execution state unchanged.
 ///
-/// The validator owns the decision; this strategy owns the side effects, so the
-/// pure decision logic stays independently testable.
+/// The validator owns the decision; this strategy owns the side effects,
+/// so the decision logic stays independently testable.
 class OrderAcceptance : public execution::StrategyInterface
 {
 public:

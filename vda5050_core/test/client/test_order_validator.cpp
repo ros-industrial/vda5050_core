@@ -223,7 +223,61 @@ TEST(OrderValidatorTest, RejectsDeprecatedUpdate)
   EXPECT_EQ(result.errors.front().error_type, "orderUpdateError");
 }
 
-// Test 8: An update whose stitch node does not match the last base node fails.
+// Test 8a: An update is accepted when it stitches at the decision point (the
+// last released base node) even though the AGV has not reached it yet. Here the
+// AGV last reached node_a (seq 10) but node_c (seq 14) is still pending in the
+// released base, so the update must stitch at node_c, not node_a.
+TEST(OrderValidatorTest, AcceptsUpdateStitchedAtBaseEndAheadOfLastReached)
+{
+  OrderValidator validator;
+  auto context = make_context();
+
+  types::NodeState pending_c;
+  pending_c.node_id = "node_c";
+  pending_c.sequence_id = 14;
+  pending_c.released = true;
+  seed_execution_state(context, "active", 1, "node_a", 10, {pending_c});
+
+  types::Order order;
+  order.order_id = "active";
+  order.order_update_id = 2;
+  order.nodes.push_back(
+    make_node("node_c", 14));  // stitch at the decision point
+  order.nodes.push_back(make_node("node_d", 16));
+  order.edges.push_back(make_edge("edge_cd", 15, "node_c", "node_d"));
+
+  const auto result = validator.validate_order(order, context);
+
+  EXPECT_TRUE(result.accepted());
+}
+
+// Test 8b: With a released base node still pending ahead of the last reached
+// node, stitching at the last reached node (instead of the decision point) is
+// rejected.
+TEST(OrderValidatorTest, RejectsUpdateStitchedAtLastReachedWhenBaseStillPending)
+{
+  OrderValidator validator;
+  auto context = make_context();
+
+  types::NodeState pending_c;
+  pending_c.node_id = "node_c";
+  pending_c.sequence_id = 14;
+  pending_c.released = true;
+  seed_execution_state(context, "active", 1, "node_a", 10, {pending_c});
+
+  types::Order order;
+  order.order_id = "active";
+  order.order_update_id = 2;
+  order.nodes.push_back(make_node("node_a", 10));  // stale anchor, not base end
+
+  const auto result = validator.validate_order(order, context);
+
+  EXPECT_TRUE(result.rejected());
+  ASSERT_FALSE(result.errors.empty());
+  EXPECT_EQ(result.errors.front().error_type, "orderUpdateError");
+}
+
+// Test 9: An update whose stitch node does not match the last base node fails.
 TEST(OrderValidatorTest, RejectsStitchNodeMismatch)
 {
   OrderValidator validator;
