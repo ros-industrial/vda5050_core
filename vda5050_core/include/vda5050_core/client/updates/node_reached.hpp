@@ -29,13 +29,10 @@ namespace vda5050_core {
 
 namespace client {
 
-/// \brief Inbound signal that the AGV has traversed a node.
+/// \brief Inbound signal that the AGV has reached a node.
 ///
-/// Pushed by the vehicle's localization layer once its control point is within
-/// the node's deviation range (and any corridor constraint is met). It carries
-/// only the identity of the reached node; the traversal strategy uses it to
-/// advance the execution state. Mirrors `OrderUpdate` as a provider-pushed,
-/// context-cached carrier.
+/// Pushed by the vehicle/navigation layer when it reports a node as reached.
+/// The traversal strategy uses the node identity to advance the execution state.
 struct NodeReachedUpdate
 : public execution::Initialize<NodeReachedUpdate, execution::UpdateBase>
 {

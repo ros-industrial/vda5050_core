@@ -52,16 +52,14 @@ struct Dispatch
 std::optional<Dispatch> apply_node_reached(
   types::State& state, const NodeReachedUpdate& reached)
 {
-  auto node_it = std::find_if(  // Find the reached node
+  // Find the reached node (matched on sequence_id and node_id) in the base.
+  auto node_it = std::find_if(
     state.node_states.begin(), state.node_states.end(),
     [&](const types::NodeState& n) {
-      return n.sequence_id ==
-               reached.sequence_id &&  // Match sequence_id and node_id
+      return n.sequence_id == reached.sequence_id &&
              n.node_id == reached.node_id;
     });
-  if (
-    node_it ==
-    state.node_states.end())  // If the node is not found, return nullopt
+  if (node_it == state.node_states.end())
   {
     // Unknown or stale node; nothing to advance.
     return std::nullopt;
@@ -88,7 +86,7 @@ std::optional<Dispatch> apply_node_reached(
   if (reached.sequence_id > 0)
   {
     const uint32_t incoming_edge_seq = reached.sequence_id - 1;
-    state.edge_states.erase(  // Remove the incoming edge
+    state.edge_states.erase(
       std::remove_if(
         state.edge_states.begin(), state.edge_states.end(),
         [&](const types::EdgeState& e) {
