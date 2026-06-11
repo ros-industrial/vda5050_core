@@ -18,6 +18,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import threading
 import time
 from datetime import datetime, timezone
 
@@ -82,15 +83,24 @@ def main() -> int:
 
     visited = []
 
-    def on_navigate(node, edge):
+    def _drive(node):
+        # Model a real robot move: report driving, travel, arrive, stop.
         p = node.node_position
-        print(f"[robot ] drive -> {node.node_id} @ ({p.x:.1f}, {p.y:.1f})", flush=True)
+        print(f"[robot ] driving -> {node.node_id} @ ({p.x:.1f}, {p.y:.1f})", flush=True)
+        rep.set_driving(True)
+        time.sleep(0.4)  # simulate travel time
         pos = vda.AGVPosition()
         pos.x, pos.y, pos.map_id = p.x, p.y, p.map_id
         pos.position_initialized = True
         rep.set_agv_position(pos)
+        rep.set_driving(False)  # stopped at the node
         visited.append(node.node_id)
-        rep.node_reached(node.node_id, node.sequence_id)  # stub: instant arrival
+        rep.node_reached(node.node_id, node.sequence_id)
+
+    def on_navigate(node, edge):
+        # Return immediately; drive on a worker thread so the spin loop keeps
+        # running (it must stay free to deliver node_reached and advance).
+        threading.Thread(target=_drive, args=(node,), daemon=True).start()
 
     runtime.on_navigate(on_navigate)
     runtime.start()
@@ -113,8 +123,9 @@ def main() -> int:
     pub.publish(ORDER_TOPIC, json.dumps(ORDER))
 
     # No manual start kick: the adapter auto-reports node[0] reached on order
-    # acceptance, so traversal begins navigating on its own.
-    time.sleep(2.0)
+    # acceptance, so traversal begins navigating on its own. Allow time for the
+    # threaded per-node drives (0.4s each) to complete.
+    time.sleep(4.0)
     runtime.stop()
     sub.loop_stop()
     pub.loop_stop()
@@ -127,10 +138,12 @@ def main() -> int:
         last = states[-1]
         print("final lastNodeId       :", last.get("lastNodeId"))
         print("final nodeStates left  :", len(last.get("nodeStates") or []))
+        print("final driving          :", last.get("driving"))
         ok = (
             visited == ["node_row", "node_west", "node_east"]
             and last.get("lastNodeId") == "node_east"
             and len(last.get("nodeStates") or []) == 0
+            and last.get("driving") is False
         )
         print("\nFULL MQTT LOOP:", "PASS ✅" if ok else "INCOMPLETE ❌")
         return 0 if ok else 1

@@ -133,11 +133,8 @@ Adapter::Adapter(std::shared_ptr<execution::ProtocolAdapter> protocol_adapter)
   // resolve the full Node + entering Edge, and dispatch to the callback.
   traversal->engine()->on<client::NavigateToNodeEvent>(
     [this](std::shared_ptr<client::NavigateToNodeEvent> event) {
-      {
-        std::lock_guard<std::mutex> lock(robot_io_->mutex);
-        robot_io_->driving = true;
-      }
-
+      // `driving` is the robot's actual motion state, owned and reported by the
+      // robot via Reporter::set_driving — the adapter does not fabricate it.
       types::Node node = resolve_node(event->target);
       std::optional<types::Edge> edge = resolve_edge(event->via_edge);
 
