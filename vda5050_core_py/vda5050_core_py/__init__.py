@@ -1,28 +1,28 @@
-"""Python bindings for the vda5050_core C++ Adapter.
+"""Python bindings for the vda5050_core C++ runtime.
 
-The C++ adapter owns MQTT, order graph execution, and 1Hz state publishing.
-Python implements the per-node navigation callback and reports state via
-NavigationManager.
+C++ owns the runtime — MQTT, protocol handling, order execution, threading and
+1Hz state publishing. Python implements only robot behaviour: a navigation
+callback and state reporting via Reporter.
 
 Typical usage:
 
-    from vda5050_core_py import (
-        Adapter, ProtocolAdapter, create_default_mqtt_client,
-        run_until_signal,
+    from vda5050_core_py import RobotRuntime, run_until_signal
+
+    runtime = RobotRuntime(
+        broker="tcp://localhost:1883",
+        client_id="my_agv",
+        manufacturer="MyCompany",
+        serial_number="AGV_001",
     )
+    rep = runtime.reporter()
 
-    mqtt = create_default_mqtt_client("tcp://localhost:1883", "my_agv")
-    protocol = ProtocolAdapter.make(mqtt, "uagv", "2.0.0", "Manufacturer", "S001")
-    adapter = Adapter.make(protocol)
-    nav = adapter.navigation_manager()
+    def on_navigate(node, edge):
+        # ... drive the robot to node.node_position (edge has trajectory) ...
+        rep.node_reached(node.node_id, node.sequence_id)
 
-    def on_navigate(node):
-        # ... drive the robot to node.node_position ...
-        nav.node_reached(node)
-
-    adapter.on_navigate(on_navigate)
-    adapter.start()
-    run_until_signal(adapter)
+    runtime.on_navigate(on_navigate)
+    runtime.start()
+    run_until_signal(runtime)
 """
 
 import os
@@ -35,16 +35,15 @@ from ._core import (
     ActionParameter,
     ActionState,
     ActionStatus,
-    Adapter,
     AGVPosition,
     BatteryState,
     BlockingType,
-    MqttClient,
-    NavigationManager,
+    Edge,
     Node,
     NodePosition,
-    ProtocolAdapter,
-    create_default_mqtt_client,
+    Order,
+    Reporter,
+    RobotRuntime,
 )
 
 _PAUSE_MSG = (
@@ -54,19 +53,18 @@ _PAUSE_MSG = (
 _RESUME_MSG = "Resumed (fg/bg).\n"
 
 
-def run_until_signal(adapter, poll_interval: float = 0.1) -> None:
-    """Block until a shutdown signal, then stop the adapter.
+def run_until_signal(runtime, poll_interval: float = 0.1) -> None:
+    """Block until a shutdown signal, then stop the runtime.
 
     Graceful exit (Unix): SIGINT (Ctrl+C), SIGTERM, SIGQUIT (Ctrl+\\).
     On Windows only SIGINT and SIGTERM are used for exit.
 
-    Job control (Unix): SIGTSTP (Ctrl+Z) calls ``adapter.stop()`` (MQTT
+    Job control (Unix): SIGTSTP (Ctrl+Z) calls ``runtime.stop()`` (MQTT
     OFFLINE), suspends the process, and prints a hint. SIGCONT (``fg`` /
-    ``bg`` then ``fg``) calls ``adapter.start()`` again without exiting.
+    ``bg`` then ``fg``) calls ``runtime.start()`` again without exiting.
 
-    Mirrors the shutdown pattern in vda5050_core/examples/adapter_example.cpp:
-    a signal handler clears a flag, the main thread exits its wait loop, and
-    adapter.stop() runs on the main thread (safe for pybind/C++ teardown).
+    A signal handler clears a flag, the main thread exits its wait loop, and
+    runtime.stop() runs on the main thread (safe for pybind/C++ teardown).
     """
     running = True
     paused = False
@@ -79,7 +77,7 @@ def run_until_signal(adapter, poll_interval: float = 0.1) -> None:
         nonlocal paused
         if paused:
             return
-        adapter.stop()
+        runtime.stop()
         paused = True
         print(_PAUSE_MSG, file=sys.stderr, end="", flush=True)
         signal.signal(signal.SIGTSTP, signal.SIG_DFL)
@@ -89,7 +87,7 @@ def run_until_signal(adapter, poll_interval: float = 0.1) -> None:
         nonlocal paused
         if not paused:
             return
-        adapter.start()
+        runtime.start()
         paused = False
         print(_RESUME_MSG, file=sys.stderr, end="", flush=True)
 
@@ -103,13 +101,12 @@ def run_until_signal(adapter, poll_interval: float = 0.1) -> None:
             signal.signal(signal.SIGTSTP, _on_tstp)
         if hasattr(signal, "SIGCONT"):
             signal.signal(signal.SIGCONT, _on_cont)
-    # so handler for windows byebye
 
     try:
         while running:
             time.sleep(poll_interval)
     finally:
-        adapter.stop()
+        runtime.stop()
 
 
 __all__ = [
@@ -117,15 +114,14 @@ __all__ = [
     "ActionParameter",
     "ActionState",
     "ActionStatus",
-    "Adapter",
     "AGVPosition",
     "BatteryState",
     "BlockingType",
-    "MqttClient",
-    "NavigationManager",
+    "Edge",
     "Node",
     "NodePosition",
-    "ProtocolAdapter",
-    "create_default_mqtt_client",
+    "Order",
+    "Reporter",
+    "RobotRuntime",
     "run_until_signal",
 ]

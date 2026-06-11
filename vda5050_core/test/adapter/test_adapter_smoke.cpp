@@ -22,6 +22,7 @@
 #include <chrono>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <thread>
 #include <unordered_map>
@@ -31,7 +32,7 @@
 #include <nlohmann/json.hpp>
 
 #include "vda5050_core/adapter/adapter.hpp"
-#include "vda5050_core/adapter/navigation_manager.hpp"
+#include "vda5050_core/adapter/reporter.hpp"
 #include "vda5050_core/execution/protocol_adapter.hpp"
 #include "vda5050_core/json_utils/serialization.hpp"
 #include "vda5050_core/transport/mqtt_client_interface.hpp"
@@ -189,7 +190,7 @@ TEST(AdapterSmokeTest, DrivesOrderThroughNavigateAndPublishesState)
   auto protocol =
     execution::ProtocolAdapter::make(fake, "uagv", "2.0.0", "ROS-I", "S001");
   auto vda_adapter = adapter::Adapter::make(protocol);
-  auto nav = vda_adapter->navigation_manager();
+  auto reporter = vda_adapter->reporter();
 
   std::mutex mutex;
   std::vector<types::Node> dispatched;
@@ -197,21 +198,22 @@ TEST(AdapterSmokeTest, DrivesOrderThroughNavigateAndPublishesState)
   // Each dispatched node is recorded, then acknowledged as instantly reached to
   // drive the traversal to the next node (node_reached only queues an update,
   // so this is non-reentrant against the spin thread).
-  vda_adapter->on_navigate([&](types::Node node) {
-    {
-      std::lock_guard<std::mutex> lock(mutex);
-      dispatched.push_back(node);
-    }
-    nav->node_reached(node);
-  });
+  vda_adapter->on_navigate(
+    [&](types::Node node, std::optional<types::Edge> /*edge*/) {
+      {
+        std::lock_guard<std::mutex> lock(mutex);
+        dispatched.push_back(node);
+      }
+      reporter->node_reached(node.node_id, node.sequence_id);
+    });
 
   vda_adapter->start();
 
   nlohmann::json order_json = make_order();
   fake->inject("/order", order_json.dump());
 
-  // Kick off: the robot reports it is sitting on the start node.
-  nav->node_reached(make_node("node_0", 0, 0.0));
+  // No manual start kick: the adapter auto-reports the order's first node
+  // (node_0) reached on acceptance, which starts the traversal.
 
   // Wait until the route is fully traversed (terminal State published).
   types::State final_state;

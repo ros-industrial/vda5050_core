@@ -41,6 +41,23 @@ install(TARGETS _core
   LIBRARY DESTINATION "${PYTHON_INSTALL_DIR}/${PROJECT_NAME}"
 )
 
+# Install the robot-side example clients (Autoxing L300). These are reference
+# integrations, not part of the importable package — run them from the install
+# share dir against a robot environment.
+install(DIRECTORY autoxing-l300
+  DESTINATION share/${PROJECT_NAME}
+  USE_SOURCE_PERMISSIONS
+  PATTERN "__pycache__" EXCLUDE
+)
+
+# Broker-only example clients (no robot): sim_demo.py runs the whole MQTT loop
+# with a stub robot; example_client.py is the minimal stub AGV.
+install(DIRECTORY examples
+  DESTINATION share/${PROJECT_NAME}
+  USE_SOURCE_PERMISSIONS
+  PATTERN "__pycache__" EXCLUDE
+)
+
 if(BUILD_TESTING)
   find_package(ament_cmake_pytest REQUIRED)
   ament_add_pytest_test(test_adapter_smoke test/test_adapter_smoke.py

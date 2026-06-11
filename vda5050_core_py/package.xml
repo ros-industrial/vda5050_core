@@ -12,6 +12,10 @@
   <depend>pybind11_vendor</depend>
   <depend>vda5050_core</depend>
 
+  <!-- Runtime deps for the Autoxing L300 example client (REST + WebSocket I/O). -->
+  <exec_depend>python3-requests</exec_depend>
+  <exec_depend>python3-websockets</exec_depend>
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
   <test_depend>ament_cmake_pytest</test_depend>

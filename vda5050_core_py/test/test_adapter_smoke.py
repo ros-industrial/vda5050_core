@@ -1,21 +1,25 @@
 """Smoke tests that do not require a broker.
 
-These verify the module imports cleanly, types construct, and the Adapter +
-NavigationManager chain can be wired together. They do NOT call .start() —
-that would try to connect MQTT.
+These verify the module imports cleanly, types construct, and the RobotRuntime +
+Reporter chain can be wired together. They do NOT call .start() — that would try
+to connect MQTT.
 """
 
 import vda5050_core_py as vda
 
 
 def test_module_surface():
-    assert hasattr(vda, "Adapter")
-    assert hasattr(vda, "NavigationManager")
-    assert hasattr(vda, "ProtocolAdapter")
+    assert hasattr(vda, "RobotRuntime")
+    assert hasattr(vda, "Reporter")
     assert hasattr(vda, "Node")
+    assert hasattr(vda, "Edge")
+    assert hasattr(vda, "Order")
     assert hasattr(vda, "NodePosition")
     assert hasattr(vda, "AGVPosition")
-    assert hasattr(vda, "create_default_mqtt_client")
+    # Removed building blocks are no longer exposed to Python.
+    assert not hasattr(vda, "ProtocolAdapter")
+    assert not hasattr(vda, "Adapter")
+    assert not hasattr(vda, "create_default_mqtt_client")
 
 
 def test_types_construct_and_roundtrip():
@@ -39,6 +43,23 @@ def test_types_construct_and_roundtrip():
     assert node.node_position.map_id == "map1"
 
 
+def test_edge_and_order_construct():
+    edge = vda.Edge()
+    edge.edge_id = "E1"
+    edge.sequence_id = 1
+    edge.start_node_id = "N0"
+    edge.end_node_id = "N1"
+
+    order = vda.Order()
+    order.order_id = "O1"
+    order.nodes = [vda.Node()]
+    order.edges = [edge]
+
+    assert order.order_id == "O1"
+    assert len(order.nodes) == 1
+    assert order.edges[0].end_node_id == "N1"
+
+
 def test_optional_fields_accept_none():
     pos = vda.NodePosition()
     pos.theta = None
@@ -54,16 +75,18 @@ def test_agv_position_defaults():
     assert p.y == 0.0
 
 
-def test_adapter_construct_without_starting():
+def test_runtime_construct_without_starting():
     # No broker contact: we don't call .start().
-    mqtt = vda.create_default_mqtt_client("tcp://localhost:1883", "test_smoke")
-    protocol = vda.ProtocolAdapter.make(
-        mqtt, "uagv", "2.0.0", "Manufacturer", "S001",
+    runtime = vda.RobotRuntime(
+        broker="tcp://localhost:1883",
+        client_id="test_smoke",
+        manufacturer="Manufacturer",
+        serial_number="S001",
     )
-    adapter = vda.Adapter.make(protocol)
-    nav = adapter.navigation_manager()
-    assert nav is not None
+    rep = runtime.reporter()
+    assert rep is not None
 
-    # Register a callback; just verify no exception. The callback is never
-    # invoked because we never start the spin loop.
-    adapter.on_navigate(lambda node: None)
+    # Register callbacks; just verify no exception. They never fire because we
+    # never start the loop.
+    runtime.on_navigate(lambda node, edge: None)
+    runtime.on_base(lambda order: None)

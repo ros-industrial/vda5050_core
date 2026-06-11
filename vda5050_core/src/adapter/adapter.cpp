@@ -18,35 +18,29 @@
 
 #include "vda5050_core/adapter/adapter.hpp"
 
-#include <atomic>
 #include <chrono>
-#include <condition_variable>
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
-#include <thread>
+#include <string>
 #include <utility>
 #include <vector>
 
 #include "vda5050_core/logger/logger.hpp"
 
-#include "vda5050_core/client/contexts/agv_context.hpp"
 #include "vda5050_core/client/events/navigate_to_node.hpp"
 #include "vda5050_core/client/resources/config.hpp"
-#include "vda5050_core/client/resources/order_execution.hpp"
 #include "vda5050_core/client/strategies/order_acceptance.hpp"
 #include "vda5050_core/client/strategies/order_actions.hpp"
 #include "vda5050_core/client/strategies/order_traversal.hpp"
 #include "vda5050_core/client/strategies/state_reporting.hpp"
+#include "vda5050_core/client/updates/node_reached.hpp"
 #include "vda5050_core/client/updates/order.hpp"
-#include "vda5050_core/execution/handler.hpp"
+#include "vda5050_core/execution/strategy_interface.hpp"
 #include "vda5050_core/types/connection.hpp"
+#include "vda5050_core/types/edge_state.hpp"
 #include "vda5050_core/types/error.hpp"
-#include "vda5050_core/types/node.hpp"
-#include "vda5050_core/types/node_state.hpp"
-#include "vda5050_core/types/order.hpp"
-#include "vda5050_core/types/state.hpp"
 
 #include "adapter_internal.hpp"
 
@@ -54,148 +48,115 @@ namespace vda5050_core {
 
 namespace adapter {
 
-class Adapter::Implementation
+namespace {
+
+// Reports the order's first node as reached the moment a new order is accepted,
+// and announces the whole base. OrderTraversal dispatches only SUCCESSOR nodes
+// and advances on node-reached signals; it treats node[0] as the AGV's current
+// position. VDA5050 requires the first node of a new order to be where the AGV
+// already is, so it is "reached" on acceptance. Without this kick, a freshly
+// accepted order would sit idle. Runs after OrderAcceptance in the pipeline.
+class AutoStartKick : public execution::StrategyInterface
 {
 public:
-  std::shared_ptr<execution::ProtocolAdapter> protocol_adapter;
-  std::shared_ptr<RobotIoState> robot_io;
-
-  std::shared_ptr<client::AGVContext> context;
-  std::shared_ptr<client::OrderExecutionResource> execution;
-
-  std::shared_ptr<client::OrderAcceptance> acceptance;
-  std::shared_ptr<client::OrderTraversal> traversal;
-  std::shared_ptr<client::OrderActions> actions;
-  std::shared_ptr<client::StateReporting> reporting;
-
-  std::shared_ptr<execution::Handler> handler;
-  std::shared_ptr<NavigationManager> navigation_manager;
-
-  std::function<void(types::Node)> navigate_callback;
-  std::mutex callback_mutex;
-
-  // Serialises State publishes from the reporter (spin thread) and the
-  // 1 Hz heartbeat thread.
-  std::mutex publish_mutex;
-
-  std::thread spin_thread;
-  std::thread heartbeat_thread;
-  std::atomic_bool started{false};
-
-  bool heartbeat_running = false;
-  std::mutex heartbeat_mutex;
-  std::condition_variable heartbeat_cv;
-
-  // Overlay robot-owned fields onto the strategy-produced State, then publish.
-  void publish_state(const types::State& order_state)
+  // Invoked once per newly accepted order with the full active order (the base).
+  void set_on_new_order(std::function<void(const types::Order&)> callback)
   {
-    if (!protocol_adapter || !robot_io) return;
-
-    types::State merged = merge_robot_io(order_state, *robot_io);
-
-    std::lock_guard<std::mutex> lock(publish_mutex);
-    protocol_adapter->publish<types::State>(merged, 0);
+    on_new_order_ = std::move(callback);
   }
 
-  // NavigateToNodeEvent carries a NodeState; resolve the full order Node
-  // (actions + position) from the persisted active order, falling back to a
-  // minimal Node built from the NodeState when no match is found.
-  types::Node resolve_node(const types::NodeState& target)
+  void init(std::shared_ptr<execution::ContextInterface> /*context*/) override
   {
-    if (execution)
-    {
-      const types::Order order = execution->get_active_order();
-      for (const auto& node : order.nodes)
-      {
-        if (
-          node.node_id == target.node_id &&
-          node.sequence_id == target.sequence_id)
-        {
-          return node;
-        }
-      }
-    }
-
-    types::Node node;
-    node.node_id = target.node_id;
-    node.sequence_id = target.sequence_id;
-    node.released = target.released;
-    node.node_position = target.node_position;
-    node.node_description = target.node_description;
-    return node;
   }
 
-  void run_heartbeat()
+  void step(std::shared_ptr<execution::ContextInterface> context) override
   {
-    while (true)
-    {
-      std::unique_lock<std::mutex> lock(heartbeat_mutex);
-      heartbeat_cv.wait_for(
-        lock, std::chrono::seconds(1), [this] { return !heartbeat_running; });
-      if (!heartbeat_running) break;
-      lock.unlock();
+    auto execution = context->get_resource<client::OrderExecutionResource>();
+    if (!execution || !execution->is_executing_order()) return;
 
-      if (execution) publish_state(execution->get_state());
-    }
+    const types::Order order = execution->get_active_order();
+    if (order.nodes.empty() || order.order_id == last_kicked_order_id_) return;
+
+    // Only a brand-new order starts the AGV at node[0]; order updates extend the
+    // horizon mid-route, so they must not re-report the start node.
+    last_kicked_order_id_ = order.order_id;
+
+    if (on_new_order_) on_new_order_(order);
+
+    const types::Node& start = order.nodes.front();
+    context->provider()->push<client::NodeReachedUpdate>(
+      start.node_id, start.sequence_id);
   }
+
+private:
+  std::function<void(const types::Order&)> on_new_order_;
+  std::string last_kicked_order_id_;
 };
 
-Adapter::Adapter(
-  std::shared_ptr<execution::ProtocolAdapter> protocol_adapter,
-  std::shared_ptr<NavigationManager> navigation_manager)
-: pimpl_(std::make_unique<Implementation>())
-{
-  pimpl_->protocol_adapter = std::move(protocol_adapter);
-  pimpl_->robot_io = std::make_shared<RobotIoState>();
+}  // namespace
 
+Adapter::Adapter(std::shared_ptr<execution::ProtocolAdapter> protocol_adapter)
+: protocol_adapter_(std::move(protocol_adapter)),
+  robot_io_(std::make_shared<RobotIoState>())
+{
   // No strategy reads HeaderConfigResource and the ProtocolAdapter stamps real
   // message headers on publish, so a placeholder identity is sufficient here.
   auto config = std::make_shared<client::HeaderConfigResource>(
     "uagv", "2.0.0", "Manufacturer", "S001");
-  pimpl_->context = client::AGVContext::make(config);
-  pimpl_->execution =
-    pimpl_->context->get_resource<client::OrderExecutionResource>();
+  context_ = client::AGVContext::make(config);
+  execution_ = context_->get_resource<client::OrderExecutionResource>();
 
-  pimpl_->acceptance = std::make_shared<client::OrderAcceptance>();
-  pimpl_->traversal = std::make_shared<client::OrderTraversal>();
-  // OrderActions consumes traversal's engine events (node reached / edge
-  // entered / left), so it is constructed against the traversal engine.
-  pimpl_->actions = client::OrderActions::make(pimpl_->traversal->engine());
-  pimpl_->reporting = std::make_shared<client::StateReporting>();
+  // Strategies are owned by the Handler once registered; only `traversal` is
+  // needed here (for its engine), so the rest stay local to the constructor.
+  auto acceptance = std::make_shared<client::OrderAcceptance>();
+  auto auto_start_kick = std::make_shared<AutoStartKick>();
+  auto traversal = std::make_shared<client::OrderTraversal>();
+  auto actions = client::OrderActions::make(traversal->engine());
+  auto reporting = std::make_shared<client::StateReporting>();
 
-  Implementation* self = pimpl_.get();
+  // Whole-base callback fires from the start-kick, which already detects a
+  // freshly accepted order.
+  auto_start_kick->set_on_new_order([this](const types::Order& order) {
+    BaseCallback callback;
+    {
+      std::lock_guard<std::mutex> lock(callback_mutex_);
+      callback = base_callback_;
+    }
+    if (callback) callback(order);
+  });
 
   // State out: StateReporting reports the assembled State on change.
-  pimpl_->reporting->set_reporter(
-    [self](const types::State& state) { self->publish_state(state); });
+  reporting->set_reporter(
+    [this](const types::State& state) { publish_state(state); });
 
   // Navigation out: consume NavigateToNodeEvent from the traversal engine,
-  // resolve the full Node, and dispatch it to the registered callback.
-  pimpl_->traversal->engine()->on<client::NavigateToNodeEvent>(
-    [self](std::shared_ptr<client::NavigateToNodeEvent> event) {
+  // resolve the full Node + entering Edge, and dispatch to the callback.
+  traversal->engine()->on<client::NavigateToNodeEvent>(
+    [this](std::shared_ptr<client::NavigateToNodeEvent> event) {
       {
-        std::lock_guard<std::mutex> lock(self->robot_io->mutex);
-        self->robot_io->driving = true;
+        std::lock_guard<std::mutex> lock(robot_io_->mutex);
+        robot_io_->driving = true;
       }
 
-      types::Node node = self->resolve_node(event->target);
+      types::Node node = resolve_node(event->target);
+      std::optional<types::Edge> edge = resolve_edge(event->via_edge);
 
-      std::function<void(types::Node)> callback;
+      NavigateCallback callback;
       {
-        std::lock_guard<std::mutex> lock(self->callback_mutex);
-        callback = self->navigate_callback;
+        std::lock_guard<std::mutex> lock(callback_mutex_);
+        callback = navigate_callback_;
       }
-      if (callback) callback(std::move(node));
+      if (callback) callback(std::move(node), std::move(edge));
     });
 
-  // Handler::make() calls context->init() and strategy->init() for each.
-  pimpl_->handler = execution::Handler::make(
-    pimpl_->context, {pimpl_->acceptance, pimpl_->traversal, pimpl_->actions,
-                      pimpl_->reporting});
+  // Order matters: auto_start_kick runs after acceptance has applied the order
+  // and before traversal, so the start-node reached signal it pushes is
+  // consumed in the same handler pass.
+  handler_ = execution::Handler::make(
+    context_, {acceptance, auto_start_kick, traversal, actions, reporting});
 
-  pimpl_->navigation_manager = std::move(navigation_manager);
-  pimpl_->navigation_manager->bind_internals(
-    pimpl_->robot_io, pimpl_->context->provider());
+  reporter_ = std::shared_ptr<Reporter>(new Reporter());
+  reporter_->bind_internals(robot_io_, context_->provider());
 }
 
 Adapter::~Adapter()
@@ -206,37 +167,116 @@ Adapter::~Adapter()
 std::shared_ptr<Adapter> Adapter::make(
   std::shared_ptr<execution::ProtocolAdapter> protocol_adapter)
 {
-  auto navigation_manager =
-    std::shared_ptr<NavigationManager>(new NavigationManager());
-  return std::shared_ptr<Adapter>(
-    new Adapter(std::move(protocol_adapter), std::move(navigation_manager)));
+  return std::shared_ptr<Adapter>(new Adapter(std::move(protocol_adapter)));
 }
 
-void Adapter::on_navigate(std::function<void(types::Node)> callback)
+void Adapter::on_navigate(NavigateCallback callback)
 {
-  std::lock_guard<std::mutex> lock(pimpl_->callback_mutex);
-  pimpl_->navigate_callback = std::move(callback);
+  std::lock_guard<std::mutex> lock(callback_mutex_);
+  navigate_callback_ = std::move(callback);
 }
 
-std::shared_ptr<NavigationManager> Adapter::navigation_manager()
+void Adapter::on_base(BaseCallback callback)
 {
-  return pimpl_->navigation_manager;
+  std::lock_guard<std::mutex> lock(callback_mutex_);
+  base_callback_ = std::move(callback);
+}
+
+std::shared_ptr<Reporter> Adapter::reporter()
+{
+  return reporter_;
+}
+
+void Adapter::publish_state(const types::State& order_state)
+{
+  if (!protocol_adapter_ || !robot_io_) return;
+
+  types::State merged = merge_robot_io(order_state, *robot_io_);
+
+  std::lock_guard<std::mutex> lock(publish_mutex_);
+  protocol_adapter_->publish<types::State>(merged, 0);
+}
+
+types::Node Adapter::resolve_node(const types::NodeState& target)
+{
+  if (execution_)
+  {
+    const types::Order order = execution_->get_active_order();
+    for (const auto& node : order.nodes)
+    {
+      if (
+        node.node_id == target.node_id &&
+        node.sequence_id == target.sequence_id)
+      {
+        return node;
+      }
+    }
+  }
+
+  types::Node node;
+  node.node_id = target.node_id;
+  node.sequence_id = target.sequence_id;
+  node.released = target.released;
+  node.node_position = target.node_position;
+  node.node_description = target.node_description;
+  return node;
+}
+
+std::optional<types::Edge> Adapter::resolve_edge(
+  const std::optional<types::EdgeState>& target)
+{
+  if (!target) return std::nullopt;
+
+  if (execution_)
+  {
+    const types::Order order = execution_->get_active_order();
+    for (const auto& edge : order.edges)
+    {
+      if (
+        edge.edge_id == target->edge_id &&
+        edge.sequence_id == target->sequence_id)
+      {
+        return edge;
+      }
+    }
+  }
+
+  // Fall back to a minimal Edge carrying the identity from the EdgeState.
+  types::Edge edge;
+  edge.edge_id = target->edge_id;
+  edge.sequence_id = target->sequence_id;
+  edge.released = target->released;
+  return edge;
+}
+
+void Adapter::run_heartbeat()
+{
+  while (true)
+  {
+    std::unique_lock<std::mutex> lock(heartbeat_mutex_);
+    heartbeat_cv_.wait_for(
+      lock, std::chrono::seconds(1), [this] { return !heartbeat_running_; });
+    if (!heartbeat_running_) break;
+    lock.unlock();
+
+    if (execution_) publish_state(execution_->get_state());
+  }
 }
 
 void Adapter::start()
 {
-  if (pimpl_->started.exchange(true)) return;
+  if (started_.exchange(true)) return;
 
-  pimpl_->protocol_adapter->connect();
-  if (!pimpl_->protocol_adapter->connected())
+  protocol_adapter_->connect();
+  if (!protocol_adapter_->connected())
   {
     VDA5050_WARN(
       "Adapter started but MQTT broker is not connected — messages will be "
       "dropped until a connection is established");
   }
 
-  std::weak_ptr<execution::ContextInterface> weak_context = pimpl_->context;
-  pimpl_->protocol_adapter->subscribe<types::Order>(
+  std::weak_ptr<execution::ContextInterface> weak_context = context_;
+  protocol_adapter_->subscribe<types::Order>(
     [weak_context](types::Order order, std::optional<types::Error> error) {
       if (error.has_value()) return;
       if (auto context = weak_context.lock())
@@ -250,46 +290,41 @@ void Adapter::start()
 
   types::Connection online;
   online.connection_state = types::ConnectionState::ONLINE;
-  pimpl_->protocol_adapter->publish<types::Connection>(online, 1, true);
+  protocol_adapter_->publish<types::Connection>(online, 1, true);
 
   {
-    std::lock_guard<std::mutex> lock(pimpl_->heartbeat_mutex);
-    pimpl_->heartbeat_running = true;
+    std::lock_guard<std::mutex> lock(heartbeat_mutex_);
+    heartbeat_running_ = true;
   }
-  pimpl_->spin_thread =
-    std::thread([handler = pimpl_->handler] { handler->spin(); });
-  pimpl_->heartbeat_thread =
-    std::thread([self = pimpl_.get()] { self->run_heartbeat(); });
+  spin_thread_ = std::thread([handler = handler_] { handler->spin(); });
+  heartbeat_thread_ = std::thread([this] { run_heartbeat(); });
 }
 
 void Adapter::stop()
 {
-  if (!pimpl_->started.exchange(false)) return;
+  if (!started_.exchange(false)) return;
 
-  if (pimpl_->protocol_adapter)
+  if (protocol_adapter_) protocol_adapter_->unsubscribe<types::Order>();
+
   {
-    pimpl_->protocol_adapter->unsubscribe<types::Order>();
+    std::lock_guard<std::mutex> lock(heartbeat_mutex_);
+    heartbeat_running_ = false;
   }
+  heartbeat_cv_.notify_all();
 
+  if (handler_) handler_->stop();
+  if (spin_thread_.joinable()) spin_thread_.join();
+  if (heartbeat_thread_.joinable()) heartbeat_thread_.join();
+
+  if (protocol_adapter_)
   {
-    std::lock_guard<std::mutex> lock(pimpl_->heartbeat_mutex);
-    pimpl_->heartbeat_running = false;
-  }
-  pimpl_->heartbeat_cv.notify_all();
-
-  if (pimpl_->handler) pimpl_->handler->stop();
-  if (pimpl_->spin_thread.joinable()) pimpl_->spin_thread.join();
-  if (pimpl_->heartbeat_thread.joinable()) pimpl_->heartbeat_thread.join();
-
-  if (pimpl_->protocol_adapter)
-  {
-    if (pimpl_->protocol_adapter->connected())
+    if (protocol_adapter_->connected())
     {
       types::Connection offline;
       offline.connection_state = types::ConnectionState::OFFLINE;
-      pimpl_->protocol_adapter->publish<types::Connection>(offline, 1, true);
+      protocol_adapter_->publish<types::Connection>(offline, 1, true);
     }
-    pimpl_->protocol_adapter->disconnect();
+    protocol_adapter_->disconnect();
   }
 }
 

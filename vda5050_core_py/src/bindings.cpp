@@ -14,14 +14,11 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include <memory>
 #include <sstream>
 #include <string>
 
-#include <vda5050_core/adapter/adapter.hpp>
-#include <vda5050_core/adapter/navigation_manager.hpp>
-#include <vda5050_core/execution/protocol_adapter.hpp>
-#include <vda5050_core/transport/mqtt_client_interface.hpp>
+#include <vda5050_core/adapter/reporter.hpp>
+#include <vda5050_core/adapter/runtime.hpp>
 #include <vda5050_core/types/action.hpp>
 #include <vda5050_core/types/action_parameter.hpp>
 #include <vda5050_core/types/action_state.hpp>
@@ -29,8 +26,10 @@
 #include <vda5050_core/types/agv_position.hpp>
 #include <vda5050_core/types/battery_state.hpp>
 #include <vda5050_core/types/blocking_type.hpp>
+#include <vda5050_core/types/edge.hpp>
 #include <vda5050_core/types/node.hpp>
 #include <vda5050_core/types/node_position.hpp>
+#include <vda5050_core/types/order.hpp>
 
 namespace py = pybind11;
 using namespace vda5050_core;
@@ -38,11 +37,11 @@ using namespace vda5050_core;
 PYBIND11_MODULE(_core, m)
 {
   m.doc() =
-    "Python bindings for vda5050_core: the AGV-side Adapter facade.\n"
-    "The C++ adapter owns the MQTT lifecycle, order graph execution, "
-    "header IDs, and 1Hz state publishing. Python implements only the "
-    "robot-side navigation callback and reports state back via "
-    "NavigationManager.";
+    "Python bindings for vda5050_core: the AGV-side RobotRuntime facade.\n"
+    "C++ owns the runtime — MQTT, protocol handling, order execution, threading "
+    "and 1Hz state publishing. Python implements only robot behaviour: the "
+    "navigation callback and state reporting via Reporter. All GIL management "
+    "stays inside the runtime's callback bridge.";
 
   // ===== Enums =====
   py::enum_<types::BlockingType>(m, "BlockingType")
@@ -62,10 +61,7 @@ PYBIND11_MODULE(_core, m)
   py::class_<types::ActionParameter>(m, "ActionParameter")
     .def(py::init<>())
     .def_readwrite("key", &types::ActionParameter::key)
-    .def_readwrite("value", &types::ActionParameter::value)
-    .def("__repr__", [](const types::ActionParameter& p) {
-      return "ActionParameter(key='" + p.key + "', value='" + p.value + "')";
-    });
+    .def_readwrite("value", &types::ActionParameter::value);
 
   py::class_<types::Action>(m, "Action")
     .def(py::init<>())
@@ -73,11 +69,7 @@ PYBIND11_MODULE(_core, m)
     .def_readwrite("action_id", &types::Action::action_id)
     .def_readwrite("blocking_type", &types::Action::blocking_type)
     .def_readwrite("action_description", &types::Action::action_description)
-    .def_readwrite("action_parameters", &types::Action::action_parameters)
-    .def("__repr__", [](const types::Action& a) {
-      return "Action(action_type='" + a.action_type +
-             "', action_id='" + a.action_id + "')";
-    });
+    .def_readwrite("action_parameters", &types::Action::action_parameters);
 
   py::class_<types::ActionState>(m, "ActionState")
     .def(py::init<>())
@@ -85,10 +77,7 @@ PYBIND11_MODULE(_core, m)
     .def_readwrite("action_type", &types::ActionState::action_type)
     .def_readwrite("action_description", &types::ActionState::action_description)
     .def_readwrite("action_status", &types::ActionState::action_status)
-    .def_readwrite("result_description", &types::ActionState::result_description)
-    .def("__repr__", [](const types::ActionState& a) {
-      return "ActionState(action_id='" + a.action_id + "')";
-    });
+    .def_readwrite("result_description", &types::ActionState::result_description);
 
   py::class_<types::BatteryState>(m, "BatteryState")
     .def(py::init<>())
@@ -96,13 +85,7 @@ PYBIND11_MODULE(_core, m)
     .def_readwrite("battery_voltage", &types::BatteryState::battery_voltage)
     .def_readwrite("battery_health", &types::BatteryState::battery_health)
     .def_readwrite("charging", &types::BatteryState::charging)
-    .def_readwrite("reach", &types::BatteryState::reach)
-    .def("__repr__", [](const types::BatteryState& b) {
-      std::ostringstream s;
-      s << "BatteryState(battery_charge=" << b.battery_charge
-        << ", charging=" << (b.charging ? "True" : "False") << ")";
-      return s.str();
-    });
+    .def_readwrite("reach", &types::BatteryState::reach);
 
   py::class_<types::NodePosition>(m, "NodePosition")
     .def(py::init<>())
@@ -117,8 +100,8 @@ PYBIND11_MODULE(_core, m)
     .def_readwrite("map_description", &types::NodePosition::map_description)
     .def("__repr__", [](const types::NodePosition& p) {
       std::ostringstream s;
-      s << "NodePosition(x=" << p.x << ", y=" << p.y
-        << ", map_id='" << p.map_id << "')";
+      s << "NodePosition(x=" << p.x << ", y=" << p.y << ", map_id='" << p.map_id
+        << "')";
       return s.str();
     });
 
@@ -132,9 +115,37 @@ PYBIND11_MODULE(_core, m)
     .def_readwrite("node_description", &types::Node::node_description)
     .def("__repr__", [](const types::Node& n) {
       std::ostringstream s;
-      s << "Node(node_id='" << n.node_id
-        << "', sequence_id=" << n.sequence_id
-        << ", released=" << (n.released ? "True" : "False") << ")";
+      s << "Node(node_id='" << n.node_id << "', sequence_id=" << n.sequence_id
+        << ")";
+      return s.str();
+    });
+
+  py::class_<types::Edge>(m, "Edge")
+    .def(py::init<>())
+    .def_readwrite("edge_id", &types::Edge::edge_id)
+    .def_readwrite("sequence_id", &types::Edge::sequence_id)
+    .def_readwrite("released", &types::Edge::released)
+    .def_readwrite("start_node_id", &types::Edge::start_node_id)
+    .def_readwrite("end_node_id", &types::Edge::end_node_id)
+    .def_readwrite("actions", &types::Edge::actions)
+    .def_readwrite("edge_description", &types::Edge::edge_description)
+    .def("__repr__", [](const types::Edge& e) {
+      std::ostringstream s;
+      s << "Edge(edge_id='" << e.edge_id << "', sequence_id=" << e.sequence_id
+        << ", " << e.start_node_id << "->" << e.end_node_id << ")";
+      return s.str();
+    });
+
+  py::class_<types::Order>(m, "Order")
+    .def(py::init<>())
+    .def_readwrite("order_id", &types::Order::order_id)
+    .def_readwrite("order_update_id", &types::Order::order_update_id)
+    .def_readwrite("nodes", &types::Order::nodes)
+    .def_readwrite("edges", &types::Order::edges)
+    .def("__repr__", [](const types::Order& o) {
+      std::ostringstream s;
+      s << "Order(order_id='" << o.order_id << "', nodes=" << o.nodes.size()
+        << ", edges=" << o.edges.size() << ")";
       return s.str();
     });
 
@@ -142,118 +153,73 @@ PYBIND11_MODULE(_core, m)
     .def(py::init<>())
     .def_readwrite(
       "position_initialized", &types::AGVPosition::position_initialized)
-    .def_readwrite(
-      "localization_score", &types::AGVPosition::localization_score)
+    .def_readwrite("localization_score", &types::AGVPosition::localization_score)
     .def_readwrite("deviation_range", &types::AGVPosition::deviation_range)
     .def_readwrite("x", &types::AGVPosition::x)
     .def_readwrite("y", &types::AGVPosition::y)
     .def_readwrite("theta", &types::AGVPosition::theta)
     .def_readwrite("map_id", &types::AGVPosition::map_id)
-    .def_readwrite("map_description", &types::AGVPosition::map_description)
-    .def("__repr__", [](const types::AGVPosition& p) {
-      std::ostringstream s;
-      s << "AGVPosition(x=" << p.x << ", y=" << p.y
-        << ", theta=" << p.theta << ", map_id='" << p.map_id << "')";
-      return s.str();
-    });
+    .def_readwrite("map_description", &types::AGVPosition::map_description);
 
-  // ===== Transport =====
-  py::class_<transport::MqttClientInterface,
-             std::shared_ptr<transport::MqttClientInterface>>(
-    m, "MqttClient",
-    "Opaque MQTT client handle. Construct via create_default_mqtt_client.");
+  // ===== Reporter =====
+  py::class_<adapter::Reporter, std::shared_ptr<adapter::Reporter>>(
+    m, "Reporter",
+    "Robot-side handle for reporting arrival and live state. Obtained from "
+    "RobotRuntime.reporter(); cannot be constructed directly.")
+    .def(
+      "node_reached", &adapter::Reporter::node_reached, py::arg("node_id"),
+      py::arg("sequence_id"), py::call_guard<py::gil_scoped_release>(),
+      "Report that the robot reached the node with this id + sequence id, "
+      "unblocking order execution so the next node is dispatched.")
+    .def(
+      "set_driving", &adapter::Reporter::set_driving, py::arg("driving"),
+      py::call_guard<py::gil_scoped_release>(),
+      "Update the published State's `driving` flag.")
+    .def(
+      "set_agv_position", &adapter::Reporter::set_agv_position,
+      py::arg("position"), py::call_guard<py::gil_scoped_release>(),
+      "Update the published State's `agvPosition`.")
+    .def(
+      "set_battery_state", &adapter::Reporter::set_battery_state,
+      py::arg("battery_state"), py::call_guard<py::gil_scoped_release>(),
+      "Update the published State's `batteryState`.")
+    .def(
+      "set_action_states", &adapter::Reporter::set_action_states,
+      py::arg("action_states"), py::call_guard<py::gil_scoped_release>(),
+      "Update the published State's `actionStates` array.");
 
-  m.def(
-    "create_default_mqtt_client",
-    [](const std::string& broker_address, const std::string& client_id)
-      -> std::shared_ptr<transport::MqttClientInterface> {
-      // create_default_client_unique returns unique_ptr; promote to shared
-      // because ProtocolAdapter::make takes shared_ptr.
-      auto unique =
-        transport::create_default_client_unique(broker_address, client_id);
-      return std::shared_ptr<transport::MqttClientInterface>(std::move(unique));
-    },
-    py::arg("broker_address"), py::arg("client_id"),
-    py::call_guard<py::gil_scoped_release>(),
-    "Create a Paho-backed MQTT client. Pass the result to "
-    "ProtocolAdapter.make().");
-
-  // ===== Execution =====
-  py::class_<execution::ProtocolAdapter,
-             std::shared_ptr<execution::ProtocolAdapter>>(m, "ProtocolAdapter")
-    .def_static(
-      "make", &execution::ProtocolAdapter::make,
-      py::arg("mqtt_client"), py::arg("interface"), py::arg("version"),
-      py::arg("manufacturer"), py::arg("serial_number"),
-      "Create a ProtocolAdapter. `interface` is the VDA5050 interface name "
-      "(usually \"uagv\"); `version` is the full protocol version "
-      "(e.g. \"2.1.0\"); `manufacturer` and `serial_number` identify the AGV.")
+  // ===== RobotRuntime =====
+  py::class_<adapter::RobotRuntime, std::shared_ptr<adapter::RobotRuntime>>(
+    m, "RobotRuntime",
+    "AGV-side runtime facade. Owns MQTT, protocol handling, order execution and "
+    "1Hz state publishing; Python implements only the navigation callback and "
+    "state reporting.")
     .def(
-      "connected", &execution::ProtocolAdapter::connected,
-      py::call_guard<py::gil_scoped_release>());
-
-  // ===== Adapter =====
-  py::class_<adapter::NavigationManager,
-             std::shared_ptr<adapter::NavigationManager>>(
-    m, "NavigationManager",
-    "Robot-side handle for reporting navigation completion and state. "
-    "Obtained from Adapter.navigation_manager(); cannot be constructed "
-    "directly.")
+      py::init(&adapter::RobotRuntime::make), py::arg("broker"),
+      py::arg("client_id"), py::arg("manufacturer"), py::arg("serial_number"),
+      py::arg("interface") = "uagv", py::arg("version") = "2.0.0",
+      "Build a runtime bound to an MQTT broker (e.g. "
+      "broker='tcp://localhost:1883').")
     .def(
-      "node_reached", &adapter::NavigationManager::node_reached,
-      py::arg("node"),
-      py::call_guard<py::gil_scoped_release>(),
-      "Signal that the robot has reached `node`. Unblocks order execution "
-      "so the next node in the order is dispatched.")
-    .def(
-      "set_driving", &adapter::NavigationManager::set_driving,
-      py::arg("driving"),
-      py::call_guard<py::gil_scoped_release>(),
-      "Update the published State message's `driving` flag.")
-    .def(
-      "set_agv_position", &adapter::NavigationManager::set_agv_position,
-      py::arg("position"),
-      py::call_guard<py::gil_scoped_release>(),
-      "Update the published State message's `agv_position`. Typically "
-      "called at the robot's localization tick rate.")
-    .def(
-      "set_battery_state", &adapter::NavigationManager::set_battery_state,
-      py::arg("battery_state"),
-      py::call_guard<py::gil_scoped_release>(),
-      "Update the published State message's `batteryState` fields.")
-    .def(
-      "set_action_states", &adapter::NavigationManager::set_action_states,
-      py::arg("action_states"),
-      py::call_guard<py::gil_scoped_release>(),
-      "Update the published State message's `actionStates` array.");
-
-  py::class_<adapter::Adapter, std::shared_ptr<adapter::Adapter>>(
-    m, "Adapter",
-    "AGV-side facade. Wires a ProtocolAdapter into the execution framework, "
-    "subscribes to Order, publishes State at 1Hz, and routes per-node "
-    "navigation requests to the Python `on_navigate` callback.")
-    .def_static(
-      "make", &adapter::Adapter::make, py::arg("protocol_adapter"),
-      "Construct an Adapter from a ProtocolAdapter. Start the spin loop "
-      "with .start().")
-    .def(
-      "on_navigate", &adapter::Adapter::on_navigate, py::arg("callback"),
+      "on_navigate", &adapter::RobotRuntime::on_navigate, py::arg("callback"),
       "Register the per-node navigation callback. Signature: "
-      "`Callable[[Node], None]`. Invoked on the C++ spin thread; long-"
-      "running work (HTTP, polling) should be dispatched to a Python "
-      "worker thread so the spin loop is not blocked.")
+      "`Callable[[Node, Optional[Edge]], None]` — the node to drive to and the "
+      "edge entered to reach it (None for the first node). Invoked on the C++ "
+      "spin thread; dispatch long-running work to a worker thread.")
     .def(
-      "navigation_manager", &adapter::Adapter::navigation_manager,
-      "Return the NavigationManager for reporting node arrival and state.")
+      "on_base", &adapter::RobotRuntime::on_base, py::arg("callback"),
+      "Register the whole-base callback. Signature: `Callable[[Order], None]` — "
+      "the full released base of a newly accepted order, for robots that plan a "
+      "whole route at once.")
     .def(
-      "start", &adapter::Adapter::start,
+      "reporter", &adapter::RobotRuntime::reporter,
+      "Return the Reporter for arrival + state reporting.")
+    .def(
+      "start", &adapter::RobotRuntime::start,
       py::call_guard<py::gil_scoped_release>(),
-      "Connect MQTT, subscribe to Order, publish ONLINE, and start the "
-      "execution spin thread. Returns once the spin thread is running.")
+      "Connect MQTT, subscribe to Order, publish ONLINE, start the loop.")
     .def(
-      "stop", &adapter::Adapter::stop,
+      "stop", &adapter::RobotRuntime::stop,
       py::call_guard<py::gil_scoped_release>(),
-      "Unsubscribe, stop the spin loop, publish OFFLINE, disconnect MQTT. "
-      "Joins the spin thread; releases the GIL while waiting so in-flight "
-      "Python callbacks can complete.");
+      "Stop the loop, publish OFFLINE, disconnect MQTT.");
 }
