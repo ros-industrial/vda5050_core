@@ -212,7 +212,7 @@ TEST_F(EngineTest, WaitConditionSucess)
   EXPECT_FALSE(engine->waiting());
 }
 
-TEST_F(EngineTest, WaitTimeout)
+TEST_F(EngineTest, SuspendWithTimeoutNoPredicate)
 {
   std::vector<std::string> execution_log;
 
@@ -235,6 +235,63 @@ TEST_F(EngineTest, WaitTimeout)
   engine->step();
   ASSERT_EQ(execution_log.size(), 1);
   EXPECT_EQ(execution_log[0], "node_delayed");
+}
+
+TEST_F(EngineTest, SuspendWithTimeoutAndPredicate)
+{
+  std::vector<std::string> execution_log;
+
+  engine->on<MockNavigationCommand>(
+    [&](auto event) { execution_log.push_back(event->node_id); });
+
+  engine->emit<MockNavigationCommand>(Priority::NORMAL, "node_delayed");
+
+  engine->suspend_for<MockNavigationAcknowledgement>(
+    std::chrono::milliseconds(50),
+    [&](auto update) -> bool { return update->node_id == "node_previous"; });
+
+  EXPECT_TRUE(engine->waiting());
+
+  engine->step();
+  EXPECT_TRUE(execution_log.empty());
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(20));
+
+  EXPECT_TRUE(engine->waiting());
+
+  engine->notify(
+    std::make_shared<MockNavigationAcknowledgement>("node_previous"));
+
+  EXPECT_FALSE(engine->waiting());
+
+  engine->step();
+  ASSERT_EQ(execution_log.size(), 1);
+  EXPECT_EQ(execution_log[0], "node_delayed");
+}
+
+TEST_F(EngineTest, SuspendIndefinitely)
+{
+  std::atomic_bool recevied = false;
+
+  engine->suspend<MockNavigationAcknowledgement>([&](auto update) -> bool {
+    if (update->node_id == "node_1")
+    {
+      recevied = true;
+      return true;
+    }
+    return false;
+  });
+
+  EXPECT_TRUE(engine->waiting());
+
+  engine->step();
+  EXPECT_TRUE(engine->waiting());
+
+  engine->notify(std::make_shared<MockNavigationAcknowledgement>("node_1"));
+
+  engine->step();
+  EXPECT_FALSE(engine->waiting());
+  EXPECT_TRUE(recevied);
 }
 
 TEST_F(EngineTest, ConcurrentEmitAndStep)
