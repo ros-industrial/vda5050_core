@@ -61,5 +61,17 @@ void OrderExecutionResource::set_state(types::State state)
   state_ = std::move(state);
 }
 
+types::Order OrderExecutionResource::get_active_order() const
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  return active_order_;
+}
+
+void OrderExecutionResource::set_active_order(types::Order order)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  active_order_ = std::move(order);
+}
+
 }  // namespace client
 }  // namespace vda5050_core
