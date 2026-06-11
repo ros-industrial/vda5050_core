@@ -192,6 +192,30 @@ target_include_directories(vda5050_master
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+# Adapter (AGV-side integration facade over the client Context+Strategy pipeline)
+file(GLOB_RECURSE adapter_srcs "src/adapter/*.cpp")
+add_library(vda5050_adapter SHARED ${adapter_srcs})
+vda5050_configure_target_alias(
+  TARGET vda5050_adapter
+  NAMESPACE ${PROJECT_NAME}::
+  EXPORT_NAME adapter
+)
+target_link_libraries(vda5050_adapter
+  PUBLIC
+    ${PROJECT_NAME}::client
+    ${PROJECT_NAME}::execution
+    ${PROJECT_NAME}::transport
+    ${PROJECT_NAME}::types
+    ${PROJECT_NAME}::logger
+)
+target_include_directories(vda5050_adapter
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/adapter>
+)
+
 
 install(
   DIRECTORY include/${PROJECT_NAME}/
@@ -209,6 +233,7 @@ install(
     vda5050_execution
     vda5050_client
     vda5050_master
+    vda5050_adapter
   EXPORT export_${PROJECT_NAME}
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -296,10 +321,23 @@ if(BUILD_TESTING)
     test/client/test_order_types.cpp
     test/client/test_order_execution_resource.cpp
     test/client/test_agv_context.cpp
+    test/client/test_order_validator.cpp
+    test/client/test_order_acceptance.cpp
+    test/client/test_order_traversal.cpp
+    test/client/test_order_actions.cpp
+    test/client/test_state_reporting.cpp
   )
 
   target_link_libraries(test_client
     vda5050_core::client
+  )
+
+  ament_add_gmock(test_adapter
+    test/adapter/test_adapter_smoke.cpp
+  )
+  target_link_libraries(test_adapter
+    vda5050_core::adapter
+    vda5050_core::json_utils
   )
 
   ament_add_gmock(test_execution
