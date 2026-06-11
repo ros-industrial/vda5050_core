@@ -59,10 +59,22 @@ install(DIRECTORY examples
 )
 
 if(BUILD_TESTING)
-  find_package(ament_cmake_pytest REQUIRED)
-  ament_add_pytest_test(test_adapter_smoke test/test_adapter_smoke.py
-    TIMEOUT 60
-  )
+  # The smoke test imports the compiled _core extension into a plain python3
+  # interpreter. When the build is instrumented with a sanitizer, that .so
+  # carries the sanitizer runtime, which cannot be dlopen'd into an
+  # un-instrumented host process (asan: "runtime does not come first";
+  # tsan: "cannot allocate memory in static TLS block"). The C++ tests still
+  # exercise the sanitizers, so skip only this Python import test.
+  string(FIND "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS}" "-fsanitize" _sanitizer_pos)
+  if(_sanitizer_pos EQUAL -1)
+    find_package(ament_cmake_pytest REQUIRED)
+    ament_add_pytest_test(test_adapter_smoke test/test_adapter_smoke.py
+      TIMEOUT 60
+    )
+  else()
+    message(STATUS
+      "vda5050_core_py: skipping test_adapter_smoke under sanitizer build")
+  endif()
 endif()
 
 ament_package()
