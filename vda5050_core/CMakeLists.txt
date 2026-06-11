@@ -300,6 +300,7 @@ if(BUILD_TESTING)
     test/client/test_order_acceptance.cpp
     test/client/test_order_traversal.cpp
     test/client/test_order_actions.cpp
+    test/client/test_state_reporting.cpp
   )
 
   target_link_libraries(test_client
