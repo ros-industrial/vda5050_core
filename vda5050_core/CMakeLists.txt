@@ -296,6 +296,10 @@ if(BUILD_TESTING)
     test/client/test_order_types.cpp
     test/client/test_order_execution_resource.cpp
     test/client/test_agv_context.cpp
+    test/client/test_order_validator.cpp
+    test/client/test_order_acceptance.cpp
+    test/client/test_order_traversal.cpp
+    test/client/test_order_actions.cpp
   )
 
   target_link_libraries(test_client

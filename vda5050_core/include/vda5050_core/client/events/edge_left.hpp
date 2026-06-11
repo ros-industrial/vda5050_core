@@ -16,28 +16,37 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__ERRORS__ERROR_CODES_HPP_
-#define VDA5050_CORE__ERRORS__ERROR_CODES_HPP_
+#ifndef VDA5050_CORE__CLIENT__EVENTS__EDGE_LEFT_HPP_
+#define VDA5050_CORE__CLIENT__EVENTS__EDGE_LEFT_HPP_
 
+#include <cstdint>
 #include <string>
+#include <utility>
+
+#include "vda5050_core/execution/base.hpp"
 
 namespace vda5050_core {
 
-namespace errors {
+namespace client {
 
-// Error Codes for vda5050_types::Error::error_type field
-inline const std::string GraphValidationError = "graphValidationError";
-inline const std::string OrderUpdateError = "orderUpdateError";
-inline const std::string ValidationError = "validationError";
+/// \brief Emitted by the traversal strategy when the AGV leaves an edge.
+///
+/// The action strategy hooks this to stop or expire the edge's (time-bound)
+/// actions that are still active. Fires when the AGV reaches the edge's end
+/// node.
+struct EdgeLeftEvent
+: public execution::Initialize<EdgeLeftEvent, execution::EventBase>
+{
+  std::string edge_id;
+  uint32_t sequence_id = 0;
 
-// Reference key string for vda5050_types::ErrorReference::key
-inline const std::string RefOrderId = "orderId";
-inline const std::string RefOrderUpdateId = "orderUpdateId";
-inline const std::string RefNodeId = "nodeId";
-inline const std::string RefEdgeId = "edgeId";
-inline const std::string RefSequenceId = "sequenceId";
+  EdgeLeftEvent(std::string edge_id, uint32_t sequence_id)
+  : edge_id(std::move(edge_id)), sequence_id(sequence_id)
+  {
+  }
+};
 
-}  // namespace errors
+}  // namespace client
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__ERRORS__ERROR_CODES_HPP_
+#endif  // VDA5050_CORE__CLIENT__EVENTS__EDGE_LEFT_HPP_
