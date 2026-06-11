@@ -19,7 +19,9 @@
 #ifndef VDA5050_CORE__CLIENT__STRATEGIES__ORDER_ACCEPTANCE_HPP_
 #define VDA5050_CORE__CLIENT__STRATEGIES__ORDER_ACCEPTANCE_HPP_
 
+#include <cstdint>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "vda5050_core/client/strategies/order_validator.hpp"
@@ -57,6 +59,12 @@ public:
 
 private:
   OrderValidator validator_;
+
+  // Last (orderId, orderUpdateId) processed. The inbound OrderUpdate stays
+  // cached and step() runs every handler tick, so this lets an unchanged order
+  // be processed once instead of re-validated (and re-logged) on every tick.
+  std::string last_order_id_;
+  uint32_t last_order_update_id_ = 0;
 };
 
 }  // namespace client

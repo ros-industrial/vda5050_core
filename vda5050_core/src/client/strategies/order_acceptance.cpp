@@ -173,6 +173,20 @@ void OrderAcceptance::step(std::shared_ptr<execution::ContextInterface> context)
   if (!update) return;  // nothing to process yet
 
   const types::Order& order = update->order;
+
+  // Edge-trigger: the cached OrderUpdate is not cleared and step() runs on every
+  // handler tick, so skip an order already processed at this (orderId,
+  // orderUpdateId). Without this the validator re-evaluates and logs the same
+  // order ~10x/second for as long as it stays cached.
+  if (
+    order.order_id == last_order_id_ &&
+    order.order_update_id == last_order_update_id_)
+  {
+    return;
+  }
+  last_order_id_ = order.order_id;
+  last_order_update_id_ = order.order_update_id;
+
   const AcceptanceResult result =
     validator_.validate_order(order, order_context);
 
