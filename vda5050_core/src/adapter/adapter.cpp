@@ -16,7 +16,12 @@
  * limitations under the License.
  */
 
+#include <thread>
+#include <utility>
+
 #include "vda5050_core/logger/logger.hpp"
+
+#include "vda5050_core/order_utils/order_graph_validator.hpp"
 
 #include "vda5050_core/adapter/adapter.hpp"
 
@@ -37,16 +42,81 @@ void Adapter::Implementation::subscribe_orders()
     [this](types::Order order, auto error) {
       if (error.has_value())
       {
+        state_manager->add_error(error.value());
+        return;
       }
+
+      auto active = active_order.lock();
+
+      if (!active->order.has_value())
+      {
+        auto result = order_utils::is_valid_graph(order);
+
+        if (!result)
+        {
+          for (const auto& e : result.errors)
+          {
+            state_manager->add_error(e);
+          }
+
+          return;
+        }
+
+        state_manager->clear_errors();
+
+        ActiveOrder incoming;
+        incoming.order = std::move(order);
+
+        active->order = std::move(incoming);
+
+        VDA5050_INFO("Accepted new order [{}]", active->order->order.order_id);
+
+        return;
+      }
+
+      // TODO(sauk2): validate order update and stitching
+
+      active->order->order = std::move(order);
+      VDA5050_INFO("Accepted order update");
     },
     0);
 }
 
 //=============================================================================
-void Adapter::Implementation::subscribe_instant_actions() {}
+void Adapter::Implementation::subscribe_instant_actions()
+{
+  protocol_adapter->subscribe<types::InstantActions>(
+    [this](types::InstantActions actions, auto error) {
+      if (error.has_value())
+      {
+        state_manager->add_error(error.value());
+        return;
+      }
+
+      auto queue = instant_actions.lock();
+
+      for (auto& action : actions.actions)
+      {
+        queue->push_back(std::move(action));
+      }
+
+      VDA5050_INFO("Received {} instant actions", actions.actions.size());
+    },
+    0);
+}
 
 //=============================================================================
-void Adapter::Implementation::start_dispatch_thread() {}
+void Adapter::Implementation::start_dispatch_thread()
+{
+  dispatch_thread = std::thread([this]() {
+    while (running)
+    {
+      process_navigation();
+
+      process_actions();
+    }
+  });
+}
 
 //=============================================================================
 void Adapter::Implementation::start_state_thread() {}
