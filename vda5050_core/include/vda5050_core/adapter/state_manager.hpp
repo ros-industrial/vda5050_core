@@ -19,11 +19,19 @@
 #ifndef VDA5050_CORE__ADAPTER__STATE_MANAGER_HPP_
 #define VDA5050_CORE__ADAPTER__STATE_MANAGER_HPP_
 
+#include <atomic>
 #include <memory>
 #include <mutex>
 
+#include "vda5050_core/types/action_state.hpp"
 #include "vda5050_core/types/agv_position.hpp"
+#include "vda5050_core/types/battery_state.hpp"
+#include "vda5050_core/types/error.hpp"
+#include "vda5050_core/types/operating_mode.hpp"
+#include "vda5050_core/types/safety_state.hpp"
 #include "vda5050_core/types/state.hpp"
+
+#include "vda5050_core/adapter/execution_progress.hpp"
 
 namespace vda5050_core {
 
@@ -38,6 +46,8 @@ public:
 
   void set_agv_position(const types::AGVPosition& position);
 
+  void set_battery_state(const types::BatteryState& battery);
+
   void set_action_states(const std::vector<types::ActionState>& action_states);
 
   void set_operating_mode(types::OperatingMode mode);
@@ -46,13 +56,24 @@ public:
 
   void clear_errors();
 
+  void set_execution_progress(
+    std::shared_ptr<ExecutionProgress> execution_progress);
+
+  void set_safety_state(const types::SafetyState& safety_state);
+
   types::State state() const;
+
+  void mark_publish_requested();
+
+  bool consume_publish_requested();
 
 private:
   StateManager();
 
   mutable std::mutex mutex_;
   types::State state_;
+
+  std::atomic_bool publish_requested_;
 };
 
 }  // namespace adapter
