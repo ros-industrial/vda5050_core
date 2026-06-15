@@ -73,11 +73,16 @@ private:
 
 struct ActiveOrder
 {
-  std::optional<types::Order> order;
+  types::Order order;
 
   std::size_t current_node{0};
 
   bool executing{false};
+};
+
+struct ActiveOrderState
+{
+  std::optional<ActiveOrder> order;
 };
 
 class Adapter::Implementation
@@ -85,9 +90,9 @@ class Adapter::Implementation
 public:
   std::shared_ptr<execution::ProtocolAdapter> protocol_adapter;
 
-  std::shared_ptr<SharedState<StateManager>> state_manager;
+  std::shared_ptr<StateManager> state_manager;
 
-  SharedState<ActiveOrder> active_order;
+  SharedState<ActiveOrderState> active_order;
 
   SharedState<std::vector<types::Action>> instant_actions;
 
@@ -119,6 +124,8 @@ public:
   void publish_connection_offline();
 
   void process_navigation();
+
+  void process_actions();
 
   void publish_factsheet();
 
