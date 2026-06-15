@@ -22,9 +22,11 @@
 #include <functional>
 #include <memory>
 
-#include "vda5050_core/adapter/navigation_manager.hpp"
+#include "vda5050_core/adapter/action_request.hpp"
+#include "vda5050_core/adapter/execution.hpp"
+#include "vda5050_core/adapter/navigation_request.hpp"
+#include "vda5050_core/adapter/state_manager.hpp"
 #include "vda5050_core/execution/protocol_adapter.hpp"
-#include "vda5050_core/types/node.hpp"
 
 namespace vda5050_core {
 
@@ -34,6 +36,8 @@ namespace adapter {
 class Adapter : public std::enable_shared_from_this<Adapter>
 {
 public:
+  ~Adapter();
+
   /// \brief Create an Adapter instance
   ///
   /// \param protocol_adapter Configured protocol adapter for MQTT messaging
@@ -42,15 +46,14 @@ public:
     std::shared_ptr<execution::ProtocolAdapter> protocol_adapter);
 
   /// \brief Register callback invoked when the AGV should navigate to a node
-  void on_navigate(std::function<void(types::Node)> callback);
+  void on_navigate(
+    std::function<void(NavigationRequest, std::shared_ptr<Execution>)>
+      callback);
 
-  // on_cancel() is reserved for VDA5050 §6.10.2 cancel instant action support.
-  // Wiring it requires subscribing to an InstantAction topic and dispatching
-  // the cancel through the execution engine — not yet implemented.
-  // void on_cancel(std::function<void()> callback);
+  void on_action(
+    std::function<void(ActionRequest, std::shared_ptr<Execution>)> callback);
 
-  /// \brief Access the navigation manager for status reporting and state updates
-  std::shared_ptr<NavigationManager> navigation_manager();
+  std::shared_ptr<StateManager> state_manager();
 
   /// \brief Connect MQTT, subscribe to orders, and start the execution loop
   void start();
@@ -58,12 +61,8 @@ public:
   /// \brief Stop the execution loop and publish OFFLINE connection state
   void stop();
 
-  ~Adapter();
-
 private:
-  Adapter(
-    std::shared_ptr<execution::ProtocolAdapter> protocol_adapter,
-    std::shared_ptr<NavigationManager> navigation_manager);
+  Adapter(std::shared_ptr<execution::ProtocolAdapter> protocol_adapter);
 
   class Implementation;
   std::unique_ptr<Implementation> pimpl_;
