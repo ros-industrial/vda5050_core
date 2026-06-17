@@ -402,4 +402,113 @@ TEST(OrderAcceptanceTest, RejectedUpdatePreservesRunningBase)
   EXPECT_FALSE(state.errors.empty());  // rejection error recorded
 }
 
+// Test 10: A new order rejected because the AGV is busy must not be remembered
+// as processed. If the master resends the same order after the AGV becomes idle,
+// it should be accepted.
+TEST(OrderAcceptanceTest, RejectedBusyOrderCanBeAcceptedWhenResentAfterIdle)
+{
+  OrderAcceptance strategy;
+  auto context = make_context();
+  auto execution = context->get_resource<OrderExecutionResource>();
+
+  // Simulate that the AGV is currently busy executing another order.
+  execution->set_executing_order(true);
+  {
+    types::State state = execution->get_state();
+    state.order_id = "running";
+    state.order_update_id = 0;
+    state.node_states.push_back([] {
+      types::NodeState n;
+      n.node_id = "running_node";
+      n.sequence_id = 0;
+      n.released = true;
+      return n;
+    }());
+    execution->set_state(std::move(state));
+  }
+
+  // New order arrives while busy, so it should be rejected.
+  types::Order queued;
+  queued.order_id = "queued";
+  queued.order_update_id = 0;
+  queued.nodes.push_back(make_node("node_0", 0));
+
+  context->provider()->push<OrderUpdate>(queued);
+  strategy.step(context);
+
+  {
+    const auto state = execution->get_state();
+    EXPECT_EQ(state.order_id, "running");
+    EXPECT_FALSE(state.errors.empty());
+  }
+
+  // AGV becomes idle after finishing the running order.
+  execution->set_executing_order(false);
+  {
+    types::State state = execution->get_state();
+    state.order_id.clear();
+    state.order_update_id = 0;
+    state.node_states.clear();
+    state.edge_states.clear();
+    state.action_states.clear();
+    state.last_node_id.clear();
+    state.last_node_sequence_id = 0;
+    execution->set_state(std::move(state));
+  }
+
+  // Master resends the same order_id/order_update_id.
+  // This should NOT be skipped by last_order_id_/last_order_update_id_.
+  context->provider()->push<OrderUpdate>(queued);
+  strategy.step(context);
+
+  const auto state = execution->get_state();
+  EXPECT_TRUE(execution->is_executing_order());
+  EXPECT_EQ(state.order_id, "queued");
+  EXPECT_EQ(state.order_update_id, 0u);
+  EXPECT_TRUE(state.errors.empty());
+  ASSERT_EQ(state.node_states.size(), 1u);
+  EXPECT_EQ(state.node_states[0].node_id, "node_0");
+}
+
+// Test 11: An already accepted order should not be re-applied on later step()
+// ticks while the same cached OrderUpdate remains in the context.
+TEST(OrderAcceptanceTest, AcceptedOrderIsNotReprocessedOnLaterTicks)
+{
+  OrderAcceptance strategy;
+  auto context = make_context();
+
+  types::Order order;
+  order.order_id = "o1";
+  order.order_update_id = 0;
+  order.nodes.push_back(make_node("node_0", 0));
+
+  context->provider()->push<OrderUpdate>(order);
+  strategy.step(context);
+
+  auto execution = context->get_resource<OrderExecutionResource>();
+  const auto state_after_first = execution->get_state();
+  ASSERT_EQ(state_after_first.order_id, "o1");
+  ASSERT_EQ(state_after_first.node_states.size(), 1u);
+
+  // Mutate state so we can detect if apply_new_order() runs again.
+  {
+    types::State state = execution->get_state();
+    state.node_states.push_back([] {
+      types::NodeState n;
+      n.node_id = "should_not_be_cleared";
+      n.sequence_id = 99;
+      n.released = true;
+      return n;
+    }());
+    execution->set_state(std::move(state));
+  }
+
+  // Same cached update should be skipped because it was already accepted.
+  strategy.step(context);
+
+  const auto state_after_second = execution->get_state();
+  ASSERT_EQ(state_after_second.node_states.size(), 2u);
+  EXPECT_EQ(state_after_second.node_states[1].node_id, "should_not_be_cleared");
+}
+
 }  // namespace
