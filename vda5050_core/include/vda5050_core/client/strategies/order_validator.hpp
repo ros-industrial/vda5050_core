@@ -22,7 +22,7 @@
 #include <memory>
 #include <vector>
 
-#include "vda5050_core/client/contexts/agv_context.hpp"
+#include "vda5050_core/execution/context_interface.hpp"
 #include "vda5050_core/types/error.hpp"
 #include "vda5050_core/types/order.hpp"
 
@@ -75,13 +75,13 @@ public:
   /// \brief Evaluate an incoming order against graph validity and execution state.
   ///
   /// \param incoming_order Order payload received from master control.
-  /// \param context Thread-safe order context with execution tracking state.
+  /// \param context Execution context exposing the order-execution resource.
   /// \return Acceptance decision; on rejection `errors` holds the VDA5050 errors.
   // TODO(eileentyz): Add protocol limit validation once factsheet/config data
   // is available.
   AcceptanceResult validate_order(
     const types::Order& incoming_order,
-    const std::shared_ptr<AGVContext>& context) const;
+    const std::shared_ptr<execution::ContextInterface>& context) const;
 };
 
 }  // namespace client

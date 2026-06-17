@@ -93,8 +93,11 @@ AcceptanceResult accepted()
 // The vehicle is "busy" if it still has nodes left
 // to traverse (base or horizon) or any action that is not yet FINISHED/FAILED.
 // Edges never outlive their nodes, so checking node_states is sufficient.
-// Operates on a caller-supplied snapshot so the whole acceptance decision is
-// made from one consistent view of the state.
+//
+// LIMITATION: this PR does not yet remove nodes as the AGV reaches them, so
+// node_states stays populated for the lifetime of an accepted order. Until
+// traversal/state-update handling lands, an accepted order keeps the vehicle
+// "busy" and new orders are rejected until its state is cleared.
 bool is_busy(const types::State& state)
 {
   if (!state.node_states.empty()) return true;
@@ -115,13 +118,13 @@ bool is_busy(const types::State& state)
 
 AcceptanceResult OrderValidator::validate_order(
   const types::Order& incoming_order,
-  const std::shared_ptr<AGVContext>& context) const
+  const std::shared_ptr<execution::ContextInterface>& context) const
 {
   // If context is null, return a validation error.
   if (!context)
   {
     return rejected(
-      errors::create_error(errors::ValidationError, "AGVContext is null", {}));
+      errors::create_error(errors::ValidationError, "context is null", {}));
   }
 
   // Execution state (order/node tracking) lives in the resource, not the

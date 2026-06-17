@@ -25,10 +25,8 @@
 #include <unordered_set>
 #include <utility>
 
-#include "vda5050_core/client/contexts/agv_context.hpp"
 #include "vda5050_core/client/resources/order_execution.hpp"
 #include "vda5050_core/client/updates/order.hpp"
-#include "vda5050_core/logger/logger.hpp"
 #include "vda5050_core/types/action_status.hpp"
 
 namespace vda5050_core {
@@ -161,15 +159,10 @@ void OrderAcceptance::init(
 
 void OrderAcceptance::step(std::shared_ptr<execution::ContextInterface> context)
 {
-  auto order_context = std::dynamic_pointer_cast<AGVContext>(context);
-  if (!order_context)
-  {
-    VDA5050_WARN_STREAM("OrderAcceptance: context is not an AGVContext");
-    return;
-  }
+  if (!context) return;
 
   // The inbound order is whatever the protocol adapter (or a test) last pushed.
-  auto update = order_context->get_update<OrderUpdate>();
+  auto update = context->get_update<OrderUpdate>();
   if (!update) return;  // nothing to process yet
 
   const types::Order& order = update->order;
@@ -181,10 +174,9 @@ void OrderAcceptance::step(std::shared_ptr<execution::ContextInterface> context)
     return;
   }
 
-  const AcceptanceResult result =
-    validator_.validate_order(order, order_context);
+  const AcceptanceResult result = validator_.validate_order(order, context);
 
-  auto execution = order_context->get_resource<OrderExecutionResource>();
+  auto execution = context->get_resource<OrderExecutionResource>();
   if (!execution) return;
 
   // NOTE: get_state()/set_state() is a non-atomic read-modify-write.
