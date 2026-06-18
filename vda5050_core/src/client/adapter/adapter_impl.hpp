@@ -82,7 +82,7 @@ struct ActiveOrder
   std::unordered_map<uint32_t, std::size_t> node_lookup;
   std::unordered_map<uint32_t, std::size_t> edge_lookup;
 
-  std::uint32_t last_completed_node_sequence_id{0};
+  std::optional<std::uint32_t> last_completed_node_sequence_id;
 
   bool executing{false};
 };

@@ -66,7 +66,12 @@ void Adapter::Implementation::subscribe_orders()
         }
 
         ActiveOrder incoming;
-        incoming.order = std::move(order);
+        incoming.order = order;
+
+        incoming.last_completed_node_sequence_id.reset();
+
+        incoming.node_lookup.clear();
+        incoming.edge_lookup.clear();
 
         for (std::size_t i = 0; i < order.nodes.size(); ++i)
         {
@@ -144,6 +149,8 @@ void Adapter::Implementation::start_dispatch_thread()
       process_navigation();
 
       process_actions();
+
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
   });
 }
@@ -197,24 +204,28 @@ void Adapter::Implementation::process_navigation()
 {
   if (!navigation_callback) return;
 
-  auto active = active_order.lock();
+  ActiveOrder order_state;
+  {
+    auto active = active_order.lock();
 
-  if (!active->order.has_value()) return;
+    if (!active->order.has_value()) return;
 
-  auto& order_state = *active->order;
-  if (order_state.executing) return;
+    if (active->order->executing) return;
+
+    order_state = *active->order;
+  }
 
   const auto& order = order_state.order;
 
   uint32_t next_node_seq;
 
-  if (order_state.last_completed_node_sequence_id == 0)
+  if (!order_state.last_completed_node_sequence_id.has_value())
   {
     next_node_seq = 0;
   }
   else
   {
-    next_node_seq = order_state.last_completed_node_sequence_id;
+    next_node_seq = order_state.last_completed_node_sequence_id.value() + 2;
   }
 
   auto node_it = order_state.node_lookup.find(next_node_seq);
@@ -234,7 +245,13 @@ void Adapter::Implementation::process_navigation()
     request.approach_edge = order.edges[edge_it->second];
   }
 
-  order_state.executing = true;
+  {
+    auto active = active_order.lock();
+
+    if (!active->order.has_value()) return;
+
+    active->order->executing = true;
+  }
 
   VDA5050_INFO(
     "Dispatching node ID [{}] with sequence [{}]", next_node.node_id,
@@ -243,20 +260,31 @@ void Adapter::Implementation::process_navigation()
   navigation_callback(
     std::move(request),
     Execution::make(
-      [this, seq = next_node_seq]() {
-        auto active = active_order.lock();
-        if (!active->order.has_value()) return;
-
-        auto& order_state = *active->order;
-
-        order_state.executing = false;
-        order_state.last_completed_node_sequence_id = seq;
-
-        auto it = order_state.node_lookup.find(seq);
-        if (it != order_state.node_lookup.end())
+      [this, next_node_seq, next_edge_seq]() {
+        ActiveOrder order_state;
         {
-          state_manager->node_reached(order_state.order.nodes[it->second]);
+          auto active = active_order.lock();
+          if (!active->order.has_value()) return;
+
+          order_state = *active->order;
+
+          active->order->executing = false;
+          active->order->last_completed_node_sequence_id = next_node_seq;
         }
+
+        auto edge_it = order_state.edge_lookup.find(next_edge_seq);
+        if (edge_it != order_state.edge_lookup.end())
+        {
+          state_manager->edge_traversed(
+            order_state.order.edges[edge_it->second]);
+        }
+
+        auto node_it = order_state.node_lookup.find(next_node_seq);
+        if (node_it != order_state.node_lookup.end())
+        {
+          state_manager->node_reached(order_state.order.nodes[node_it->second]);
+        }
+
         request_state_publish();
       },
       [this](const std::string& reason) {
@@ -482,6 +510,8 @@ void Adapter::start()
       "Messages will be dropped until a connection is established");
   }
 
+  pimpl_->running = true;
+
   pimpl_->subscribe_orders();
 
   pimpl_->subscribe_instant_actions();
@@ -491,8 +521,6 @@ void Adapter::start()
   pimpl_->start_dispatch_thread();
 
   pimpl_->start_state_thread();
-
-  pimpl_->running = true;
 }
 
 //=============================================================================
@@ -501,6 +529,11 @@ void Adapter::stop()
   if (!pimpl_->running) return;
 
   pimpl_->running = false;
+  pimpl_->state_cv.notify_all();
+
+  if (pimpl_->dispatch_thread.joinable()) pimpl_->dispatch_thread.join();
+
+  if (pimpl_->state_thread.joinable()) pimpl_->state_thread.join();
 
   if (pimpl_->protocol_adapter)
   {
