@@ -192,27 +192,6 @@ target_include_directories(vda5050_master
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-# Adapter
-file(GLOB_RECURSE adapter_srcs "src/adapter/*.cpp")
-add_library(vda5050_adapter SHARED ${adapter_srcs})
-vda5050_configure_target_alias(
-  TARGET vda5050_adapter
-  NAMESPACE ${PROJECT_NAME}::
-  EXPORT_NAME adapter
-)
-target_link_libraries(vda5050_adapter
-  PUBLIC
-    ${PROJECT_NAME}::execution
-    ${PROJECT_NAME}::logger
-)
-target_include_directories(vda5050_adapter
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/adapter
-)
-
 install(
   DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
@@ -229,7 +208,6 @@ install(
     vda5050_execution
     vda5050_client
     vda5050_master
-    vda5050_adapter
   EXPORT export_${PROJECT_NAME}
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -273,19 +251,19 @@ if(BUILD_EXAMPLES)
     ${PROJECT_NAME}::logger
   )
 
-  add_executable(adapter_example examples/adapter_example.cpp)
-  target_link_libraries(adapter_example PUBLIC
-    ${PROJECT_NAME}::adapter
-    ${PROJECT_NAME}::transport
-    ${PROJECT_NAME}::logger
-  )
+  # add_executable(adapter_example examples/adapter_example.cpp)
+  # target_link_libraries(adapter_example PUBLIC
+  #   ${PROJECT_NAME}::adapter
+  #   ${PROJECT_NAME}::transport
+  #   ${PROJECT_NAME}::logger
+  # )
 
   install(TARGETS
       custom_base
       provider_example
       engine_example
       handler_integration
-      adapter_example
+      # adapter_example
     DESTINATION lib/${PROJECT_NAME}
   )
 endif()
