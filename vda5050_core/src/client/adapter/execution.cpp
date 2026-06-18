@@ -17,12 +17,23 @@
  */
 
 #include "vda5050_core/client/adapter/execution.hpp"
+#include "vda5050_core/logger/logger.hpp"
 
 namespace vda5050_core {
 
 namespace client {
 
 namespace adapter {
+
+//=============================================================================
+Execution::~Execution()
+{
+  if (!completed_)
+  {
+    VDA5050_WARN(
+      "Execution destroyed before finished() or failed() was called");
+  }
+}
 
 //=============================================================================
 std::shared_ptr<Execution> Execution::make(

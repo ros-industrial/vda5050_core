@@ -33,6 +33,8 @@ namespace adapter {
 class Execution : public std::enable_shared_from_this<Execution>
 {
 public:
+  ~Execution();
+
   static std::shared_ptr<Execution> make(
     std::function<void()> finish_callback,
     std::function<void(std::string)> fail_callback);
