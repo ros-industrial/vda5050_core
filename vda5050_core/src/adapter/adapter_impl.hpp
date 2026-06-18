@@ -20,8 +20,10 @@
 #define VDA5050_CORE__ADAPTER__ADAPTER_IMPL_HPP_
 
 #include <atomic>
+#include <condition_variable>
 #include <mutex>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 #include "vda5050_core/execution/protocol_adapter.hpp"
@@ -75,7 +77,10 @@ struct ActiveOrder
 {
   types::Order order;
 
-  std::size_t current_node{0};
+  std::unordered_map<uint32_t, std::size_t> node_lookup;
+  std::unordered_map<uint32_t, std::size_t> edge_lookup;
+
+  std::uint32_t last_completed_node_sequence_id{0};
 
   bool executing{false};
 };
@@ -105,7 +110,8 @@ public:
   std::thread dispatch_thread;
   std::thread state_thread;
 
-  std::mutex mutex;
+  std::mutex state_mutex;
+  std::condition_variable state_cv;
 
   std::atomic_bool running{false};
 
@@ -130,6 +136,8 @@ public:
   void publish_factsheet();
 
   void publish_state();
+
+  void request_state_publish();
 };
 
 }  // namespace adapter
