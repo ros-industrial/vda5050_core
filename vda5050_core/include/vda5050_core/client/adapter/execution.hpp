@@ -19,6 +19,7 @@
 #ifndef VDA5050_CORE__CLIENT__ADAPTER__EXECUTION_HPP_
 #define VDA5050_CORE__CLIENT__ADAPTER__EXECUTION_HPP_
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <string>
@@ -49,6 +50,8 @@ private:
 
   std::function<void()> finish_callback_;
   std::function<void(std::string)> fail_callback_;
+
+  std::atomic_bool completed_;
 };
 
 }  // namespace adapter
