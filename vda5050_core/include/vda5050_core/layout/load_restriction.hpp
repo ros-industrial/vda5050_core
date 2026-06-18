@@ -25,7 +25,7 @@
 
 namespace vda5050_core::layout {
 
-/// Load-traversability rule on an edge (per vehicle-type bucket).
+/// \brief Load-traversability rule on an edge (per vehicle-type bucket).
 ///
 /// When load_set_names is absent/empty, the edge is usable for all load sets
 /// the vehicle declares in its factsheet.

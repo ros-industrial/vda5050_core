@@ -30,7 +30,7 @@
 
 namespace vda5050_core::layout {
 
-/// Exactly one of {LIF, errors} is populated.
+/// \brief Result of a layout load: exactly one of {LIF, errors} is populated.
 ///
 /// Construction is funnelled through success() / failure() factories so an
 /// invalid state cannot be represented.
@@ -52,15 +52,17 @@ public:
     return ok();
   }
 
-  /// Access the loaded LIF.
+  /// \brief Access the loaded LIF (take_lif() moves it out).
   ///
-  /// Precondition: ok(); throws std::bad_variant_access otherwise.
+  /// \return The loaded LIF.
+  /// \throws std::bad_variant_access if !ok().
   const LIF& lif() const;
   LIF take_lif() &&;
 
-  /// Access the accumulated load errors.
+  /// \brief Access the accumulated load errors.
   ///
-  /// Precondition: !ok(); throws std::bad_variant_access otherwise.
+  /// \return The load errors.
+  /// \throws std::bad_variant_access if ok().
   const std::vector<LayoutLoadError>& errors() const;
 
 private:
@@ -68,12 +70,15 @@ private:
   std::variant<LIF, std::vector<LayoutLoadError>> data_;
 };
 
-/// Load a single LIF, validating it; the result holds the LIF or errors.
+/// \brief Load a single LIF, validating it; the result holds the LIF or errors.
 ///
 /// Node, edge, station, and layout IDs are required globally unique across the
 /// loaded LIF. Multi-vendor reconciliation (where different vendor LIFs may
 /// legitimately reuse IDs and must be remapped by the master) is out of scope;
 /// loading several vendor LIFs as one will yield DUPLICATE_ID errors by design.
+///
+/// \param path Path to the LIF JSON file (load_from_json takes a parsed value).
+/// \return Result holding the validated LIF, or the errors found.
 LayoutLoadResult load_from_file(const std::string& path);
 LayoutLoadResult load_from_json(const nlohmann::json& json);
 

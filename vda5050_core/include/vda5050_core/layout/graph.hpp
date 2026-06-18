@@ -32,7 +32,7 @@
 
 namespace vda5050_core::layout {
 
-/// Master-side wrapper over a validated LIF.
+/// \brief Master-side wrapper over a validated LIF.
 ///
 /// Adds hash-backed indices and per-node adjacency lists. Built once from a
 /// LIF; mutations rebuild internal indices to keep them consistent with the
@@ -43,12 +43,14 @@ public:
   using Ptr = std::shared_ptr<Graph>;
   using ConstPtr = std::shared_ptr<const Graph>;
 
-  /// Factory; takes ownership of `lif`.
+  /// \brief Factory; takes ownership of `lif`.
   ///
   /// Callers using load_from_file / load_from_json already get a validated LIF;
-  /// this guard protects in-memory or test-constructed inputs. Throws
-  /// std::invalid_argument if `lif` contains duplicate node, edge, station, or
-  /// layout IDs (the uniqueness invariant validate_layout enforces).
+  /// this guard protects in-memory or test-constructed inputs.
+  ///
+  /// \param lif Layout to wrap; node/edge/station/layout IDs must be unique.
+  /// \throws std::invalid_argument on duplicate IDs (the uniqueness invariant
+  ///   validate_layout enforces).
   static Ptr from_lif(LIF lif);
 
   Graph(const Graph&) = default;
@@ -57,44 +59,61 @@ public:
   Graph& operator=(Graph&&) noexcept = default;
   ~Graph() = default;
 
-  /// Check whether a node / edge / station exists.
+  /// \brief Check whether a node / edge / station exists.
+  ///
+  /// \param id Entity id to look up.
+  /// \return True if the entity is present.
   bool has_node(const std::string& id) const noexcept;
   bool has_edge(const std::string& id) const noexcept;
   bool has_station(const std::string& id) const noexcept;
 
-  /// Lookup by id.
+  /// \brief Look up a node / edge / station by id.
   ///
-  /// Throws std::out_of_range if absent.
+  /// \param id Entity id.
+  /// \return Reference to the entity.
+  /// \throws std::out_of_range if absent.
   const Node& get_node(const std::string& id) const;
   const Edge& get_edge(const std::string& id) const;
   const Station& get_station(const std::string& id) const;
 
-  /// Lookup by id; returns nullptr if absent.
+  /// \brief Look up a node / edge / station / layout by id; nullable.
   ///
   /// Returned pointers are invalidated by any subsequent mutation
   /// (`add_*`, `delete_*`, `update_*_id`, `prune`). Treat them as short-lived,
   /// similar to std::vector iterators.
+  ///
+  /// \param id Entity id.
+  /// \return Pointer to the entity, or nullptr if absent.
   const Node* find_node(const std::string& id) const noexcept;
   const Edge* find_edge(const std::string& id) const noexcept;
   const Station* find_station(const std::string& id) const noexcept;
   const Layout* find_layout(const std::string& layout_id) const noexcept;
 
-  /// Adjacency lists; multi-edge safe (vector, since LIF allows multiple
-  /// parallel edges between the same node pair).
+  /// \brief Edges incident to a node; multi-edge safe (vector, since LIF allows
+  /// multiple parallel edges between the same node pair).
   ///
-  /// Throws std::out_of_range if `node_id` doesn't exist.
+  /// \param node_id Node whose incident edges to return.
+  /// \return Ids of edges leaving / entering the node.
+  /// \throws std::out_of_range if `node_id` doesn't exist.
   const std::vector<std::string>& outbound_edges(
     const std::string& node_id) const;
   const std::vector<std::string>& inbound_edges(
     const std::string& node_id) const;
 
-  /// Return edge IDs for edges from `from_node_id` to `to_node_id`.
+  /// \brief Return edge ids for edges from `from_node_id` to `to_node_id`.
+  ///
+  /// \param from_node_id Source node id.
+  /// \param to_node_id Target node id.
+  /// \return Ids of edges connecting the two nodes.
   std::vector<std::string> edges_between(
     const std::string& from_node_id, const std::string& to_node_id) const;
 
-  /// Iterate over nodes / edges / stations.
+  /// \brief Iterate over nodes / edges / stations.
   ///
-  /// Visitor return value is ignored; iteration does not short-circuit.
+  /// Visitor return value is ignored; iteration does not short-circuit. The
+  /// `_ordered` variants visit entities sorted by id.
+  ///
+  /// \param visitor Callable invoked with each entity.
   template <typename V>
   void for_each_node(V&& visitor) const;
   template <typename V>
@@ -108,67 +127,82 @@ public:
   template <typename V>
   void for_each_station_ordered(V&& visitor) const;
 
-  /// Return graph size / state.
+  /// \brief Return graph size / state (entity counts and emptiness).
   std::size_t node_count() const noexcept;
   std::size_t edge_count() const noexcept;
   std::size_t station_count() const noexcept;
   bool empty() const noexcept;
 
-  /// Underlying LIF.
+  /// \brief Underlying LIF.
   ///
   /// No non-const accessor by design — the owned LIF is mutable only through
   /// the typed mutation methods so that indices and adjacency stay in sync.
+  ///
+  /// \return Const reference to the wrapped LIF.
   const LIF& lif() const noexcept
   {
     return lif_;
   }
 
-  /// Return IDs of unconnected nodes.
+  /// \brief Return ids of unconnected nodes.
   ///
   /// A node is considered unconnected when it has no inbound edges, no outbound
   /// edges, and is not referenced by any station's interactionNodeIds.
+  ///
+  /// \return Ids of the unconnected nodes.
   std::vector<std::string> unconnected_nodes() const;
 
-  /// Add a node / edge / station to a layout.
+  /// \brief Add a node / edge / station to a layout.
   ///
   /// All mutations rebuild indices and invalidate any previously-returned
-  /// const T* / const Layout*. Throws std::invalid_argument on duplicate id,
-  /// missing layout, or unresolved reference.
+  /// const T* / const Layout*.
+  ///
+  /// \param node Entity to add (edge / station for the other overloads).
+  /// \param layout_id Layout to add it to.
+  /// \throws std::invalid_argument on duplicate id, missing layout, or
+  ///   unresolved reference.
   void add_node(Node node, const std::string& layout_id);
   void add_edge(Edge edge, const std::string& layout_id);
   void add_station(Station station, const std::string& layout_id);
 
-  /// Delete a node / edge / station.
+  /// \brief Delete a node / edge / station.
   ///
-  /// Throws std::invalid_argument if not found; delete_node also throws if the
-  /// node is still referenced by an edge (start/end) or station
-  /// (interactionNodeIds).
+  /// \param id Entity id to delete.
+  /// \throws std::invalid_argument if not found; delete_node also throws if the
+  ///   node is still referenced by an edge (start/end) or station
+  ///   (interactionNodeIds).
   void delete_node(const std::string& id);
   void delete_edge(const std::string& id);
   void delete_station(const std::string& id);
 
-  /// Update an entity's id, rewriting it AND all references to it.
+  /// \brief Update an entity's id, rewriting it AND all references to it.
   ///
-  /// Throws std::invalid_argument if new_id already exists.
+  /// \param old_id Current id.
+  /// \param new_id Replacement id.
+  /// \throws std::invalid_argument if new_id already exists.
   void update_node_id(const std::string& old_id, const std::string& new_id);
   void update_edge_id(const std::string& old_id, const std::string& new_id);
   void update_station_id(const std::string& old_id, const std::string& new_id);
 
-  /// Delete all nodes returned by unconnected_nodes().
+  /// \brief Delete all nodes returned by unconnected_nodes().
   ///
-  /// Returns the IDs removed.
+  /// \return Ids of the nodes removed.
   std::vector<std::string> prune();
 
-  /// Deep equality check.
+  /// \brief Deep equality check.
   ///
   /// Structural and order-sensitive. Two graphs with the same node IDs and
   /// properties in different layout order are not equal.
+  ///
+  /// \param rhs Graph to compare against.
   bool operator==(const Graph& rhs) const;
   bool operator!=(const Graph& rhs) const;
 
-  /// Dump the graph in Graphviz DOT format.
+  /// \brief Dump the graph in Graphviz DOT format.
   ///
   /// Edge labels are edge IDs.
+  ///
+  /// \param os Stream to write the DOT output to.
   void dump_dot(std::ostream& os) const;
 
 private:

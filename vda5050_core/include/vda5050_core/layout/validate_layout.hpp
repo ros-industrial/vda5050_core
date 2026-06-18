@@ -47,7 +47,10 @@ struct LayoutLoadError
   std::string description;
 };
 
-/// Check LIF structural invariants; returns the errors found (empty if valid).
+/// \brief Check LIF structural invariants.
+///
+/// \param lif Layout to validate.
+/// \return Errors found; empty if the layout is valid.
 std::vector<LayoutLoadError> validate_layout(const LIF& lif);
 
 }  // namespace vda5050_core::layout

@@ -49,7 +49,7 @@ struct ActionParameter
   }
 };
 
-/// LIF action template (no `actionId`; the master generates ids when
+/// \brief LIF action template (no `actionId`; the master generates ids when
 /// integrating it into an order).
 ///
 /// Forked from VDA5050 Action because of the missing `actionId` and the
