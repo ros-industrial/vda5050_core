@@ -296,8 +296,8 @@ void StateManager::edge_traversed(const types::Edge& edge)
   auto it = std::find_if(
     state_.edge_states.begin(), state_.edge_states.end(),
     [&](const auto& edge_state) {
-      return edge_state.edge_id == edge.edge_id && edge_state.sequence_id =
-               edge.sequence_id;
+      return edge_state.edge_id == edge.edge_id &&
+             edge_state.sequence_id == edge.sequence_id;
     });
 
   if (it != state_.edge_states.end())
