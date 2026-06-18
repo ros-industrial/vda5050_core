@@ -25,9 +25,10 @@
 
 namespace vda5050_core::layout {
 
-// Load-traversability rule on an edge (per vehicle-type bucket). When
-// load_set_names is absent/empty, the edge is usable for all load sets the
-// vehicle declares in its factsheet.
+/// Load-traversability rule on an edge (per vehicle-type bucket).
+///
+/// When load_set_names is absent/empty, the edge is usable for all load sets
+/// the vehicle declares in its factsheet.
 struct LoadRestriction
 {
   bool unloaded = true;  ///< edge usable when vehicle carries no load

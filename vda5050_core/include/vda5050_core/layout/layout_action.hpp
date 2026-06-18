@@ -27,10 +27,6 @@
 
 namespace vda5050_core::layout {
 
-// LIF actions are layout templates (no `actionId`); the master generates ids
-// when integrating them into an order. Forked from VDA5050 Action because of
-// the missing `actionId` and the LIF-only `requirementType`.
-
 enum class RequirementType
 {
   REQUIRED,
@@ -53,6 +49,11 @@ struct ActionParameter
   }
 };
 
+/// LIF action template (no `actionId`; the master generates ids when
+/// integrating it into an order).
+///
+/// Forked from VDA5050 Action because of the missing `actionId` and the
+/// LIF-only `requirementType`.
 struct Action
 {
   std::string action_type;

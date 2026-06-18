@@ -23,7 +23,7 @@
 #include <utility>
 #include <vector>
 
-#include "vda5050_core/layout/layout_loader.hpp"
+#include "vda5050_core/layout/validate_layout.hpp"
 
 namespace vda5050_core::layout {
 

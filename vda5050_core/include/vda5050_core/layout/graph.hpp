@@ -32,20 +32,23 @@
 
 namespace vda5050_core::layout {
 
-// Master-side wrapper over a validated LIF, adding hash-backed indices and
-// per-node adjacency lists. Built once from a LIF; mutations rebuild internal
-// indices to keep them consistent with the underlying LIF.
+/// Master-side wrapper over a validated LIF.
+///
+/// Adds hash-backed indices and per-node adjacency lists. Built once from a
+/// LIF; mutations rebuild internal indices to keep them consistent with the
+/// underlying LIF.
 class Graph
 {
 public:
   using Ptr = std::shared_ptr<Graph>;
   using ConstPtr = std::shared_ptr<const Graph>;
 
-  // Factory; takes ownership of `lif`. Throws std::invalid_argument if the
-  // input contains duplicate node, edge, station, or layout IDs (same
-  // uniqueness invariant validate_layout enforces). Callers using
-  // load_from_file / load_from_json already get a validated LIF; this guard
-  // protects in-memory or test-constructed inputs.
+  /// Factory; takes ownership of `lif`.
+  ///
+  /// Callers using load_from_file / load_from_json already get a validated LIF;
+  /// this guard protects in-memory or test-constructed inputs. Throws
+  /// std::invalid_argument if `lif` contains duplicate node, edge, station, or
+  /// layout IDs (the uniqueness invariant validate_layout enforces).
   static Ptr from_lif(LIF lif);
 
   Graph(const Graph&) = default;
@@ -54,38 +57,44 @@ public:
   Graph& operator=(Graph&&) noexcept = default;
   ~Graph() = default;
 
-  // Existence
+  /// Check whether a node / edge / station exists.
   bool has_node(const std::string& id) const noexcept;
   bool has_edge(const std::string& id) const noexcept;
   bool has_station(const std::string& id) const noexcept;
 
-  // Lookup — throws std::out_of_range if absent.
+  /// Lookup by id.
+  ///
+  /// Throws std::out_of_range if absent.
   const Node& get_node(const std::string& id) const;
   const Edge& get_edge(const std::string& id) const;
   const Station& get_station(const std::string& id) const;
 
-  // Lookup — nullable.
-  // Returned pointers are invalidated by ANY subsequent mutation
-  // (add_*, delete_*, update_*_id, prune). Treat as short-lived, like
-  // std::vector::iterator.
+  /// Lookup by id; returns nullptr if absent.
+  ///
+  /// Returned pointers are invalidated by any subsequent mutation
+  /// (`add_*`, `delete_*`, `update_*_id`, `prune`). Treat them as short-lived,
+  /// similar to std::vector iterators.
   const Node* find_node(const std::string& id) const noexcept;
   const Edge* find_edge(const std::string& id) const noexcept;
   const Station* find_station(const std::string& id) const noexcept;
   const Layout* find_layout(const std::string& layout_id) const noexcept;
 
-  // Adjacency — multi-edge safe (vector since LIF allows multiple parallel
-  // edges between the same node pair). Throws std::out_of_range if `node_id`
-  // doesn't exist.
+  /// Adjacency lists; multi-edge safe (vector, since LIF allows multiple
+  /// parallel edges between the same node pair).
+  ///
+  /// Throws std::out_of_range if `node_id` doesn't exist.
   const std::vector<std::string>& outbound_edges(
     const std::string& node_id) const;
   const std::vector<std::string>& inbound_edges(
     const std::string& node_id) const;
 
-  // Convenience: returns vector<edge_id> for edges from -> to.
+  /// Return edge IDs for edges from `from_node_id` to `to_node_id`.
   std::vector<std::string> edges_between(
     const std::string& from_node_id, const std::string& to_node_id) const;
 
-  // Iteration. Visitor return value is ignored (no short-circuit).
+  /// Iterate over nodes / edges / stations.
+  ///
+  /// Visitor return value is ignored; iteration does not short-circuit.
   template <typename V>
   void for_each_node(V&& visitor) const;
   template <typename V>
@@ -99,58 +108,72 @@ public:
   template <typename V>
   void for_each_station_ordered(V&& visitor) const;
 
-  // Size / state.
+  /// Return graph size / state.
   std::size_t node_count() const noexcept;
   std::size_t edge_count() const noexcept;
   std::size_t station_count() const noexcept;
   bool empty() const noexcept;
 
-  // Underlying LIF. No non-const accessor by design — the owned LIF is
-  // mutable only through the typed mutation methods so that indices and
-  // adjacency stay in sync.
+  /// Underlying LIF.
+  ///
+  /// No non-const accessor by design — the owned LIF is mutable only through
+  /// the typed mutation methods so that indices and adjacency stay in sync.
   const LIF& lif() const noexcept
   {
     return lif_;
   }
 
-  // Diagnostics. Returns IDs of nodes with no inbound edges, no outbound
-  // edges, and not referenced by any station's interactionNodeIds.
+  /// Return IDs of unconnected nodes.
+  ///
+  /// A node is considered unconnected when it has no inbound edges, no outbound
+  /// edges, and is not referenced by any station's interactionNodeIds.
   std::vector<std::string> unconnected_nodes() const;
 
-  // Mutation — add. Throws std::invalid_argument on duplicate id, missing
-  // layout, or unresolved reference. All mutations rebuild indices and
-  // invalidate any previously-returned const T* / const Layout*.
+  /// Add a node / edge / station to a layout.
+  ///
+  /// All mutations rebuild indices and invalidate any previously-returned
+  /// const T* / const Layout*. Throws std::invalid_argument on duplicate id,
+  /// missing layout, or unresolved reference.
   void add_node(Node node, const std::string& layout_id);
   void add_edge(Edge edge, const std::string& layout_id);
   void add_station(Station station, const std::string& layout_id);
 
-  // Mutation — delete. Throws std::invalid_argument if not found;
-  // delete_node also throws if the node is still referenced by an edge
-  // (start/end) or station (interactionNodeIds).
+  /// Delete a node / edge / station.
+  ///
+  /// Throws std::invalid_argument if not found; delete_node also throws if the
+  /// node is still referenced by an edge (start/end) or station
+  /// (interactionNodeIds).
   void delete_node(const std::string& id);
   void delete_edge(const std::string& id);
   void delete_station(const std::string& id);
 
-  // Mutation — update id. Rewrites the entity's id AND all references to
-  // it. Throws std::invalid_argument if new_id already exists.
+  /// Update an entity's id, rewriting it AND all references to it.
+  ///
+  /// Throws std::invalid_argument if new_id already exists.
   void update_node_id(const std::string& old_id, const std::string& new_id);
   void update_edge_id(const std::string& old_id, const std::string& new_id);
   void update_station_id(const std::string& old_id, const std::string& new_id);
 
-  // Deletes all nodes in unconnected_nodes(). Returns IDs removed.
+  /// Delete all nodes returned by unconnected_nodes().
+  ///
+  /// Returns the IDs removed.
   std::vector<std::string> prune();
 
-  // Deep equality (structural, order-sensitive). Two graphs with the same
-  // node IDs and properties in different layout order are NOT equal.
+  /// Deep equality check.
+  ///
+  /// Structural and order-sensitive. Two graphs with the same node IDs and
+  /// properties in different layout order are not equal.
   bool operator==(const Graph& rhs) const;
   bool operator!=(const Graph& rhs) const;
 
-  // Graphviz DOT format. Edge labels are edge IDs.
+  /// Dump the graph in Graphviz DOT format.
+  ///
+  /// Edge labels are edge IDs.
   void dump_dot(std::ostream& os) const;
 
 private:
   Graph() = default;
-  void rebuild_indices_();
+  void rebuild_indices();
 
   LIF lif_;
   // (layout_idx in lif_.layouts, element_idx in that layout's vector).

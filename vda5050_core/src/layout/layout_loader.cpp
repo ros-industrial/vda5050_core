@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "vda5050_core/json_utils/layout_serialization.hpp"
+#include "vda5050_core/layout/validate_layout.hpp"
 
 namespace vda5050_core::layout {
 

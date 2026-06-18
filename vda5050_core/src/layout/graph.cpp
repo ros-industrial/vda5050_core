@@ -70,11 +70,11 @@ Graph::Ptr Graph::from_lif(LIF lif)
 
   auto g = Ptr(new Graph());
   g->lif_ = std::move(lif);
-  g->rebuild_indices_();
+  g->rebuild_indices();
   return g;
 }
 
-void Graph::rebuild_indices_()
+void Graph::rebuild_indices()
 {
   node_index_.clear();
   edge_index_.clear();
@@ -306,7 +306,7 @@ void Graph::add_node(Node node, const std::string& layout_id)
       "Graph::add_node: layout '" + layout_id + "' not found");
   }
   lif_.layouts[li].nodes.push_back(std::move(node));
-  rebuild_indices_();
+  rebuild_indices();
 }
 
 void Graph::add_edge(Edge edge, const std::string& layout_id)
@@ -346,7 +346,7 @@ void Graph::add_edge(Edge edge, const std::string& layout_id)
       "' does not exist in any layout");
   }
   lif_.layouts[li].edges.push_back(std::move(edge));
-  rebuild_indices_();
+  rebuild_indices();
 }
 
 void Graph::add_station(Station station, const std::string& layout_id)
@@ -372,7 +372,7 @@ void Graph::add_station(Station station, const std::string& layout_id)
     }
   }
   lif_.layouts[li].stations.push_back(std::move(station));
-  rebuild_indices_();
+  rebuild_indices();
 }
 
 void Graph::delete_node(const std::string& id)
@@ -436,7 +436,7 @@ void Graph::delete_node(const std::string& id)
   const auto [li, ni] = node_index_.at(id);
   auto& nodes = lif_.layouts[li].nodes;
   nodes.erase(nodes.begin() + static_cast<std::ptrdiff_t>(ni));
-  rebuild_indices_();
+  rebuild_indices();
 }
 
 void Graph::delete_edge(const std::string& id)
@@ -449,7 +449,7 @@ void Graph::delete_edge(const std::string& id)
   const auto [li, ei] = edge_index_.at(id);
   auto& edges = lif_.layouts[li].edges;
   edges.erase(edges.begin() + static_cast<std::ptrdiff_t>(ei));
-  rebuild_indices_();
+  rebuild_indices();
 }
 
 void Graph::delete_station(const std::string& id)
@@ -462,7 +462,7 @@ void Graph::delete_station(const std::string& id)
   const auto [li, si] = station_index_.at(id);
   auto& stations = lif_.layouts[li].stations;
   stations.erase(stations.begin() + static_cast<std::ptrdiff_t>(si));
-  rebuild_indices_();
+  rebuild_indices();
 }
 
 void Graph::update_node_id(const std::string& old_id, const std::string& new_id)
@@ -497,7 +497,7 @@ void Graph::update_node_id(const std::string& old_id, const std::string& new_id)
       }
     }
   }
-  rebuild_indices_();
+  rebuild_indices();
 }
 
 void Graph::update_edge_id(const std::string& old_id, const std::string& new_id)
@@ -515,7 +515,7 @@ void Graph::update_edge_id(const std::string& old_id, const std::string& new_id)
   }
   const auto [li, ei] = edge_index_.at(old_id);
   lif_.layouts[li].edges[ei].edge_id = new_id;
-  rebuild_indices_();
+  rebuild_indices();
 }
 
 void Graph::update_station_id(
@@ -535,7 +535,7 @@ void Graph::update_station_id(
   }
   const auto [li, si] = station_index_.at(old_id);
   lif_.layouts[li].stations[si].station_id = new_id;
-  rebuild_indices_();
+  rebuild_indices();
 }
 
 std::vector<std::string> Graph::prune()
