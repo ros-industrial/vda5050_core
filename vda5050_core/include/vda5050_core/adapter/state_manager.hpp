@@ -28,10 +28,9 @@
 #include "vda5050_core/types/battery_state.hpp"
 #include "vda5050_core/types/error.hpp"
 #include "vda5050_core/types/operating_mode.hpp"
+#include "vda5050_core/types/order.hpp"
 #include "vda5050_core/types/safety_state.hpp"
 #include "vda5050_core/types/state.hpp"
-
-#include "vda5050_core/adapter/execution_progress.hpp"
 
 namespace vda5050_core {
 
@@ -42,24 +41,49 @@ class StateManager : public std::enable_shared_from_this<StateManager>
 public:
   static std::shared_ptr<StateManager> make();
 
+  void set_agv_position(const types::AGVPosition& position);
+
+  void set_velocity(const types::Velocity& velocity);
+
   void set_driving(bool driving);
 
-  void set_agv_position(const types::AGVPosition& position);
+  void set_paused(bool paused);
+
+  void set_new_base_request(bool request);
+
+  void set_distance_since_last_node(double distance);
 
   void set_battery_state(const types::BatteryState& battery);
 
+  void set_operating_mode(types::OperatingMode mode);
+
+  void set_safety_state(const types::SafetyState& safety_state);
+
+  void add_action_state(const types::ActionState& action_state);
+
   void set_action_states(const std::vector<types::ActionState>& action_states);
 
-  void set_operating_mode(types::OperatingMode mode);
+  void clear_action_states();
 
   void add_error(const types::Error& error);
 
+  void set_errors(const std::vector<types::Error>& errors);
+
   void clear_errors();
 
-  void set_execution_progress(
-    std::shared_ptr<ExecutionProgress> execution_progress);
+  void add_load(const types::Load& load);
 
-  void set_safety_state(const types::SafetyState& safety_state);
+  void set_loads(const std::vector<types::Load>& loads);
+
+  void clear_loads();
+
+  void remove_loads();
+
+  void add_information(const types::Info& information);
+
+  void set_information(const std::vector<types::Info>& infomation);
+
+  void remove_information();
 
   types::State state() const;
 
@@ -68,7 +92,17 @@ public:
   bool consume_publish_requested();
 
 private:
+  friend class Adapter;
+
   StateManager();
+
+  void set_order(const types::Order& order);
+
+  void node_reached(const types::Node& node);
+
+  void edge_traversed(const types::Edge& edge);
+
+  void clear_order();
 
   mutable std::mutex mutex_;
   types::State state_;
