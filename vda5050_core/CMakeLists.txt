@@ -251,19 +251,27 @@ if(BUILD_EXAMPLES)
     ${PROJECT_NAME}::logger
   )
 
-  # add_executable(adapter_example examples/adapter_example.cpp)
-  # target_link_libraries(adapter_example PUBLIC
-  #   ${PROJECT_NAME}::adapter
-  #   ${PROJECT_NAME}::transport
-  #   ${PROJECT_NAME}::logger
-  # )
+  add_executable(adapter_example examples/adapter_example.cpp)
+  target_link_libraries(adapter_example PUBLIC
+    ${PROJECT_NAME}::client
+    ${PROJECT_NAME}::transport
+    ${PROJECT_NAME}::logger
+  )
+
+  add_executable(single_order_publisher examples/single_order_publish.cpp)
+  target_link_libraries(single_order_publisher PUBLIC
+    ${PROJECT_NAME}::transport
+    ${PROJECT_NAME}::logger
+    ${PROJECT_NAME}::execution
+  )
 
   install(TARGETS
       custom_base
       provider_example
       engine_example
       handler_integration
-      # adapter_example
+      adapter_example
+      single_order_publisher
     DESTINATION lib/${PROJECT_NAME}
   )
 endif()
