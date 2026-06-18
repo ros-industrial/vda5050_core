@@ -16,14 +16,16 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__ADAPTER__EXECUTION_HPP_
-#define VDA5050_CORE__ADAPTER__EXECUTION_HPP_
+#ifndef VDA5050_CORE__CLIENT__ADAPTER__EXECUTION_HPP_
+#define VDA5050_CORE__CLIENT__ADAPTER__EXECUTION_HPP_
 
 #include <functional>
 #include <memory>
 #include <string>
 
 namespace vda5050_core {
+
+namespace client {
 
 namespace adapter {
 
@@ -50,6 +52,7 @@ private:
 };
 
 }  // namespace adapter
+}  // namespace client
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__ADAPTER__EXECUTION_HPP_
+#endif  // VDA5050_CORE__CLIENT__ADAPTER__EXECUTION_HPP_

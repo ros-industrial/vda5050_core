@@ -16,33 +16,24 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__ADAPTER__EXECUTION_PROGRESS_HPP_
-#define VDA5050_CORE__ADAPTER__EXECUTION_PROGRESS_HPP_
+#ifndef VDA5050_CORE__CLIENT__ADAPTER__ACTION_REQUEST_HPP_
+#define VDA5050_CORE__CLIENT__ADAPTER__ACTION_REQUEST_HPP_
 
-#include <cstdint>
-#include <string>
-#include <vector>
-
-#include "vda5050_core/types/edge_state.hpp"
-#include "vda5050_core/types/node_state.hpp"
+#include "vda5050_core/types/action.hpp"
 
 namespace vda5050_core {
 
+namespace client {
+
 namespace adapter {
 
-struct ExecutionProgress
+struct ActionRequest
 {
-  std::string order_id;
-  uint32_t order_update_id;
-
-  std::vector<types::NodeState> node_states;
-  std::vector<types::EdgeState> edge_states;
-
-  std::size_t current_node_index = 0;
+  types::Action action;
 };
 
 }  // namespace adapter
-
+}  // namespace client
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__ADAPTER__EXECUTION_PROGRESS_HPP_
+#endif  // VDA5050_CORE__CLIENT__ADAPTER__ACTION_REQUEST_HPP_

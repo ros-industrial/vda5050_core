@@ -28,9 +28,11 @@
 #include "vda5050_core/types/order.hpp"
 
 #include "adapter_impl.hpp"
-#include "vda5050_core/adapter/adapter.hpp"
+#include "vda5050_core/client/adapter/adapter.hpp"
 
 namespace vda5050_core {
+
+namespace client {
 
 namespace adapter {
 
@@ -381,4 +383,5 @@ Adapter::Adapter(std::shared_ptr<execution::ProtocolAdapter> protocol_adapter)
 }
 
 }  // namespace adapter
+}  // namespace client
 }  // namespace vda5050_core

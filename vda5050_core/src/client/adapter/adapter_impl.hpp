@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__ADAPTER__ADAPTER_IMPL_HPP_
-#define VDA5050_CORE__ADAPTER__ADAPTER_IMPL_HPP_
+#ifndef VDA5050_CORE__CLIENT__ADAPTER__ADAPTER_IMPL_HPP_
+#define VDA5050_CORE__CLIENT__ADAPTER__ADAPTER_IMPL_HPP_
 
 #include <atomic>
 #include <condition_variable>
@@ -30,9 +30,11 @@
 #include "vda5050_core/types/action.hpp"
 #include "vda5050_core/types/order.hpp"
 
-#include "vda5050_core/adapter/adapter.hpp"
+#include "vda5050_core/client/adapter/adapter.hpp"
 
 namespace vda5050_core {
+
+namespace client {
 
 namespace adapter {
 
@@ -141,6 +143,7 @@ public:
 };
 
 }  // namespace adapter
+}  // namespace client
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__ADAPTER__ADAPTER_IMPL_HPP_
+#endif  // VDA5050_CORE__CLIENT__ADAPTER__ADAPTER_IMPL_HPP_

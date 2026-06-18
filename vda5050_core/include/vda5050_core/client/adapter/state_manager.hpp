@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__ADAPTER__STATE_MANAGER_HPP_
-#define VDA5050_CORE__ADAPTER__STATE_MANAGER_HPP_
+#ifndef VDA5050_CORE__CLIENT__ADAPTER__STATE_MANAGER_HPP_
+#define VDA5050_CORE__CLIENT__ADAPTER__STATE_MANAGER_HPP_
 
 #include <atomic>
 #include <memory>
@@ -33,6 +33,8 @@
 #include "vda5050_core/types/state.hpp"
 
 namespace vda5050_core {
+
+namespace client {
 
 namespace adapter {
 
@@ -111,6 +113,7 @@ private:
 };
 
 }  // namespace adapter
+}  // namespace client
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__ADAPTER__STATE_MANAGER_HPP_
+#endif  // VDA5050_CORE__CLIENT__ADAPTER__STATE_MANAGER_HPP_

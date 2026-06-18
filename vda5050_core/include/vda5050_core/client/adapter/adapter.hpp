@@ -16,19 +16,21 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__ADAPTER__ADAPTER_HPP_
-#define VDA5050_CORE__ADAPTER__ADAPTER_HPP_
+#ifndef VDA5050_CORE__CLIENT__ADAPTER__ADAPTER_HPP_
+#define VDA5050_CORE__CLIENT__ADAPTER__ADAPTER_HPP_
 
 #include <functional>
 #include <memory>
 
-#include "vda5050_core/adapter/action_request.hpp"
-#include "vda5050_core/adapter/execution.hpp"
-#include "vda5050_core/adapter/navigation_request.hpp"
-#include "vda5050_core/adapter/state_manager.hpp"
+#include "vda5050_core/client/adapter/action_request.hpp"
+#include "vda5050_core/client/adapter/execution.hpp"
+#include "vda5050_core/client/adapter/navigation_request.hpp"
+#include "vda5050_core/client/adapter/state_manager.hpp"
 #include "vda5050_core/execution/protocol_adapter.hpp"
 
 namespace vda5050_core {
+
+namespace client {
 
 namespace adapter {
 
@@ -69,6 +71,7 @@ private:
 };
 
 }  // namespace adapter
+}  // namespace client
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__ADAPTER__ADAPTER_HPP_
+#endif  // VDA5050_CORE__CLIENT__ADAPTER__ADAPTER_HPP_

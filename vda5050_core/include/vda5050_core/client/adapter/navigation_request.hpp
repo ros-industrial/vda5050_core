@@ -16,21 +16,29 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__ADAPTER__ACTION_REQUEST_HPP_
-#define VDA5050_CORE__ADAPTER__ACTION_REQUEST_HPP_
+#ifndef VDA5050_CORE__CLIENT__ADAPTER__NAVIGATION_REQUEST_HPP_
+#define VDA5050_CORE__CLIENT__ADAPTER__NAVIGATION_REQUEST_HPP_
 
-#include "vda5050_core/types/action.hpp"
+#include <optional>
+
+#include "vda5050_core/types/edge.hpp"
+#include "vda5050_core/types/node.hpp"
 
 namespace vda5050_core {
 
+namespace client {
+
 namespace adapter {
 
-struct ActionRequest
+struct NavigationRequest
 {
-  types::Action action;
+  types::Node destination;
+
+  std::optional<types::Edge> approach_edge;
 };
 
 }  // namespace adapter
+}  // namespace client
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__ADAPTER__ACTION_REQUEST_HPP_
+#endif  // VDA5050_CORE__CLIENT__ADAPTER__NAVIGATION_REQUEST_HPP_

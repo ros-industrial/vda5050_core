@@ -18,9 +18,11 @@
 
 #include <algorithm>
 
-#include "vda5050_core/adapter/state_manager.hpp"
+#include "vda5050_core/client/adapter/state_manager.hpp"
 
 namespace vda5050_core {
+
+namespace client {
 
 namespace adapter {
 
@@ -318,4 +320,5 @@ void StateManager::clear_order()
 }
 
 }  // namespace adapter
+}  // namespace client
 }  // namespace vda5050_core
