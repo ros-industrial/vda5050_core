@@ -92,6 +92,11 @@ struct ActiveOrderState
   std::optional<ActiveOrder> order;
 };
 
+struct FactsheetManager
+{
+  std::optional<types::Factsheet> factsheet;
+};
+
 class Adapter::Implementation
 {
 public:
@@ -102,6 +107,8 @@ public:
   SharedState<ActiveOrderState> active_order;
 
   SharedState<std::vector<types::Action>> instant_actions;
+
+  SharedState<FactsheetManager> factsheet_manager;
 
   std::function<void(NavigationRequest, std::shared_ptr<Execution>)>
     navigation_callback;
@@ -140,6 +147,8 @@ public:
   void publish_state();
 
   void request_state_publish();
+
+  types::Factsheet make_default_factsheet();
 };
 
 }  // namespace adapter

@@ -277,7 +277,63 @@ void Adapter::Implementation::process_navigation()
 }
 
 //=============================================================================
-void Adapter::Implementation::publish_factsheet() {}
+void Adapter::Implementation::process_actions()
+{
+  if (!action_callback) return;
+
+  types::Action action;
+  {
+    auto actions = instant_actions.lock();
+
+    if (actions->empty()) return;
+
+    action = std::move(actions->front());
+    actions->erase(actions->begin());
+  }
+
+  types::ActionState action_state;
+  action_state.action_id = action.action_id;
+  action_state.action_type = action.action_type;
+  action_state.action_status = types::ActionStatus::RUNNING;
+  action_state.action_description = action.action_description;
+
+  state_manager->add_action_state(action_state);
+
+  ActionRequest request;
+  request.action = action;
+
+  action_callback(
+    std::move(request),
+    Execution::make(
+      [this, action]() {
+        types::ActionState action_state;
+        action_state.action_id = action.action_id;
+        action_state.action_type = action.action_type;
+        action_state.action_status = types::ActionStatus::FINISHED;
+        action_state.action_description = action.action_description;
+
+        state_manager->add_action_state(action_state);
+        request_state_publish();
+      },
+      [this, action](const std::string& reason) {
+        types::ActionState action_state;
+        action_state.action_id = action.action_id;
+        action_state.action_type = action.action_type;
+        action_state.action_status = types::ActionStatus::FAILED;
+        action_state.action_description = action.action_description;
+        action_state.result_description = reason;
+
+        state_manager->add_action_state(action_state);
+        request_state_publish();
+      }));
+}
+
+//=============================================================================
+void Adapter::Implementation::publish_factsheet()
+{
+  auto manager = factsheet_manager.lock();
+  protocol_adapter->publish<types::Factsheet>(manager->factsheet.value(), 0);
+}
 
 //=============================================================================
 void Adapter::Implementation::publish_state()
@@ -290,6 +346,78 @@ void Adapter::Implementation::request_state_publish()
 {
   state_manager->mark_publish_requested();
   state_cv.notify_all();
+}
+
+//=============================================================================
+types::Factsheet Adapter::Implementation::make_default_factsheet()
+{
+  types::Factsheet factsheet;
+
+  factsheet.type_specification.series_name = "Generic AMR";
+  factsheet.type_specification.agv_kinematic = types::AGVKinematic::DIFF;
+  factsheet.type_specification.agv_class = types::AGVClass::CARRIER;
+
+  factsheet.type_specification.max_load_mass = 100.0;
+
+  factsheet.type_specification.localization_types = {"NATURAL"};
+
+  factsheet.type_specification.navigation_types = {"AUTONOMOUS"};
+
+  factsheet.physical_parameters.speed_min = 0.05;
+  factsheet.physical_parameters.speed_max = 1.5;
+
+  factsheet.physical_parameters.acceleration_max = 0.5;
+  factsheet.physical_parameters.deceleration_max = 0.5;
+
+  factsheet.physical_parameters.height_min = 0.30;
+  factsheet.physical_parameters.height_max = 0.30;
+
+  factsheet.physical_parameters.width = 0.60;
+  factsheet.physical_parameters.length = 0.80;
+
+  factsheet.physical_parameters.angular_speed_min = 0.1;
+  factsheet.physical_parameters.angular_speed_max = 1.0;
+
+  factsheet.protocol_limits.max_string_lens.msg_len = 1024 * 1024;
+
+  factsheet.protocol_limits.max_string_lens.topic_serial_len = 64;
+  factsheet.protocol_limits.max_string_lens.topic_elem_len = 64;
+
+  factsheet.protocol_limits.max_string_lens.id_len = 128;
+  factsheet.protocol_limits.max_string_lens.enum_len = 64;
+  factsheet.protocol_limits.max_string_lens.load_id_len = 128;
+
+  factsheet.protocol_limits.max_string_lens.id_numerical_only = false;
+
+  factsheet.protocol_limits.max_array_lens.order_nodes = 1000;
+  factsheet.protocol_limits.max_array_lens.order_edges = 1000;
+
+  factsheet.protocol_limits.max_array_lens.node_actions = 50;
+  factsheet.protocol_limits.max_array_lens.edge_actions = 50;
+
+  factsheet.protocol_limits.max_array_lens.actions_actions_parameters = 50;
+
+  factsheet.protocol_limits.max_array_lens.instant_actions = 50;
+
+  factsheet.protocol_limits.max_array_lens.trajectory_knot_vector = 1000;
+  factsheet.protocol_limits.max_array_lens.trajectory_control_points = 1000;
+
+  factsheet.protocol_limits.max_array_lens.state_node_states = 1000;
+  factsheet.protocol_limits.max_array_lens.state_edge_states = 1000;
+
+  factsheet.protocol_limits.max_array_lens.state_loads = 20;
+  factsheet.protocol_limits.max_array_lens.state_action_states = 100;
+  factsheet.protocol_limits.max_array_lens.state_errors = 100;
+  factsheet.protocol_limits.max_array_lens.state_information = 100;
+
+  factsheet.protocol_limits.max_array_lens.error_error_references = 20;
+  factsheet.protocol_limits.max_array_lens.information_info_references = 20;
+
+  factsheet.protocol_features.optional_parameters = {};
+
+  factsheet.protocol_features.agv_actions = {};
+
+  return factsheet;
 }
 
 //=============================================================================
@@ -328,9 +456,21 @@ std::shared_ptr<StateManager> Adapter::state_manager()
 }
 
 //=============================================================================
+void Adapter::set_factsheet(const types::Factsheet& factsheet)
+{
+  pimpl_->factsheet_manager.lock()->factsheet = factsheet;
+}
+
+//=============================================================================
 void Adapter::start()
 {
   if (pimpl_->running) return;
+
+  auto factsheet_manager = pimpl_->factsheet_manager.lock();
+  if (!factsheet_manager->factsheet.has_value())
+  {
+    factsheet_manager->factsheet = pimpl_->make_default_factsheet();
+  }
 
   pimpl_->set_connection_will();
   pimpl_->protocol_adapter->connect();

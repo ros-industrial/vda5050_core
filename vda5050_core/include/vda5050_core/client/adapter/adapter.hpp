@@ -57,6 +57,8 @@ public:
 
   std::shared_ptr<StateManager> state_manager();
 
+  void set_factsheet(const types::Factsheet& factsheet);
+
   /// \brief Connect MQTT, subscribe to orders, and start the execution loop
   void start();
 
