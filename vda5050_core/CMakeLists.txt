@@ -192,6 +192,12 @@ target_include_directories(vda5050_master
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+option(BUILD_PYTHON "Build Python bindings" ON)
+
+if(BUILD_PYTHON)
+  add_subdirectory(python)
+endif()
+
 install(
   DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
