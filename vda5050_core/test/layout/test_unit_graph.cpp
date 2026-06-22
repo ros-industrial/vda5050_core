@@ -668,4 +668,114 @@ TEST(GraphTest, Mutation_AfterAddDeleteAdd_StateConsistent)
   EXPECT_EQ(out_n0[0], "E1");
 }
 
+TEST(GraphTest, DeleteNode_NonLast_SwappedNodeStillResolves)
+{
+  LIF lif = make_minimal_lif();
+  for (const char* id : {"NA", "NB"})
+  {
+    Node n;
+    n.node_id = id;
+    n.map_id = "L1";
+    n.vehicle_type_node_properties.push_back(
+      {"v1", std::nullopt, std::nullopt});
+    lif.layouts[0].nodes.push_back(n);
+  }
+  auto g = Graph::from_lif(lif);  // nodes: N0, N1, NA, NB
+  // NA is not last, so NB is swapped into its slot; NB must still resolve.
+  g->delete_node("NA");
+  EXPECT_FALSE(g->has_node("NA"));
+  ASSERT_TRUE(g->has_node("NB"));
+  EXPECT_EQ(g->get_node("NB").node_id, "NB");
+  EXPECT_EQ(g->node_count(), 3u);
+}
+
+TEST(GraphTest, DeleteLastElement_NodeEdgeStation_Consistent)
+{
+  auto g = Graph::from_lif(make_minimal_lif());  // N0, N1; E1; S1
+  g->delete_station("S1");
+  EXPECT_EQ(g->station_count(), 0u);
+  g->delete_edge("E1");
+  EXPECT_EQ(g->edge_count(), 0u);
+  g->delete_node("N1");  // last element in the node vector
+  g->delete_node("N0");  // sole remaining element
+  EXPECT_EQ(g->node_count(), 0u);
+  EXPECT_TRUE(g->empty());
+}
+
+TEST(GraphTest, SelfLoopEdge_RenameNode_RewritesBothEndpoints)
+{
+  LIF lif = make_minimal_lif();
+  Edge loop;
+  loop.edge_id = "E_loop";
+  loop.start_node_id = "N1";
+  loop.end_node_id = "N1";  // self-loop
+  VehicleTypeEdgeProperty p;
+  p.vehicle_type_id = "v1";
+  p.rotation_allowed = false;
+  loop.vehicle_type_edge_properties.push_back(p);
+  lif.layouts[0].edges.push_back(loop);
+  auto g = Graph::from_lif(lif);
+
+  g->update_node_id("N1", "N1x");
+  EXPECT_EQ(g->get_edge("E_loop").start_node_id, "N1x");
+  EXPECT_EQ(g->get_edge("E_loop").end_node_id, "N1x");
+  EXPECT_EQ(g->outbound_edges("N1x").size(), 1u);  // E_loop
+  EXPECT_EQ(g->inbound_edges("N1x").size(), 2u);   // E1, E_loop
+
+  g->delete_edge("E_loop");
+  EXPECT_FALSE(g->has_edge("E_loop"));
+  EXPECT_EQ(g->outbound_edges("N1x").size(), 0u);
+  EXPECT_EQ(g->inbound_edges("N1x").size(), 1u);  // E1 remains
+}
+
+TEST(GraphTest, UpdateNodeId_CrossLayoutReferencedNode_RewritesEdge)
+{
+  auto g = Graph::from_lif(make_multi_layout_lif());
+  // N5 lives in LB but is the end of E_xfer, whose start N1 is in LA.
+  g->update_node_id("N5", "N5x");
+  EXPECT_FALSE(g->has_node("N5"));
+  EXPECT_TRUE(g->has_node("N5x"));
+  EXPECT_EQ(g->get_edge("E_xfer").end_node_id, "N5x");
+  EXPECT_EQ(g->inbound_edges("N5x").size(), 1u);
+}
+
+TEST(GraphTest, DeleteNode_CrossLayoutReferenced_ThrowsThenSucceeds)
+{
+  auto g = Graph::from_lif(make_multi_layout_lif());
+  EXPECT_THROW(g->delete_node("N5"), std::invalid_argument);
+  g->delete_edge("E_xfer");
+  g->delete_node("N5");
+  EXPECT_FALSE(g->has_node("N5"));
+}
+
+TEST(GraphTest, UpdateNodeId_IsolatedNode_RemainsUnconnected)
+{
+  LIF lif = make_minimal_lif();
+  Node iso;
+  iso.node_id = "N_iso";
+  iso.map_id = "L1";
+  iso.vehicle_type_node_properties.push_back(
+    {"v1", std::nullopt, std::nullopt});
+  lif.layouts[0].nodes.push_back(iso);
+  auto g = Graph::from_lif(lif);
+
+  g->update_node_id("N_iso", "N_iso2");
+  auto unconnected = g->unconnected_nodes();
+  ASSERT_EQ(unconnected.size(), 1u);
+  EXPECT_EQ(unconnected[0], "N_iso2");
+  EXPECT_TRUE(g->outbound_edges("N_iso2").empty());
+}
+
+TEST(GraphTest, UpdateStationId_ThenRenameReferencedNode_Consistent)
+{
+  auto g = Graph::from_lif(make_minimal_lif());  // S1 references N0
+  g->update_station_id("S1", "S1x");
+  EXPECT_TRUE(g->has_station("S1x"));
+  // The reverse index must track the station rename so renaming N0 still
+  // updates S1x's interaction node.
+  g->update_node_id("N0", "N0x");
+  ASSERT_FALSE(g->get_station("S1x").interaction_node_ids.empty());
+  EXPECT_EQ(g->get_station("S1x").interaction_node_ids[0], "N0x");
+}
+
 }  // namespace vda5050_core::layout::test

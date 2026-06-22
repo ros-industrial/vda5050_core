@@ -35,7 +35,7 @@ namespace vda5050_core::layout {
 /// \brief Master-side wrapper over a validated LIF.
 ///
 /// Adds hash-backed indices and per-node adjacency lists. Built once from a
-/// LIF; mutations rebuild internal indices to keep them consistent with the
+/// LIF; mutations update the indices in place to keep them consistent with the
 /// underlying LIF.
 class Graph
 {
@@ -154,7 +154,7 @@ public:
 
   /// \brief Add a node / edge / station to a layout.
   ///
-  /// All mutations rebuild indices and invalidate any previously-returned
+  /// All mutations update the indices and invalidate any previously-returned
   /// const T* / const Layout*.
   ///
   /// \param node Entity to add (edge / station for the other overloads).
@@ -219,6 +219,8 @@ private:
     station_index_;
   std::unordered_map<std::string, std::vector<std::string>> node_outbound_;
   std::unordered_map<std::string, std::vector<std::string>> node_inbound_;
+  // node_id -> station_ids whose interactionNodeIds reference that node.
+  std::unordered_map<std::string, std::vector<std::string>> node_stations_;
 };
 
 template <typename V>
