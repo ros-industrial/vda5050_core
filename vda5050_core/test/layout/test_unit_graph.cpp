@@ -154,13 +154,11 @@ LIF make_station_only_lif()
 
 }  // namespace
 
-TEST(GraphTest, FromLif_EmptyLIF_ReturnsEmptyGraph)
+TEST(GraphTest, FromLif_EmptyLIF_Throws)
 {
-  auto g = Graph::from_lif(LIF{});
-  EXPECT_TRUE(g->empty());
-  EXPECT_EQ(g->node_count(), 0u);
-  EXPECT_EQ(g->edge_count(), 0u);
-  EXPECT_EQ(g->station_count(), 0u);
+  // A LIF with no layouts is invalid (validate_layout rejects it), so it
+  // cannot be wrapped in a Graph.
+  EXPECT_THROW(Graph::from_lif(LIF{}), std::invalid_argument);
 }
 
 TEST(GraphTest, FromLif_MinimalLIF_Populates)
@@ -197,6 +195,21 @@ TEST(GraphTest, FromLif_DuplicateNodeId_Throws)
   dup.vehicle_type_node_properties.push_back(
     {"v1", std::nullopt, std::nullopt});
   lif.layouts[0].nodes.push_back(dup);
+  EXPECT_THROW(Graph::from_lif(lif), std::invalid_argument);
+}
+
+TEST(GraphTest, FromLif_DanglingEdge_Throws)
+{
+  LIF lif = make_minimal_lif();
+  Edge bad;
+  bad.edge_id = "E_bad";
+  bad.start_node_id = "N0";
+  bad.end_node_id = "N_missing";  // references a node that does not exist
+  VehicleTypeEdgeProperty p;
+  p.vehicle_type_id = "v1";
+  p.rotation_allowed = false;
+  bad.vehicle_type_edge_properties.push_back(p);
+  lif.layouts[0].edges.push_back(bad);
   EXPECT_THROW(Graph::from_lif(lif), std::invalid_argument);
 }
 
@@ -551,14 +564,6 @@ TEST(GraphTest, AddStation_UnknownLayout_Throws)
   s.station_id = "S_new";
   s.interaction_node_ids = {"N0"};
   EXPECT_THROW(g->add_station(s, "UNKNOWN_LAYOUT"), std::invalid_argument);
-}
-
-TEST(GraphTest, EmptyGraph_AnyAdd_Throws_OnUnknownLayout)
-{
-  auto g = Graph::from_lif(LIF{});
-  Node n;
-  n.node_id = "N0";
-  EXPECT_THROW(g->add_node(n, "L1"), std::invalid_argument);
 }
 
 TEST(GraphTest, DeleteNode_NoRefs_Succeeds)

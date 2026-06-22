@@ -45,12 +45,12 @@ public:
 
   /// \brief Factory; takes ownership of `lif`.
   ///
-  /// Callers using load_from_file / load_from_json already get a validated LIF;
-  /// this guard protects in-memory or test-constructed inputs.
+  /// Validates `lif` with validate_layout before wrapping it, so the same rules
+  /// apply whether the LIF comes from the loader or is built in memory.
   ///
-  /// \param lif Layout to wrap; node/edge/station/layout IDs must be unique.
-  /// \throws std::invalid_argument on duplicate IDs (the uniqueness invariant
-  ///   validate_layout enforces).
+  /// \param lif Layout to wrap.
+  /// \throws std::invalid_argument if the LIF fails validation (empty,
+  ///   duplicate IDs, or dangling edge / station references).
   static Ptr from_lif(LIF lif);
 
   Graph(const Graph&) = default;

@@ -25,50 +25,18 @@
 #include <unordered_set>
 #include <utility>
 
+#include "vda5050_core/layout/validate_layout.hpp"
+
 namespace vda5050_core::layout {
 
 Graph::Ptr Graph::from_lif(LIF lif)
 {
-  // Uniqueness pre-check: protects programmatically-constructed inputs
-  // (load_from_json already validates, but in-memory builds may not).
-  std::unordered_set<std::string> layout_ids;
-  std::unordered_set<std::string> node_ids;
-  std::unordered_set<std::string> edge_ids;
-  std::unordered_set<std::string> station_ids;
-
-  for (const auto& layout : lif.layouts)
+  auto errors = validate_layout(lif);
+  if (!errors.empty())
   {
-    if (!layout_ids.insert(layout.layout_id).second)
-    {
-      throw std::invalid_argument(
-        "Graph::from_lif: duplicate layoutId '" + layout.layout_id + "'");
-    }
-    for (const auto& node : layout.nodes)
-    {
-      if (!node_ids.insert(node.node_id).second)
-      {
-        throw std::invalid_argument(
-          "Graph::from_lif: duplicate nodeId '" + node.node_id + "'");
-      }
-    }
-    for (const auto& edge : layout.edges)
-    {
-      if (!edge_ids.insert(edge.edge_id).second)
-      {
-        throw std::invalid_argument(
-          "Graph::from_lif: duplicate edgeId '" + edge.edge_id + "'");
-      }
-    }
-    for (const auto& station : layout.stations)
-    {
-      if (!station_ids.insert(station.station_id).second)
-      {
-        throw std::invalid_argument(
-          "Graph::from_lif: duplicate stationId '" + station.station_id + "'");
-      }
-    }
+    throw std::invalid_argument(
+      "Graph::from_lif: " + errors.front().description);
   }
-
   auto g = Ptr(new Graph());
   g->lif_ = std::move(lif);
   g->rebuild_indices();
