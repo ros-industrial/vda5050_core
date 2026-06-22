@@ -65,8 +65,8 @@ nlohmann::json minimal_valid_json()
 
 bool has_error_of_type(const LayoutLoadResult& r, LayoutLoadErrorType t)
 {
-  if (r.ok()) return false;
-  return std::any_of(r.errors().begin(), r.errors().end(), [&](const auto& e) {
+  if (r) return false;
+  return std::any_of(r.errors.begin(), r.errors.end(), [&](const auto& e) {
     return e.type == t;
   });
 }
@@ -105,8 +105,8 @@ TEST(LayoutLoaderTest, LoadFromFile_MalformedJson_ReturnsParseError)
 TEST(LayoutLoaderTest, LoadFromJson_Minimal_HappyPath)
 {
   auto r = load_from_json(minimal_valid_json());
-  ASSERT_TRUE(r.ok());
-  ASSERT_EQ(r.lif().layouts.size(), 1u);
+  ASSERT_TRUE(static_cast<bool>(r));
+  ASSERT_EQ(r.lif.value().layouts.size(), 1u);
 }
 
 TEST(LayoutLoaderTest, LoadFromJson_LenientOnUnknownFields)
@@ -114,15 +114,15 @@ TEST(LayoutLoaderTest, LoadFromJson_LenientOnUnknownFields)
   auto j = minimal_valid_json();
   j["unknownTopLevel"] = "future-compat";
   j["layouts"][0]["unknownLayoutField"] = 42;
-  EXPECT_TRUE(load_from_json(j).ok());
+  EXPECT_TRUE(static_cast<bool>(load_from_json(j)));
 }
 
 TEST(LayoutLoaderTest, LoadFromJson_AbsentOptionalsStayNullopt)
 {
   auto r = load_from_json(minimal_valid_json());
-  ASSERT_TRUE(r.ok());
+  ASSERT_TRUE(static_cast<bool>(r));
   const auto& vtep =
-    r.lif().layouts[0].edges[0].vehicle_type_edge_properties[0];
+    r.lif.value().layouts[0].edges[0].vehicle_type_edge_properties[0];
   EXPECT_FALSE(vtep.orientation_type.has_value());
 }
 
@@ -346,10 +346,10 @@ TEST(LayoutLoaderTest, Trajectory_HappyPath_RoundTrip)
       "degree": 1
     })");
   auto r = load_from_json(j);
-  ASSERT_TRUE(r.ok());
-  auto r2 = load_from_json(nlohmann::json(r.lif()));
-  ASSERT_TRUE(r2.ok());
-  EXPECT_EQ(r.lif(), r2.lif());
+  ASSERT_TRUE(static_cast<bool>(r));
+  auto r2 = load_from_json(nlohmann::json(r.lif.value()));
+  ASSERT_TRUE(static_cast<bool>(r2));
+  EXPECT_EQ(r.lif.value(), r2.lif.value());
 }
 
 TEST(LayoutLoaderTest, LoadRestriction_RoundTrip)
@@ -362,10 +362,10 @@ TEST(LayoutLoaderTest, LoadRestriction_RoundTrip)
       "loadSetNames": ["pallet_eur", "pallet_us"]
     })");
   auto r = load_from_json(j);
-  ASSERT_TRUE(r.ok());
-  auto r2 = load_from_json(nlohmann::json(r.lif()));
-  ASSERT_TRUE(r2.ok());
-  EXPECT_EQ(r.lif(), r2.lif());
+  ASSERT_TRUE(static_cast<bool>(r));
+  auto r2 = load_from_json(nlohmann::json(r.lif.value()));
+  ASSERT_TRUE(static_cast<bool>(r2));
+  EXPECT_EQ(r.lif.value(), r2.lif.value());
 }
 
 TEST(LayoutLoaderTest, StationPosition_RoundTrip)
@@ -381,10 +381,10 @@ TEST(LayoutLoaderTest, StationPosition_RoundTrip)
     }
   ])");
   auto r = load_from_json(j);
-  ASSERT_TRUE(r.ok());
-  auto r2 = load_from_json(nlohmann::json(r.lif()));
-  ASSERT_TRUE(r2.ok());
-  EXPECT_EQ(r.lif(), r2.lif());
+  ASSERT_TRUE(static_cast<bool>(r));
+  auto r2 = load_from_json(nlohmann::json(r.lif.value()));
+  ASSERT_TRUE(static_cast<bool>(r2));
+  EXPECT_EQ(r.lif.value(), r2.lif.value());
 }
 
 TEST(LayoutLoaderTest, Action_RoundTrip)
@@ -404,10 +404,10 @@ TEST(LayoutLoaderTest, Action_RoundTrip)
       }
     ])");
   auto r = load_from_json(j);
-  ASSERT_TRUE(r.ok());
-  auto r2 = load_from_json(nlohmann::json(r.lif()));
-  ASSERT_TRUE(r2.ok());
-  EXPECT_EQ(r.lif(), r2.lif());
+  ASSERT_TRUE(static_cast<bool>(r));
+  auto r2 = load_from_json(nlohmann::json(r.lif.value()));
+  ASSERT_TRUE(static_cast<bool>(r2));
+  EXPECT_EQ(r.lif.value(), r2.lif.value());
 }
 
 TEST(LayoutLoaderTest, Enums_NonDefaultValues_RoundTrip)
@@ -422,21 +422,22 @@ TEST(LayoutLoaderTest, Enums_NonDefaultValues_RoundTrip)
       {"actionType":"x","blockingType":"SOFT","requirementType":"REQUIRED"}
     ])");
   auto r = load_from_json(j);
-  ASSERT_TRUE(r.ok());
-  auto r2 = load_from_json(nlohmann::json(r.lif()));
-  ASSERT_TRUE(r2.ok());
-  EXPECT_EQ(r.lif(), r2.lif());
+  ASSERT_TRUE(static_cast<bool>(r));
+  auto r2 = load_from_json(nlohmann::json(r.lif.value()));
+  ASSERT_TRUE(static_cast<bool>(r2));
+  EXPECT_EQ(r.lif.value(), r2.lif.value());
 }
 
 TEST(LayoutLoaderTest, LoadFromFile_RoundTripSampleData)
 {
 #ifdef VDA5050_CORE__SAMPLE_LAYOUT_PATH
   auto r = load_from_file(VDA5050_CORE__SAMPLE_LAYOUT_PATH);
-  ASSERT_TRUE(r.ok()) << "Sample layout at " << VDA5050_CORE__SAMPLE_LAYOUT_PATH
-                      << " did not load";
-  auto r2 = load_from_json(nlohmann::json(r.lif()));
-  ASSERT_TRUE(r2.ok());
-  EXPECT_EQ(r.lif(), r2.lif());
+  ASSERT_TRUE(static_cast<bool>(r))
+    << "Sample layout at " << VDA5050_CORE__SAMPLE_LAYOUT_PATH
+    << " did not load";
+  auto r2 = load_from_json(nlohmann::json(r.lif.value()));
+  ASSERT_TRUE(static_cast<bool>(r2));
+  EXPECT_EQ(r.lif.value(), r2.lif.value());
 #else
   GTEST_SKIP() << "VDA5050_CORE__SAMPLE_LAYOUT_PATH not defined";
 #endif

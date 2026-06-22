@@ -458,8 +458,8 @@ TEST(GraphTest, FromLoadedLif_SampleLayout_Loads)
 {
 #ifdef VDA5050_CORE__SAMPLE_LAYOUT_PATH
   auto r = load_from_file(VDA5050_CORE__SAMPLE_LAYOUT_PATH);
-  ASSERT_TRUE(r.ok());
-  auto g = Graph::from_lif(std::move(r).take_lif());
+  ASSERT_TRUE(static_cast<bool>(r));
+  auto g = Graph::from_lif(std::move(r.lif).value());
   EXPECT_FALSE(g->empty());
   EXPECT_GT(g->node_count(), 0u);
   EXPECT_EQ(g->lif().meta_information.lif_version, "0.11.0");

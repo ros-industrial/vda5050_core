@@ -19,50 +19,16 @@
 #include "vda5050_core/layout/layout_loader.hpp"
 
 #include <fstream>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include "vda5050_core/json_utils/layout_serialization.hpp"
 #include "vda5050_core/layout/validate_layout.hpp"
 
 namespace vda5050_core::layout {
-
-LayoutLoadResult LayoutLoadResult::success(LIF lif)
-{
-  LayoutLoadResult r;
-  r.data_.emplace<LIF>(std::move(lif));
-  return r;
-}
-
-LayoutLoadResult LayoutLoadResult::failure(std::vector<LayoutLoadError> errors)
-{
-  LayoutLoadResult r;
-  r.data_.emplace<std::vector<LayoutLoadError>>(std::move(errors));
-  return r;
-}
-
-bool LayoutLoadResult::ok() const noexcept
-{
-  return std::holds_alternative<LIF>(data_);
-}
-
-const LIF& LayoutLoadResult::lif() const
-{
-  return std::get<LIF>(data_);
-}
-
-LIF LayoutLoadResult::take_lif() &&
-{
-  return std::get<LIF>(std::move(data_));
-}
-
-const std::vector<LayoutLoadError>& LayoutLoadResult::errors() const
-{
-  return std::get<std::vector<LayoutLoadError>>(data_);
-}
 
 namespace {
 
@@ -131,7 +97,7 @@ LayoutLoadResult load_from_file(const std::string& path)
     add(
       errors, LayoutLoadErrorType::FILE_NOT_FOUND,
       "Cannot open LIF config file '" + path + "'.");
-    return LayoutLoadResult::failure(std::move(errors));
+    return LayoutLoadResult{std::nullopt, std::move(errors)};
   }
 
   std::stringstream buf;
@@ -141,7 +107,7 @@ LayoutLoadResult load_from_file(const std::string& path)
     add(
       errors, LayoutLoadErrorType::FILE_READ_FAILED,
       "I/O error while reading LIF config file '" + path + "'.");
-    return LayoutLoadResult::failure(std::move(errors));
+    return LayoutLoadResult{std::nullopt, std::move(errors)};
   }
 
   nlohmann::json parsed;
@@ -154,7 +120,7 @@ LayoutLoadResult load_from_file(const std::string& path)
     add(
       errors, LayoutLoadErrorType::JSON_PARSE_ERROR,
       std::string("JSON parse error in '") + path + "': " + e.what());
-    return LayoutLoadResult::failure(std::move(errors));
+    return LayoutLoadResult{std::nullopt, std::move(errors)};
   }
 
   return load_from_json(parsed);
@@ -169,7 +135,7 @@ LayoutLoadResult load_from_json(const nlohmann::json& json)
     add(
       errors, LayoutLoadErrorType::JSON_PARSE_ERROR,
       "Top-level JSON value is not an object.");
-    return LayoutLoadResult::failure(std::move(errors));
+    return LayoutLoadResult{std::nullopt, std::move(errors)};
   }
 
   LIF lif;
@@ -257,17 +223,17 @@ LayoutLoadResult load_from_json(const nlohmann::json& json)
 
   if (!errors.empty())
   {
-    return LayoutLoadResult::failure(std::move(errors));
+    return LayoutLoadResult{std::nullopt, std::move(errors)};
   }
 
   auto invariants = validate_layout(lif);
   if (!invariants.empty())
   {
     errors.insert(errors.end(), invariants.begin(), invariants.end());
-    return LayoutLoadResult::failure(std::move(errors));
+    return LayoutLoadResult{std::nullopt, std::move(errors)};
   }
 
-  return LayoutLoadResult::success(std::move(lif));
+  return LayoutLoadResult{std::move(lif), {}};
 }
 
 }  // namespace vda5050_core::layout

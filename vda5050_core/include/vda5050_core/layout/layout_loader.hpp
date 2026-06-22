@@ -19,8 +19,8 @@
 #ifndef VDA5050_CORE__LAYOUT__LAYOUT_LOADER_HPP_
 #define VDA5050_CORE__LAYOUT__LAYOUT_LOADER_HPP_
 
+#include <optional>
 #include <string>
-#include <variant>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -30,44 +30,22 @@
 
 namespace vda5050_core::layout {
 
-/// \brief Result of a layout load: exactly one of {LIF, errors} is populated.
+/// \brief Result of a layout load: a valid LIF, or the load errors.
 ///
-/// Construction is funnelled through success() / failure() factories so an
-/// invalid state cannot be represented.
-class LayoutLoadResult
+/// The loader populates exactly one side — on success `lif` holds the LIF and
+/// `errors` is empty; on failure `lif` is empty and `errors` is non-empty.
+/// Check via `operator bool` (or `lif`) first, and access the LIF through
+/// `lif.value()` so a missed check throws rather than being undefined.
+struct LayoutLoadResult
 {
-public:
-  static LayoutLoadResult success(LIF lif);
-  static LayoutLoadResult failure(std::vector<LayoutLoadError> errors);
+  std::optional<LIF> lif;
+  std::vector<LayoutLoadError> errors;
 
-  LayoutLoadResult(const LayoutLoadResult&) = default;
-  LayoutLoadResult(LayoutLoadResult&&) noexcept = default;
-  LayoutLoadResult& operator=(const LayoutLoadResult&) = default;
-  LayoutLoadResult& operator=(LayoutLoadResult&&) noexcept = default;
-  ~LayoutLoadResult() = default;
-
-  bool ok() const noexcept;
+  /// \brief True iff a LIF was loaded (so lif.value() is safe to use).
   explicit operator bool() const noexcept
   {
-    return ok();
+    return lif.has_value() && errors.empty();
   }
-
-  /// \brief Access the loaded LIF (take_lif() moves it out).
-  ///
-  /// \return The loaded LIF.
-  /// \throws std::bad_variant_access if !ok().
-  const LIF& lif() const;
-  LIF take_lif() &&;
-
-  /// \brief Access the accumulated load errors.
-  ///
-  /// \return The load errors.
-  /// \throws std::bad_variant_access if ok().
-  const std::vector<LayoutLoadError>& errors() const;
-
-private:
-  LayoutLoadResult() = default;
-  std::variant<LIF, std::vector<LayoutLoadError>> data_;
 };
 
 /// \brief Load a single LIF, validating it; the result holds the LIF or errors.
