@@ -18,33 +18,31 @@
 
 #include <pybind11/pybind11.h>
 
-#include <optional>
 #include <string>
 
-#include "vda5050_core/client/adapter/navigation_request.hpp"
+#include "vda5050_core/client/adapter/adapter.hpp"
+#include "vda5050_core/execution/protocol_adapter.hpp"
 
 namespace py = pybind11;
 
-using vda5050_core::client::adapter::NavigationRequest;
+using vda5050_core::client::adapter::Adapter;
+using vda5050_core::execution::ProtocolAdapter;
 
-class Destination
+class RobotUpdateHandle;
+
+class Robot
 {
 public:
-  std::string node_id;
+  static std::shared_ptr<Robot> make(
+    const std::string& manufacturer, const std::string& serial_number)
+  {
+  }
 
-  std::optional<double> x;
-  std::optional<double> y;
-  std::optional<double> yaw;
+  void start() {}
 
-  std::string map;
+private:
+  Robot(const std::string& manufacturer, const std::string& serial_number) {}
+
+  std::shared_ptr<Adapter> adapter_;
+  std::shared_ptr<RobotUpdateHandle> robot_update_handle_;
 };
-
-void bind_rmf_migration_destination(py::module& m)
-{
-  py::class_<Destination>(m, "Destination")
-    .def_readonly("node_id", &Destination::node_id)
-    .def_readonly("x", &Destination::x)
-    .def_readonly("y", &Destination::y)
-    .def_readonly("yaw", &Destination::yaw)
-    .def_readonly("map", &Destination::map);
-}

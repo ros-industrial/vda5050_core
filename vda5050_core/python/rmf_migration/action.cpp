@@ -18,33 +18,26 @@
 
 #include <pybind11/pybind11.h>
 
-#include <optional>
 #include <string>
 
-#include "vda5050_core/client/adapter/navigation_request.hpp"
+#include "vda5050_core/client/adapter/action_request.hpp"
 
 namespace py = pybind11;
 
-using vda5050_core::client::adapter::NavigationRequest;
+using vda5050_core::client::adapter::ActionRequest;
 
-class Destination
+class Action
 {
 public:
-  std::string node_id;
-
-  std::optional<double> x;
-  std::optional<double> y;
-  std::optional<double> yaw;
-
-  std::string map;
+  std::string action_id;
+  std::string action_type;
+  std::string action_description;
 };
 
-void bind_rmf_migration_destination(py::module& m)
+void bind_rmf_migration_action(py::module& m)
 {
-  py::class_<Destination>(m, "Destination")
-    .def_readonly("node_id", &Destination::node_id)
-    .def_readonly("x", &Destination::x)
-    .def_readonly("y", &Destination::y)
-    .def_readonly("yaw", &Destination::yaw)
-    .def_readonly("map", &Destination::map);
+  py::class_<Action>(m, "Action")
+    .def_readonly("action_id", &Action::action_id)
+    .def_readonly("action_type", &Action::action_type)
+    .def_readonly("action_description", &Action::action_description);
 }

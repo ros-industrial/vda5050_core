@@ -18,33 +18,7 @@
 
 #include <pybind11/pybind11.h>
 
-#include <optional>
-#include <string>
-
-#include "vda5050_core/client/adapter/navigation_request.hpp"
-
 namespace py = pybind11;
 
-using vda5050_core::client::adapter::NavigationRequest;
-
-class Destination
-{
-public:
-  std::string node_id;
-
-  std::optional<double> x;
-  std::optional<double> y;
-  std::optional<double> yaw;
-
-  std::string map;
-};
-
-void bind_rmf_migration_destination(py::module& m)
-{
-  py::class_<Destination>(m, "Destination")
-    .def_readonly("node_id", &Destination::node_id)
-    .def_readonly("x", &Destination::x)
-    .def_readonly("y", &Destination::y)
-    .def_readonly("yaw", &Destination::yaw)
-    .def_readonly("map", &Destination::map);
-}
+class Fleet
+{};
