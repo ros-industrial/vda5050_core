@@ -35,8 +35,6 @@ namespace client {
 
 namespace {
 
-// Appends the orderId / orderUpdateId references to an existing error so every
-// rejection carries the same order context, no matter where it originated.
 void attach_order_refs(types::Error& error, const types::Order& order)
 {
   if (!error.error_references) error.error_references.emplace();
@@ -45,7 +43,6 @@ void attach_order_refs(types::Error& error, const types::Order& order)
     {errors::RefOrderUpdateId, std::to_string(order.order_update_id)});
 }
 
-// Builds a VDA5050 Error, always appending the orderId / orderUpdateId refs.
 types::Error make_error(
   const std::string& type, const std::string& description,
   const types::Order& order, std::vector<types::ErrorReference> refs = {})
@@ -120,15 +117,12 @@ AcceptanceResult OrderValidator::validate_order(
   const types::Order& incoming_order,
   const std::shared_ptr<execution::ContextInterface>& context) const
 {
-  // If context is null, return a validation error.
   if (!context)
   {
     return rejected(
       errors::create_error(errors::ValidationError, "context is null", {}));
   }
 
-  // Execution state (order/node tracking) lives in the resource, not the
-  // context itself; the context only routes us to it.
   auto execution = context->get_resource<OrderExecutionResource>();
   if (!execution)
   {
@@ -136,7 +130,6 @@ AcceptanceResult OrderValidator::validate_order(
       errors::ValidationError, "OrderExecutionResource is null", {}));
   }
 
-  // Structural / format validity of the order graph.
   if (auto graph = order_utils::is_valid_graph(incoming_order); !graph)
   {
     for (auto& error : graph.errors) attach_order_refs(error, incoming_order);
@@ -156,8 +149,6 @@ AcceptanceResult OrderValidator::validate_order(
   // Brand new order, or an update of the active one?
   if (incoming_order.order_id != current_id)
   {
-    // New order
-    // Reject if the vehicle is still executing or holding a horizon.
     if (is_busy(current_state))
     {
       return rejected(make_error(
@@ -173,16 +164,11 @@ AcceptanceResult OrderValidator::validate_order(
     return accepted();
   }
 
-  // Update of the active order (same orderId)
-  // Identical orderUpdateId => duplicate resend; discard silently.
   if (incoming_order.order_update_id == current_update_id)
   {
     return ignored();
   }
 
-  // Lower orderUpdateId => deprecated update. Report it
-  // and keep executing the previous order. Any strictly greater id is a valid
-  // newer update -- there is no requirement that it increment by exactly one.
   if (incoming_order.order_update_id < current_update_id)
   {
     return rejected(make_error(

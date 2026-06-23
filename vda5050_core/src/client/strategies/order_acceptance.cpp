@@ -85,7 +85,6 @@ void append_edge(types::State& state, const types::Edge& edge)
   }
 }
 
-// New order: reset the execution snapshot and populate it from the order.
 void apply_new_order(types::State& state, const types::Order& order)
 {
   state.node_states.clear();
@@ -105,7 +104,6 @@ void apply_new_order(types::State& state, const types::Order& order)
   for (const auto& edge : order.edges) append_edge(state, edge);
 }
 
-// Order update: keep the running base, drop the old horizon, append new states.
 void apply_order_update(types::State& state, const types::Order& order)
 {
   state.order_update_id = order.order_update_id;
@@ -184,9 +182,6 @@ void OrderAcceptance::step(std::shared_ptr<execution::ContextInterface> context)
   auto execution = context->get_resource<OrderExecutionResource>();
   if (!execution) return;
 
-  // NOTE: get_state()/set_state() is a non-atomic read-modify-write.
-  // This is safe while the handler runs state-writing strategies sequentially
-  // and OrderAcceptance is the only writer of this state.
   switch (result.outcome)
   {
     case AcceptanceOutcome::ACCEPTED: {

@@ -56,9 +56,6 @@ public:
 private:
   OrderValidator validator_;
 
-  // Last (orderId, orderUpdateId) processed. The inbound OrderUpdate stays
-  // cached and step() runs every handler tick, so this lets an unchanged order
-  // be processed once instead of re-validated (and re-logged) on every tick.
   std::string last_order_id_;
   uint32_t last_order_update_id_ = 0;
 };
