@@ -150,6 +150,11 @@ void apply_order_update(types::State& state, const types::Order& order)
 
 OrderAcceptance::OrderAcceptance() = default;
 
+OrderAcceptance::OrderAcceptance(OrderValidator validator)
+: validator_(std::move(validator))
+{
+}
+
 void OrderAcceptance::init(
   std::shared_ptr<execution::ContextInterface> /*context*/)
 {

@@ -22,7 +22,6 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <utility>
 
 #include "vda5050_core/client/strategies/order_validator.hpp"
 #include "vda5050_core/execution/context_interface.hpp"
@@ -48,10 +47,7 @@ public:
   OrderAcceptance();
 
   /// \brief Construct with a pre-configured validator
-  explicit OrderAcceptance(OrderValidator validator)
-  : validator_(std::move(validator))
-  {
-  }
+  explicit OrderAcceptance(OrderValidator validator);
 
   void init(std::shared_ptr<execution::ContextInterface> context) override;
 
