@@ -45,6 +45,7 @@ Graph::Ptr Graph::from_lif(LIF lif)
 
 void Graph::rebuild_indices()
 {
+  layout_index_.clear();
   node_index_.clear();
   edge_index_.clear();
   station_index_.clear();
@@ -55,6 +56,7 @@ void Graph::rebuild_indices()
   for (std::size_t li = 0; li < lif_.layouts.size(); ++li)
   {
     const auto& layout = lif_.layouts[li];
+    layout_index_.emplace(layout.layout_id, li);
     for (std::size_t ni = 0; ni < layout.nodes.size(); ++ni)
     {
       const auto& node = layout.nodes[ni];
@@ -153,11 +155,9 @@ const Station* Graph::find_station(const std::string& id) const noexcept
 
 const Layout* Graph::find_layout(const std::string& layout_id) const noexcept
 {
-  for (const auto& layout : lif_.layouts)
-  {
-    if (layout.layout_id == layout_id) return &layout;
-  }
-  return nullptr;
+  auto it = layout_index_.find(layout_id);
+  if (it == layout_index_.end()) return nullptr;
+  return &lif_.layouts[it->second];
 }
 
 const std::vector<std::string>& Graph::outbound_edges(
@@ -257,16 +257,6 @@ namespace {
 using PosIndex =
   std::unordered_map<std::string, std::pair<std::size_t, std::size_t>>;
 
-// Find layout index by id in lif_.layouts; returns lif.layouts.size() on miss.
-std::size_t find_layout_index(const LIF& lif, const std::string& layout_id)
-{
-  for (std::size_t i = 0; i < lif.layouts.size(); ++i)
-  {
-    if (lif.layouts[i].layout_id == layout_id) return i;
-  }
-  return lif.layouts.size();
-}
-
 // Remove the first occurrence of `value` from `vec`.
 void vec_erase_value(std::vector<std::string>& vec, const std::string& value)
 {
@@ -319,12 +309,13 @@ void Graph::add_node(Node node, const std::string& layout_id)
     throw std::invalid_argument(
       "Graph::add_node: duplicate nodeId '" + node.node_id + "'");
   }
-  const std::size_t li = find_layout_index(lif_, layout_id);
-  if (li == lif_.layouts.size())
+  auto lit = layout_index_.find(layout_id);
+  if (lit == layout_index_.end())
   {
     throw std::invalid_argument(
       "Graph::add_node: layout '" + layout_id + "' not found");
   }
+  const std::size_t li = lit->second;
   lif_.layouts[li].nodes.push_back(std::move(node));
   auto& nodes = lif_.layouts[li].nodes;
   const std::size_t ni = nodes.size() - 1;
@@ -342,12 +333,13 @@ void Graph::add_edge(Edge edge, const std::string& layout_id)
     throw std::invalid_argument(
       "Graph::add_edge: duplicate edgeId '" + edge.edge_id + "'");
   }
-  const std::size_t li = find_layout_index(lif_, layout_id);
-  if (li == lif_.layouts.size())
+  auto lit = layout_index_.find(layout_id);
+  if (lit == layout_index_.end())
   {
     throw std::invalid_argument(
       "Graph::add_edge: layout '" + layout_id + "' not found");
   }
+  const std::size_t li = lit->second;
   // startNodeId must be in the specified layout.
   auto sit = node_index_.find(edge.start_node_id);
   if (sit == node_index_.end() || sit->second.first != li)
@@ -381,12 +373,13 @@ void Graph::add_station(Station station, const std::string& layout_id)
     throw std::invalid_argument(
       "Graph::add_station: duplicate stationId '" + station.station_id + "'");
   }
-  const std::size_t li = find_layout_index(lif_, layout_id);
-  if (li == lif_.layouts.size())
+  auto lit = layout_index_.find(layout_id);
+  if (lit == layout_index_.end())
   {
     throw std::invalid_argument(
       "Graph::add_station: layout '" + layout_id + "' not found");
   }
+  const std::size_t li = lit->second;
   for (const auto& nid : station.interaction_node_ids)
   {
     if (!has_node(nid))

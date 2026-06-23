@@ -210,6 +210,8 @@ private:
   void rebuild_indices();
 
   LIF lif_;
+  // layout_id -> index into lif_.layouts.
+  std::unordered_map<std::string, std::size_t> layout_index_;
   // (layout_idx in lif_.layouts, element_idx in that layout's vector).
   std::unordered_map<std::string, std::pair<std::size_t, std::size_t>>
     node_index_;
