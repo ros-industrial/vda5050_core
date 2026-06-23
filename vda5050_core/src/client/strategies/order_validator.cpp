@@ -62,7 +62,7 @@ AcceptanceResult rejected(types::Error error)
     "OrderValidator rejected order: " << error.error_type << " - "
                                       << error.error_description.value_or(""));
   AcceptanceResult res;
-  res.outcome = AcceptanceOutcome::Rejected;
+  res.outcome = AcceptanceOutcome::REJECTED;
   res.errors.push_back(std::move(error));
   return res;
 }
@@ -70,7 +70,7 @@ AcceptanceResult rejected(types::Error error)
 AcceptanceResult rejected(std::vector<types::Error> errors)
 {
   AcceptanceResult res;
-  res.outcome = AcceptanceOutcome::Rejected;
+  res.outcome = AcceptanceOutcome::REJECTED;
   res.errors = std::move(errors);
   return res;
 }
@@ -79,14 +79,14 @@ AcceptanceResult ignored()
 {
   VDA5050_INFO_STREAM("OrderValidator ignored duplicate order update");
   AcceptanceResult res;
-  res.outcome = AcceptanceOutcome::Ignored;
+  res.outcome = AcceptanceOutcome::IGNORED;
   return res;
 }
 
 AcceptanceResult accepted()
 {
   AcceptanceResult res;
-  res.outcome = AcceptanceOutcome::Accepted;
+  res.outcome = AcceptanceOutcome::ACCEPTED;
   return res;
 }
 

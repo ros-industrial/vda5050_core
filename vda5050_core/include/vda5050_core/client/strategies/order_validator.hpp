@@ -34,32 +34,32 @@ namespace client {
 enum class AcceptanceOutcome
 {
   /// \brief Order is valid and should be applied to the execution state.
-  Accepted,
+  ACCEPTED,
   /// \brief Order is invalid; report `errors` and keep the previous order.
-  Rejected,
+  REJECTED,
   /// \brief Duplicate resend (same orderId + orderUpdateId); leave state unchanged.
-  Ignored
+  IGNORED
 };
 
 /// \brief Result of order-acceptance validation.
 struct AcceptanceResult
 {
-  AcceptanceOutcome outcome = AcceptanceOutcome::Rejected;
+  AcceptanceOutcome outcome = AcceptanceOutcome::REJECTED;
 
-  /// \brief Errors to report when `outcome == Rejected`.
+  /// \brief Errors to report when `outcome == REJECTED`.
   std::vector<types::Error> errors;
 
   bool accepted() const
   {
-    return outcome == AcceptanceOutcome::Accepted;
+    return outcome == AcceptanceOutcome::ACCEPTED;
   }
   bool rejected() const
   {
-    return outcome == AcceptanceOutcome::Rejected;
+    return outcome == AcceptanceOutcome::REJECTED;
   }
   bool ignored() const
   {
-    return outcome == AcceptanceOutcome::Ignored;
+    return outcome == AcceptanceOutcome::IGNORED;
   }
 };
 
