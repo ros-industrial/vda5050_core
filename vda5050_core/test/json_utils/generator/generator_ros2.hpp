@@ -185,7 +185,8 @@ public:
   {
     // uniform_int_distribution does not permit char-sized types (MSVC enforces
     // this); use int and narrow on return.
-    std::uniform_int_distribution<int> index_dist(0, static_cast<int>(size) - 1);
+    std::uniform_int_distribution<int> index_dist(
+      0, static_cast<int>(size) - 1);
     return index_dist(rng_);
   }
 
