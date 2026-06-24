@@ -126,7 +126,11 @@ void apply_order_update(types::State& state, const types::Order& order)
   {
     append_node(state, order.nodes[i]);
   }
-  for (const auto& edge : order.edges) append_edge(state, edge);
+
+  for (size_t i = 0; i < order.edges.size(); ++i)
+  {
+    append_edge(state, order.edges[i]);
+  }
 
   // Deduplicate action states after replacing the horizon. This prevents
   // re-sent horizon actions from accumulating while preserving first-seen
