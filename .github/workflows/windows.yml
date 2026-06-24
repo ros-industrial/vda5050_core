@@ -48,11 +48,17 @@ jobs:
       - name: Start MQTT broker (mosquitto)
         shell: pwsh
         run: |
-          choco install mosquitto --no-progress -y
+          # The Chocolatey 'mosquitto' package was delisted, so install from the
+          # official mosquitto.org installer (silent /S, default install dir).
+          $ver = "2.0.20"
+          $url = "https://mosquitto.org/files/binary/win64/mosquitto-$ver-install-windows-x64.exe"
+          $installer = "$env:RUNNER_TEMP\mosquitto-install.exe"
+          Invoke-WebRequest -Uri $url -OutFile $installer
+          Start-Process -FilePath $installer -ArgumentList "/S" -Wait
+          $dir = "C:\Program Files\mosquitto"
           # mosquitto 2.x denies anonymous access and needs an explicit listener.
-          "listener 1883`nallow_anonymous true" | Out-File -Encoding ascii mosquitto.conf
-          $exe = "C:\Program Files\mosquitto\mosquitto.exe"
-          Start-Process -FilePath $exe -ArgumentList "-c", "$PWD\mosquitto.conf"
+          "listener 1883`nallow_anonymous true" | Out-File -Encoding ascii "$dir\mosquitto.conf"
+          Start-Process -FilePath "$dir\mosquitto.exe" -ArgumentList "-c", "$dir\mosquitto.conf"
           Start-Sleep -Seconds 2
 
       - name: Test
