@@ -15,8 +15,25 @@ jobs:
     env:
       # The library lives in the vda5050_core/ subdirectory of the repository.
       SOURCE_DIR: vda5050_core
+      # vcpkg stores built packages here; actions/cache persists it across runs
+      # so paho/fmt/nlohmann-json/gtest are restored instead of recompiled.
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg-bincache
     steps:
       - uses: actions/checkout@v4
+
+      - name: Cache vcpkg binary packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_DEFAULT_BINARY_CACHE }}
+          # Invalidate when the manifest changes; fall back to the latest cache.
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vda5050_core/vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
+
+      # vcpkg requires VCPKG_DEFAULT_BINARY_CACHE to be an existing directory.
+      - name: Create binary cache directory
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path "$env:VCPKG_DEFAULT_BINARY_CACHE" | Out-Null
 
       - name: Configure (CMake + vcpkg manifest)
         shell: pwsh
