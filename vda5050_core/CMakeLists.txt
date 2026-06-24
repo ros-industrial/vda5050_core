@@ -148,6 +148,12 @@ target_include_directories(vda5050_transport
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+# The shared paho-mqttpp3 DLL on Windows needs PAHO_MQTTPP_IMPORTS so its headers
+# declare symbols as dllimport; the vcpkg target does not propagate it
+# (microsoft/vcpkg#52261). PUBLIC because paho_mqtt_client.hpp exposes mqtt types.
+if(WIN32)
+  target_compile_definitions(vda5050_transport PUBLIC PAHO_MQTTPP_IMPORTS)
+endif()
 
 # Execution
 file(GLOB_RECURSE execution_srcs "src/execution/*.cpp")
