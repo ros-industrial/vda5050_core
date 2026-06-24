@@ -1,0 +1,42 @@
+name: Build and test on native Windows
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  windows:
+    name: Windows (MSVC + vcpkg)
+    runs-on: windows-latest
+    env:
+      # The library lives in the vda5050_core/ subdirectory of the repository.
+      SOURCE_DIR: vda5050_core
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (CMake + vcpkg manifest)
+        shell: pwsh
+        run: |
+          cmake -S "$env:SOURCE_DIR" -B build `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Start MQTT broker (mosquitto)
+        shell: pwsh
+        run: |
+          choco install mosquitto --no-progress -y
+          # mosquitto 2.x denies anonymous access and needs an explicit listener.
+          "listener 1883`nallow_anonymous true" | Out-File -Encoding ascii mosquitto.conf
+          $exe = "C:\Program Files\mosquitto\mosquitto.exe"
+          Start-Process -FilePath $exe -ArgumentList "-c", "$PWD\mosquitto.conf"
+          Start-Sleep -Seconds 2
+
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
