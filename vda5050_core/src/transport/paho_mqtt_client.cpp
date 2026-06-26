@@ -116,34 +116,13 @@ std::unique_ptr<PahoMqttClient> PahoMqttClient::make_unique(
 PahoMqttClient::~PahoMqttClient() = default;
 
 //=============================================================================
-void PahoMqttClient::set_operation_timeout(std::chrono::milliseconds timeout)
-{
-  operation_timeout_ = timeout;
-}
-
-//=============================================================================
-bool PahoMqttClient::wait_for_token(mqtt::token_ptr token, const char* operation)
-{
-  if (!token) return true;
-
-  const auto timeout_ms = static_cast<long>(operation_timeout_.count());
-  if (token->wait_for(timeout_ms)) return true;
-
-  VDA5050_WARN(
-    "MQTT {} timed out after {} ms for client [{}]", operation, timeout_ms,
-    client_->get_client_id());
-  return false;
-}
-
-//=============================================================================
 void PahoMqttClient::connect()
 {
   if (client_->is_connected()) return;
 
   try
   {
-    wait_for_token(
-      client_->connect(conn_options_, nullptr, action_listener_), "connect");
+    client_->connect(conn_options_, nullptr, action_listener_)->wait();
   }
   catch (const mqtt::exception& e)
   {
@@ -155,24 +134,18 @@ void PahoMqttClient::connect()
 //=============================================================================
 void PahoMqttClient::disconnect()
 {
-  if (!client_->is_connected()) return;
-
-  try
+  if (client_->is_connected())
   {
-    conn_options_.set_automatic_reconnect(false);
-    const auto timeout_ms = static_cast<int>(operation_timeout_.count());
-    mqtt::disconnect_options options(timeout_ms);
-
-    if (
-      wait_for_token(client_->disconnect(options), "disconnect"))
+    try
     {
+      client_->disconnect()->wait();
       VDA5050_INFO_STREAM(
         "MQTT client disconnected: " << client_->get_client_id());
     }
-  }
-  catch (const mqtt::exception& e)
-  {
-    VDA5050_ERROR_STREAM("MQTT disconnection failed: " << e.get_message());
+    catch (const mqtt::exception& e)
+    {
+      VDA5050_ERROR_STREAM("MQTT disconnection failed: " << e.get_message());
+    }
   }
 }
 
@@ -194,7 +167,7 @@ void PahoMqttClient::publish(
     msg->set_qos(qos);
     msg->set_retained(retain);
 
-    wait_for_token(client_->publish(msg), "publish");
+    client_->publish(msg)->wait();
   }
   catch (const mqtt::exception& e)
   {
@@ -208,7 +181,7 @@ void PahoMqttClient::subscribe(
 {
   try
   {
-    wait_for_token(client_->subscribe(topic, qos), "subscribe");
+    client_->subscribe(topic, qos)->wait();
     std::lock_guard<std::mutex> lock(handler_mutex_);
     handlers_[topic] = handler;
   }
@@ -223,7 +196,7 @@ void PahoMqttClient::unsubscribe(const std::string& topic)
 {
   try
   {
-    wait_for_token(client_->unsubscribe(topic), "unsubscribe");
+    client_->unsubscribe(topic)->wait();
     std::lock_guard<std::mutex> lock(handler_mutex_);
     handlers_.erase(topic);
   }

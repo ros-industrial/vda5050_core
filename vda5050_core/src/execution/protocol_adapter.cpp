@@ -73,36 +73,6 @@ bool ProtocolAdapter::connected()
 }
 
 //=============================================================================
-std::string ProtocolAdapter::get_topic_version(const std::string& version)
-{
-  if (version.empty()) return version;
-
-  // Already in topic form without patch/minor segments (e.g. "v2").
-  if (version.front() == 'v' && version.find('.') == std::string::npos)
-  {
-    return version;
-  }
-
-  std::string major;
-  if (version.front() == 'v')
-  {
-    // Semver with leading v (e.g. "v2.0.0").
-    const auto start = std::size_t{1};
-    const auto dot = version.find('.', start);
-    major = (dot == std::string::npos) ? version.substr(start)
-                                       : version.substr(start, dot - start);
-  }
-  else
-  {
-    // Semver or major-only (e.g. "2.0.0" or "2").
-    const auto dot = version.find('.');
-    major = (dot == std::string::npos) ? version : version.substr(0, dot);
-  }
-
-  return "v" + major;
-}
-
-//=============================================================================
 ProtocolAdapter::ProtocolAdapter(
   std::shared_ptr<vda5050_core::transport::MqttClientInterface> mqtt_client,
   const std::string& interface, const std::string& version,
@@ -110,12 +80,11 @@ ProtocolAdapter::ProtocolAdapter(
 : mqtt_client_(std::move(mqtt_client)),
   interface_(interface),
   version_(version),
-  topic_version_(get_topic_version(version)),
   manufacturer_(manufacturer),
   serial_number_(serial_number)
 {
   std::string topic_prefix = fmt::format(
-    "{}/{}/{}/{}", interface_, topic_version_, manufacturer_, serial_number_);
+    "{}/{}/{}/{}", interface_, version_, manufacturer_, serial_number_);
 
   topic_names_ = {
     {std::type_index(typeid(vda5050_core::types::Connection)),
