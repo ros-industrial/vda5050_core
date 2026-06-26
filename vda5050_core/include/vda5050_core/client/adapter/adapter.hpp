@@ -68,7 +68,8 @@ public:
   void stop();
 
 private:
-  Adapter(std::shared_ptr<execution::ProtocolAdapter> protocol_adapter);
+  explicit Adapter(
+    std::shared_ptr<execution::ProtocolAdapter> protocol_adapter);
 
   class Implementation;
   std::unique_ptr<Implementation> pimpl_;

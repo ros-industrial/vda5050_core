@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__CLIENT__ADAPTER__ADAPTER_IMPL_HPP_
-#define VDA5050_CORE__CLIENT__ADAPTER__ADAPTER_IMPL_HPP_
+#ifndef CLIENT__ADAPTER__ADAPTER_IMPL_HPP_
+#define CLIENT__ADAPTER__ADAPTER_IMPL_HPP_
 
 #include <atomic>
 #include <condition_variable>
+#include <memory>
 #include <mutex>
 #include <thread>
 #include <unordered_map>
@@ -155,4 +156,4 @@ public:
 }  // namespace client
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__CLIENT__ADAPTER__ADAPTER_IMPL_HPP_
+#endif  // CLIENT__ADAPTER__ADAPTER_IMPL_HPP_

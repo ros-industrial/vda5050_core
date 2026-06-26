@@ -16,14 +16,16 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__PYTHON__RMF_MIGRATION_HPP_
-#define VDA5050_CORE__PYTHON__RMF_MIGRATION_HPP_
+#ifndef RMF_MIGRATION_HPP_
+#define RMF_MIGRATION_HPP_
 
 #include <array>
 #include <functional>
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
@@ -203,7 +205,7 @@ public:
 private:
   friend class FleetUpdateHandle;
 
-  RobotUpdateHandle(std::shared_ptr<client::adapter::Adapter> adapter);
+  explicit RobotUpdateHandle(std::shared_ptr<client::adapter::Adapter> adapter);
 
   std::shared_ptr<client::adapter::Adapter> adapter_;
 };
@@ -295,4 +297,4 @@ private:
 }  // namespace python
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__PYTHON__RMF_MIGRATION_HPP_
+#endif  // RMF_MIGRATION_HPP_
