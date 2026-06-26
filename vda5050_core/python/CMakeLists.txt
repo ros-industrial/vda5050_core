@@ -4,6 +4,7 @@ find_package(pybind11 REQUIRED)
 
 pybind11_add_module(vda5050_core_python
   bindings.cpp
+  src/rmf_migration.cpp
 )
 
 target_link_libraries(vda5050_core_python
