@@ -266,3 +266,26 @@ TYPED_TEST(ProtocolAdapterTest, HeaderIncrement)
   this->adapter_->template publish<TypeParam>(msg, this->qos_, this->retained_);
   this->adapter_->template publish<TypeParam>(msg, this->qos_, this->retained_);
 }
+
+TYPED_TEST(ProtocolAdapterTest, SetWill)
+{
+  TypeParam msg = make_valid_message<TypeParam>();
+
+  EXPECT_CALL(
+    *this->mock_, set_will(
+                    testing::StartsWith(this->topic_prefix_), testing::_,
+                    this->qos_, this->retained_))
+    .WillOnce([&](
+                const std::string& /*topic*/, const std::string& message,
+                int /*qos*/, bool /*retained*/) {
+      auto j = nlohmann::json::parse(message);
+
+      EXPECT_EQ(j["headerId"], 0);
+      EXPECT_EQ(j["version"], this->version_);
+      EXPECT_EQ(j["manufacturer"], this->manufacturer_);
+      EXPECT_EQ(j["serialNumber"], this->serial_number_);
+    });
+
+  this->adapter_->template set_will<TypeParam>(
+    msg, this->qos_, this->retained_);
+}
