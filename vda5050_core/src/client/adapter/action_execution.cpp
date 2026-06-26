@@ -16,8 +16,7 @@
  * limitations under the License.
  */
 
-#include "vda5050_core/client/adapter/execution.hpp"
-#include "vda5050_core/logger/logger.hpp"
+#include "vda5050_core/client/adapter/action_execution.hpp"
 
 namespace vda5050_core {
 
@@ -26,66 +25,48 @@ namespace client {
 namespace adapter {
 
 //=============================================================================
-Execution::~Execution()
-{
-  if (!completed_)
-  {
-    VDA5050_WARN(
-      "Execution destroyed before finished() or failed() was called");
-  }
-}
-
-//=============================================================================
-void Execution::finished()
-{
-  if (completed_.exchange(true)) return;
-
-  if (finish_callback_) finish_callback_();
-}
-
-//=============================================================================
-void Execution::failed(const std::string& reason)
-{
-  if (completed_.exchange(true)) return;
-
-  failure_reason_ = reason;
-  if (fail_callback_) fail_callback_(reason);
-}
-
-//=============================================================================
-bool Execution::okay() const
-{
-  return active_;
-}
-
-//=============================================================================
-bool Execution::is_finished() const
-{
-  return completed_;
-}
-
-//=============================================================================
-const std::optional<std::string>& Execution::failure_reason() const
-{
-  return failure_reason_;
-}
-
-//=============================================================================
-Execution::Execution(
+std::shared_ptr<ActionExecution> ActionExecution::make(
+  const std::string& action_id, const std::string& action_type,
   std::function<void()> finish_callback,
-  std::function<void(std::string)> fail_callback)
-: finish_callback_(std::move(finish_callback)),
-  fail_callback_(std::move(fail_callback)),
-  completed_(false),
-  active_(false)
+  std::function<void(std::string)> fail_callback,
+  std::optional<std::string> order_id)
+{
+  auto execution = std::shared_ptr<ActionExecution>(new ActionExecution(
+    action_id, action_type, std::move(finish_callback),
+    std::move(fail_callback), order_id));
+  return execution;
+}
+
+//=============================================================================
+const std::string& ActionExecution::action_id() const
+{
+  return action_id_;
+}
+
+//=============================================================================
+const std::string& ActionExecution::action_type() const
+{
+  return action_id_;
+}
+
+//=============================================================================
+std::optional<std::string> ActionExecution::order_id()
+{
+  return order_id_;
+}
+
+//=============================================================================
+ActionExecution::ActionExecution(
+  const std::string& action_id, const std::string& action_type,
+  std::function<void()> finish_callback,
+  std::function<void(std::string)> fail_callback,
+  std::optional<std::string> order_id)
+: Execution(std::move(finish_callback), std::move(fail_callback)),
+  action_id_(action_id),
+  action_type_(action_type),
+  order_id_(order_id)
 {
   // Nothing to do here ...
-}
-
-//=============================================================================
-void Execution::deactivate()
-{
-  active_ = false;
 }
 
 }  // namespace adapter

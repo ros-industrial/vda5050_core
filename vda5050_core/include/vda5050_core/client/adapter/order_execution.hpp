@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__CLIENT__ADAPTER__EXECUTION_HPP_
-#define VDA5050_CORE__CLIENT__ADAPTER__EXECUTION_HPP_
+#ifndef VDA5050_CORE__CLIENT__ADAPTER__ORDER_EXECUTION_HPP_
+#define VDA5050_CORE__CLIENT__ADAPTER__ORDER_EXECUTION_HPP_
 
-#include <atomic>
 #include <functional>
 #include <memory>
-#include <optional>
 #include <string>
+
+#include "vda5050_core/client/adapter/execution.hpp"
 
 namespace vda5050_core {
 
@@ -31,38 +31,21 @@ namespace client {
 
 namespace adapter {
 
-class Execution : public std::enable_shared_from_this<Execution>
+class OrderExecution : public Execution
 {
 public:
-  virtual ~Execution();
-
-  void finished();
-
-  void failed(const std::string& reason);
-
-  bool okay() const;
-
-  bool is_finished() const;
-
-  const std::optional<std::string>& failure_reason() const;
-
-protected:
-  Execution(
-    std::function<void()> finish_callback,
+  static std::shared_ptr<OrderExecution> make(
+    const std::string& order_id, std::function<void()> finish_callback,
     std::function<void(std::string)> fail_callback);
 
+  const std::string& order_id() const;
+
 private:
-  friend class Adapter;
+  OrderExecution(
+    const std::string& order_id, std::function<void()> finish_callback,
+    std::function<void(std::string)> fail_callback);
 
-  void deactivate();
-
-  std::function<void()> finish_callback_;
-  std::function<void(std::string)> fail_callback_;
-
-  std::optional<std::string> failure_reason_;
-
-  std::atomic_bool completed_;
-  std::atomic_bool active_;
+  std::string order_id_;
 };
 
 }  // namespace adapter

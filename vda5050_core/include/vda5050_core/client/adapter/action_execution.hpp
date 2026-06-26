@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 
-#ifndef VDA5050_CORE__CLIENT__ADAPTER__EXECUTION_HPP_
-#define VDA5050_CORE__CLIENT__ADAPTER__EXECUTION_HPP_
+#ifndef VDA5050_CORE__CLIENT__ADAPTER__ACTION_EXECUTION_HPP_
+#define VDA5050_CORE__CLIENT__ADAPTER__ACTION_EXECUTION_HPP_
 
-#include <atomic>
 #include <functional>
 #include <memory>
-#include <optional>
 #include <string>
+
+#include "vda5050_core/client/adapter/execution.hpp"
 
 namespace vda5050_core {
 
@@ -31,42 +31,35 @@ namespace client {
 
 namespace adapter {
 
-class Execution : public std::enable_shared_from_this<Execution>
+class ActionExecution : public Execution
 {
 public:
-  virtual ~Execution();
-
-  void finished();
-
-  void failed(const std::string& reason);
-
-  bool okay() const;
-
-  bool is_finished() const;
-
-  const std::optional<std::string>& failure_reason() const;
-
-protected:
-  Execution(
+  static std::shared_ptr<ActionExecution> make(
+    const std::string& action_id, const std::string& action_type,
     std::function<void()> finish_callback,
-    std::function<void(std::string)> fail_callback);
+    std::function<void(std::string)> fail_callback,
+    std::optional<std::string> order_id = std::nullopt);
+
+  const std::string& action_id() const;
+
+  const std::string& action_type() const;
+
+  std::optional<std::string> order_id();
 
 private:
-  friend class Adapter;
+  ActionExecution(
+    const std::string& action_id, const std::string& action_type,
+    std::function<void()> finish_callback,
+    std::function<void(std::string)> fail_callback,
+    std::optional<std::string> order_id);
 
-  void deactivate();
-
-  std::function<void()> finish_callback_;
-  std::function<void(std::string)> fail_callback_;
-
-  std::optional<std::string> failure_reason_;
-
-  std::atomic_bool completed_;
-  std::atomic_bool active_;
+  std::string action_id_;
+  std::string action_type_;
+  std::optional<std::string> order_id_;
 };
 
 }  // namespace adapter
 }  // namespace client
 }  // namespace vda5050_core
 
-#endif  // VDA5050_CORE__CLIENT__ADAPTER__EXECUTION_HPP_
+#endif  // VDA5050_CORE__CLIENT__ADAPTER__ACTION_EXECUTION_HPP_
