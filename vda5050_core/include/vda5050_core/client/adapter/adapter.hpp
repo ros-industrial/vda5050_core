@@ -22,9 +22,10 @@
 #include <functional>
 #include <memory>
 
+#include "vda5050_core/client/adapter/action_execution.hpp"
 #include "vda5050_core/client/adapter/action_request.hpp"
-#include "vda5050_core/client/adapter/execution.hpp"
 #include "vda5050_core/client/adapter/navigation_request.hpp"
+#include "vda5050_core/client/adapter/order_execution.hpp"
 #include "vda5050_core/client/adapter/state_manager.hpp"
 #include "vda5050_core/execution/protocol_adapter.hpp"
 
@@ -49,11 +50,12 @@ public:
 
   /// \brief Register callback invoked when the AGV should navigate to a node
   void on_navigate(
-    std::function<void(NavigationRequest, std::shared_ptr<Execution>)>
+    std::function<void(NavigationRequest, std::shared_ptr<OrderExecution>)>
       callback);
 
   void on_action(
-    std::function<void(ActionRequest, std::shared_ptr<Execution>)> callback);
+    std::function<void(ActionRequest, std::shared_ptr<ActionExecution>)>
+      callback);
 
   std::shared_ptr<StateManager> state_manager();
 

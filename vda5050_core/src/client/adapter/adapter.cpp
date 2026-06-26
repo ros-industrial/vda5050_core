@@ -259,7 +259,8 @@ void Adapter::Implementation::process_navigation()
 
   navigation_callback(
     std::move(request),
-    Execution::make(
+    OrderExecution::make(
+      order.order_id,
       [this, next_node_seq, next_edge_seq]() {
         ActiveOrder order_state;
         {
@@ -332,7 +333,8 @@ void Adapter::Implementation::process_actions()
 
   action_callback(
     std::move(request),
-    Execution::make(
+    ActionExecution::make(
+      action.action_id, action.action_type,
       [this, action]() {
         types::ActionState action_state;
         action_state.action_id = action.action_id;
@@ -465,14 +467,15 @@ std::shared_ptr<Adapter> Adapter::make(
 
 //=============================================================================
 void Adapter::on_navigate(
-  std::function<void(NavigationRequest, std::shared_ptr<Execution>)> callback)
+  std::function<void(NavigationRequest, std::shared_ptr<OrderExecution>)>
+    callback)
 {
   pimpl_->navigation_callback = std::move(callback);
 }
 
 //=============================================================================
 void Adapter::on_action(
-  std::function<void(ActionRequest, std::shared_ptr<Execution>)> callback)
+  std::function<void(ActionRequest, std::shared_ptr<ActionExecution>)> callback)
 {
   pimpl_->action_callback = std::move(callback);
 }
