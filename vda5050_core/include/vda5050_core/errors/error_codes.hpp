@@ -29,6 +29,7 @@ namespace errors {
 inline const std::string GraphValidationError = "graphValidationError";
 inline const std::string OrderUpdateError = "orderUpdateError";
 inline const std::string NavigationFailedError = "navigationFailedError";
+inline const std::string ValidationError = "validationError";
 
 // Reference key string for vda5050_types::ErrorReference::key
 inline const std::string RefOrderId = "orderId";

@@ -171,6 +171,25 @@ target_include_directories(vda5050_client
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+# Layout (LIF) — neutral namespace; master depends on it
+file(GLOB_RECURSE layout_srcs "src/layout/*.cpp")
+add_library(vda5050_layout SHARED ${layout_srcs})
+vda5050_configure_target_alias(
+  TARGET vda5050_layout
+  NAMESPACE ${PROJECT_NAME}::
+  EXPORT_NAME layout
+)
+target_link_libraries(vda5050_layout
+  PUBLIC
+    ${PROJECT_NAME}::types
+    ${PROJECT_NAME}::json_utils
+)
+target_include_directories(vda5050_layout
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
 # Master
 file(GLOB_RECURSE master_srcs "src/master/*.cpp")
 add_library(vda5050_master SHARED ${master_srcs})
@@ -213,6 +232,7 @@ install(
     vda5050_transport
     vda5050_execution
     vda5050_client
+    vda5050_layout
     vda5050_master
   EXPORT export_${PROJECT_NAME}
   LIBRARY DESTINATION lib
@@ -317,6 +337,8 @@ if(BUILD_TESTING)
     test/client/test_order_types.cpp
     test/client/test_order_execution_resource.cpp
     test/client/test_agv_context.cpp
+    test/client/test_order_validator.cpp
+    test/client/test_order_acceptance.cpp
   )
 
   target_link_libraries(test_client
@@ -340,6 +362,20 @@ if(BUILD_TESTING)
     test/master/test_unit_agv.cpp
   )
   target_link_libraries(test_master vda5050_core::master)
+
+  ament_add_gmock(test_layout_loader
+    test/layout/test_unit_loader.cpp
+  )
+  target_link_libraries(test_layout_loader vda5050_core::layout)
+  target_compile_definitions(test_layout_loader PRIVATE
+    VDA5050_CORE__SAMPLE_LAYOUT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/test/layout/data/sample_layout.json")
+
+  ament_add_gmock(test_layout_graph
+    test/layout/test_unit_graph.cpp
+  )
+  target_link_libraries(test_layout_graph vda5050_core::layout)
+  target_compile_definitions(test_layout_graph PRIVATE
+    VDA5050_CORE__SAMPLE_LAYOUT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/test/layout/data/sample_layout.json")
 endif()
 
 # Install linter macro
