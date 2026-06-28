@@ -336,14 +336,32 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_execution vda5050_core::execution)
 
-  ament_add_gmock(test_master
+  ament_add_gmock(test_master_comm
     test/master/test_integration_heartbeat.cpp
     test/master/test_integration_master_logic.cpp
     test/master/test_integration_master_mqtt.cpp
     test/master/test_integration_master_teardown.cpp
-    test/master/test_unit_agv.cpp
   )
-  target_link_libraries(test_master vda5050_core::master)
+  target_link_libraries(test_master_comm vda5050_core::master)
+
+  ament_add_gmock(test_master_integration
+    test/master/test_integration_master_assign_order.cpp
+    test/master/test_integration_master_assign_instant_actions.cpp
+    test/master/test_integration_master_mode_handling.cpp
+    test/master/test_integration_master_state_timeout.cpp
+    test/master/test_integration_master_broker_status.cpp
+    test/master/test_master_onboard_batch.cpp
+  )
+  target_link_libraries(test_master_integration vda5050_core::master)
+
+  ament_add_gmock(test_master_agv
+    test/master/test_unit_agv_connection_state.cpp
+    test/master/test_unit_agv_operational_state.cpp
+    test/master/test_unit_agv_lifecycle.cpp
+    test/master/test_unit_agv_order_lifecycle.cpp
+    test/master/test_unit_agv_pose_view.cpp
+  )
+  target_link_libraries(test_master_agv vda5050_core::master)
 
   ament_add_gmock(test_master_validation
     test/master/test_unit_schema_validator.cpp
@@ -383,6 +401,18 @@ if(BUILD_TESTING)
     test/master/test_unit_event_detector.cpp
   )
   target_link_libraries(test_master_event_detector vda5050_core::master)
+
+  ament_add_gmock(test_master_order
+    test/master/test_unit_order_publisher.cpp
+    test/master/test_unit_order_lifecycle_manager.cpp
+    test/master/test_unit_order_stitcher.cpp
+  )
+  target_link_libraries(test_master_order vda5050_core::master)
+
+  ament_add_gmock(test_master_actions
+    test/master/test_unit_action_factory.cpp
+  )
+  target_link_libraries(test_master_actions vda5050_core::master)
 endif()
 
 # Install linter macro
