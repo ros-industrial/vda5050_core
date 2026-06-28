@@ -191,7 +191,7 @@ target_include_directories(vda5050_layout
 )
 
 # Master
-file(GLOB_RECURSE master_srcs "src/master/*.cpp")
+file(GLOB_RECURSE master_srcs CONFIGURE_DEPENDS "src/master/*.cpp")
 add_library(vda5050_master SHARED ${master_srcs})
 vda5050_configure_target_alias(
   TARGET vda5050_master
@@ -372,6 +372,17 @@ if(BUILD_TESTING)
   target_link_libraries(test_layout_graph vda5050_core::layout)
   target_compile_definitions(test_layout_graph PRIVATE
     VDA5050_CORE__SAMPLE_LAYOUT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/test/layout/data/sample_layout.json")
+
+  ament_add_gmock(test_master_detectors
+    test/master/test_unit_state_event_detector.cpp
+    test/master/test_unit_connection_event_detector.cpp
+  )
+  target_link_libraries(test_master_detectors vda5050_core::master)
+
+  ament_add_gmock(test_master_event_detector
+    test/master/test_unit_event_detector.cpp
+  )
+  target_link_libraries(test_master_event_detector vda5050_core::master)
 endif()
 
 # Install linter macro
