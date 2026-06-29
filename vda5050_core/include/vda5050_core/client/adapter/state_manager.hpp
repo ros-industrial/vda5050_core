@@ -28,6 +28,8 @@
 #include "vda5050_core/types/agv_position.hpp"
 #include "vda5050_core/types/battery_state.hpp"
 #include "vda5050_core/types/error.hpp"
+#include "vda5050_core/types/info.hpp"
+#include "vda5050_core/types/load.hpp"
 #include "vda5050_core/types/operating_mode.hpp"
 #include "vda5050_core/types/order.hpp"
 #include "vda5050_core/types/safety_state.hpp"
