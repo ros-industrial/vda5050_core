@@ -29,20 +29,20 @@ namespace vda5050_core {
 
 namespace client {
 
-/// \brief Inbound signal that the AGV has reached a node.
+/// \brief Update indicating that the AGV has reached a node.
 ///
-/// Pushed by the vehicle/navigation layer when it reports a node as reached.
-/// The traversal strategy uses the node identity to advance the execution state.
+/// Published by the vehicle or navigation layer when a node is reached.
+/// The traversal strategy uses this update to advance the order execution state.
 struct NodeReachedUpdate
 : public execution::Initialize<NodeReachedUpdate, execution::UpdateBase>
 {
   /// \brief Node ID of the reached node.
   std::string node_id;
 
-  /// \brief Sequence ID of the reached node (keys loops, not node_id).
+  /// \brief Sequence ID of the reached node.
   uint32_t sequence_id = 0;
 
-  NodeReachedUpdate(std::string node_id, uint32_t sequence_id)
+  explicit NodeReachedUpdate(std::string node_id, uint32_t sequence_id)
   : node_id(std::move(node_id)), sequence_id(sequence_id)
   {
   }

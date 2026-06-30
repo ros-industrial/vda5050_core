@@ -36,23 +36,21 @@ namespace client {
 
 namespace {
 
-// Raise new_base_request once this few released nodes remain in the base.
+// Request a new base when this few released nodes remain.
 constexpr std::size_t kLowBaseThreshold = 1;
 
-// The next node to drive to, plus the edge to traverse to reach it.
+// Navigation target and its incoming edge.
 struct Dispatch
 {
   types::NodeState target;
   std::optional<types::EdgeState> via_edge;
 };
 
-// Runs the VDA5050 traversal cascade against the working state. Returns the
-// next dispatch when traversal should continue, or nullopt when the AGV must
-// stop (order complete, or the next node is part of the horizon).
-std::optional<Dispatch> apply_node_reached(
-  types::State& state, const NodeReachedUpdate& reached)
+// Updates the state when a node is reached.
+// Returns false if the node is unknown, already handled, or out of order.
+bool advance_to_reached(types::State& state, const NodeReachedUpdate& reached)
 {
-  // Find the reached node (matched on sequence_id and node_id) in the base.
+  // Find the reached node in the current base.
   auto node_it = std::find_if(
     state.node_states.begin(), state.node_states.end(),
     [&](const types::NodeState& n) {
@@ -61,28 +59,23 @@ std::optional<Dispatch> apply_node_reached(
     });
   if (node_it == state.node_states.end())
   {
-    // Unknown or stale node; nothing to advance.
-    return std::nullopt;
+    return false;
   }
 
-  // Traversal is sequential: only advance when the reported node is the next
-  // expected one (no lower sequence_id still pending). Reaching anything else
-  // would orphan the nodes in between, so it is ignored.
+  // Only accept the next expected node.
   const bool is_next_expected = std::none_of(
     state.node_states.begin(), state.node_states.end(),
     [&](const types::NodeState& n) {
       return n.sequence_id < reached.sequence_id;
     });
-  if (!is_next_expected) return std::nullopt;
+  if (!is_next_expected) return false;
 
-  // Mark the node as the last reached node, then drop its state.
+  // Update last reached node and remove it from pending state.
   state.last_node_id = reached.node_id;
   state.last_node_sequence_id = reached.sequence_id;
   state.node_states.erase(node_it);
 
-  // Leaving the incoming edge (sequence_id == reached - 1): drop its state.
-  // reached - 1 is because the edge is the one before the reached node.
-  // e.g edge = 3, node = 4, so the incoming edge is 3.
+  // Remove the incoming edge.
   if (reached.sequence_id > 0)
   {
     const uint32_t incoming_edge_seq = reached.sequence_id - 1;
@@ -95,56 +88,58 @@ std::optional<Dispatch> apply_node_reached(
       state.edge_states.end());
   }
 
-  // The next node is the lowest sequence_id strictly ahead of the reached one.
-  auto next_it = state.node_states.end();
-  for (auto it = state.node_states.begin(); it != state.node_states.end(); ++it)
-  {
-    if (it->sequence_id <= reached.sequence_id) continue;
-    if (
-      next_it == state.node_states.end() ||
-      it->sequence_id < next_it->sequence_id)
-    {
-      next_it = it;
-    }
-  }
-  if (next_it == state.node_states.end())
+  return true;
+}
+
+// Updates new_base_request from the base ahead of the last reached node.
+void refresh_new_base_request(types::State& state)
+{
+  const bool anything_ahead = std::any_of(
+    state.node_states.begin(), state.node_states.end(),
+    [&](const types::NodeState& n) {
+      return n.sequence_id > state.last_node_sequence_id;
+    });
+  if (!anything_ahead)
   {
     state.new_base_request = std::nullopt;
-    return std::nullopt;  // nothing ahead -> order/base fully traversed
+    return;
   }
 
-  // Count the number of released nodes ahead of the reached node.
-  // Raise new_base_request when the released base ahead is running low.
   const std::size_t released_ahead = static_cast<std::size_t>(std::count_if(
     state.node_states.begin(), state.node_states.end(),
     [&](const types::NodeState& n) {
-      return n.released && n.sequence_id > reached.sequence_id;
+      return n.released && n.sequence_id > state.last_node_sequence_id;
     }));
-  if (released_ahead <= kLowBaseThreshold)
-  {
-    state.new_base_request = true;
-  }
-  else
-  {
-    // Base is sufficiently long again (e.g. after an order update extended it).
-    state.new_base_request = false;
-  }
+  state.new_base_request = released_ahead <= kLowBaseThreshold;
+}
 
-  // Stop at the decision point: never drive into the horizon.
-  if (!next_it->released) return std::nullopt;
+// Finds the next node after the last reached node.
+// Returns nullopt if there is no node ahead or the next node is still horizon.
+std::optional<Dispatch> compute_next_dispatch(const types::State& state)
+{
+  const types::NodeState* next = nullptr;
+  for (const auto& node : state.node_states)
+  {
+    if (node.sequence_id <= state.last_node_sequence_id) continue;
+    if (next == nullptr || node.sequence_id < next->sequence_id) next = &node;
+  }
+  if (next == nullptr) return std::nullopt;  // No node ahead.
 
-  // Find the edge leading into the next node (sequence_id == next - 1).
+  // Stop before the horizon.
+  if (!next->released) return std::nullopt;
+
+  // Find the edge to the next node.
   std::optional<types::EdgeState> via_edge;
-  if (next_it->sequence_id > 0)
+  if (next->sequence_id > 0)
   {
-    const uint32_t via_seq = next_it->sequence_id - 1;
+    const uint32_t via_seq = next->sequence_id - 1;
     auto edge_it = std::find_if(
       state.edge_states.begin(), state.edge_states.end(),
       [&](const types::EdgeState& e) { return e.sequence_id == via_seq; });
     if (edge_it != state.edge_states.end()) via_edge = *edge_it;
   }
 
-  return Dispatch{*next_it, std::move(via_edge)};
+  return Dispatch{*next, std::move(via_edge)};
 }
 
 }  // namespace
@@ -166,25 +161,49 @@ void OrderTraversal::step(std::shared_ptr<execution::ContextInterface> context)
     return;
   }
 
-  auto reached = order_context->get_update<NodeReachedUpdate>();
-  if (!reached) return;  // no node-reached signal yet
-
   auto execution = order_context->get_resource<OrderExecutionResource>();
   if (!execution) return;
 
-  // NOTE: get_state()/set_state() is a non-atomic read-modify-write.
-  // This is safe while the handler runs state-writing strategies sequentially.
-  types::State state = execution->get_state();
-  std::optional<Dispatch> dispatch = apply_node_reached(state, *reached);
-  execution->set_state(std::move(state));
+  // Only run traversal while an order is active.
+  if (!execution->is_executing_order()) return;
 
-  if (dispatch)
+  auto reached = order_context->get_update<NodeReachedUpdate>();
+
+  types::State state = execution->get_state();
+
+  // Apply each cached node-reached update only once.
+  bool state_changed = false;
+  if (reached && reached != last_processed_)
   {
-    engine()->emit<NavigateToNodeEvent>(
-      execution::Priority::NORMAL, dispatch->target, dispatch->via_edge);
-    // emit() only enqueues; step() delivers the event to registered handlers.
-    engine()->step();
+    state_changed = advance_to_reached(state, *reached);
+    last_processed_ = reached;
   }
+
+  // Check every step so base extensions can resume traversal.
+  const std::optional<bool> prev_request = state.new_base_request;
+  refresh_new_base_request(state);
+  if (state.new_base_request != prev_request) state_changed = true;
+
+  const std::string order_id = state.order_id;
+  std::optional<Dispatch> dispatch = compute_next_dispatch(state);
+
+  if (state_changed) execution->set_state(std::move(state));
+
+  if (!dispatch) return;
+
+  if (
+    last_dispatched_seq_ == dispatch->target.sequence_id &&
+    last_dispatched_order_id_ == order_id)
+  {
+    return;
+  }
+  last_dispatched_seq_ = dispatch->target.sequence_id;
+  last_dispatched_order_id_ = order_id;
+
+  engine()->emit<NavigateToNodeEvent>(
+    execution::Priority::NORMAL, dispatch->target, dispatch->via_edge);
+
+  engine()->step();
 }
 
 }  // namespace client

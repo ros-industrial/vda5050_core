@@ -30,21 +30,23 @@ namespace vda5050_core {
 
 namespace client {
 
-/// \brief Dispatch event: drive to the next released node along the given edge.
+/// \brief Event requesting navigation to a node in the order.
 ///
 /// Emitted by the traversal strategy through the Engine for the vehicle's
-/// navigation layer to consume. Carries the target node (with its position) and
-/// the edge to traverse to reach it (absent for the very first node).
+/// navigation layer to consume. Carries the target node and
+/// if available, the edge that leads to it.
 struct NavigateToNodeEvent
 : public execution::Initialize<NavigateToNodeEvent, execution::EventBase>
 {
-  /// \brief The node the AGV should drive to next.
+  /// \brief Node that the AGV should navigate to.
   types::NodeState target;
 
-  /// \brief The edge to traverse to reach `target` (none for the first node).
+  /// \brief Edge to traverse before reaching the target node.
+  ///
+  /// Empty when navigating to the first node of the order.
   std::optional<types::EdgeState> via_edge;
 
-  NavigateToNodeEvent(
+  explicit NavigateToNodeEvent(
     types::NodeState target,
     std::optional<types::EdgeState> via_edge = std::nullopt)
   : target(std::move(target)), via_edge(std::move(via_edge))

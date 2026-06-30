@@ -77,6 +77,7 @@ void seed(
   state.node_states = std::move(nodes);
   state.edge_states = std::move(edges);
   execution->set_state(std::move(state));
+  execution->set_executing_order(true);
 }
 
 // Test 1: Reaching a node drops its state + incoming edge and sets lastNode.
@@ -235,6 +236,145 @@ TEST(OrderTraversalTest, DoesNotRequestBaseWhenPlentiful)
   const auto state = execution->get_state();
   ASSERT_TRUE(state.new_base_request.has_value());
   EXPECT_FALSE(state.new_base_request.value());
+}
+
+// Test 8: A base extension resumes traversal without a new node-reached update.
+TEST(OrderTraversalTest, ResumesAfterBaseExtension)
+{
+  OrderTraversal strategy;
+  auto context = make_context();
+  // node_2 is the last released base node; node_4 is horizon.
+  seed(
+    context, {node_state("node_2", 2, true), node_state("node_4", 4, false)},
+    {edge_state("e3", 3)});
+
+  int dispatches = 0;
+  std::shared_ptr<NavigateToNodeEvent> last;
+  strategy.engine()->on<NavigateToNodeEvent>(
+    [&](std::shared_ptr<NavigateToNodeEvent> event) {
+      ++dispatches;
+      last = event;
+    });
+
+  // Reach the decision point: traversal stops, nothing dispatched.
+  context->provider()->push<NodeReachedUpdate>("node_2", 2);
+  strategy.step(context);
+  EXPECT_EQ(dispatches, 0);
+
+  // Master extends the base: node_4 becomes released. No new node-reached.
+  auto execution = context->get_resource<OrderExecutionResource>();
+  types::State state = execution->get_state();
+  ASSERT_EQ(state.node_states.size(), 1u);
+  state.node_states.front().released = true;
+  execution->set_state(std::move(state));
+
+  // The next step reconciles against the now-released base and dispatches.
+  strategy.step(context);
+  ASSERT_EQ(dispatches, 1);
+  ASSERT_NE(last, nullptr);
+  EXPECT_EQ(last->target.node_id, "node_4");
+}
+
+// Test 9: Repeated steps with the same cached update are no-ops.
+TEST(OrderTraversalTest, IsIdempotentAcrossSteps)
+{
+  OrderTraversal strategy;
+  auto context = make_context();
+  seed(
+    context, {node_state("node_2", 2, true), node_state("node_4", 4, true)},
+    {edge_state("e1", 1), edge_state("e3", 3)});
+
+  int dispatches = 0;
+  strategy.engine()->on<NavigateToNodeEvent>(
+    [&](std::shared_ptr<NavigateToNodeEvent>) { ++dispatches; });
+
+  context->provider()->push<NodeReachedUpdate>("node_2", 2);
+  strategy.step(context);
+  ASSERT_EQ(dispatches, 1);
+
+  auto execution = context->get_resource<OrderExecutionResource>();
+  const auto after_first = execution->get_state();
+
+  // The cached node-reached update is still present; extra steps must be no-ops.
+  strategy.step(context);
+  strategy.step(context);
+  EXPECT_EQ(dispatches, 1);
+  EXPECT_EQ(execution->get_state(), after_first);
+}
+
+// Test 10: A stale update from an old order must not advance a new order.
+TEST(OrderTraversalTest, StaleUpdateDoesNotAdvanceNewOrder)
+{
+  OrderTraversal strategy;
+  auto context = make_context();
+  seed(context, {node_state("node_2", 2, true)}, {edge_state("e1", 1)});
+
+  // Order o1 reaches node_2; the update stays cached afterwards.
+  context->provider()->push<NodeReachedUpdate>("node_2", 2);
+  strategy.step(context);
+
+  // A new order o2 reuses node_2 at the same sequence; it is not yet reached.
+  auto execution = context->get_resource<OrderExecutionResource>();
+  types::State fresh;
+  fresh.order_id = "o2";
+  fresh.node_states = {
+    node_state("node_2", 2, true), node_state("node_4", 4, true)};
+  fresh.edge_states = {edge_state("e1", 1), edge_state("e3", 3)};
+  execution->set_state(std::move(fresh));
+
+  // Step with the stale o1 update still cached (no new node-reached pushed).
+  strategy.step(context);
+
+  const auto state = execution->get_state();
+  // node_2 must NOT be consumed as reached for o2.
+  ASSERT_EQ(state.node_states.size(), 2u);
+  EXPECT_EQ(state.node_states.front().node_id, "node_2");
+  EXPECT_TRUE(state.last_node_id.empty());
+}
+
+// Test 11: The first released node is dispatched on the first step, before any
+// node-reached arrives (the AGV is already on the start node).
+TEST(OrderTraversalTest, BootstrapsFirstNode)
+{
+  OrderTraversal strategy;
+  auto context = make_context();
+  seed(
+    context, {node_state("node_2", 2, true), node_state("node_4", 4, true)},
+    {edge_state("e1", 1), edge_state("e3", 3)});
+
+  std::shared_ptr<NavigateToNodeEvent> dispatched;
+  strategy.engine()->on<NavigateToNodeEvent>(
+    [&](std::shared_ptr<NavigateToNodeEvent> event) { dispatched = event; });
+
+  // No node-reached pushed.
+  strategy.step(context);
+
+  ASSERT_NE(dispatched, nullptr);
+  EXPECT_EQ(dispatched->target.node_id, "node_2");
+  ASSERT_TRUE(dispatched->via_edge.has_value());
+  EXPECT_EQ(dispatched->via_edge->sequence_id, 1u);
+}
+
+// Test 12: Traversal is inert while no order is executing.
+TEST(OrderTraversalTest, DoesNothingWhenNotExecuting)
+{
+  OrderTraversal strategy;
+  auto context = make_context();
+  seed(context, {node_state("node_2", 2, true)}, {edge_state("e1", 1)});
+  context->get_resource<OrderExecutionResource>()->set_executing_order(false);
+
+  bool dispatched = false;
+  strategy.engine()->on<NavigateToNodeEvent>(
+    [&](std::shared_ptr<NavigateToNodeEvent>) { dispatched = true; });
+
+  context->provider()->push<NodeReachedUpdate>("node_2", 2);
+  strategy.step(context);
+
+  EXPECT_FALSE(dispatched);
+  const auto state =
+    context->get_resource<OrderExecutionResource>()->get_state();
+  EXPECT_EQ(state.node_states.size(), 1u);  // unchanged
+  EXPECT_TRUE(state.last_node_id.empty());
 }
 
 }  // namespace

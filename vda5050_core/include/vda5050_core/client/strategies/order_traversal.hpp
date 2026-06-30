@@ -19,7 +19,10 @@
 #ifndef VDA5050_CORE__CLIENT__STRATEGIES__ORDER_TRAVERSAL_HPP_
 #define VDA5050_CORE__CLIENT__STRATEGIES__ORDER_TRAVERSAL_HPP_
 
+#include <cstdint>
 #include <memory>
+#include <optional>
+#include <string>
 
 #include "vda5050_core/execution/context_interface.hpp"
 #include "vda5050_core/execution/strategy_interface.hpp"
@@ -28,17 +31,16 @@ namespace vda5050_core {
 
 namespace client {
 
-/// \brief Walks the released base of an accepted order.
+struct NodeReachedUpdate;
+
+/// \brief Moves through the released part of an accepted order.
 ///
-/// On each `NodeReachedUpdate` it runs the traversal cascade against the
-/// `OrderExecutionResource`: set lastNode, drop the reached node's state and the
-/// incoming edge's state, then dispatch the next released node via a
-/// `NavigateToNodeEvent`. It stops at the decision point (the last released base
-/// node) and never enters the horizon, raising `new_base_request` when the
-/// released base runs low.
+/// Applies new `NodeReachedUpdate`s to the order state, then sends a
+/// `NavigateToNodeEvent` for the next released node. It stops at decision
+/// points and does not move into the horizon.
 ///
-/// Action execution and blockingType concurrency are handled by the actions
-/// strategy; this strategy advances node/edge state and dispatches navigation.
+/// This runs every step, so the AGV can continue after a base extension.
+/// Cached updates and repeated steps are handled safely.
 class OrderTraversal : public execution::StrategyInterface
 {
 public:
@@ -47,6 +49,16 @@ public:
   void init(std::shared_ptr<execution::ContextInterface> context) override;
 
   void step(std::shared_ptr<execution::ContextInterface> context) override;
+
+private:
+  /// \brief Last node-reached update that was already used.
+  std::shared_ptr<NodeReachedUpdate> last_processed_;
+
+  /// \brief Last node sequence ID that was already dispatched.
+  std::optional<uint32_t> last_dispatched_seq_;
+
+  /// \brief Order ID for the last dispatched node.
+  std::string last_dispatched_order_id_;
 };
 
 }  // namespace client
