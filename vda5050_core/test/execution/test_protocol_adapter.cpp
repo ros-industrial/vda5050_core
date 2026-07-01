@@ -267,64 +267,44 @@ TYPED_TEST(ProtocolAdapterTest, HeaderIncrement)
   this->adapter_->template publish<TypeParam>(msg, this->qos_, this->retained_);
 }
 
-class ProtocolAdapterUnsubscribeAllTest : public testing::Test
+TYPED_TEST(ProtocolAdapterTest, UnsubscribeAllOnlyUnsubscribesActiveTopics)
 {
-protected:
-  std::shared_ptr<MockMqttClient> mock_;
-  std::shared_ptr<ProtocolAdapter> adapter_;
-  std::string topic_prefix_;
+  // Nothing subscribed — unsubscribe_all() must not touch mqtt_client_.
+  EXPECT_CALL(*this->mock_, unsubscribe(testing::_)).Times(0);
 
-  void SetUp()
-  {
-    mock_ = std::make_shared<MockMqttClient>();
-    adapter_ =
-      ProtocolAdapter::make(mock_, "uagv", "v2", "ROS-I", "S001");
-    topic_prefix_ = "uagv/v2/ROS-I/S001/";
-  }
-
-  void TearDown()
-  {
-    mock_.reset();
-    adapter_.reset();
-  }
-};
-
-TEST_F(ProtocolAdapterUnsubscribeAllTest, UnsubscribeAllCallsMqttForAllTopics)
-{
-  EXPECT_CALL(*mock_, unsubscribe(testing::StartsWith(topic_prefix_)))
-    .Times(6);
-
-  adapter_->unsubscribe_all();
+  this->adapter_->unsubscribe_all();
 }
 
-TEST_F(ProtocolAdapterUnsubscribeAllTest, UnsubscribeAllSilencesActiveCallbacks)
+TYPED_TEST(ProtocolAdapterTest, UnsubscribeAllSilencesActiveCallbacks)
 {
   MqttClientInterface::MessageHandler captured_handler;
 
   EXPECT_CALL(
-    *mock_, subscribe(testing::StartsWith(topic_prefix_), testing::_, 0))
+    *this->mock_,
+    subscribe(testing::StartsWith(this->topic_prefix_), testing::_, this->qos_))
     .WillOnce(testing::SaveArg<1>(&captured_handler));
 
   std::atomic_bool callback_invoked = false;
-  adapter_->subscribe<Connection>(
-    [&](Connection /*msg*/, std::optional<Error> err) {
+  this->adapter_->template subscribe<TypeParam>(
+    [&](TypeParam /*msg*/, std::optional<Error> err) {
       if (!err.has_value()) callback_invoked = true;
     },
-    0);
+    this->qos_);
 
   // While subscribed, the captured wrapper should dispatch to the
   // user callback.
-  Connection msg{};
+  TypeParam msg = make_valid_message<TypeParam>();
   nlohmann::json j = msg;
-  captured_handler(topic_prefix_, j.dump());
+  captured_handler(this->topic_prefix_, j.dump());
   EXPECT_TRUE(callback_invoked);
 
   // After unsubscribe_all, the wrapper should be inert.
-  EXPECT_CALL(*mock_, unsubscribe(testing::StartsWith(topic_prefix_)))
-    .Times(6);
-  adapter_->unsubscribe_all();
+  EXPECT_CALL(
+    *this->mock_, unsubscribe(testing::StartsWith(this->topic_prefix_)))
+    .Times(1);
+  this->adapter_->unsubscribe_all();
 
   callback_invoked = false;
-  captured_handler(topic_prefix_, j.dump());
+  captured_handler(this->topic_prefix_, j.dump());
   EXPECT_FALSE(callback_invoked);
 }
