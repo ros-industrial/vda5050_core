@@ -204,6 +204,8 @@ target_link_libraries(vda5050_master
     ${PROJECT_NAME}::json_utils
     ${PROJECT_NAME}::transport
     ${PROJECT_NAME}::execution
+    ${PROJECT_NAME}::order_utils
+    ${PROJECT_NAME}::errors
 )
 target_include_directories(vda5050_master
   PUBLIC
@@ -341,6 +343,12 @@ if(BUILD_TESTING)
     test/master/test_unit_agv.cpp
   )
   target_link_libraries(test_master vda5050_core::master)
+
+  ament_add_gmock(test_master_validation
+    test/master/test_unit_content_validator.cpp
+    test/master/test_unit_pre_send_validator.cpp
+  )
+  target_link_libraries(test_master_validation vda5050_core::master)
 
   ament_add_gmock(test_layout_loader
     test/layout/test_unit_loader.cpp
