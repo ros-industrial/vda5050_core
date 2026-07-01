@@ -109,5 +109,28 @@ ProtocolAdapter::ProtocolAdapter(
     {std::type_index(typeid(vda5050_core::types::Visualization)), 0}};
 }
 
+//=============================================================================
+void ProtocolAdapter::unsubscribe_all()
+{
+  // Deactivate all wrapper flags so any in-flight or post-unsubscribe
+  // dispatches become a no-op at the adapter layer.
+  {
+    std::lock_guard<std::mutex> lock(active_flags_mutex_);
+    for (auto& entry : active_flags_)
+    {
+      *(entry.second) = false;
+    }
+    active_flags_.clear();
+  }
+
+  if (mqtt_client_)
+  {
+    for (const auto& entry : topic_names_)
+    {
+      mqtt_client_->unsubscribe(entry.second);
+    }
+  }
+}
+
 }  // namespace execution
 }  // namespace vda5050_core

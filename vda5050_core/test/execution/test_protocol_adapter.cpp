@@ -266,3 +266,65 @@ TYPED_TEST(ProtocolAdapterTest, HeaderIncrement)
   this->adapter_->template publish<TypeParam>(msg, this->qos_, this->retained_);
   this->adapter_->template publish<TypeParam>(msg, this->qos_, this->retained_);
 }
+
+class ProtocolAdapterUnsubscribeAllTest : public testing::Test
+{
+protected:
+  std::shared_ptr<MockMqttClient> mock_;
+  std::shared_ptr<ProtocolAdapter> adapter_;
+  std::string topic_prefix_;
+
+  void SetUp()
+  {
+    mock_ = std::make_shared<MockMqttClient>();
+    adapter_ =
+      ProtocolAdapter::make(mock_, "uagv", "v2", "ROS-I", "S001");
+    topic_prefix_ = "uagv/v2/ROS-I/S001/";
+  }
+
+  void TearDown()
+  {
+    mock_.reset();
+    adapter_.reset();
+  }
+};
+
+TEST_F(ProtocolAdapterUnsubscribeAllTest, UnsubscribeAllCallsMqttForAllTopics)
+{
+  EXPECT_CALL(*mock_, unsubscribe(testing::StartsWith(topic_prefix_)))
+    .Times(6);
+
+  adapter_->unsubscribe_all();
+}
+
+TEST_F(ProtocolAdapterUnsubscribeAllTest, UnsubscribeAllSilencesActiveCallbacks)
+{
+  MqttClientInterface::MessageHandler captured_handler;
+
+  EXPECT_CALL(
+    *mock_, subscribe(testing::StartsWith(topic_prefix_), testing::_, 0))
+    .WillOnce(testing::SaveArg<1>(&captured_handler));
+
+  std::atomic_bool callback_invoked = false;
+  adapter_->subscribe<Connection>(
+    [&](Connection /*msg*/, std::optional<Error> err) {
+      if (!err.has_value()) callback_invoked = true;
+    },
+    0);
+
+  // While subscribed, the captured wrapper should dispatch to the
+  // user callback.
+  Connection msg{};
+  nlohmann::json j = msg;
+  captured_handler(topic_prefix_, j.dump());
+  EXPECT_TRUE(callback_invoked);
+
+  // After unsubscribe_all, the wrapper should be inert.
+  EXPECT_CALL(*mock_, unsubscribe(testing::StartsWith(topic_prefix_)))
+    .Times(6);
+  adapter_->unsubscribe_all();
+
+  callback_invoked = false;
+  captured_handler(topic_prefix_, j.dump());
+  EXPECT_FALSE(callback_invoked);
+}
