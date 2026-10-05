@@ -77,10 +77,25 @@ vda5050_core::errors::ValidationResult OrderPublisher::publish(
       vda5050_core::validation::is_valid_graph(combine_res.order);
     if (!merged_graph || merged_graph.has_warnings())
     {
+      if (merged_graph.has_warnings())
+      {
+        VDA5050_WARN(
+          "[OrderPublisher] order {} merged stitch graph has {} "
+          "graph advisory(ies)",
+          order.order_id, merged_graph.warnings().size());
+      }
       vda5050_core::errors::ValidationResult res;
       res.add_error(vda5050_core::errors::create_error(
         vda5050_core::errors::ValidationError,
         "Merged stitch order is not a valid graph", {}));
+      for (const auto& err : merged_graph.fatal_errors())
+      {
+        res.add_error(err);
+      }
+      for (const auto& warn : merged_graph.warnings())
+      {
+        res.add_error(warn);
+      }
       return res;
     }
     // Array limits are per-order, so the merged order is the subject.
