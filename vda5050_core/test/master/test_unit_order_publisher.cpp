@@ -370,6 +370,48 @@ TEST(OrderPublisherTest, MergedGraphInvalidRejected)
     << "must reject on the merged-graph check, not an earlier one";
 }
 
+TEST(OrderPublisherTest, MergedGraphDiagnosticsPreserved)
+{
+  auto mock = std::make_shared<MockMqttClient>();
+  ON_CALL(*mock, connected()).WillByDefault(::testing::Return(true));
+  auto adapter = vda5050_core::execution::ProtocolAdapter::make(
+    mock, "uagv", "2.0.0", "ACME", "AGV001");
+  vda5050_core::master::OrderPublisher publisher;
+  EXPECT_CALL(
+    *mock, publish(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+    .Times(0);
+
+  // Combine succeeds but the merged graph has structural errors (E2 branches
+  // N1->N3 while horizon N2 is kept) -> publisher rejects the stitched order.
+  auto u = make_stitched_update_v1();
+  u.nodes = {mk_node("N1", 2, true), mk_node("N3", 6, true)};
+  u.edges = {mk_edge("E2", 5, "N1", "N3", true)};
+  auto result =
+    publisher.publish(*adapter, make_ready_context("N1"), u, make_active_v0());
+
+  // A. Rejection behavior remains intact; generic error is first.
+  EXPECT_FALSE(static_cast<bool>(result));
+  ASSERT_FALSE(result.fatal_errors().empty());
+  EXPECT_EQ(
+    result.fatal_errors().front().error_description.value_or(""),
+    "Merged stitch order is not a valid graph");
+
+  // B. Underlying diagnostics from is_valid_graph() are preserved.
+  EXPECT_GT(result.fatal_errors().size(), 1u);
+  bool found_underlying_graph_error = false;
+  for (size_t i = 1; i < result.fatal_errors().size(); ++i)
+  {
+    if (result.fatal_errors()[i].error_type ==
+        vda5050_core::errors::GraphValidationError)
+    {
+      found_underlying_graph_error = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(found_underlying_graph_error)
+    << "underlying GraphValidationError from is_valid_graph must be preserved";
+}
+
 TEST(OrderPublisherTest, StitchedUpdateBackwardUpdateIdRejected)
 {
   // combine_order rejects update_update_id <= active.order_update_id.
