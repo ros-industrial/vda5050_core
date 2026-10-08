@@ -100,7 +100,7 @@ vda5050_core::layout::Graph::ConstPtr make_minimal_graph()
 }
 
 // Passes all pre-send readiness checks. last_node_id parks the AGV on a node so
-// traversability's reachability passes (fixtures lack node_position).
+// reachability passes (fixtures lack node_position).
 validation::PreSendContext make_ready_context(
   const std::string& last_node_id = "")
 {
@@ -337,11 +337,39 @@ TEST(OrderPublisherTest, StitchedUpdateValidatedViaCombineOrder)
     *mock, publish(::testing::_, ::testing::_, ::testing::_, ::testing::_))
     .Times(1);
 
-  auto ctx = make_ready_context("N1");
+  // AGV has passed N0 and not yet reached the stitch node N1.
+  auto ctx = make_ready_context("N0");
   auto u1 = make_stitched_update_v1();
   auto result = publisher.publish(*adapter, ctx, u1, make_active_v0());
   EXPECT_TRUE(static_cast<bool>(result))
     << "errors=" << result.fatal_errors().size();
+}
+
+TEST(OrderPublisherTest, StitchedUpdateOutsideLayoutRejected)
+{
+  auto mock = std::make_shared<MockMqttClient>();
+  ON_CALL(*mock, connected()).WillByDefault(::testing::Return(true));
+  auto adapter = vda5050_core::execution::ProtocolAdapter::make(
+    mock, "uagv", "2.0.0", "ACME", "AGV001");
+  vda5050_core::master::OrderPublisher publisher;
+  EXPECT_CALL(
+    *mock, publish(::testing::_, ::testing::_, ::testing::_, ::testing::_))
+    .Times(0);
+
+  // Valid merged graph, but N4 and E4 are not in the layout.
+  auto u = make_stitched_update_v1();
+  u.nodes.push_back(mk_node("N4", 8, true));
+  u.edges.push_back(mk_edge("E4", 7, "N3", "N4", true));
+  auto result =
+    publisher.publish(*adapter, make_ready_context("N0"), u, make_active_v0());
+  EXPECT_FALSE(static_cast<bool>(result));
+  const auto& errors = result.fatal_errors();
+  ASSERT_EQ(errors.size(), 2u);
+  for (const auto& error : errors)
+  {
+    EXPECT_EQ(
+      error.error_type, vda5050_core::errors::TraversabilityValidationError);
+  }
 }
 
 TEST(OrderPublisherTest, MergedGraphInvalidRejected)
