@@ -122,10 +122,9 @@ TEST(TraversabilityValidatorTest, OrderHappyPathOnNode)
 {
   auto ctx = make_ctx(make_state_on_node("N0"), make_factsheet());
   auto order = make_minimal_order();
-  auto res = validate_traversability(ctx, order);
+  auto res = validate_reachability(ctx, order);
   EXPECT_FALSE(res.has_fatal());  // valid — no FATAL errors
-  // No layout loaded => graph-integrity skipped, reported as an advisory.
-  EXPECT_EQ(res.warnings().size(), 1u);
+  EXPECT_TRUE(res.warnings().empty());
 }
 
 TEST(TraversabilityValidatorTest, OrderHappyPathByPositionWithinDeviation)
@@ -142,7 +141,7 @@ TEST(TraversabilityValidatorTest, OrderHappyPathByPositionWithinDeviation)
   np.allowed_deviation_x_y = 0.10;  // 10cm tolerance
   order.nodes.front().node_position = np;
 
-  auto res = validate_traversability(ctx, order);
+  auto res = validate_reachability(ctx, order);
   EXPECT_FALSE(res.has_fatal());
 }
 
@@ -164,7 +163,7 @@ TEST(TraversabilityValidatorTest, OrderRejectFirstNodeUnreachable)
   np.allowed_deviation_x_y = 0.10;  // 10cm tolerance
   order.nodes.front().node_position = np;
 
-  auto res = validate_traversability(ctx, order);
+  auto res = validate_reachability(ctx, order);
   EXPECT_FALSE(static_cast<bool>(res));
   EXPECT_TRUE(AllErrorsHaveTraversabilityType(res));
   EXPECT_TRUE(AnyErrorMentions(res, "deviation"));
@@ -177,7 +176,7 @@ TEST(TraversabilityValidatorTest, OrderRejectInsufficientReachabilityData)
   auto ctx = make_ctx(state, make_factsheet());
   auto order = make_minimal_order();
   // node_position omitted
-  auto res = validate_traversability(ctx, order);
+  auto res = validate_reachability(ctx, order);
   EXPECT_FALSE(static_cast<bool>(res));
   EXPECT_TRUE(AllErrorsHaveTraversabilityType(res));
   EXPECT_TRUE(AnyErrorMentions(res, "Cannot determine reachability"));
@@ -197,7 +196,7 @@ TEST(TraversabilityValidatorTest, OrderRejectUninitializedPosition)
   np.y = 0.0;
   order.nodes.front().node_position = np;
 
-  auto res = validate_traversability(ctx, order);
+  auto res = validate_reachability(ctx, order);
   EXPECT_FALSE(static_cast<bool>(res));
   EXPECT_TRUE(AllErrorsHaveTraversabilityType(res));
   EXPECT_TRUE(AnyErrorMentions(res, "not initialized"));
@@ -219,7 +218,7 @@ TEST(TraversabilityValidatorTest, OrderRejectFirstNodeOnDifferentMap)
   np.allowed_deviation_x_y = 1.0;
   order.nodes.front().node_position = np;
 
-  auto res = validate_traversability(ctx, order);
+  auto res = validate_reachability(ctx, order);
   EXPECT_FALSE(static_cast<bool>(res));
   EXPECT_TRUE(AllErrorsHaveTraversabilityType(res));
   EXPECT_TRUE(AnyErrorMentions(res, "different map"));
@@ -310,7 +309,7 @@ TEST(TraversabilityValidatorTest, GraphIntegrity_HappyPath_Accepts)
   auto order = make_minimal_order();
   order.edges.push_back(make_order_edge("E1", "N0", "N1"));
 
-  auto res = validate_traversability(ctx, order);
+  auto res = validate_graph_integrity(ctx, order);
   EXPECT_TRUE(static_cast<bool>(res));
 }
 
@@ -321,7 +320,7 @@ TEST(TraversabilityValidatorTest, GraphIntegrity_OrderNodeNotInLayout_Rejects)
   auto order = make_minimal_order();
   order.nodes.front().node_id = "GHOST";  // not in the layout
 
-  auto res = validate_traversability(ctx, order);
+  auto res = validate_graph_integrity(ctx, order);
   EXPECT_FALSE(static_cast<bool>(res));
   EXPECT_TRUE(AnyErrorMentions(res, "GHOST"));
   EXPECT_TRUE(
@@ -335,7 +334,7 @@ TEST(TraversabilityValidatorTest, GraphIntegrity_OrderEdgeNotInLayout_Rejects)
   auto order = make_minimal_order();
   order.edges.push_back(make_order_edge("GHOST_EDGE", "N0", "N1"));
 
-  auto res = validate_traversability(ctx, order);
+  auto res = validate_graph_integrity(ctx, order);
   EXPECT_FALSE(static_cast<bool>(res));
   EXPECT_TRUE(AnyErrorMentions(res, "GHOST_EDGE"));
 }
@@ -348,7 +347,7 @@ TEST(TraversabilityValidatorTest, GraphIntegrity_EdgeEndpointMismatch_Rejects)
   auto order = make_minimal_order();
   order.edges.push_back(make_order_edge("E1", "N1", "N0"));
 
-  auto res = validate_traversability(ctx, order);
+  auto res = validate_graph_integrity(ctx, order);
   EXPECT_FALSE(static_cast<bool>(res));
   EXPECT_TRUE(AnyErrorMentions(res, "endpoints"));
 }
@@ -373,7 +372,7 @@ TEST(TraversabilityValidatorTest, GraphIntegrity_ReverseViaSeparateEdge_Accepts)
   auto order = make_minimal_order();
   order.edges.push_back(make_order_edge("E2", "N1", "N0"));
 
-  auto res = validate_traversability(ctx, order);
+  auto res = validate_graph_integrity(ctx, order);
   EXPECT_TRUE(static_cast<bool>(res)) << "reverse traversal via a distinct "
                                          "directed edge should be accepted";
 }
@@ -387,7 +386,7 @@ TEST(TraversabilityValidatorTest, GraphIntegrity_EdgeIdMustMatchLayout_Rejects)
   auto order = make_minimal_order();
   order.edges.push_back(make_order_edge("WRONG_ID", "N0", "N1"));
 
-  auto res = validate_traversability(ctx, order);
+  auto res = validate_graph_integrity(ctx, order);
   EXPECT_FALSE(static_cast<bool>(res));
   EXPECT_TRUE(AnyErrorMentions(res, "WRONG_ID"));
 }
@@ -403,7 +402,7 @@ TEST(TraversabilityValidatorTest, GraphIntegrity_NodeMapIdMismatch_Rejects)
   np.map_id = "L2";  // layout node N0 is on map "L1"
   order.nodes.front().node_position = np;
 
-  auto res = validate_traversability(ctx, order);
+  auto res = validate_graph_integrity(ctx, order);
   EXPECT_FALSE(static_cast<bool>(res));
   EXPECT_TRUE(AnyErrorMentions(res, "does not match the layout's map_id"));
 }
@@ -416,7 +415,7 @@ TEST(TraversabilityValidatorTest, GraphIntegrity_SkippedWhenNoGraph_Accepts)
   auto order = make_minimal_order();
   order.edges.push_back(make_order_edge("ANY", "N0", "N1"));
 
-  auto res = validate_traversability(ctx, order);
+  auto res = validate_graph_integrity(ctx, order);
   EXPECT_FALSE(res.has_fatal());
   ASSERT_EQ(res.warnings().size(), 1u);
   EXPECT_EQ(

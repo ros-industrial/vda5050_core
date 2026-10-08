@@ -41,9 +41,8 @@ vda5050_core::errors::ValidationResult OrderPublisher::publish(
   const std::optional<vda5050_core::types::Order>& active_order,
   std::optional<vda5050_core::types::Order>* merged_out)
 {
-  // Chain: schema → PreSend → structural → limits → traversability →
-  // capability. Structural and limits take the merged order on the stitch
-  // path, the order as-sent otherwise.
+  // Checks: schema, pre-send, graph, limits, reachability, graph integrity,
+  // capability. A stitch update checks graph and limits on the merged order.
   auto schema_result = vda5050_core::validation::validate_order_content(order);
   if (!schema_result)
   {
@@ -111,13 +110,20 @@ vda5050_core::errors::ValidationResult OrderPublisher::publish(
     {
       return limits_result;
     }
+    // Updates start at the stitch node, which the AGV may not have reached.
+    auto reachability_result =
+      vda5050_core::validation::validate_reachability(ctx, order);
+    if (!reachability_result)
+    {
+      return reachability_result;
+    }
   }
 
-  auto traversability_result =
-    vda5050_core::validation::validate_traversability(ctx, order);
-  if (!traversability_result)
+  auto integrity_result =
+    vda5050_core::validation::validate_graph_integrity(ctx, order);
+  if (!integrity_result)
   {
-    return traversability_result;
+    return integrity_result;
   }
 
   auto capability_result =

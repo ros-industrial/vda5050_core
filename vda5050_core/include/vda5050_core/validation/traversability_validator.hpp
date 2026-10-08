@@ -27,10 +27,14 @@ namespace vda5050_core {
 
 namespace validation {
 
-/// \brief Validate the order's route for this AGV: first-node reachability
-/// and, if a layout is loaded, node/edge existence, map_id, and edge
-/// direction.
-vda5050_core::errors::ValidationResult validate_traversability(
+/// \brief Validate that the AGV is on, or within the deviation range of, the
+/// order's first node. Applies to new orders only.
+vda5050_core::errors::ValidationResult validate_reachability(
+  const PreSendContext& ctx, const vda5050_core::types::Order& order);
+
+/// \brief Validate the order's nodes and edges against the loaded layout:
+/// existence, map_id, and edge direction. Warns when no layout is loaded.
+vda5050_core::errors::ValidationResult validate_graph_integrity(
   const PreSendContext& ctx, const vda5050_core::types::Order& order);
 
 }  // namespace validation

@@ -20,7 +20,6 @@
 
 #include <fmt/format.h>
 #include <cmath>
-#include <functional>
 #include <string>
 #include <vector>
 
@@ -31,17 +30,29 @@ namespace vda5050_core::validation {
 
 namespace {
 
-using AddErrorFn =
-  std::function<void(const std::string&, std::vector<types::ErrorReference>)>;
+auto make_error_adder(errors::ValidationResult& res, const types::Order& order)
+{
+  return
+    [&res, &order](
+      const std::string& description, std::vector<types::ErrorReference> refs) {
+      refs.push_back({errors::RefOrderId, order.order_id});
+      res.add_error(errors::create_error(
+        errors::TraversabilityValidationError, description, refs));
+    };
+}
+
+}  // namespace
 
 // Reachability (state-driven; runs without a factsheet).
-void validate_reachability(
-  const PreSendContext& ctx, const types::Order& order,
-  const AddErrorFn& add_error)
+errors::ValidationResult validate_reachability(
+  const PreSendContext& ctx, const types::Order& order)
 {
+  errors::ValidationResult res;
+  const auto add_error = make_error_adder(res, order);
+
   if (order.nodes.empty())
   {
-    return;  // the graph validator already rejects this
+    return res;  // the graph validator already rejects this
   }
 
   const auto& first = order.nodes.front();
@@ -50,11 +61,11 @@ void validate_reachability(
   {
     add_error(
       "Cannot determine reachability: AGV has not yet reported any State.", {});
-    return;
+    return res;
   }
   const auto& state = ctx.last_state.value();
 
-  if (state.last_node_id == first.node_id) return;
+  if (state.last_node_id == first.node_id) return res;
 
   if (!first.node_position.has_value() || !state.agv_position.has_value())
   {
@@ -62,7 +73,7 @@ void validate_reachability(
       "Cannot determine reachability: AGV is not on first node and "
       "either node_position or agv_position is missing.",
       {{errors::RefNodeId, first.node_id}});
-    return;
+    return res;
   }
 
   const auto& np = first.node_position.value();
@@ -73,7 +84,7 @@ void validate_reachability(
     add_error(
       "Cannot determine reachability: AGV position is not initialized.",
       {{errors::RefNodeId, first.node_id}});
-    return;
+    return res;
   }
 
   if (ap.map_id != np.map_id)
@@ -84,7 +95,7 @@ void validate_reachability(
         "map '{}').",
         ap.map_id, np.map_id),
       {{errors::RefNodeId, first.node_id}});
-    return;
+    return res;
   }
 
   // No declared deviation => must be exactly on the node.
@@ -103,14 +114,25 @@ void validate_reachability(
         distance, allowed),
       {{errors::RefNodeId, first.node_id}});
   }
+  return res;
 }
 
-// Order nodes/edges must exist in the layout with matching endpoints, edge
-// direction, and map_id. Coordinates aren't compared (map_id asserts agreement).
-void validate_graph_integrity(
-  const PreSendContext& ctx, const types::Order& order,
-  const AddErrorFn& add_error)
+// Only node existence and map_id are checked, not node positions.
+errors::ValidationResult validate_graph_integrity(
+  const PreSendContext& ctx, const types::Order& order)
 {
+  errors::ValidationResult res;
+
+  if (ctx.loaded_graph == nullptr)
+  {
+    res.add_error(errors::create_error(
+      errors::GraphIntegrityCheckSkipped,
+      "No layout loaded; graph-integrity checks skipped.",
+      {{errors::RefOrderId, order.order_id}}, types::ErrorLevel::WARNING));
+    return res;
+  }
+
+  const auto add_error = make_error_adder(res, order);
   const auto& graph = *ctx.loaded_graph;
 
   for (const auto& node : order.nodes)
@@ -165,37 +187,6 @@ void validate_graph_integrity(
         {{errors::RefEdgeId, edge.edge_id}});
     }
   }
-}
-
-}  // namespace
-
-errors::ValidationResult validate_traversability(
-  const PreSendContext& ctx, const types::Order& order)
-{
-  errors::ValidationResult res;
-
-  auto add_error = [&](
-                     const std::string& description,
-                     std::vector<types::ErrorReference> refs) {
-    refs.push_back({errors::RefOrderId, order.order_id});
-    res.add_error(errors::create_error(
-      errors::TraversabilityValidationError, description, refs));
-  };
-
-  validate_reachability(ctx, order, add_error);
-
-  if (ctx.loaded_graph != nullptr)
-  {
-    validate_graph_integrity(ctx, order, add_error);
-  }
-  else
-  {
-    res.add_error(errors::create_error(
-      errors::GraphIntegrityCheckSkipped,
-      "No layout loaded; graph-integrity checks skipped.",
-      {{errors::RefOrderId, order.order_id}}, types::ErrorLevel::WARNING));
-  }
-
   return res;
 }
 
