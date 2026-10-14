@@ -1,50 +1,58 @@
 # VDA5050 Library and Support Tools
 
-`vda5050_core` is a modern C++ library designed for implementing the [VDA5050 specification](https://github.com/VDA5050/VDA5050) across AGVs, AMRs and fleet control systems.
+[![CI](https://github.com/ros-industrial/rmf_scheduler/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/ros-industrial/rmf_scheduler/actions/workflows/build.yml)
 
-It provides native JSON serialization/deserialization, specification validation, an asynchronous execution framework, MQTT transport abstractions and high-level client adapter
-and master control APIs.
+This repository contains the source code for the C++ and Python libraries for
+implementing the [VDA5050 specification](https://github.com/VDA5050/VDA5050) across AGVs, AMRs and fleet control systems.
 
-The library is **framework-independent** and can be embedded directly into standalone native C++ drivers, ROS 2 packages, or Python-based systems.
-
-```mermaid
-flowchart LR
-    Shared["<b>vda5050_core</b><br/>• MQTT Transport Layer<br/>• C++ Data Models<br/>• JSON Parsing & Validation<br/>• Execution Engine"]
-
-    subgraph MasterTrack["Master Control Application"]
-        direction LR
-        MasterAPI["<b>vda5050_core::master</b><br/>Master Control API"]
-        MasterApp["Fleet Controller"]
-        MasterAPI --> MasterApp
-    end
-
-    subgraph ClientTrack["AGV/AMR Application"]
-        direction LR
-        ClientAPI["<b>vda5050_core::client</b><br/>AGV Client Adapter"]
-        ClientApp["Robot Software"]
-        ClientAPI --> ClientApp
-    end
-
-    Shared ---> MasterAPI
-    Shared --> ClientAPI
-
-    MasterApp <===>|"<b>MQTT</b> (uagv/v2/...)"| ClientApp
-```
+The library can be embedded directly into standalone native C++ drivers, ROS 2 packages, or Python-based systems.
 
 > [!NOTE]
 > This project is under active development. API stability is guaranteed across minor releases.
 
+## Content
+
+- [Features](#features)
+- [Detailed guides](#detailed-guides)
+- [Installation](#installation)
+  - [Binary packages](#binary-packages)
+  - [Build from source](#build-from-source)
+- [Examples](#examples)
+  - [AGV Client Integration](#agv-client-integration)
+  - [Master Control Integration](#master-control-integration)
+- [Project Layout](#project-layout)
+- [Testing](#testing)
+- [Contributing](#contributing)
+- [License](#license)
+
 
 ## Features
 
-- **Specification Compliant Data Structures:** Native C++17 representations for all VDA5050 message types.
-- **Serialization and Validation:** Fast JSON parsing (`nlohmann/json`) with standard compliance validation
-- **Asynchronous Execution Framework:** Reactive execution engine for managing non-blocking robot state transitions, node execution and instant actions.
-- **High-Level Client Adapter API:** Pre-built abstraction layer wrapping navigation, action execution and automated state reporting.
-- **Layout Interchange Format (LIF):** Native support for loading and validating VDMA define Layout Interchange Format.
-- **Multi-Ecosystem Support:** Standalone CMake and `ament_cmake` build integration, optional ROS 2 (`vda5050_interfaces`) support and Python bindings via `pybind11`.
+- Support for VDA5050 v2.0.0
+- Support for Layout Interchange Format (LIF)
+- Core functionality
+  - MQTT transport abstraction
+  - Protocol specific message types
+  - JSON (de)serialization
+  - Specification validation
+  - Asynchronous execution
 
-## Overview
+- Client library
+  - order processing
+  - navigation callback
+  - action callbacks
+  - localization callbacks
+  - robot state reporting
+  - Open-RMF migration
+
+- Master library
+  - robot onboarding / offboarding
+  - layout loading
+  - order assignment
+  - instant actions assignment
+  - event-based callback handling
+
+## Detailed Guides
 
 | Guide                                                              | Description                                               |
 | ------------------------------------------------------------------ | --------------------------------------------------------- |
@@ -60,35 +68,54 @@ To connect an existing robot SDK, REST API or ROS 2 navigation system, start wit
 
 To build a master control, or integrate one into an existing application, start with the [Master Guide](docs/master.md).
 
-## Getting Started
+## Installation
 
-### Requirements
+### Binary packages
 
-- **C++ Compiler:** C++17 or higher
-- **Build System:** CMake $\ge 3.8$, `colcon` (optional for ROS 2 workspaces)
-- **System Libraries:** `nlohmann-json3-dev`, `libfmt-dev`, `libpaho-mqtt-dev`, `libpaho-mqttpp-dev`
-- **Optional:** ROS 2 (Humble/Jazzy) for `vda5050_interfaces`, `pybind11` for Python bindings.
+> [!NOTE]
+> Binary packages are only available for Python right now
 
-### Build
+#### Install from PyPI
 
-1. Install the required MQTT dependencies:
+Supported Platforms
+- **Python**: 3.10+
+- **OS:** Linux, MacOS (15+)
+- **Architecture:** x86_64, arm64
+
+```shell
+pip install vda5050_core
+```
+
+### Build from source
+
+The following instructions are for Ubuntu 22.04+
+
+1. Install the required build dependencies:
 
 ```bash
 sudo apt update
-sudo apt install libpaho-mqtt-dev libpaho-mqttpp-dev
+sudo apt install \
+    libpaho-mqtt-dev \
+    libpaho-mqttpp-dev \
+    libfmt-dev \
+    nlohmann-json3-dev \
+    pybind11-json-dev
 ```
 
-2. Create a workspace, clone the repository and build the package:
+1. Create a workspace and clone the repository:
 
 ```bash
 mkdir -p ~/vda5050_ws/src
 cd ~/vda5050_ws/src
 
 git clone https://github.com/ros-industrial/vda5050_core.git
+```
 
+1. Build the package:
+
+```bash
 cd ~/vda5050_ws
-colcon build --packages-select vda5050_core
-source install/setup.bash
+colcon build
 ```
 
 #### Build Options
@@ -102,7 +129,19 @@ Pass these flags through `colcon build --cmake-args -D<OPTION>=<VALUE>` or direc
 | `BUILD_EXAMPLES` | `ON`    | Builds the examples                                     |
 | `BUILD_TESTING`  | `ON`    | Builds the tests and configured linters                 |
 
-### Quick Examples
+### Examples
+
+Sample applications can be found in the source repository at [vda5050_core/examples/](./vda5050_core/examples).
+
+These can all be build along with the library by specifying the CMake flag: `-DBUILD_EXAMPLES=ON` when configuring the build.
+
+You can launch a local MQTT broker to test them.
+
+```shell
+mosquitto -v -p 1883
+```
+
+Below are some quick examples
 
 #### AGV Client Integration
 
@@ -110,6 +149,8 @@ The following example shows the basic setup for an AGV-side client.
 
 It creates an MQTT transport and a VDA5050 client adapter, then registers a navigation callback.
 In a real application, the callback should forward the request to the robot's navigation system.
+
+**In C++**
 
 ```cpp
 #include <iostream>
@@ -156,7 +197,7 @@ int main()
 }
 ```
 
-##### Linking with CMake
+Linking with CMake
 
 ```cmake
 find_package(vda5050_core REQUIRED)
@@ -169,9 +210,74 @@ target_link_libraries(agv_application
 )
 ```
 
+**In Python**
+
+```python
+from vda5050_core.rmf_migration import (
+    Adapter,
+    FleetConfiguration,
+    RobotCallbacks,
+    RobotConfiguration,
+    RobotState,
+)
+
+MAP_ID = "demo-map"
+
+
+def main() -> None:
+    adapter = Adapter.make()
+    fleet_config = FleetConfiguration(
+        fleet_name="demo",
+        broker_uri="tcp://localhost:1883",
+        client_id_prefix="agv_1",
+    )
+    fleet = adapter.add_vda5050_fleet(fleet_config)
+
+    robot_config = RobotConfiguration(
+        manufacturer="Manufacturer",
+        serial_number="S001",
+        interface_name="uagv",
+        version="2.0.0",
+    )
+    initial_state = RobotState(MAP_ID, [0.0, 0.0, 0.0], 1.0)
+
+    robot_handle = None
+
+    def navigate(destination, execution) -> None:
+        # Forward the request to the robot navigation system.
+        #
+        # This demonstration reports completion immediately.
+        # A real integration should only report completion after
+        # the robot reaches the requested node.
+        execution.finished()
+
+    def stop() -> None:
+        pass
+
+    def execute_action(action_type, action_id, execution) -> None:
+        execution.finished()
+
+    callbacks = RobotCallbacks(navigate, stop, execute_action)
+    robot_handle = fleet.add_robot(
+        "robot-1",
+        initial_state,
+        robot_config,
+        callbacks,
+    )
+
+    adapter.start()
+
+    # Keep processing orders until Enter is pressed.
+    input()
+    adapter.stop()
+
+
+if __name__ == "__main__":
+    main()
+```
+
 For a complete integration covering navigation, actions, localization, cancellation and state reporting,
-see the [Client Adapter Guide](docs/client-adapter.md) and a preconfigured
-[example](vda5050_core/examples/client/adapter_example.cpp).
+see the [Client Adapter Guide](docs/client-adapter.md) and [Open-RMF Migration Guide](docs/rmf-migration.md).
 
 #### Master Control Integration
 
@@ -183,6 +289,8 @@ the AGV reports itself ready. In a real application, the completion callback ass
 This assumes an AGV that is already localized and reporting state. See the
 [Master Guide](docs/master.md) for bringing an unlocalized vehicle up with an
 `initPosition` instant action.
+
+**In C++**
 
 ```cpp
 #include <chrono>
@@ -251,7 +359,7 @@ int main()
 }
 ```
 
-##### Linking with CMake
+Linking with CMake
 
 ```cmake
 find_package(vda5050_core REQUIRED)
@@ -264,28 +372,88 @@ target_link_libraries(master_application
 )
 ```
 
-For a complete integration covering order construction, validation, event handling and multi-AGV
-dispatch, see the [Master Guide](docs/master.md) and a preconfigured
-[example](vda5050_core/examples/master/master_example.cpp).
+**In Python**
 
-## Examples
+```python
+from logging import getLogger
+from time import sleep
 
-You can launch a local MQTT broker to test the included examples.
+from vda5050_core.master import VDA5050Master, AGVState, OrderAssignmentDecision
+from vda5050_core.transport import create_default_client_shared
+from vda5050_core.types import Order, Node, Edge
 
-```bash
-mosquitto -v -p 1883
+LOGGER = getLogger(__name__)
+
+
+def main() -> None:
+    mqtt_client = create_default_client_shared("tcp://localhost:1883", "master_1")
+    master = VDA5050Master.make(mqtt_client)
+
+    def on_order_complete(agv_id, order_id):
+        LOGGER.info(f"[{agv_id} completed order {order_id}]")
+
+        # A real integration would assign this AGV's next order here, with a
+        # new order id, or return the AGV to its task queue.
+
+
+    master.on_order_complete(on_order_complete)
+
+    master.connect()
+    master.onboard_agv("Manufacturer", "S001")
+
+    # Wait until the AGV is online, localized and idle.
+    agv = master.get_agv("Manufacturer", "S001")
+    while agv.get_operational_state() != AGVState.AVAILABLE:
+        sleep(0.2)
+
+    # A simple order: drive from node N0 to node N1.
+    # Nodes take even sequence ids, the edges between them the odd ones.
+    order = Order()
+    order.order_id = "order-1"
+    order.order_update_id = 0
+        position = state.agv_position
+        pose = None if position is None else (position.x, position
+    order.nodes = [
+            Node.from_json({"nodeId": "N0", "sequenceId": 0, "released": True, "actions": []}),
+            Node.from_json({"nodeId": "N1", "sequenceId": 2, "released": True, "actions": []}),
+    ]
+
+    order.edges = [
+        Edge.from_json({
+            "edgeId": "E0",
+            "sequenceId": 1,
+            "startNodeId": "N0",
+            "endNodeId": "N1",
+            "released": True,
+            "actions": []
+        })
+    ]
+
+    result = master.assign_order("Manufacturer", "S001", order)
+
+    if result.decision != OrderAssignmentDecision.ASSIGNED:
+        # A real integration should read result.decision and result.errors to
+        # decide whether to retry, hand the task to another AGV, or raise it to
+        # an operator.
+        LOGGER.warning(f"Order [{order.order_id}] not assigned ({len(result.errors)})")
+
+    # Keep the master running until Enter is pressed.
+    input()
+
+    master.disconnect()
+
+if __name__ == "__main__":
+    main()
 ```
 
-| Example                                                   | Demonstrates                                     |
-| --------------------------------------------------------- | ------------------------------------------------ |
-| `vda5050_core/examples/client/adapter_example.cpp`        | AGV client-adapter integration                   |
-| `vda5050_core/examples/master/order_publisher.cpp`        | Continuously dispatching a growing VDA5050 order |
-| `vda5050_core/examples/master/master_example.cpp`         | Continuously assigning orders with a new id upon completion, via the master API |
+For a complete integration covering order construction, validation, event handling and multi-AGV
+dispatch, see the [Master Guide](docs/master.md).
 
-## Directory Layout
 
-```bash
-.
+## Project Layout
+
+```
+vda5050_core
 └── vda5050_core
     ├── docs                 # Guides and architectural documentation
     ├── examples             # Ready-to-run executables
@@ -313,7 +481,8 @@ Run the unit and integration tests using `colcon`.
 colcon test --event-handlers console_direct+ --packages-select vda5050_core
 ```
 
-> Note: Some integration tests require an active MQTT broker listening on `localhost:1883`.
+> [!NOTE]
+> Some integration tests require an active MQTT broker listening on `localhost:1883`.
 
 ## Contributing
 
