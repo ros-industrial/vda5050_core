@@ -49,6 +49,7 @@ flowchart LR
 | Guide                                                              | Description                                               |
 | ------------------------------------------------------------------ | --------------------------------------------------------- |
 | **[Client Adapter Guide](docs/client-adapter.md)**                 | Step-by-step integration guide for AGV/AMR                |
+| **[Client Adapter Guide (Python)](docs/client-adapter-python.md)** | Step-by-step integration guide for AGV/AMR with Python    |
 | **[Master Guide](docs/master.md)**                                 | Step-by-step guide to building a master control           |
 | **[Master API Reference](docs/master-api.md)**                     | Master commands, types and callbacks                      |
 | **[Types and Serialization Guide](docs/types.md)**                 | Message structures, validation rules and JSON conversion  |
@@ -172,6 +173,74 @@ target_link_libraries(agv_application
 For a complete integration covering navigation, actions, localization, cancellation and state reporting,
 see the [Client Adapter Guide](docs/client-adapter.md) and a preconfigured
 [example](vda5050_core/examples/client/adapter_example.cpp).
+
+#### AGV Client Integration (Python)
+
+The following example shows the basic setup for an AGV-side client in python.
+
+It creates an MQTT transport and a VDA5050 client adapter, then registers a navigation callback.
+In a real application, the callback should forward the request to the robot's navigation system.
+
+``` python
+import signal
+import time
+import threading
+
+from vda5050_core.client import Adapter, ProtocolAdapter
+from vda5050_core.transport import create_default_client_shared
+
+running = threading.Event()
+running.set()
+
+def signal_handler(signum, _frame) -> None:
+    print("System Signal [%d] received. Shutting down ...", signum)
+    running.clear()
+
+def main() -> None:
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    mqtt_client = create_default_client_shared(
+        "tcp://192.168.1.10:1883",
+        "robot_1_vda5050_adapter",
+    )
+
+    protocol_adapter = ProtocolAdapter.make(
+        mqtt_client,
+        "uagv",        # Interface domain
+        "2.0.0",       # VDA5050 specification version
+        "MyCompany",   # Manufacturer string
+        "AGV-001",     # Serial number
+    )
+
+    adapter = Adapter.make(protocol_adapter)
+    state_manager = adapter.state_manager()
+
+    def on_navigate(node_request, _edge_request, execution) -> None:
+        # Forward the request to the robot navigation system.
+        #
+        # This demonstration reports completion immediately.
+        # A real integration should only report completion after
+        # the robot reaches the requested node.
+        pass 
+
+
+    adapter.on_navigate(on_navigate)
+
+    adapter.start()
+
+    try:
+        while running.is_set():
+            time.sleep(1)
+    finally:
+        adapter.stop()
+
+if __name__ == '__main__':
+    main()
+```
+For a complete integration covering navigation, actions, localization, cancellation and state reporting,
+see the [Client Adapter Guide](docs/client-adapter-python.md) and a preconfigured
+[example](vda5050_core/examples/python/adapter_example.py).
 
 #### Master Control Integration
 
