@@ -1,0 +1,158 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="Pallet_Rack">
+    <link name="base_link">
+      <visual name="base_visual">
+        <geometry>
+          <mesh>
+            <uri>base_visual.glb</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="box014034_collider_box">
+        <pose>0.0 -0.647701 1.473205 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.5146 0.063502 0.0762</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box014034_collider_box.001">
+        <pose>0.0 0.647701 1.473205 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.5146 0.063502 0.0762</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box014034_collider_box.002">
+        <pose>0.0 0.647701 2.997205 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.5146 0.063502 0.0762</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box014034_collider_box.003">
+        <pose>0.0 -0.647701 2.997205 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.5146 0.063502 0.0762</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box014_collider_box">
+        <pose>-1.2573 -0.6477 1.524 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.0762 0.0762 3.048</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box014007_collider_box">
+        <pose>1.2573 -0.6477 1.524 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.0762 0.0762 3.048</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box014012_collider_box">
+        <pose>-1.2573 0.6477 1.524 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.0762 0.0762 3.048</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box014019_collider_box">
+        <pose>1.2573 0.6477 1.524 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.0762 0.0762 3.048</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box014025_collider_box">
+        <pose>-1.2573 -0.0 0.257366 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.0254 1.234421 0.0254</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box014026_collider_box">
+        <pose>-1.2573 -0.0 1.435715 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.0254 1.234421 0.0254</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box014027_collider_box">
+        <pose>-1.2573 0.0 2.933138 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.0254 1.234421 0.0254</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box014030_collider_box">
+        <pose>1.2573 -0.0 0.257366 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.0254 1.234421 0.0254</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box014031_collider_box">
+        <pose>1.2573 0.0 1.435715 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.0254 1.234421 0.0254</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box014032_collider_box">
+        <pose>1.2573 0.0 2.933138 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.0254 1.234421 0.0254</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box014024_collider_box">
+        <pose>-1.2573 -0.007284 2.258983 -0.610865 -0.0 3.141593</pose>
+        <geometry>
+          <box>
+            <size>0.0254 1.62082 0.0254</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box014028_collider_box">
+        <pose>-1.2573 0.007284 0.801803 0.610866 -0.0 3.141593</pose>
+        <geometry>
+          <box>
+            <size>0.0254 1.62082 0.0254</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box014029_collider_box">
+        <pose>1.2573 -0.007284 2.258983 -1.570796 0.610865 -1.570796</pose>
+        <geometry>
+          <box>
+            <size>1.62082 0.0254 0.0254</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box014033_collider_box">
+        <pose>1.2573 0.007284 0.801803 1.570796 0.610866 1.570796</pose>
+        <geometry>
+          <box>
+            <size>1.62082 0.0254 0.0254</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

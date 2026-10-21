@@ -1,0 +1,17 @@
+<?xml version='1.0' ?>
+
+<launch>
+  <arg name="gz_world_file" default="/work/jetty_demo/worlds/jetty.sdf" description="Absolute path to the Gz world file."/>
+  <arg name="gz_model_path" default="/work/jetty_demo/models" description="Absolute path to additional SDF models."/>
+
+  <!-- Simulator launch -->
+  <executable cmd="gz sim -v 4 $(var gz_world_file)" output="both">
+    <env name="GZ_SIM_RESOURCE_PATH" value="$(env GZ_SIM_RESOURCE_PATH):$(env HOME)/.gazebo/models:$(var gz_model_path)" />
+  </executable>
+
+  <!-- ros_gz bridge for simulation clock -->
+  <node pkg="ros_gz_bridge" exec="parameter_bridge"
+    args="/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"
+  />
+
+</launch>

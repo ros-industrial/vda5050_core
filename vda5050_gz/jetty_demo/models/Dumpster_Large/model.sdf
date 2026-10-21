@@ -1,0 +1,54 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="Dumpster_Large">
+    <link name="base_link">
+      <visual name="base_visual">
+        <geometry>
+          <mesh>
+            <uri>base_visual.glb</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="box015001_collider_box">
+        <pose>0.081367 1.21897 1.334814 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>7.0972 0.196529 2.246558</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box015001_collider_box.001">
+        <pose>0.070731 -1.213102 1.334835 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>7.072949 0.245827 2.246517</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box015001_collider_box.002">
+        <pose>-3.358019 -0.007172 1.229047 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.186664 2.458094 2.716692</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box015001_collider_box.003">
+        <pose>-0.003617 0.012904 0.089457 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>7.480402 2.252423 0.437513</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box015001_collider_box.004">
+        <pose>3.596625 -0.007172 1.136868 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.279918 2.458094 2.532333</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>
