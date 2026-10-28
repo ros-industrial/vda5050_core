@@ -15,7 +15,7 @@ defaults:
 jobs:
   lint:
     name: Ruff Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
 
@@ -30,7 +30,7 @@ jobs:
 
   test:
     name: UV Test (Python ${{ matrix.python-version }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -63,7 +63,7 @@ jobs:
 
   stub-test:
     name: Check Stale Stubs
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -109,7 +109,7 @@ jobs:
       matrix:
         python: ["cp310", "cp312"]
         buildplat:
-          - [ubuntu-latest, manylinux_x86_64]
+          - [ubuntu-24.04, manylinux_x86_64]
           - [ubuntu-24.04-arm, manylinux_aarch64]
           - [macos-15-intel, macosx_x86_64]
           - [macos-15, macosx_arm64]
