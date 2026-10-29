@@ -71,7 +71,6 @@ before-build = [
 ]
 
 [tool.cibuildwheel.linux]
-before-all = "dnf clean all && dnf makecache"
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
 musllinux-x86_64-image = "musllinux_1_2"
