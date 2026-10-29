@@ -23,7 +23,7 @@ jobs:
       ISOLATION: "shell"
       UPSTREAM_WORKSPACE: 'github:ros-industrial/vda5050_interfaces#main github:eclipse-paho/paho.mqtt.cpp#v1.5.0'
       ROS_DISTRO: ${{ matrix.distro }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     container:
       image: ros:${{ matrix.distro }}-ros-core
     steps:

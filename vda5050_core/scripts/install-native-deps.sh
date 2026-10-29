@@ -12,6 +12,8 @@ INSTALL_PREFIX="${CMAKE_INSTALL_PREFIX:-/usr/local}"
 install_linux() {
   if command -v yum >/dev/null 2>&1; then
     # manylinux / Alma Linux images
+    # clear stale cache
+    dnf clean all && dnf makecache
     yum install -y cmake git openssl-devel
     install_fmt_from_source
     install_json_from_source

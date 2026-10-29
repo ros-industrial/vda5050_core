@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "vda5050_core"
-version = "0.1.0rc2"
+version = "0.1.0"
 license = "Apache-2.0"
 description = "VDA5050 Library and Support Tools"
 authors = [
