@@ -1,0 +1,223 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="Handtruck_02">
+    <link name="base_link">
+      <visual name="base_visual">
+        <geometry>
+          <mesh>
+            <uri>base_visual.glb</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="sm_handtruck063_collider_box">
+        <pose>-0.001147 -0.453465 0.237538 -6e-06 -1.513413 -1.570791</pose>
+        <geometry>
+          <box>
+            <size>0.19 0.35 0.004044</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_cylinder">
+        <pose>0.145714 -0.085178 0.190179 1.62818 0.0 -0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.016</radius>
+            <length>0.73</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_cylinder.001">
+        <pose>-0.145714 -0.085178 0.190179 1.62818 0.0 -0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.016</radius>
+            <length>0.73</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_cylinder.002">
+        <pose>0.145714 0.304507 0.142736 0.057384 0.0 -0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.016</radius>
+            <length>0.099753</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_cylinder.003">
+        <pose>-0.145714 0.304507 0.142736 0.057384 0.0 -0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.016</radius>
+            <length>0.099753</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_box.001">
+        <pose>0.0 0.306686 0.098317 -0.057383 -3.141593 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.326971 0.036011 0.013351</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_box.004">
+        <pose>0.0 0.091209 0.199106 -1.570796 0.057384 -1.570796</pose>
+        <geometry>
+          <box>
+            <size>0.027884 0.013984 0.29874</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_box.005">
+        <pose>-0.139599 0.121274 0.194211 1.628535 -0.110864 -0.006395</pose>
+        <geometry>
+          <box>
+            <size>0.107613 0.030678 0.007069</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_box.006">
+        <pose>0.0 -0.179711 0.183542 -3.141593 0.057384 -1.570796</pose>
+        <geometry>
+          <box>
+            <size>0.027884 0.29874 0.013984</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_cylinder.006">
+        <pose>0.0 -0.355127 0.091144 -1.570796 1.62818 -1.570796</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.00605</radius>
+            <length>0.437087</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_cylinder.007">
+        <pose>0.190715 -0.355127 0.091139 -1.570796 1.62818 -1.570796</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.093276</radius>
+            <length>0.043851</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_cylinder.008">
+        <pose>-0.190715 -0.355127 0.091139 -1.570796 1.62818 -1.570796</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.093276</radius>
+            <length>0.043851</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_box.007">
+        <pose>0.145654 -0.315424 0.133999 3.073895 -3.141645 -6e-06</pose>
+        <geometry>
+          <box>
+            <size>0.026144 0.26372 0.072271</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_box.008">
+        <pose>-0.145654 -0.315424 0.133999 3.073895 3.141645 6e-06</pose>
+        <geometry>
+          <box>
+            <size>0.026144 0.26372 0.072271</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_box.009">
+        <pose>0.158544 0.26898 0.177218 -1.57079 0.728006 1.570795</pose>
+        <geometry>
+          <box>
+            <size>0.098995 0.043333 0.004184</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_box.010">
+        <pose>-0.158544 0.26898 0.177218 1.57079 0.728006 1.570797</pose>
+        <geometry>
+          <box>
+            <size>0.098995 0.043333 0.004184</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_box.011">
+        <pose>0.145129 0.298554 0.273247 1.62818 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.026027 0.283282 0.025135</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_box.012">
+        <pose>0.145129 0.333209 0.495312 1.104581 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.026027 0.211049 0.025135</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_box.013">
+        <pose>-0.0 0.381886 0.590536 1.62818 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.279602 0.024447 0.024483</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_box.014">
+        <pose>-0.145129 0.333209 0.495312 1.104581 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.026027 0.211049 0.025135</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruck063_collider_box.015">
+        <pose>-0.145129 0.298554 0.273247 1.62818 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.026027 0.283282 0.025135</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruckcart002_collider_box">
+        <pose>-0.100573 0.312464 0.061994 1.524687 -1e-06 -3.141593</pose>
+        <geometry>
+          <box>
+            <size>0.042673 0.065363 0.050016</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruckcart001_collider_box">
+        <pose>0.100573 0.312464 0.061994 1.524687 1e-06 -3.141593</pose>
+        <geometry>
+          <box>
+            <size>0.042673 0.065363 0.050016</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruckcart004_collider_cylinder">
+        <pose>-0.100557 0.331977 0.038932 1.570796 0.0 1.570796</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.039251</radius>
+            <length>0.021759</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="sm_handtruckcart003_collider_cylinder">
+        <pose>0.100557 0.331977 0.038932 1.570796 0.0 1.570796</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.039251</radius>
+            <length>0.021759</length>
+          </cylinder>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

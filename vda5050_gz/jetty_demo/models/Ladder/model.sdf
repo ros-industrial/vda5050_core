@@ -1,0 +1,214 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="Ladder">
+    <link name="base_link">
+      <visual name="base_visual">
+        <geometry>
+          <mesh>
+            <uri>base_visual.glb</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="double_stepladder_6ft_open003_collider_box">
+        <pose>-0.218174 -0.371562 0.836679 1.456672 1.219083 -1.677994</pose>
+        <geometry>
+          <box>
+            <size>1.813121 0.084531 0.026942</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open004_collider_box">
+        <pose>-0.0 -0.614183 0.173367 3.141593 0.0 1.570796</pose>
+        <geometry>
+          <box>
+            <size>0.099076 0.5 0.05</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open005_collider_box">
+        <pose>-0.0 -0.503173 0.478367 0.0 -0.0 3.141593</pose>
+        <geometry>
+          <box>
+            <size>0.480732 0.099076 0.05</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open006_collider_box">
+        <pose>-0.0 -0.392526 0.782367 3.141593 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.457375 0.099076 0.05</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open007_collider_box">
+        <pose>-0.0 -0.281151 1.088367 0.0 -0.0 3.141593</pose>
+        <geometry>
+          <box>
+            <size>0.433865 0.099076 0.05</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open008_collider_box">
+        <pose>-0.0 -0.170504 1.392367 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.410048 0.099076 0.05</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open021_collider_box">
+        <pose>-0.23554 -0.212371 0.754702 1.939827 -1.47727 1.202739</pose>
+        <geometry>
+          <box>
+            <size>0.02508 0.402079 0.001803</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open022_collider_box">
+        <pose>-0.236264 0.0 0.736198 -1.537059 0.0 1.570796</pose>
+        <geometry>
+          <box>
+            <size>0.074577 0.035125 0.004002</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open023_collider_box">
+        <pose>0.218174 -0.371562 0.836679 -1.456666 1.219083 -1.463598</pose>
+        <geometry>
+          <box>
+            <size>1.813121 0.084531 0.026942</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open025_collider_box">
+        <pose>-0.200794 -0.0 1.689591 -1.570786 -1e-06 -1.570801</pose>
+        <geometry>
+          <box>
+            <size>0.230187 0.0412 0.005257</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open024_collider_box">
+        <pose>0.0 -0.08212 1.637534 -0.349066 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.396332 0.088417 0.120598</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open022_collider_box.001">
+        <pose>0.236264 0.0 0.736198 -1.537059 0.0 1.570796</pose>
+        <geometry>
+          <box>
+            <size>0.074577 0.035125 0.004002</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open021_collider_box.001">
+        <pose>0.23554 -0.212371 0.754702 1.939827 -1.47727 1.202739</pose>
+        <geometry>
+          <box>
+            <size>0.02508 0.402079 0.001803</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open021_collider_box.002">
+        <pose>0.23554 0.212371 0.754702 1.201765 -1.664323 1.938854</pose>
+        <geometry>
+          <box>
+            <size>0.02508 0.402079 0.001803</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open021_collider_box.003">
+        <pose>-0.23554 0.212371 0.754702 1.201765 -1.664323 1.938854</pose>
+        <geometry>
+          <box>
+            <size>0.02508 0.402079 0.001803</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open025_collider_box.001">
+        <pose>0.200794 -0.0 1.689591 -1.570786 -1e-06 -1.570801</pose>
+        <geometry>
+          <box>
+            <size>0.230187 0.0412 0.005257</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open024_collider_box.002">
+        <pose>0.0 0.0 1.699893 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.396332 0.206404 0.020597</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open024_collider_box.003">
+        <pose>0.0 0.08212 1.637534 0.349066 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.396332 0.088417 0.120598</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open023_collider_box.001">
+        <pose>0.218174 0.371562 0.836679 -1.684926 1.922509 -1.677995</pose>
+        <geometry>
+          <box>
+            <size>1.813121 0.084531 0.026942</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open003_collider_box.001">
+        <pose>-0.218174 0.371562 0.836679 1.68492 1.922509 -1.463598</pose>
+        <geometry>
+          <box>
+            <size>1.813121 0.084531 0.026942</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open008_collider_box.001">
+        <pose>-0.0 0.170504 1.392367 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.410048 0.099076 0.05</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open007_collider_box.001">
+        <pose>-0.0 0.281151 1.088367 0.0 -0.0 3.141593</pose>
+        <geometry>
+          <box>
+            <size>0.433865 0.099076 0.05</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open006_collider_box.001">
+        <pose>-0.0 0.392526 0.782367 3.141593 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.457375 0.099076 0.05</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open005_collider_box.001">
+        <pose>-0.0 0.503173 0.478367 0.0 -0.0 3.141593</pose>
+        <geometry>
+          <box>
+            <size>0.480732 0.099076 0.05</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="double_stepladder_6ft_open004_collider_box.001">
+        <pose>-0.0 0.614183 0.173367 3.141593 0.0 1.570796</pose>
+        <geometry>
+          <box>
+            <size>0.099076 0.5 0.05</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

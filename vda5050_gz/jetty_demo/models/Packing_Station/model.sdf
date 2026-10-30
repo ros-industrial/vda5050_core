@@ -1,0 +1,278 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="Packing_Station">
+    <link name="base_link">
+      <visual name="base_visual">
+        <geometry>
+          <mesh>
+            <uri>base_visual.glb</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="packaging station015_collider_box">
+        <pose>0.0 0.0 0.897656 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.8382 2.108201 0.033489</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station016_collider_box">
+        <pose>0.0 0.0 0.316744 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.6604 1.4986 0.033489</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station042_collider_box">
+        <pose>0.308861 -0.727654 0.440456 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.037623 0.037623 0.880912</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station042_collider_box.001">
+        <pose>-0.308861 -0.727654 0.440456 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.037623 0.037623 0.880911</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station042_collider_box.002">
+        <pose>0.308861 0.727654 0.440456 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.037623 0.037623 0.880912</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station043_collider_box">
+        <pose>-0.308861 0.727654 0.440456 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.037623 0.037623 0.880911</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station041_collider_box">
+        <pose>0.0 0.0 0.864167 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.6604 1.4986 0.033489</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station041_collider_box.001">
+        <pose>-0.436968 -0.727654 1.10832 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.035736 0.035736 1.183361</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station041_collider_box.002">
+        <pose>-0.436968 0.727654 1.10832 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.035736 0.035736 1.183361</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station013_collider_box">
+        <pose>-0.372889 0.727655 0.806211 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.169066 0.041117 0.082154</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station014_collider_box">
+        <pose>-0.372889 -0.727654 0.806211 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.169066 0.041117 0.082154</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="labelprinter_collider_box">
+        <pose>0.12418 -0.828282 1.104276 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.508 0.3302 0.381</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="storagebox_collider_box">
+        <pose>0.0 0.760448 1.087816 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.842441 0.549703 0.340225</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="handheldscanner001_collider_box">
+        <pose>0.289656 0.311643 0.933523 3.141593 0.123054 -0.314628</pose>
+        <geometry>
+          <box>
+            <size>0.208692 0.094746 0.012903</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="handheldscanner002_collider_box">
+        <pose>0.304323 0.30687 1.031666 1.42181 0.0 -1.885424</pose>
+        <geometry>
+          <box>
+            <size>0.063 0.199637 0.083087</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packageenvelope_collider_box">
+        <pose>-0.18306 0.280363 0.928527 0.0 5.5e-05 -0.0</pose>
+        <geometry>
+          <box>
+            <size>0.330246 0.258727 0.029153</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packingstation_cardboardbox_collider_box">
+        <pose>0.135936 -0.434021 0.929904 -1.570796 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.4572 0.032927 0.31188</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station022_collider_box">
+        <pose>-0.265059 0.0 1.577259 3.141593 -0.0 1.570796</pose>
+        <geometry>
+          <box>
+            <size>1.473158 0.3011 0.044877</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station023_collider_box">
+        <pose>-0.260006 0.726296 1.693443 -1.570448 3.141593 -0.0</pose>
+        <geometry>
+          <box>
+            <size>0.277775 0.187493 0.004042</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station028_collider_box">
+        <pose>-0.260006 0.486853 1.693746 -1.570449 -3.141593 -0.0</pose>
+        <geometry>
+          <box>
+            <size>0.277775 0.187493 0.004042</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station030_collider_box">
+        <pose>-0.260006 0.243416 1.693746 -1.570449 3.141593 -0.0</pose>
+        <geometry>
+          <box>
+            <size>0.277775 0.187493 0.004042</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station032_collider_box">
+        <pose>-0.260006 -2.1e-05 1.693746 -1.570448 -3.141593 -0.0</pose>
+        <geometry>
+          <box>
+            <size>0.277775 0.187493 0.004042</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station034_collider_box">
+        <pose>-0.260006 -0.243458 1.693746 -1.570449 3.141593 -0.0</pose>
+        <geometry>
+          <box>
+            <size>0.277775 0.187493 0.004042</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station036_collider_box">
+        <pose>-0.260006 -0.486895 1.693746 -1.570448 -3.141593 -0.0</pose>
+        <geometry>
+          <box>
+            <size>0.277775 0.187493 0.004042</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packaging station026_collider_box">
+        <pose>-0.260006 -0.726295 1.693443 1.571144 0.0 -0.0</pose>
+        <geometry>
+          <box>
+            <size>0.277775 0.187493 0.004042</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packageenvelope001_collider_box">
+        <pose>-0.238303 -0.696445 1.730941 1.48353 3.141588 5.5e-05</pose>
+        <geometry>
+          <box>
+            <size>0.330246 0.258727 0.029153</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packageenvelope002_collider_box">
+        <pose>-0.238303 0.222293 1.729878 5.9e-05 -1.463168 1.570793</pose>
+        <geometry>
+          <box>
+            <size>0.258727 0.330246 0.029153</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packageenvelope003_collider_box">
+        <pose>-0.238303 0.189366 1.728958 5.8e-05 -1.449849 1.570794</pose>
+        <geometry>
+          <box>
+            <size>0.258727 0.330246 0.029153</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packageenvelope004_collider_box">
+        <pose>-0.238303 0.153245 1.730663 1.40421 9e-06 5.4e-05</pose>
+        <geometry>
+          <box>
+            <size>0.330246 0.258727 0.029153</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packageenvelope005_collider_box">
+        <pose>-0.23419 -0.222656 1.763977 1.637117 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.258727 0.330246 0.029153</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packingstation_cardboardbox001_collider_box">
+        <pose>-0.237421 -0.026879 1.755715 -1.570795 -1.324306 1.570795</pose>
+        <geometry>
+          <box>
+            <size>0.31188 0.032927 0.4572</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packingstation_cardboardbox002_collider_box">
+        <pose>-0.237421 0.466676 1.755966 -0.0 -0.038016 -1.570796</pose>
+        <geometry>
+          <box>
+            <size>0.032927 0.4572 0.31188</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="packingstation_cardboardbox003_collider_box">
+        <pose>-0.237421 0.418174 1.758195 1.445112 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.4572 0.31188 0.032927</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

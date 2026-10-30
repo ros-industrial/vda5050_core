@@ -1,0 +1,54 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="Picking_Bin">
+    <link name="base_link">
+      <visual name="base_visual">
+        <geometry>
+          <mesh>
+            <uri>base_visual.glb</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="box002_elements5001_collider_box">
+        <pose>-3.6647 0.347915 4.5 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.670601 17.304169 9.0</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box002_elements5001_collider_box.001">
+        <pose>3.6647 0.347915 4.5 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.670601 17.304169 9.0</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box002_elements5001_collider_box.002">
+        <pose>0.0 8.595875 4.5 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>8.0 0.808252 9.0</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box002_elements5001_collider_box.003">
+        <pose>0.0 0.933531 0.398687 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>8.0 16.132938 0.797375</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box002_elements5001_collider_box.004">
+        <pose>0.0 -7.444695 2.426299 0.698132 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>8.0 1.66591 4.79594</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>
