@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>vda5050_core</name>
-  <version>0.0.0</version>
+  <version>0.1.0</version>
   <description>Tools for VDA5050 development workflows</description>
   <maintainer email="saurabh_kamat@a-star.edu.sg">Saurabh Kamat</maintainer>
   <maintainer email="lim_yew_hao@a-star.edu.sg">Yew Hao Lim</maintainer>
@@ -16,7 +16,7 @@
   <buildtool_depend>cmake</buildtool_depend>
   <buildtool_depend>ament_cmake_python</buildtool_depend>
   <buildtool_depend>python3</buildtool_depend>
-  
+
   <build_depend>nlohmann-json-dev</build_depend>
 
   <depend>libpaho-mqtt-dev</depend>

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(vda5050_core VERSION 0.0.0)
+project(vda5050_core VERSION 0.1.0)
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
