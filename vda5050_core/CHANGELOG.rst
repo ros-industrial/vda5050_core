@@ -2,7 +2,7 @@
 Changelog for package vda5050_core
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
+0.1.0 (2026-10-28)
 -----------
 * Client Library
 
@@ -22,15 +22,18 @@ Forthcoming
     * feat: master-side event detectors and heartbeat hardening (`#58 <https://github.com/ros-industrial/vda5050_core/issues/58>`_)
     * feat: add traversability, action-conflict, factsheet, and mode validators (`#56 <https://github.com/ros-industrial/vda5050_core/issues/56>`_)
     * feat: add schema and pre-send validators (`#55 <https://github.com/ros-industrial/vda5050_core/issues/55>`_)
-  
+
 * Core Library
 
-  * feat(transport): add ProtocolAdapter `#48 <https://github.com/ros-industrial/vda5050_core/issues/48>`_, `#74 <https://github.com/ros-industrial/vda5050_core/issues/74>`_)  
-  * feat(transport): add MQTT client interface with Paho as an default implementation (`#1 <https://github.com/ros-industrial/vda5050_core/issues/1>`_, `#17 <https://github.com/ros-industrial/vda5050_core/issues/17>`_, `#19 <https://github.com/ros-industrial/vda5050_core/issues/19>`_) 
+  * feat(transport): add ProtocolAdapter `#48 <https://github.com/ros-industrial/vda5050_core/issues/48>`_, `#74 <https://github.com/ros-industrial/vda5050_core/issues/74>`_)
+  * feat(transport): add MQTT client interface with Paho as an default implementation (`#1 <https://github.com/ros-industrial/vda5050_core/issues/1>`_, `#17 <https://github.com/ros-industrial/vda5050_core/issues/17>`_, `#19 <https://github.com/ros-industrial/vda5050_core/issues/19>`_)
   * feat(types): create C++ structs for VDA5050 2.0.0 spec (`#6 <https://github.com/ros-industrial/vda5050_core/issues/6>`_)
   * feat(serialization): add common (de)serializers for C++ structs and ROS 2 msgs (`#10 <https://github.com/ros-industrial/vda5050_core/issues/10>`_, `#24 <https://github.com/ros-industrial/vda5050_core/issues/24>`_)
   * feat(layout): add LIF topology graph and JSON loader (`#54 <https://github.com/ros-industrial/vda5050_core/issues/54>`_)
   * feat(execution): add execution utilities (`#28 <https://github.com/ros-industrial/vda5050_core/issues/28>`_, `#36 <https://github.com/ros-industrial/vda5050_core/issues/36>`_, `#50 <https://github.com/ros-industrial/vda5050_core/issues/50>`_)
+  * feat(pybind): refactor pybind code for better compatibility with modern pyproject (`#88 <https://github.com/ros-industrial/vda5050_core/issues/88>`_, `#89 <https://github.com/ros-industrial/vda5050_core/issues/89>`_, `#90 <https://github.com/ros-industrial/vda5050_core/issues/90>`_)
+  * fix(client): fix execution lifecycle handling for navigation and actions (`#91 <https://github.com/ros-industrial/vda5050_core/issues/91>`_)
+  * fix(transport): register message handler before subscribing (`#93 <https://github.com/ros-industrial/vda5050_core/issues/93>`_)
 
 * Others
 
