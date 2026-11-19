@@ -396,6 +396,18 @@ TEST(OrderPublisherTest, MergedGraphInvalidRejected)
     result.fatal_errors().front().error_description.value_or("").find("graph"),
     std::string::npos)
     << "must reject on the merged-graph check, not an earlier one";
+  // The underlying graph validation error must be preserved.
+  bool found_graph_validation_error = false;
+  for (const auto& error : result.fatal_errors())
+  {
+    if (error.error_type == vda5050_core::errors::GraphValidationError)
+    {
+      found_graph_validation_error = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(found_graph_validation_error)
+    << "The underlying GraphValidationError should be preserved";
 }
 
 TEST(OrderPublisherTest, StitchedUpdateBackwardUpdateIdRejected)
