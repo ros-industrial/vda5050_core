@@ -1,0 +1,113 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="Picking_Shelves">
+    <link name="base_link">
+      <visual name="base_visual">
+        <geometry>
+          <mesh>
+            <uri>base_visual.glb</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <!--
+      <collision name="bounding_box_collider">
+        <pose>0.0 0.0 0.95 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.9017 0.444312 1.9</size>
+          </box>
+        </geometry>
+      </collision>
+      -->
+
+      <collision name="pickingshelvesshort_collider_box">
+        <pose>0.0 0.0 0.0635 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.9017 0.444312 0.0254</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="pickingshelvesshort005_collider_box">
+        <pose>0.0 0.0 0.3683 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.9017 0.444312 0.0254</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="pickingshelvesshort010_collider_box">
+        <pose>0.0 0.0 0.6731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.9017 0.444312 0.0254</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="pickingshelvesshort015_collider_box">
+        <pose>0.0 0.0 0.9779 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.9017 0.444312 0.0254</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="pickingshelvesshort020_collider_box">
+        <pose>0.0 0.0 1.2827 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.9017 0.444312 0.0254</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="pickingshelvesshort025_collider_box">
+        <pose>0.0 0.0 1.5875 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.9017 0.444312 0.0254</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="pickingshelvesshort030_collider_box">
+        <pose>0.0 0.0 1.8923 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.9017 0.444312 0.0254</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="pickingshelvesshort035_collider_box">
+        <pose>-0.431013 -0.202413 0.9525 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.052375 0.052375 1.905</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="pickingshelvesshort036_collider_box">
+        <pose>-0.431013 0.202413 0.9525 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.052375 0.052375 1.905</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="pickingshelvesshort037_collider_box">
+        <pose>0.431013 -0.202413 0.9525 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.052375 0.052375 1.905</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="pickingshelvesshort038_collider_box">
+        <pose>0.431013 0.202413 0.9525 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.052375 0.052375 1.905</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

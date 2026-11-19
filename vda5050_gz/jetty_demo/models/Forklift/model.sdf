@@ -1,0 +1,259 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="Forklift">
+    <link name="base_link">
+      <visual name="base_visual">
+        <geometry>
+          <mesh>
+            <uri>base_visual.glb</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="forklift_b132_collider_cylinder">
+        <pose>-0.455378 0.684627 0.285136 0.0 1.570796 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.284716</radius>
+            <length>0.224494</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="forklift_b129_collider_cylinder">
+        <pose>-0.465442 -0.557447 0.222519 0.0 1.570796 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.238229</radius>
+            <length>0.161316</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="forklift_b128_collider_cylinder">
+        <pose>0.455379 0.684627 0.285136 0.0 1.570796 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.284716</radius>
+            <length>0.224494</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="forklift_b125_collider_cylinder">
+        <pose>0.465442 -0.557447 0.222519 0.0 1.570796 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.238229</radius>
+            <length>0.161316</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="forklift_b044_collider_box">
+        <pose>0.263007 1.684895 0.149 0.0 1.570796 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.034368 1.219199 0.127</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b094_collider_box">
+        <pose>-0.263007 1.684895 0.149 0.0 1.570796 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.034368 1.219199 0.127</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b094_collider_box.001">
+        <pose>-0.263007 1.087425 0.393275 0.0 1.570796 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.522919 0.024258 0.127</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b044_collider_box.001">
+        <pose>0.263007 1.087432 0.393275 0.0 1.570796 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.522919 0.024273 0.127</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b033_collider_box">
+        <pose>0.0 1.050077 0.674221 0.0 1.570796 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.039757 0.075838 1.084605</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b026_collider_box">
+        <pose>0.0 -0.427481 0.582787 0.0 1.570796 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.93852 0.893155 1.0922</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b026_collider_box.001">
+        <pose>0.0 0.203739 0.381118 0.0 1.570796 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.535182 1.345925 1.0922</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b140_collider_box">
+        <pose>0.0 0.851012 1.063734 0.0 1.570796 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.870128 0.222264 0.721164</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b139_collider_box">
+        <pose>-0.0 0.798919 1.95054 0.0 1.570796 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.034998 0.277386 0.742054</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b139_collider_box.001">
+        <pose>0.0 0.756692 1.823356 0.0 1.570796 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.288451 0.157958 0.440354</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b140_collider_box.001">
+        <pose>0.0 0.878046 0.875679 0.0 1.570796 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.22967 0.129587 0.875406</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b139_collider_box.002">
+        <pose>-0.000873 0.515486 0.930159 1.570796 1.308997 1.570796</pose>
+        <geometry>
+          <box>
+            <size>0.660991 0.220155 0.243121</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b139_collider_cylinder">
+        <pose>0.0 0.338926 1.258317 -0.272899 3.141593 -0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.114914</radius>
+            <length>0.083365</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="forklift_b143_collider_box">
+        <pose>0.203028 0.395788 1.121018 0.992323 -0.000479 3.141591</pose>
+        <geometry>
+          <box>
+            <size>0.06902 0.360071 0.092192</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b139_collider_box.003">
+        <pose>-0.284765 0.466145 0.966224 1.260286 3.141593 -0.0</pose>
+        <geometry>
+          <box>
+            <size>0.075778 0.433645 0.070774</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b139_collider_box.004">
+        <pose>-0.0 0.538142 0.948467 1.570797 -1.329257 -1.570797</pose>
+        <geometry>
+          <box>
+            <size>0.3188 0.148748 0.910215</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b139_collider_box.005">
+        <pose>-0.471358 -0.666068 1.553107 0.0 -0.0 -1.570796</pose>
+        <geometry>
+          <box>
+            <size>0.062739 0.033 1.032844</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b139_collider_box.006">
+        <pose>0.471358 -0.666068 1.553107 0.0 1.570796 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.032844 0.062739 0.033</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b142_collider_box">
+        <pose>-0.0 -0.172392 2.059983 -0.023069 -0.0 -0.0</pose>
+        <geometry>
+          <box>
+            <size>0.981179 1.125203 0.115755</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b139_collider_box.007">
+        <pose>-0.47289 0.481024 1.334569 1.570796 1.326061 1.570796</pose>
+        <geometry>
+          <box>
+            <size>1.500593 0.074299 0.0354</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b139_collider_box.008">
+        <pose>0.47289 0.481024 1.334569 1.570796 1.326061 1.570796</pose>
+        <geometry>
+          <box>
+            <size>1.500593 0.074299 0.0354</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b139_collider_box.009">
+        <pose>0.0 -0.343208 1.190168 0.0 1.570796 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.39912 0.163592 0.561282</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b139_collider_box.010">
+        <pose>0.0 0.539583 0.734719 -0.393722 -0.0 3.141593</pose>
+        <geometry>
+          <box>
+            <size>0.902271 0.740745 0.111237</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b140_collider_box.002">
+        <pose>0.0 0.927693 0.409215 3.141592 -0.0 -0.0</pose>
+        <geometry>
+          <box>
+            <size>0.834675 0.203935 0.423513</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b139_collider_box.011">
+        <pose>0.472881 0.405408 1.378921 1.359241 0.0 3.141593</pose>
+        <geometry>
+          <box>
+            <size>0.016 0.195484 0.11207</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="forklift_b139_collider_box.012">
+        <pose>-0.472881 0.405408 1.378921 -0.0 1.359241 1.570796</pose>
+        <geometry>
+          <box>
+            <size>0.195484 0.016 0.11207</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

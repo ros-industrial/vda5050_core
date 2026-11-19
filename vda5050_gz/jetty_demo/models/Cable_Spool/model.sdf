@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="Cable_Spool">
+    <link name="base_link">
+      <visual name="base_visual">
+        <geometry>
+          <mesh>
+            <uri>base_visual.glb</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="spool_cable_low_collider_cylinder">
+        <pose>0.0 0.0 0.025 -0.0 0.0 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.5</radius>
+            <length>0.05</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="spool_cable_low_collider_cylinder.001">
+        <pose>0.0 0.0 0.575 -0.0 0.0 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.5</radius>
+            <length>0.05</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="spool_cable_low_collider_cylinder.002">
+        <pose>0.0 0.0 0.3 -0.0 0.0 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.385824</radius>
+            <length>0.6</length>
+          </cylinder>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

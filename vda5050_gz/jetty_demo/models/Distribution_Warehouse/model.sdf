@@ -1,0 +1,1166 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="Distribution_Warehouse">
+    <link name="base_link">
+      <visual name="base_visual">
+        <geometry>
+          <mesh>
+            <uri>base_visual.glb</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="cube (5)001_collider_box">
+        <pose>13.67 -5.68 5.929999 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.0 1.0 13.01</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cube (5)_collider_box">
+        <pose>-7.57 -5.68 5.929999 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.0 1.0 13.01</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cube (1)_collider_box">
+        <pose>-24.0 17.618946 2.510651 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>13.049801 25.872377 5.021302</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cube (4)001_collider_box">
+        <pose>-23.040001 4.776191 2.1 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>4.705098 0.251252 1.979337</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cube (4)003_collider_box">
+        <pose>-27.151514 4.776191 2.1 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.640517 0.251252 1.979337</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="frame_hp001_collider_box">
+        <pose>-19.563 4.649602 1.133148 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.971092 0.093134 2.169982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cube (1)001_collider_box">
+        <pose>-24.0 17.618946 0.043774 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>13.106369 25.928946 0.087549</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="frame_hp_collider_box">
+        <pose>-17.461601 20.076 1.133148 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.093134 0.971092 2.169983</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cube (4)005_collider_box">
+        <pose>-17.563911 24.582869 2.1 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.251251 4.705097 1.979337</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cube (5)002_collider_box">
+        <pose>-15.980897 15.356428 2.327658 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.693814 0.693814 5.282052</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cube (5)003_collider_box">
+        <pose>-15.980897 27.471577 2.327658 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.693814 0.693814 5.282052</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters_collider_box">
+        <pose>27.432001 5.9e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165783 62.56284 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters001_collider_box">
+        <pose>-27.431999 3.5e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165785 62.562836 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters002_collider_box">
+        <pose>-24.383999 3.6e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165783 62.56284 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters003_collider_box">
+        <pose>-21.335999 3.8e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165785 62.56284 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters004_collider_box">
+        <pose>-18.288002 3.6e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165783 62.562843 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters005_collider_box">
+        <pose>-15.24 3.8e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165786 62.562843 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters006_collider_box">
+        <pose>-12.192001 4e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165786 62.562843 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters007_collider_box">
+        <pose>-9.143999 4.3e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165785 62.562836 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters008_collider_box">
+        <pose>-6.096001 4.5e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165784 62.562836 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters009_collider_box">
+        <pose>-3.048 4.6e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165785 62.562836 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters010_collider_box">
+        <pose>-1e-06 4.8e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165784 62.562836 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters011_collider_box">
+        <pose>3.047999 5e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165785 62.562836 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters012_collider_box">
+        <pose>6.095998 5e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165784 62.562836 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters013_collider_box">
+        <pose>9.143999 5.1e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165785 62.562836 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters014_collider_box">
+        <pose>12.191998 5.3e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165787 62.56284 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters015_collider_box">
+        <pose>15.239998 5.7e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165786 62.562843 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters016_collider_box">
+        <pose>18.287998 5.9e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165783 62.562843 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters017_collider_box">
+        <pose>21.335999 5.7e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165785 62.56284 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="rafters018_collider_box">
+        <pose>24.384001 5.9e-05 11.675549 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.165783 62.56284 0.99057</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="walls001_collider_box.001">
+        <pose>30.48 2e-06 6.096 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.01 60.960003 12.192019</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="walls002_collider_box">
+        <pose>0.0 -30.479998 6.096009 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>60.959999 0.01 12.191999</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="walls_collider_box">
+        <pose>-30.48 2e-06 6.096 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.01 60.960003 12.192019</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5485_collider_box">
+        <pose>-0.000529 30.067745 3.631921 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.615615 0.800793 0.85331</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box">
+        <pose>1.19452 30.403812 2.923347 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.13896 0.171846 5.852485</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.001">
+        <pose>-1.196062 30.403812 2.923347 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.13896 0.171846 5.852485</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.002">
+        <pose>0.0 30.444313 1.387489 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.4384 0.062555 2.774978</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5485_collider_box.001">
+        <pose>9.751661 30.067745 3.631921 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.615615 0.800793 0.85331</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.003">
+        <pose>10.946712 30.403812 2.923347 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.13896 0.171846 5.852485</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.004">
+        <pose>8.556129 30.403812 2.923347 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.13896 0.171846 5.852485</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.005">
+        <pose>9.752191 30.444313 1.387489 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.4384 0.062555 2.774978</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5485_collider_box.002">
+        <pose>24.371634 30.067745 3.631921 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.615615 0.800793 0.85331</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.006">
+        <pose>25.566683 30.403812 2.923347 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.13896 0.171846 5.852485</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.007">
+        <pose>23.176102 30.403812 2.923347 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.13896 0.171846 5.852485</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.008">
+        <pose>24.372164 30.444313 1.387489 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.4384 0.062555 2.774978</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5485_collider_box.003">
+        <pose>19.509531 30.067745 3.631921 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.615615 0.800793 0.85331</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.009">
+        <pose>20.70458 30.403812 2.923347 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.13896 0.171846 5.852485</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.010">
+        <pose>18.313999 30.403812 2.923347 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.13896 0.171846 5.852485</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.011">
+        <pose>19.510061 30.444313 4.184203 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.4384 0.062555 2.774978</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5485_collider_box.004">
+        <pose>14.630073 30.067745 3.631921 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.615615 0.800793 0.85331</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.012">
+        <pose>15.825122 30.403812 2.923347 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.13896 0.171846 5.852485</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.013">
+        <pose>13.434541 30.403812 2.923347 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.13896 0.171846 5.852485</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.014">
+        <pose>14.630603 30.444313 4.184203 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.4384 0.062555 2.774978</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5485_collider_box.005">
+        <pose>4.877446 30.067745 3.631921 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.615615 0.800793 0.85331</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.015">
+        <pose>6.072495 30.403812 2.923347 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.13896 0.171846 5.852485</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.016">
+        <pose>3.681914 30.403812 2.923347 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.13896 0.171846 5.852485</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.017">
+        <pose>4.877976 30.444313 4.184203 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.4384 0.062555 2.774978</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="container001001_collider_box">
+        <pose>3.651515 36.745579 1.274999 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.160527 12.477701 2.896004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="container001001_collider_box.001">
+        <pose>6.102085 36.745579 1.274999 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.160527 12.477701 2.896004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="container001001_collider_box.002">
+        <pose>4.8768 36.888428 -0.087001 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.611096 12.192007 0.172003</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="container001001_collider_box.003">
+        <pose>4.8768 36.730724 2.744853 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.611096 12.507417 0.401707</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="ramp 4001_collider_box">
+        <pose>4.8768 29.091019 -0.044212 0.013963 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.153553 3.077521 0.122</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="ramp 4001_collider_box.001">
+        <pose>4.8768 31.077013 -0.051979 -0.058494 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.153553 0.921423 0.122</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="container001001_collider_box.004">
+        <pose>4.8768 42.873322 1.274999 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.611096 0.222218 2.896004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="container001001_collider_box.005">
+        <pose>13.375796 36.745579 1.274999 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.160527 12.477701 2.896004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="container001001_collider_box.006">
+        <pose>15.826365 36.745579 1.274999 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.160527 12.477701 2.896004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="container001001_collider_box.007">
+        <pose>14.601083 36.888428 -0.087001 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.611096 12.192007 0.172003</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="container001001_collider_box.008">
+        <pose>14.601083 36.730724 2.744853 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.611096 12.507417 0.401707</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="ramp 4001_collider_box.002">
+        <pose>14.601083 29.091019 -0.044212 0.013963 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.153553 3.077521 0.122</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="ramp 4001_collider_box.003">
+        <pose>14.601083 31.077013 -0.051979 -0.058494 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.153553 0.921423 0.122</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="container001001_collider_box.009">
+        <pose>14.601083 42.873322 1.274999 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.611096 0.222218 2.896004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5485_collider_box.006">
+        <pose>19.564995 30.067745 3.631921 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.615615 0.800793 0.85331</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.018">
+        <pose>20.760044 30.403812 2.923347 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.13896 0.171846 5.852485</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.019">
+        <pose>18.369465 30.403812 2.923347 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.13896 0.171846 5.852485</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="slidingdoor 5482_collider_box.020">
+        <pose>19.565525 30.444313 4.184203 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.4384 0.062555 2.774978</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="container001001_collider_box.010">
+        <pose>18.310719 36.745579 1.274999 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.160527 12.477701 2.896004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="container001001_collider_box.011">
+        <pose>20.761288 36.745579 1.274999 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.160527 12.477701 2.896004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="container001001_collider_box.012">
+        <pose>19.536007 36.888428 -0.087001 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.611096 12.192007 0.172003</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="container001001_collider_box.013">
+        <pose>19.536007 36.730724 2.744853 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.611096 12.507417 0.401707</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="ramp 4001_collider_box.004">
+        <pose>19.536007 29.091019 -0.044212 0.013963 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.153553 3.077521 0.122</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="ramp 4001_collider_box.005">
+        <pose>19.536007 31.077013 -0.051979 -0.058494 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.153553 0.921423 0.122</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="container001001_collider_box.014">
+        <pose>19.536007 42.873322 1.274999 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.611096 0.222218 2.896004</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="floor002_collider_box">
+        <pose>0.0 0.0 0.0 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>60.959999 60.959999 1.8e-05</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="stairsmetal002_collider_box">
+        <pose>-17.423519 8.967621 5.437622 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.061687 8.759787 1.120139</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="stairsmetal (1)004_collider_box">
+        <pose>-24.647566 4.609578 5.437623 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>14.396378 0.061687 1.120139</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="stairsmetal002_collider_box.001">
+        <pose>-15.567365 22.503052 5.375848 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.05726 18.476784 1.243688</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="stairsmetal003_collider_box">
+        <pose>-16.5 7.908711 0.101603 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.799999 5.725052 5.080006</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="stairsmetal002_collider_box.002">
+        <pose>-15.570251 10.697059 3.102405 0.726581 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.063033 7.635524 0.888999</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="stairsmetal002_collider_box.003">
+        <pose>-15.570251 7.842681 0.385799 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.063033 0.59361 1.053576</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="stairsmetal002_collider_box.004">
+        <pose>-17.426073 10.697059 3.102405 0.726581 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.063033 7.635524 0.888999</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="stairsmetal002_collider_box.005">
+        <pose>-17.426073 7.842681 0.385799 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.063033 0.59361 1.053576</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="floor002_collider_box.001">
+        <pose>-23.985769 17.944378 5.052156 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>13.078262 26.523245 0.048153</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="floor002_collider_box.002">
+        <pose>-23.065382 22.351646 5.048767 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>14.919037 17.708706 0.05493</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="walls001_collider_box">
+        <pose>-13.425142 30.548428 5.956895 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>34.109718 0.136858 12.470209</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="walls001_collider_box.002">
+        <pose>9.781928 30.548428 5.956895 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>7.277754 0.136858 12.470209</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="walls001_collider_box.004">
+        <pose>26.132429 30.548428 5.956895 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>10.66654 0.136858 12.470209</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="walls001_collider_box.005">
+        <pose>17.078478 30.548428 5.956895 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.427765 0.136858 12.470209</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="walls001_collider_box.003">
+        <pose>0.127078 30.548428 8.765667 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>61.214157 0.136858 6.852665</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp001_collider_box">
+        <pose>0.0 0.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385652 1.859864 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp003_collider_box">
+        <pose>0.0 25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385652 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp005_collider_box">
+        <pose>0.0 12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385652 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp007_collider_box">
+        <pose>0.0 -12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385652 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp009_collider_box">
+        <pose>0.0 -25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385652 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp011_collider_box">
+        <pose>-6.099999 0.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385652 1.859864 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp013_collider_box">
+        <pose>-6.099999 25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385652 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp015_collider_box">
+        <pose>-6.099999 12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385652 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp017_collider_box">
+        <pose>-6.099999 -12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385652 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp019_collider_box">
+        <pose>-6.099999 -25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385652 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp021_collider_box">
+        <pose>-12.2 0.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385653 1.859864 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp023_collider_box">
+        <pose>-12.2 25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385653 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp025_collider_box">
+        <pose>-12.2 12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385653 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp027_collider_box">
+        <pose>-12.2 -12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385653 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp029_collider_box">
+        <pose>-12.2 -25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385653 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp031_collider_box">
+        <pose>-18.279999 0.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859864 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp033_collider_box">
+        <pose>-18.279999 25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp035_collider_box">
+        <pose>-18.279999 12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp037_collider_box">
+        <pose>-18.279999 -12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp039_collider_box">
+        <pose>-18.279999 -25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp041_collider_box">
+        <pose>-24.360001 0.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859864 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp043_collider_box">
+        <pose>-24.360001 25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp045_collider_box">
+        <pose>-24.360001 12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp047_collider_box">
+        <pose>-24.360001 -12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp049_collider_box">
+        <pose>-24.360001 -25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp051_collider_box">
+        <pose>6.08 0.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385652 1.859864 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp053_collider_box">
+        <pose>6.08 25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385652 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp055_collider_box">
+        <pose>6.08 12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385652 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp057_collider_box">
+        <pose>6.08 -12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385652 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp059_collider_box">
+        <pose>6.08 -25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385652 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp061_collider_box">
+        <pose>12.18 0.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385653 1.859864 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp063_collider_box">
+        <pose>12.18 25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385653 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp065_collider_box">
+        <pose>12.18 12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385653 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp067_collider_box">
+        <pose>12.18 -12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385653 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp069_collider_box">
+        <pose>12.18 -25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385653 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp071_collider_box">
+        <pose>18.33 0.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859864 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp073_collider_box">
+        <pose>18.33 25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp075_collider_box">
+        <pose>18.33 12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp077_collider_box">
+        <pose>18.33 -12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp079_collider_box">
+        <pose>18.33 -25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp081_collider_box">
+        <pose>24.360001 0.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859864 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp083_collider_box">
+        <pose>24.360001 25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp085_collider_box">
+        <pose>24.360001 12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp087_collider_box">
+        <pose>24.360001 -12.5 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="light_lp089_collider_box">
+        <pose>24.360001 -25.0 11.077731 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.385651 1.859863 0.146982</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="ceiling_collider_box">
+        <pose>0.0 4e-06 12.191999 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>60.960007 60.960003 1.9e-05</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

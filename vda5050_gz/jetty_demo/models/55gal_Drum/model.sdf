@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="55gal_Drum">
+    <link name="base_link">
+      <visual name="base_visual">
+        <geometry>
+          <mesh>
+            <uri>base_visual.glb</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="55_gallon_drum01_collider_cylinder">
+        <pose>0.0 -0.0 0.431104 -0.0 0.0 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.297295</radius>
+            <length>0.862208</length>
+          </cylinder>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

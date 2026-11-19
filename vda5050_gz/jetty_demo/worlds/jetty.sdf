@@ -1,0 +1,2364 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sdf version="1.12">
+  <world name="default">
+    <plugin
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::Physics">
+    </plugin>
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin
+      filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands">
+    </plugin>
+    <physics name="fast" type="ignored">
+      <max_step_size>0.004</max_step_size>
+      <real_time_factor>1</real_time_factor>
+    </physics>
+
+    <scene>
+      <ambient>0.3 0.3 0.3</ambient>
+      <grid>false</grid>
+    </scene>
+
+    <light type="spot" name="spot">
+      <pose>0 0 10.0 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>1 1 1 1</specular>
+      <intensity>1</intensity>
+      <attenuation>
+        <range>30</range>
+        <linear>0.03</linear>
+        <constant>0.02</constant>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <direction>0 0 -1</direction>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>2.5</outer_angle>
+        <falloff>0.5</falloff>
+      </spot>
+      <cast_shadows>true</cast_shadows>
+      <visualize>false</visualize>
+    </light>
+
+    <light type="spot" name="spot2">
+      <pose>20 20 10.0 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>1 1 1 1</specular>
+      <intensity>1</intensity>
+      <attenuation>
+        <range>30</range>
+        <linear>0.03</linear>
+        <constant>0.02</constant>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <direction>0 0 -1</direction>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>2.5</outer_angle>
+        <falloff>0.5</falloff>
+      </spot>
+      <cast_shadows>false</cast_shadows>
+      <visualize>false</visualize>
+    </light>
+
+    <light type="spot" name="spot3">
+      <pose>-20 20 10.0 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>1 1 1 1</specular>
+      <intensity>1</intensity>
+      <attenuation>
+        <range>30</range>
+        <linear>0.03</linear>
+        <constant>0.02</constant>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <direction>0 0 -1</direction>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>2.5</outer_angle>
+        <falloff>0.5</falloff>
+      </spot>
+      <cast_shadows>false</cast_shadows>
+      <visualize>false</visualize>
+    </light>
+
+
+    <light type="spot" name="spot4">
+      <pose>20 -20 10.0 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>1 1 1 1</specular>
+      <intensity>1</intensity>
+      <attenuation>
+        <range>30</range>
+        <linear>0.03</linear>
+        <constant>0.02</constant>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <direction>0 0 -1</direction>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>2.5</outer_angle>
+        <falloff>0.5</falloff>
+      </spot>
+      <cast_shadows>false</cast_shadows>
+      <visualize>false</visualize>
+    </light>
+
+    <light type="spot" name="spot5">
+      <pose>-20 -20 10.0 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>1 1 1 1</specular>
+      <intensity>1</intensity>
+      <attenuation>
+        <range>30</range>
+        <linear>0.03</linear>
+        <constant>0.02</constant>
+        <quadratic>0.0</quadratic>
+      </attenuation>
+      <direction>0 0 -1</direction>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>2.5</outer_angle>
+        <falloff>0.5</falloff>
+      </spot>
+      <cast_shadows>false</cast_shadows>
+      <visualize>false</visualize>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- Warehouse assets -->
+    <include>
+      <static>true</static>
+      <name>Distribution Warehouse</name>
+      <uri>Distribution_Warehouse</uri>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-7.2612 0.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.001</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-7.2612 1.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.002</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-7.2612 2.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.003</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-7.2612 3.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.004</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-7.2612 4.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.005</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-7.2612 5.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.006</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-4.2612 -0.0508 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.007</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-4.2612 0.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.008</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-4.2612 1.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.009</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-4.2612 2.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.010</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-4.2612 3.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.011</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-4.2612 4.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.012</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-4.2612 5.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.013</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-3.7612 -0.0508 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.014</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-3.7612 0.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.015</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-3.7612 1.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.016</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-3.7612 2.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.017</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-3.7612 3.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.018</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-3.7612 4.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.019</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-3.7612 5.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.020</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-0.7612 -0.0508 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.021</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-0.7612 0.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.022</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-0.7612 1.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.023</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-0.7612 2.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.024</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-0.7612 3.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.025</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-0.7612 4.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.026</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-0.7612 5.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.027</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-0.2612 -0.0508 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.028</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-0.2612 0.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.029</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-0.2612 1.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.030</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-0.2612 2.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.031</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-0.2612 3.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.032</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-0.2612 4.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.033</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-0.2612 5.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.034</name>
+      <uri>Picking_Shelves</uri>
+      <pose>2.7388 -0.0508 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.035</name>
+      <uri>Picking_Shelves</uri>
+      <pose>2.7388 0.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.036</name>
+      <uri>Picking_Shelves</uri>
+      <pose>2.7388 1.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.037</name>
+      <uri>Picking_Shelves</uri>
+      <pose>2.7388 2.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.038</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-7.2612 -0.0508 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.039</name>
+      <uri>Picking_Shelves</uri>
+      <pose>2.7388 3.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.040</name>
+      <uri>Picking_Shelves</uri>
+      <pose>2.7388 4.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.041</name>
+      <uri>Picking_Shelves</uri>
+      <pose>2.7388 5.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.042</name>
+      <uri>Picking_Shelves</uri>
+      <pose>3.2388 -0.0508 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.043</name>
+      <uri>Picking_Shelves</uri>
+      <pose>3.2388 0.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.044</name>
+      <uri>Picking_Shelves</uri>
+      <pose>3.2388 1.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.045</name>
+      <uri>Picking_Shelves</uri>
+      <pose>3.2388 2.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.046</name>
+      <uri>Picking_Shelves</uri>
+      <pose>3.2388 3.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.047</name>
+      <uri>Picking_Shelves</uri>
+      <pose>3.2388 4.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.048</name>
+      <uri>Picking_Shelves</uri>
+      <pose>3.2388 5.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.049</name>
+      <uri>Picking_Shelves</uri>
+      <pose>6.2388 -0.0508 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.050</name>
+      <uri>Picking_Shelves</uri>
+      <pose>6.2388 0.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.051</name>
+      <uri>Picking_Shelves</uri>
+      <pose>6.2388 1.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.052</name>
+      <uri>Picking_Shelves</uri>
+      <pose>6.2388 2.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.053</name>
+      <uri>Picking_Shelves</uri>
+      <pose>6.2388 3.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.054</name>
+      <uri>Picking_Shelves</uri>
+      <pose>6.2388 4.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.055</name>
+      <uri>Picking_Shelves</uri>
+      <pose>6.2388 5.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.056</name>
+      <uri>Picking_Shelves</uri>
+      <pose>6.7388 -0.0508 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.057</name>
+      <uri>Picking_Shelves</uri>
+      <pose>6.7388 0.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.058</name>
+      <uri>Picking_Shelves</uri>
+      <pose>6.7388 1.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.059</name>
+      <uri>Picking_Shelves</uri>
+      <pose>6.7388 2.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.060</name>
+      <uri>Picking_Shelves</uri>
+      <pose>6.7388 3.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.061</name>
+      <uri>Picking_Shelves</uri>
+      <pose>6.7388 4.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.062</name>
+      <uri>Picking_Shelves</uri>
+      <pose>6.7388 5.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.063</name>
+      <uri>Picking_Shelves</uri>
+      <pose>9.7388 -0.0508 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.064</name>
+      <uri>Picking_Shelves</uri>
+      <pose>9.7388 0.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.065</name>
+      <uri>Picking_Shelves</uri>
+      <pose>9.7388 1.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.066</name>
+      <uri>Picking_Shelves</uri>
+      <pose>9.7388 2.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.067</name>
+      <uri>Picking_Shelves</uri>
+      <pose>9.7388 3.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.068</name>
+      <uri>Picking_Shelves</uri>
+      <pose>9.7388 4.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.069</name>
+      <uri>Picking_Shelves</uri>
+      <pose>9.7388 5.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.070</name>
+      <uri>Picking_Shelves</uri>
+      <pose>10.2388 -0.0508 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.071</name>
+      <uri>Picking_Shelves</uri>
+      <pose>10.2388 0.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.072</name>
+      <uri>Picking_Shelves</uri>
+      <pose>10.2388 1.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.073</name>
+      <uri>Picking_Shelves</uri>
+      <pose>10.2388 2.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.074</name>
+      <uri>Picking_Shelves</uri>
+      <pose>10.2388 3.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.075</name>
+      <uri>Picking_Shelves</uri>
+      <pose>10.2388 4.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.076</name>
+      <uri>Picking_Shelves</uri>
+      <pose>10.2388 5.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.077</name>
+      <uri>Picking_Shelves</uri>
+      <pose>13.2388 -0.0508 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.078</name>
+      <uri>Picking_Shelves</uri>
+      <pose>13.2388 0.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.079</name>
+      <uri>Picking_Shelves</uri>
+      <pose>13.2388 1.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.080</name>
+      <uri>Picking_Shelves</uri>
+      <pose>13.2388 2.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.081</name>
+      <uri>Picking_Shelves</uri>
+      <pose>13.2388 3.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.082</name>
+      <uri>Picking_Shelves</uri>
+      <pose>13.2388 4.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.083</name>
+      <uri>Picking_Shelves</uri>
+      <pose>13.2388 5.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.084</name>
+      <uri>Picking_Shelves</uri>
+      <pose>13.7388 -0.0508 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.085</name>
+      <uri>Picking_Shelves</uri>
+      <pose>13.7388 0.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.086</name>
+      <uri>Picking_Shelves</uri>
+      <pose>13.7388 1.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.087</name>
+      <uri>Picking_Shelves</uri>
+      <pose>13.7388 2.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.088</name>
+      <uri>Picking_Shelves</uri>
+      <pose>13.7388 3.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.089</name>
+      <uri>Picking_Shelves</uri>
+      <pose>13.7388 4.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.090</name>
+      <uri>Picking_Shelves</uri>
+      <pose>13.7388 5.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.091</name>
+      <uri>Picking_Shelves</uri>
+      <pose>16.7388 -0.0508 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.092</name>
+      <uri>Picking_Shelves</uri>
+      <pose>16.7388 0.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.093</name>
+      <uri>Picking_Shelves</uri>
+      <pose>16.7388 1.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.094</name>
+      <uri>Picking_Shelves</uri>
+      <pose>16.7388 2.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.095</name>
+      <uri>Picking_Shelves</uri>
+      <pose>16.7388 3.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.096</name>
+      <uri>Picking_Shelves</uri>
+      <pose>16.7388 4.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.097</name>
+      <uri>Picking_Shelves</uri>
+      <pose>16.7388 5.9492 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+    <!--
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.098</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-23.6296 -25.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.099</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-24.6296 -25.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.100</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-25.6296 -25.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.101</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-26.6296 -25.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.102</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-27.6296 -25.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.103</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-28.6296 -25.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.104</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-29.6296 -25.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.105</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-23.6296 -22.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.106</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-24.6296 -22.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.107</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-25.6296 -22.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.108</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-26.6296 -22.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.109</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-27.6296 -22.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.110</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-28.6296 -22.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.111</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-29.6296 -22.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.112</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-23.6296 -22.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.113</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-24.6296 -22.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.114</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-25.6296 -22.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.115</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-26.6296 -22.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.116</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-27.6296 -22.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.117</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-28.6296 -22.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.118</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-29.6296 -22.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.119</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-23.6296 -19.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.120</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-24.6296 -19.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.121</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-25.6296 -19.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.122</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-26.6296 -19.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.123</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-27.6296 -19.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.124</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-28.6296 -19.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.125</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-29.6296 -19.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.126</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-23.6296 -18.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.127</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-24.6296 -18.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.128</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-25.6296 -18.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.129</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-26.6296 -18.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.130</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-27.6296 -18.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.131</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-28.6296 -18.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.132</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-29.6296 -18.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.133</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-23.6296 -15.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.134</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-24.6296 -15.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.135</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-25.6296 -15.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.136</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-26.6296 -15.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.137</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-27.6296 -15.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.138</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-28.6296 -15.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.139</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-29.6296 -15.6159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.140</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-23.6296 -15.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.141</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-24.6296 -15.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.142</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-25.6296 -15.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.143</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-26.6296 -15.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.144</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-27.6296 -15.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.145</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-28.6296 -15.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.146</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-29.6296 -15.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.147</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-23.6296 -12.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.148</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-24.6296 -12.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.149</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-25.6296 -12.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.150</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-26.6296 -12.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.151</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-27.6296 -12.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.152</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-28.6296 -12.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.153</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-29.6296 -12.1159 0.0000 0.0000 -0.0000 3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.154</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-26.4786 8.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.155</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-26.4786 9.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.156</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-26.4786 10.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.157</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-26.4786 11.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.158</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-26.4786 12.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.159</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-26.4786 13.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.160</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-26.4786 14.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.161</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-25.9786 8.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.162</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-25.9786 9.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.163</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-25.9786 10.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.164</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-25.9786 11.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.165</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-25.9786 12.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.166</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-25.9786 13.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.167</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-25.9786 14.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.168</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-22.5720 8.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.169</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-22.5720 9.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.170</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-22.5720 10.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.171</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-22.5720 11.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.172</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-22.5720 12.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.173</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-22.5720 13.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.174</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-22.5720 14.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.175</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-22.0720 8.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.176</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-22.0720 9.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.177</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-22.0720 10.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.178</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-22.0720 11.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.179</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-22.0720 12.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.180</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-22.0720 13.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.181</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-22.0720 14.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.182</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-30.2166 8.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.183</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-30.2166 9.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.184</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-30.2166 10.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.185</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-30.2166 11.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.186</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-30.2166 12.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.187</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-30.2166 13.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Picking_Shelves.188</name>
+      <uri>Picking_Shelves</uri>
+      <pose>-30.2166 14.0853 5.1199 0.0000 -0.0000 1.5708</pose>
+    </include>
+    -->
+
+    <include>
+      <static>true</static>
+      <name>55gal_Drum</name>
+      <uri>55gal_Drum</uri>
+      <pose>30.164 -3.3757 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>55gal_Drum.001</name>
+      <uri>55gal_Drum</uri>
+      <pose>30.164 -2.5122 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>55gal_Drum.002</name>
+      <uri>55gal_Drum</uri>
+      <pose>30.164 -1.6487 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>55gal_Drum.003</name>
+      <uri>55gal_Drum</uri>
+      <pose>29.3741 -2.2211 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>55gal_Drum.004</name>
+      <uri>55gal_Drum</uri>
+      <pose>29.4938 -3.0603 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Cable_Spool</name>
+      <uri>Cable_Spool</uri>
+      <pose>29.9051 -9.0959 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Cable_Spool.001</name>
+      <uri>Cable_Spool</uri>
+      <pose>29.7221 -10.2336 0.4916 -1.5708 -0.0000 -0.4013</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Cable_Spool.002</name>
+      <uri>Cable_Spool</uri>
+      <pose>29.3782 -10.6325 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Cable_Spool.003</name>
+      <uri>Cable_Spool</uri>
+      <pose>30.4837 -10.9715 0.4916 -1.5708 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Dumpster_Large</name>
+      <uri>Dumpster_Large</uri>
+      <pose>28.8856 24.1307 0.0000 0.0000 -0.0000 1.5708</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Dumpster_Large.001</name>
+      <uri>Dumpster_Large</uri>
+      <pose>-18.4293 -29.0935 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Forklift</name>
+      <uri>Forklift</uri>
+      <pose>0.0399 -10.0522 0.0000 0.0000 0.0000 -1.8313</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Generator</name>
+      <uri>Generator</uri>
+      <pose>-28.3036 19.6236 5.07 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Generator.001</name>
+      <uri>Generator</uri>
+      <pose>-23.2303 19.6236 5.07 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Hand_Cart</name>
+      <uri>Hand_Cart</uri>
+      <pose>21.7241 13.2248 0.0000 0.0000 0.0000 -2.6822</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Hand_Cart.001</name>
+      <uri>Hand_Cart</uri>
+      <pose>16.2 -29.0120 0.0000 0.0000 0.0000 -1.5957</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Hand_Cart.002</name>
+      <uri>Hand_Cart</uri>
+      <pose>9.8893 -28.1736 0.0000 0.0000 0.0000 -1.7779</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Hand_Cart.003</name>
+      <uri>Hand_Cart</uri>
+      <pose>-10.2822 -0.8198 0.0000 0.0000 -0.0000 0.4128</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Handtruck_01</name>
+      <uri>Handtruck_01</uri>
+      <pose>-7.4130 6.9018 0.0000 0.0000 -0.0000 -3.0926</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Handtruck_01.001</name>
+      <uri>Handtruck_01</uri>
+      <pose>10.1366 14.4086 0.0000 0.0000 -0.0000 -3.0926</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Handtruck_01.002</name>
+      <uri>Handtruck_01</uri>
+      <pose>14.8018 31.6403 0.0000 0.0000 -0.0000 -0.9649</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Handtruck_01.003</name>
+      <uri>Handtruck_01</uri>
+      <pose>0.3280 4.1175 0.0000 0.0000 -0.0000 0.7851</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Handtruck_02</name>
+      <uri>Handtruck_02</uri>
+      <pose>15.3440 -0.9353 -0.0000 0.0000 0.0000 -0.5890</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Handtruck_02.001</name>
+      <uri>Handtruck_02</uri>
+      <pose>3.0293 28.5490 0.0000 0.0000 0.0000 -0.5890</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Ladder</name>
+      <uri>Ladder</uri>
+      <pose>-2.1513 29.0158 0.0000 0.0000 -0.0000 0.7118</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Ladder.001</name>
+      <uri>Ladder</uri>
+      <pose>-29.9931 -5.1888 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Ladder.002</name>
+      <uri>Ladder</uri>
+      <pose>18.6162 5.6693 0.0000 0.0000 0.0000 -0.3509</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Ladder.003</name>
+      <uri>Ladder</uri>
+      <pose>0.2378 -1.2640 0.0000 0.0000 0.0000 -1.9470</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Packing_Station</name>
+      <uri>Packing_Station</uri>
+      <pose>0.9342 13.0841 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Packing_Station.001</name>
+      <uri>Packing_Station</uri>
+      <pose>-4.0658 13.0841 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Packing_Station.002</name>
+      <uri>Packing_Station</uri>
+      <pose>-0.0912 13.0841 0.0000 0.0000 0.0000 -3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Packing_Station.003</name>
+      <uri>Packing_Station</uri>
+      <pose>5.9342 13.0841 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Packing_Station.004</name>
+      <uri>Packing_Station</uri>
+      <pose>4.9088 13.0841 0.0000 0.0000 0.0000 -3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Packing_Station.005</name>
+      <uri>Packing_Station</uri>
+      <pose>10.9342 13.0841 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Packing_Station.006</name>
+      <uri>Packing_Station</uri>
+      <pose>9.9088 13.0841 0.0000 0.0000 0.0000 -3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Packing_Station.007</name>
+      <uri>Packing_Station</uri>
+      <pose>15.9342 13.0841 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Packing_Station.008</name>
+      <uri>Packing_Station</uri>
+      <pose>14.9088 13.0841 0.0000 0.0000 0.0000 -3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Packing_Station.009</name>
+      <uri>Packing_Station</uri>
+      <pose>19.9088 13.0841 0.0000 0.0000 0.0000 -3.1416</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Jack</name>
+      <uri>Pallet_Jack</uri>
+      <pose>16.9004 -10.0573 -0.0000 0.0000 -0.0000 1.8314</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Jack.001</name>
+      <uri>Pallet_Jack</uri>
+      <pose>-1.1993 21.5562 0.0000 0.0000 -0.0000 0.9740</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Jack.002</name>
+      <uri>Pallet_Jack</uri>
+      <pose>5.5510 -16.5990 -0.0000 0.0000 0.0000 -0.4523</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Jack.003</name>
+      <uri>Pallet_Jack</uri>
+      <pose>0.4433 17.9255 -0.0000 0.0000 -0.0000 1.6441</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard</name>
+      <uri>Pallet_Standard</uri>
+      <pose>16.3462 18.8209 0.0000 0.0000 -0.0000 1.3997</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard.001</name>
+      <uri>Pallet_Standard</uri>
+      <pose>-21.2859 -12.4455 0.0000 0.0000 0.0000 -0.2909</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard.002</name>
+      <uri>Pallet_Standard</uri>
+      <pose>19.7470 15.4418 0.0000 0.0000 -0.0000 1.3997</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard.003</name>
+      <uri>Pallet_Standard</uri>
+      <pose>19.7470 15.4570 0.1448 0.0000 -0.0000 1.4629</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard.004</name>
+      <uri>Pallet_Standard</uri>
+      <pose>19.7470 15.3753 0.2894 0.0000 -0.0000 1.3734</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard.005</name>
+      <uri>Pallet_Standard</uri>
+      <pose>1.1614 17.9783 -0.0000 0.0000 -0.0000 3.2149</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard.006</name>
+      <uri>Pallet_Standard</uri>
+      <pose>-4.4823 -7.7842 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard.007</name>
+      <uri>Pallet_Standard</uri>
+      <pose>-7.0000 -12.6278 0.0000 -1.5708 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard.008</name>
+      <uri>Pallet_Standard</uri>
+      <pose>-4.4823 -12.6278 0.0000 -1.5708 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard.009</name>
+      <uri>Pallet_Standard</uri>
+      <pose>-7.0000 -14.1208 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard.010</name>
+      <uri>Pallet_Standard</uri>
+      <pose>-4.4823 -14.1208 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard.011</name>
+      <uri>Pallet_Standard</uri>
+      <pose>-7.0000 -18.9644 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard.012</name>
+      <uri>Pallet_Standard</uri>
+      <pose>-4.4823 -18.9644 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard.013</name>
+      <uri>Pallet_Standard</uri>
+      <pose>-7.0000 -20.4317 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard.014</name>
+      <uri>Pallet_Standard</uri>
+      <pose>-4.4823 -20.4317 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard.015</name>
+      <uri>Pallet_Standard</uri>
+      <pose>-7.0000 -25.2753 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard.016</name>
+      <uri>Pallet_Standard</uri>
+      <pose>-4.4823 -25.2753 0.0000 0.0000 -0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Standard.017</name>
+      <uri>Pallet_Standard</uri>
+      <pose>-7.0000 -7.7842 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack</name>
+      <uri>Pallet_Rack</uri>
+      <pose>-7.0000 -7.7842 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack.001</name>
+      <uri>Pallet_Rack</uri>
+      <pose>-7.0000 -12.6391 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack.002</name>
+      <uri>Pallet_Rack</uri>
+      <pose>-7.0000 -14.2059 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack.003</name>
+      <uri>Pallet_Rack</uri>
+      <pose>-7.0000 -18.8788 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack.004</name>
+      <uri>Pallet_Rack</uri>
+      <pose>-7.0000 -20.4456 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack.005</name>
+      <uri>Pallet_Rack</uri>
+      <pose>-7.0000 -25.2694 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>-1.9683 -7.7842 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.001</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>0.5457 -7.7842 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.002</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>3.0597 -7.7842 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.003</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>5.5737 -7.7842 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.004</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>-4.4823 -7.7842 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.005</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>8.0877 -7.7842 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.006</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>10.6017 -7.7842 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.007</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>13.1157 -7.7842 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.008</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>15.6297 -7.7842 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.009</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>18.1437 -7.7842 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.010</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>-1.9683 -12.6391 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.011</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>0.5457 -12.6391 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.012</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>3.0597 -12.6391 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.013</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>5.5737 -12.6391 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.014</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>-4.4823 -12.6391 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.015</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>8.0877 -12.6391 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.016</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>10.6017 -12.6391 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.017</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>13.1157 -12.6391 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.018</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>15.6297 -12.6391 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.019</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>18.1437 -12.6391 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.020</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>-1.9683 -14.2059 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.021</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>0.5457 -14.2059 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.022</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>3.0597 -14.2059 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.023</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>5.5737 -14.2059 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.024</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>-4.4823 -14.2059 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.025</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>8.0877 -14.2059 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.026</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>10.6017 -14.2059 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.027</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>13.1157 -14.2059 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.028</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>15.6297 -14.2059 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.029</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>18.1437 -14.2059 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.030</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>-1.9683 -18.8788 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.031</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>0.5457 -18.8788 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.032</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>3.0597 -18.8788 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.033</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>5.5737 -18.8788 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.034</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>-4.4823 -18.8788 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.035</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>8.0877 -18.8788 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.036</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>10.6017 -18.8788 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.037</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>13.1157 -18.8788 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.038</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>15.6297 -18.8788 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.039</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>18.1437 -18.8788 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.040</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>-1.9683 -20.4456 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.041</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>0.5457 -20.4456 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.042</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>3.0597 -20.4456 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.043</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>5.5737 -20.4456 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.044</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>-4.4823 -20.4456 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.045</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>8.0877 -20.4456 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.046</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>10.6017 -20.4456 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.047</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>13.1157 -20.4456 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.048</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>15.6297 -20.4456 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.049</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>18.1437 -20.4456 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.050</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>-1.9683 -25.2694 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.051</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>0.5457 -25.2694 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.052</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>3.0597 -25.2694 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.053</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>5.5737 -25.2694 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.054</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>-4.4823 -25.2694 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.055</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>8.0877 -25.2694 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.056</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>10.6017 -25.2694 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.057</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>13.1157 -25.2694 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.058</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>15.6297 -25.2694 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+
+    <include>
+      <static>true</static>
+      <name>Pallet_Rack_Section.059</name>
+      <uri>Pallet_Rack_Section</uri>
+      <pose>18.1437 -25.2694 0.0000 0.0000 0.0000 0.0000</pose>
+    </include>
+  </world>
+</sdf>

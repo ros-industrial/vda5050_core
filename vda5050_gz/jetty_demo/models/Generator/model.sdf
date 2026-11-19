@@ -1,0 +1,206 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="Generator">
+    <link name="base_link">
+      <visual name="base_visual">
+        <geometry>
+          <mesh>
+            <uri>base_visual.glb</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="line002001_collider_box">
+        <pose>1.310221 -0.099783 0.344097 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.062369 0.285094 0.688507</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="line007001_collider_box">
+        <pose>1.983937 6.94223 0.679092 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.461588 0.17 1.358184</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="line009001_collider_box">
+        <pose>1.123086 5.444244 0.256934 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.000654 0.728744 0.513869</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="object004_collider_box">
+        <pose>0.007107 -1.409525 1.211913 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.027149 1.333464 1.271448</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="object001001_collider_box">
+        <pose>0.007107 -1.76766 0.167951 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.450202 2.214718 0.134574</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="object002001_collider_box">
+        <pose>0.007107 2.580366 0.086581 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>3.151071 6.014837 0.173163</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="object002001_collider_box.001">
+        <pose>0.007106 -0.679014 0.06937 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.81638 4.716596 0.13874</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="object010001_collider_box">
+        <pose>0.0 -0.007236 0.96603 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.810959 0.74816 1.613692</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="object017001_collider_box">
+        <pose>2.108736 6.359674 0.424054 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.766328 0.735515 0.92962</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box026_collider_box">
+        <pose>-0.015714 6.930062 0.735923 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.944389 2.466381 1.471847</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box026_collider_box_collider_cylinder">
+        <pose>-0.016059 7.666399 1.081692 1.570796 0.0 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>1.483018</radius>
+            <length>1.010392</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="box026_collider_box_collider_cylinder.001">
+        <pose>-0.016059 6.221897 1.081692 1.570796 0.0 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.888887</radius>
+            <length>2.932261</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="box026_collider_box_collider_cylinder.002">
+        <pose>-0.016059 2.917049 1.316038 1.570796 0.0 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>1.65835</radius>
+            <length>4.404352</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="box026_collider_box_collider_cylinder.003">
+        <pose>0.0 0.640644 0.8353 1.570796 0.0 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>1.306258</radius>
+            <length>0.394673</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="box026001_collider_box">
+        <pose>-0.86832 5.437664 1.095789 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.059688 0.74977 2.191579</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cylinder006_collider_box">
+        <pose>0.035536 0.61301 0.437575 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>2.825981 0.297553 0.94739</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cylinder002001_collider_box">
+        <pose>-0.0 2.914505 0.571953 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>3.217031 4.318384 0.825538</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cylinder005001_collider_box">
+        <pose>0.007107 -1.794053 0.380503 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.233767 2.142519 0.391373</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cylinder008001_collider_box">
+        <pose>0.007107 -2.419672 0.970892 -0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.652259 0.889897 0.917245</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="cylinder012001_collider_cylinder">
+        <pose>0.007107 -0.562054 1.220394 1.570796 0.0 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.456146</radius>
+            <length>0.361478</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="cylinder021001_collider_cylinder">
+        <pose>0.0 -0.303435 2.23521 -0.0 0.0 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.074933</radius>
+            <length>0.924668</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="cylinder026001_collider_cylinder">
+        <pose>0.305334 -2.24845 1.012417 0.0 1.570796 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.085</radius>
+            <length>0.356603</length>
+          </cylinder>
+        </geometry>
+      </collision>
+      <collision name="cylinder043001_collider_cylinder">
+        <pose>0.007107 -0.007236 0.371015 0.0 1.570796 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.15</radius>
+            <length>2.406888</length>
+          </cylinder>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

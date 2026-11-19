@@ -1,0 +1,78 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="Pallet_Standard">
+    <link name="base_link">
+      <visual name="base_visual">
+        <geometry>
+          <mesh>
+            <uri>base_visual.glb</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="box006009_collider_box">
+        <pose>-0.52 -0.4525 0.072405 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.16 0.095 0.094811</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box006012_collider_box">
+        <pose>0.52 -0.4525 0.072405 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.16 0.095 0.094811</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box006013_collider_box">
+        <pose>-0.52 0.4525 0.072405 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.16 0.095 0.094811</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box006014_collider_box">
+        <pose>0.52 0.4525 0.072405 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.16 0.095 0.094811</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box006021_collider_box">
+        <pose>-0.52 -0.0 0.072405 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.16 0.095 0.094811</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box006022_collider_box">
+        <pose>0.52 -0.0 0.072405 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.16 0.095 0.094811</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box006024_collider_box">
+        <pose>0.0 -0.0 0.0125 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.2 1.0 0.025</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="box006024_collider_box.001">
+        <pose>0.0 -0.0 0.1325 0.0 -0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>1.2 1.0 0.025</size>
+          </box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>
